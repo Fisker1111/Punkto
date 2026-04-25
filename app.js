@@ -23,6 +23,11 @@ db.version(1).stores({
   atoms: '++id, punkto, t, lat, lon, alt',
   meta:  'key',
 });
+// v2: clear stale atoms from old feed (forces re-sync from server)
+db.version(2).stores({
+  atoms: '++id, punkto, t, lat, lon, alt',
+  meta:  'key',
+}).upgrade(tx => tx.table('atoms').clear());
 
 // ---------------------------------------------------------------------------
 // State
@@ -543,6 +548,37 @@ function initMap() {
       });
     } catch (e) {
       console.warn('[map] 3D buildings layer failed:', e);
+    }
+
+    // Add terrain elevation (AWS Terrarium DEM — free, open)
+    try {
+      map.addSource('terrain-dem', {
+        type: 'raster-dem',
+        tiles: ['https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png'],
+        encoding: 'terrarium',
+        tileSize: 256,
+        maxzoom: 15,
+      });
+      map.setTerrain({ source: 'terrain-dem', exaggeration: 1.5 });
+    } catch (e) {
+      console.warn('[map] terrain failed:', e);
+    }
+
+    // Sky layer — atmosphere for 3D view
+    try {
+      map.addLayer({
+        id: 'sky',
+        type: 'sky',
+        paint: {
+          'sky-type': 'atmosphere',
+          'sky-atmosphere-sun': [0.0, 90.0],
+          'sky-atmosphere-sun-intensity': 5,
+          'sky-atmosphere-color': 'rgba(5, 10, 25, 1)',
+          'sky-atmosphere-halo-color': 'rgba(0, 60, 80, 0.8)',
+        },
+      });
+    } catch (e) {
+      console.warn('[map] sky layer failed:', e);
     }
 
     await refreshUI();
