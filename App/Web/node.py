@@ -31,7 +31,7 @@ PUNKTO_RE = re.compile(r'^p:[0-9a-z]{12}(-[a-zA-Z0-9]+)?$')
 def ensure_data_dir():
     os.makedirs(DATA_DIR, exist_ok=True)
     if not os.path.exists(ATOMS_FILE):
-        open(ATOMS_FILE, 'a').close()
+        with open(ATOMS_FILE, 'a'): pass
 
 
 def cors_headers():
@@ -234,8 +234,6 @@ class PunktoHandler(BaseHTTPRequestHandler):
                 self.send_json(status, err)
                 return
 
-            # Add server-side received timestamp if not present
-            # (preserve client 't'; do not overwrite)
             cursor = append_atom(atom)
             self.send_json(201, {
                 'status': 'accepted',

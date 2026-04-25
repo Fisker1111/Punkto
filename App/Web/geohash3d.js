@@ -147,7 +147,6 @@ export function toBounds(hash) {
     const bit = (charVal >>> bitInChar) & 1;
 
     const dim = i % 3;
-    const dimBitIdx = Math.floor(i / 3); // which bit within dimension (MSB first)
 
     if (dim === 0) {
       latInt = (latInt << 1) | bit;
@@ -185,45 +184,3 @@ export function toBounds(hash) {
   };
 }
 
-// ---------------------------------------------------------------------------
-// Self-test (uncomment to run in browser console or Node.js)
-// ---------------------------------------------------------------------------
-// function selfTest() {
-//   const tests = [
-//     { lat: 55.6761,  lon: 12.5683,  alt: 10,   desc: 'Copenhagen' },
-//     { lat: 51.5074,  lon: -0.1278,  alt: 11,   desc: 'London' },
-//     { lat: 40.7128,  lon: -74.0060, alt: 10,   desc: 'New York' },
-//     { lat: 35.6762,  lon: 139.6503, alt: 40,   desc: 'Tokyo' },
-//     { lat: -33.8688, lon: 151.2093, alt: 50,   desc: 'Sydney' },
-//     { lat: 0,        lon: 0,        alt: 0,    desc: 'Null Island' },
-//     { lat: -90,      lon: -180,     alt: -500, desc: 'Min corner' },
-//     { lat: 89.9999,  lon: 179.9999, alt: 8499, desc: 'Near max corner' },
-//     { lat: 55.6761,  lon: 12.5683,  alt: 0,    desc: 'Copenhagen alt=0' },
-//   ];
-//
-//   console.log('=== geohash3d self-test ===');
-//   let pass = 0, fail = 0;
-//
-//   for (const t of tests) {
-//     const hash = encode(t.lat, t.lon, t.alt);
-//     const result = decode(hash);
-//     const latOk = Math.abs(result.lat - t.lat) <= result.error.lat;
-//     const lonOk = Math.abs(result.lon - t.lon) <= result.error.lon;
-//     const altOk = Math.abs(result.alt - t.alt) <= result.error.alt;
-//     const ok = latOk && lonOk && altOk;
-//     if (ok) pass++; else fail++;
-//     console.log(
-//       `${ok ? 'PASS' : 'FAIL'} ${t.desc}: hash=${hash}`,
-//       `decoded=(${result.lat.toFixed(4)}, ${result.lon.toFixed(4)}, ${result.alt.toFixed(1)})`,
-//       `err=(±${result.error.lat.toFixed(4)}, ±${result.error.lon.toFixed(4)}, ±${result.error.alt.toFixed(1)})`,
-//     );
-//   }
-//
-//   // Round-trip precision test at 12 chars
-//   const h12 = encode(55.6761, 12.5683, 42);
-//   const d12 = decode(h12);
-//   console.log(`\n12-char precision: lat_err=±${d12.error.lat.toFixed(6)}°, lon_err=±${d12.error.lon.toFixed(6)}°, alt_err=±${d12.error.alt.toFixed(2)}m`);
-//
-//   console.log(`\nResults: ${pass} passed, ${fail} failed`);
-// }
-// selfTest();

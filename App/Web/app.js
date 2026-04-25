@@ -219,24 +219,6 @@ function buildGroundGrid(atoms) {
 }
 
 /**
- * Build LineLayer data connecting ALL atoms (full mesh), capped at 50.
- * Returns array of {sourcePosition, targetPosition} objects.
- */
-function buildWireMesh(atoms) {
-  const lines = [];
-  const cap = Math.min(atoms.length, 50);
-  for (let i = 0; i < cap; i++) {
-    for (let j = i + 1; j < cap; j++) {
-      lines.push({
-        sourcePosition: [atoms[i].lon, atoms[i].lat, atoms[i].alt],
-        targetPosition: [atoms[j].lon, atoms[j].lat, atoms[j].alt],
-      });
-    }
-  }
-  return lines;
-}
-
-/**
  * Map altitude to RGBA color. Higher = brighter cyan.
  * alt range: -500 to 8500 → intensity 120–255
  */
@@ -260,8 +242,6 @@ async function renderAtoms() {
     t: a.t,
     label: (a.x || a.f || '').slice(0, 40),
   }));
-
-  // Only build wire mesh for nearby clusters (limit to avoid O(n²) explosion)
 
   const { ScatterplotLayer, LineLayer, TextLayer, MapboxOverlay } = window.deck;
 
@@ -578,7 +558,6 @@ function toggle3D() {
 async function resetCache() {
   if (!confirm('Clear local data and reload?')) return;
   try { await db.delete(); } catch(e) {}
-  localStorage.removeItem('punkto_cursor');
   if ('serviceWorker' in navigator) {
     const regs = await navigator.serviceWorker.getRegistrations();
     for (const r of regs) await r.unregister();

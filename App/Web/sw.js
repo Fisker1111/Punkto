@@ -25,8 +25,9 @@ const NETWORK_FIRST_PATTERNS = [
 ];
 
 function isNetworkFirst(url) {
-  const pathname = new URL(url).pathname + new URL(url).search;
-  return NETWORK_FIRST_PATTERNS.some(re => re.test(pathname + new URL(url).search));
+  const { pathname, search } = new URL(url);
+  const target = pathname + search;
+  return NETWORK_FIRST_PATTERNS.some(re => re.test(target));
 }
 
 // ---------------------------------------------------------------------------
