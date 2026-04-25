@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#0a0a0a" />
+  <meta name="description" content="Punkto — address points in 3D space" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <title>Punkto</title>
+
+  <link rel="manifest" href="/manifest.json" />
+  <link rel="apple-touch-icon" href="/logo-192.png" />
+
+  <!-- MapLibre GL JS 3.6.2 -->
+  <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.css" />
+  <script src="https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.js"></script>
+
+  <!-- deck.gl 8.9.35 standalone UMD (exposes window.deck) -->
+  <script src="https://unpkg.com/deck.gl@8.9.35/dist.min.js"></script>
+
+  <!-- Dexie.js 3.2.4 -->
+  <script src="https://unpkg.com/dexie@3.2.4/dist/dexie.min.js"></script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #0a0a0a;
+      --surface:   #141414;
+      --surface2:  #1e1e1e;
+      --border:    #2a2a2a;
+      --text:      #e8e8e8;
+      --text-dim:  #888;
+      --cyan:      #00e5ff;
+      --cyan-dim:  #007a8a;
+      --accent:    #00bcd4;
+      --danger:    #ff4444;
+      --bar-h:     52px;
+      --panel-h:   220px;
+      --safe-b:    env(safe-area-inset-bottom, 0px);
+    }
+
+    html, body { width: 100%; height: 100%; overflow: hidden; background: var(--bg); color: var(--text); font-family: 'Fira Mono', 'Courier New', monospace; font-size: 13px; }
+
+    /* ── Map ──────────────────────────────────────────────── */
+    #map {
+      position: absolute;
+      inset: 0;
+      top: var(--bar-h);
+    }
+    #map.panel-open { bottom: var(--panel-h); }
+
+    /* ── Top bar ──────────────────────────────────────────── */
+    #topbar {
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: var(--bar-h);
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      padding: 0 14px;
+      gap: 12px;
+      z-index: 100;
+      backdrop-filter: blur(6px);
+    }
+    #topbar .title {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--cyan);
+      letter-spacing: 0.08em;
+      flex: 1;
+    }
+    #sync-indicator {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: var(--text-dim);
+      transition: background 0.4s;
+      flex-shrink: 0;
+    }
+    #sync-indicator.ok     { background: #00e676; }
+    #sync-indicator.syncing{ background: #ffeb3b; animation: pulse 1s infinite; }
+    #sync-indicator.error  { background: var(--danger); }
+    @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
+
+    #atom-count {
+      color: var(--text-dim);
+      font-size: 11px;
+      white-space: nowrap;
+    }
+    #atom-count span { color: var(--cyan); font-weight: 600; }
+
+    /* ── Bottom panel ─────────────────────────────────────── */
+    #panel {
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      height: var(--panel-h);
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      z-index: 100;
+      display: flex;
+      flex-direction: column;
+      transform: translateY(100%);
+      transition: transform 0.3s ease;
+      padding-bottom: var(--safe-b);
+    }
+    #panel.open { transform: translateY(0); }
+
+    #panel-header {
+      display: flex;
+      align-items: center;
+      padding: 10px 14px 6px;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+    #panel-header .label {
+      flex: 1;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--text-dim);
+    }
+    #panel-close {
+      background: none;
+      border: none;
+      color: var(--text-dim);
+      cursor: pointer;
+      font-size: 18px;
+      line-height: 1;
+      padding: 2px 6px;
+    }
+    #panel-close:hover { color: var(--text); }
+
+    #atom-list {
+      flex: 1;
+      overflow-y: auto;
+      padding: 0 14px 10px;
+    }
+    #atom-list { scrollbar-width: thin; scrollbar-color: var(--border) transparent; }
+
+    .atom-item {
+      padding: 8px 0;
+      border-bottom: 1px solid var(--border);
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      gap: 0 10px;
+      align-items: start;
+    }
+    .atom-item:last-child { border-bottom: none; }
+    .atom-dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--cyan);
+      margin-top: 4px;
+      flex-shrink: 0;
+    }
+    .atom-body .atom-text {
+      color: var(--text);
+      word-break: break-word;
+    }
+    .atom-body .atom-text.empty { color: var(--text-dim); font-style: italic; }
+    .atom-body .atom-meta {
+      font-size: 10px;
+      color: var(--text-dim);
+      margin-top: 2px;
+    }
+    .atom-time {
+      font-size: 10px;
+      color: var(--text-dim);
+      white-space: nowrap;
+    }
+    #atom-list-empty {
+      color: var(--text-dim);
+      font-size: 11px;
+      padding: 20px 0;
+      text-align: center;
+    }
+
+    /* ── Floating buttons ─────────────────────────────────── */
+    #fab-add {
+      position: absolute;
+      bottom: calc(20px + var(--safe-b));
+      right: 18px;
+      width: 52px; height: 52px;
+      border-radius: 50%;
+      background: var(--cyan);
+      color: var(--bg);
+      border: none;
+      font-size: 26px;
+      line-height: 1;
+      cursor: pointer;
+      box-shadow: 0 4px 16px rgba(0,229,255,0.35);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 110;
+      transition: background 0.2s, transform 0.15s;
+    }
+    #fab-add:hover  { background: #33ecff; transform: scale(1.07); }
+    #fab-add:active { transform: scale(0.95); }
+    #fab-add.panel-open { bottom: calc(var(--panel-h) + 16px); }
+
+    #fab-panel {
+      position: absolute;
+      bottom: calc(20px + var(--safe-b));
+      left: 18px;
+      width: 44px; height: 44px;
+      border-radius: 50%;
+      background: var(--surface2);
+      color: var(--text-dim);
+      border: 1px solid var(--border);
+      font-size: 18px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 110;
+      transition: background 0.2s;
+    }
+    #fab-panel:hover { background: var(--border); color: var(--text); }
+    #fab-panel.panel-open { bottom: calc(var(--panel-h) + 14px); }
+
+    /* ── Modal ────────────────────────────────────────────── */
+    #modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.7);
+      z-index: 200;
+      display: none;
+      align-items: flex-end;
+      justify-content: center;
+      backdrop-filter: blur(4px);
+    }
+    #modal-overlay.open { display: flex; }
+
+    #modal {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-bottom: none;
+      border-radius: 16px 16px 0 0;
+      width: 100%;
+      max-width: 560px;
+      padding: 20px 20px calc(20px + var(--safe-b));
+      animation: slide-up 0.25s ease;
+    }
+    @keyframes slide-up {
+      from { transform: translateY(100%); }
+      to   { transform: translateY(0); }
+    }
+
+    #modal h2 {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--cyan);
+      margin-bottom: 6px;
+    }
+    #modal-location {
+      font-size: 11px;
+      color: var(--text-dim);
+      margin-bottom: 16px;
+      font-family: monospace;
+    }
+    #modal textarea {
+      width: 100%;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      font-family: inherit;
+      font-size: 13px;
+      padding: 10px 12px;
+      resize: none;
+      height: 80px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    #modal textarea:focus { border-color: var(--cyan-dim); }
+    #modal textarea::placeholder { color: var(--text-dim); }
+
+    #modal-author-row {
+      display: flex;
+      gap: 8px;
+      margin-top: 8px;
+    }
+    #modal-author {
+      flex: 1;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      font-family: inherit;
+      font-size: 13px;
+      padding: 8px 12px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    #modal-author:focus { border-color: var(--cyan-dim); }
+    #modal-author::placeholder { color: var(--text-dim); }
+
+    #modal-actions {
+      display: flex;
+      gap: 10px;
+      margin-top: 14px;
+    }
+    .btn {
+      padding: 10px 18px;
+      border-radius: 8px;
+      border: none;
+      font-family: inherit;
+      font-size: 13px;
+      cursor: pointer;
+      transition: opacity 0.2s;
+    }
+    .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+    .btn-primary {
+      background: var(--cyan);
+      color: var(--bg);
+      font-weight: 700;
+      flex: 1;
+    }
+    .btn-primary:hover:not(:disabled) { background: #33ecff; }
+    .btn-secondary {
+      background: var(--surface2);
+      color: var(--text-dim);
+      border: 1px solid var(--border);
+    }
+    .btn-secondary:hover { color: var(--text); background: var(--border); }
+
+    #modal-error {
+      margin-top: 8px;
+      font-size: 11px;
+      color: var(--danger);
+      min-height: 16px;
+    }
+
+    /* ── Map crosshair ────────────────────────────────────── */
+    #crosshair {
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      pointer-events: none;
+      z-index: 50;
+      opacity: 0.6;
+    }
+    #crosshair::before, #crosshair::after {
+      content: '';
+      position: absolute;
+      background: var(--cyan);
+    }
+    #crosshair::before {
+      width: 1px; height: 20px;
+      left: 50%; top: 50%;
+      transform: translate(-50%, -50%);
+    }
+    #crosshair::after {
+      width: 20px; height: 1px;
+      left: 50%; top: 50%;
+      transform: translate(-50%, -50%);
+    }
+
+    /* ── 3D toggle button ─────────────────────────────────── */
+    #toggle-3d {
+      position: absolute;
+      top: 52px;
+      right: 10px;
+      z-index: 10;
+      background: var(--surface);
+      color: var(--cyan);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 4px 10px;
+      font-family: inherit;
+      font-size: 12px;
+      cursor: pointer;
+      letter-spacing: 0.05em;
+    }
+    #toggle-3d:hover { background: var(--border); }
+    /* ── Reset cache button ──────────────────────────────── */
+    #btn-reset {
+      position: absolute;
+      top: 86px;
+      right: 10px;
+      z-index: 10;
+      background: var(--surface);
+      color: #ff6666;
+      border: 1px solid #442222;
+      border-radius: 4px;
+      padding: 4px 10px;
+      font-family: inherit;
+      font-size: 11px;
+      cursor: pointer;
+      letter-spacing: 0.05em;
+    }
+    #btn-reset:hover { background: #1a0808; }
+
+    /* ── MapLibre popup overrides ─────────────────────────── */
+    .punkto-popup .maplibregl-popup-content {
+      background: #141414;
+      border: 1px solid #2a2a2a;
+      border-radius: 6px;
+      padding: 10px 12px;
+      font-family: 'Fira Mono', monospace;
+      font-size: 12px;
+      color: #c0c0c0;
+      max-width: 280px;
+    }
+    .punkto-popup .maplibregl-popup-tip { border-top-color: #2a2a2a; }
+    .popup-text { color: #e0e0e0; margin-bottom: 4px; font-size: 13px; }
+    .popup-meta { color: #00ccdd; font-size: 11px; }
+    .popup-canon { color: #444; font-size: 10px; margin-top: 4px; word-break: break-all; }
+    .popup-coords { color: #555; font-size: 10px; }
+  </style>
+</head>
+<body>
+
+  <!-- Top bar -->
+  <div id="topbar">
+    <div class="title">punkto</div>
+    <div id="atom-count"><span id="count-num">0</span> atoms</div>
+    <div id="sync-indicator" title="sync status"></div>
+  </div>
+
+  <!-- 3D toggle -->
+  <button id="toggle-3d" title="Switch to 3D view">2D</button>
+
+  <button id="btn-reset" title="Clear local cache and resync">&#8635; reset</button>
+
+  <!-- Map container -->
+  <div id="map">
+    <div id="crosshair"></div>
+  </div>
+
+  <!-- Floating buttons -->
+  <button id="fab-panel" title="Recent atoms">☰</button>
+  <button id="fab-add" title="Add atom at map center">+</button>
+
+  <!-- Bottom panel -->
+  <div id="panel">
+    <div id="panel-header">
+      <div class="label">recent atoms</div>
+      <button id="panel-close">✕</button>
+    </div>
+    <div id="atom-list">
+      <div id="atom-list-empty">No atoms yet. Syncing…</div>
+    </div>
+  </div>
+
+  <!-- Add atom modal -->
+  <div id="modal-overlay">
+    <div id="modal">
+      <h2>+ New Atom</h2>
+      <div id="modal-location">…</div>
+      <textarea id="modal-text" placeholder="What's here? (optional)"></textarea>
+      <div id="modal-author-row">
+        <input id="modal-author" type="text" placeholder="your name / handle (optional)" />
+      </div>
+      <div id="modal-error"></div>
+      <div id="modal-actions">
+        <button class="btn btn-secondary" id="modal-cancel">Cancel</button>
+        <button class="btn btn-primary" id="modal-submit">Drop Atom</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- App (ES module) -->
+  <script type="module" src="/app.js"></script>
+
+  <!-- Service worker registration -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js')
+          .then(r => console.log('[SW] registered', r.scope))
+          .catch(e => console.warn('[SW] registration failed', e));
+      });
+    }
+  </script>
+
+</body>
+</html>
