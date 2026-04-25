@@ -11,8 +11,8 @@ import { encode, decode } from './geohash3d.js';
 
 const NODE_URL = 'https://punkto.xyz';
 const SYNC_INTERVAL_MS = 30_000;
-const MAP_STYLE = 'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json';
-const MAP_FALLBACK_STYLE = 'https://demotiles.maplibre.org/style.json';
+const MAP_STYLE = 'https://tiles.openfreemap.org/styles/dark';
+const MAP_FALLBACK_STYLE = 'https://tiles.openfreemap.org/styles/positron';
 
 // ---------------------------------------------------------------------------
 // Dexie (IndexedDB)
@@ -32,7 +32,7 @@ let map = null;
 let deckOverlay = null;
 let syncTimer = null;
 let isSyncing = false;
-let is3D = false;
+let is3D = true;
 // ---------------------------------------------------------------------------
 // DOM refs
 // ---------------------------------------------------------------------------
@@ -187,6 +187,27 @@ async function syncFeed() {
 // deck.gl rendering
 // ---------------------------------------------------------------------------
 
+
+/**
+ * Flat ground reference grid around centroid of atoms — spatial reference for 3D cloud.
+ */
+function buildGroundGrid(atoms) {
+  const lines = [];
+  if (atoms.length === 0) return lines;
+  const cLon = atoms.reduce((s, a) => s + a.lon, 0) / atoms.length;
+  const cLat = atoms.reduce((s, a) => s + a.lat, 0) / atoms.length;
+  const range = 0.08; // ~9km
+  const step  = 0.01; // ~1km grid spacing
+  const alt   = 0;
+  for (let x = -range; x <= range + 1e-9; x = Math.round((x + step) * 1e9) / 1e9) {
+    lines.push({ sourcePosition: [cLon + x, cLat - range, alt], targetPosition: [cLon + x, cLat + range, alt] });
+  }
+  for (let y = -range; y <= range + 1e-9; y = Math.round((y + step) * 1e9) / 1e9) {
+    lines.push({ sourcePosition: [cLon - range, cLat + y, alt], targetPosition: [cLon + range, cLat + y, alt] });
+  }
+  return lines;
+}
+
 /**
  * Build LineLayer data connecting ALL atoms (full mesh), capped at 50.
  * Returns array of {sourcePosition, targetPosition} objects.
@@ -236,6 +257,16 @@ async function renderAtoms() {
   const { ScatterplotLayer, LineLayer, TextLayer, MapboxOverlay } = window.deck;
 
   const layers = [
+    new LineLayer({
+      id: 'ground-grid',
+      data: buildGroundGrid(atoms),
+      getSourcePosition: d => d.sourcePosition,
+      getTargetPosition: d => d.targetPosition,
+      getColor: [30, 60, 70, 80],
+      getWidth: 0.5,
+      widthUnits: 'pixels',
+      pickable: false,
+    }),
     new LineLayer({
       id: 'wire-mesh',
       data: wireData,
@@ -461,8 +492,8 @@ function initMap() {
     style: MAP_STYLE,
     center: [10, 50],
     zoom: 3,
-    pitch: 0,
-    bearing: 0,
+    pitch: 45,
+    bearing: -10,
     antialias: true,
   });
 
@@ -494,6 +525,26 @@ function initMap() {
 
   map.on('load', async () => {
     console.log('[map] loaded');
+
+    // Add 3D building extrusion layer (OpenFreeMap has openmaptiles source)
+    try {
+      map.addLayer({
+        id: 'buildings-3d',
+        type: 'fill-extrusion',
+        source: 'openmaptiles',
+        'source-layer': 'building',
+        minzoom: 12,
+        paint: {
+          'fill-extrusion-color': '#1a1a2e',
+          'fill-extrusion-height': ['coalesce', ['get', 'render_height'], ['get', 'height'], 5],
+          'fill-extrusion-base': ['coalesce', ['get', 'render_min_height'], 0],
+          'fill-extrusion-opacity': 0.9,
+        },
+      });
+    } catch (e) {
+      console.warn('[map] 3D buildings layer failed:', e);
+    }
+
     await refreshUI();
     // Start sync
     await syncFeed();
@@ -508,7 +559,7 @@ function initMap() {
 function toggle3D() {
   is3D = !is3D;
   if (is3D) {
-    map.easeTo({ pitch: 60, bearing: -20, duration: 800 });
+    map.easeTo({ pitch: 45, bearing: -10, duration: 800 });
     elToggle3D.textContent = '2D';
     elToggle3D.title = 'Switch to 2D view';
   } else {
