@@ -12,7 +12,7 @@ import { encode, decode } from './geohash3d.js';
 const NODE_URL = 'https://punkto.xyz';
 const SYNC_INTERVAL_MS = 30_000;
 const MAP_STYLE = 'https://tiles.openfreemap.org/styles/dark';
-const MAP_FALLBACK_STYLE = 'https://tiles.openfreemap.org/styles/positron';
+const MAP_FALLBACK_STYLE = 'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json';
 
 // ---------------------------------------------------------------------------
 // Dexie (IndexedDB)
@@ -25,6 +25,10 @@ db.version(1).stores({
 });
 // v2: clear stale atoms from old feed (forces re-sync from server)
 db.version(2).stores({
+  atoms: '++id, punkto, t, lat, lon, alt',
+  meta:  'key',
+}).upgrade(tx => tx.table('atoms').clear());
+db.version(3).stores({
   atoms: '++id, punkto, t, lat, lon, alt',
   meta:  'key',
 }).upgrade(tx => tx.table('atoms').clear());
@@ -252,6 +256,7 @@ async function renderAtoms() {
     punkto: a.punkto,
     text: a.x,
     f: a.f,
+    t: a.t,
     label: (a.x || a.f || '').slice(0, 40),
   }));
 
@@ -267,8 +272,8 @@ async function renderAtoms() {
       data: buildGroundGrid(atoms),
       getSourcePosition: d => d.sourcePosition,
       getTargetPosition: d => d.targetPosition,
-      getColor: [30, 60, 70, 80],
-      getWidth: 0.5,
+      getColor: [0, 140, 160, 140],
+      getWidth: 1,
       widthUnits: 'pixels',
       pickable: false,
     }),
@@ -277,7 +282,7 @@ async function renderAtoms() {
       data: wireData,
       getSourcePosition: d => d.sourcePosition,
       getTargetPosition: d => d.targetPosition,
-      getColor: [60, 120, 130, 100],
+      getColor: [0, 200, 220, 160],
       getWidth: 1,
       widthUnits: 'pixels',
       pickable: false,
@@ -503,8 +508,16 @@ function initMap() {
   });
 
   map.on('error', e => {
-    // If the dark CartoDB style fails, fall back to demotiles
-    console.warn('[map] style error, trying fallback', e);
+    // Ignore non-critical errors (tiles, terrain, sky layers)
+    if (e.sourceId || e.tile || (e.error && (
+        e.error.message && (e.error.message.includes('sky') ||
+        e.error.message.includes('terrain') ||
+        e.error.message.includes('buildings'))
+    ))) {
+      console.warn('[map] non-critical layer error:', e.error && e.error.message);
+      return;
+    }
+    console.warn('[map] style load error, trying fallback', e);
     map.setStyle(MAP_FALLBACK_STYLE);
   });
 
@@ -596,10 +609,12 @@ function toggle3D() {
   is3D = !is3D;
   if (is3D) {
     map.easeTo({ pitch: 45, bearing: -10, duration: 800 });
+    try { map.setTerrain({ source: 'terrain-dem', exaggeration: 1.5 }); } catch(e) {}
     elToggle3D.textContent = '2D';
     elToggle3D.title = 'Switch to 2D view';
   } else {
     map.easeTo({ pitch: 0, bearing: 0, duration: 800 });
+    try { map.setTerrain(null); } catch(e) {}
     elToggle3D.textContent = '3D';
     elToggle3D.title = 'Switch to 3D view';
   }
