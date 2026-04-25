@@ -542,37 +542,6 @@ function initMap() {
       console.warn('[map] 3D buildings layer failed:', e);
     }
 
-    // Add terrain elevation (AWS Terrarium DEM — free, open)
-    try {
-      map.addSource('terrain-dem', {
-        type: 'raster-dem',
-        tiles: ['https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png'],
-        encoding: 'terrarium',
-        tileSize: 256,
-        maxzoom: 15,
-      });
-      map.setTerrain({ source: 'terrain-dem', exaggeration: 1.5 });
-    } catch (e) {
-      console.warn('[map] terrain failed:', e);
-    }
-
-    // Sky layer — atmosphere for 3D view
-    try {
-      map.addLayer({
-        id: 'sky',
-        type: 'sky',
-        paint: {
-          'sky-type': 'atmosphere',
-          'sky-atmosphere-sun': [0.0, 90.0],
-          'sky-atmosphere-sun-intensity': 5,
-          'sky-atmosphere-color': 'rgba(5, 10, 25, 1)',
-          'sky-atmosphere-halo-color': 'rgba(0, 60, 80, 0.8)',
-        },
-      });
-    } catch (e) {
-      console.warn('[map] sky layer failed:', e);
-    }
-
     await refreshUI();
     // Start sync
     await syncFeed();
@@ -588,12 +557,10 @@ function toggle3D() {
   is3D = !is3D;
   if (is3D) {
     map.easeTo({ pitch: 45, bearing: -10, duration: 800 });
-    try { map.setTerrain({ source: 'terrain-dem', exaggeration: 1.5 }); } catch(e) {}
     elToggle3D.textContent = '2D';
     elToggle3D.title = 'Switch to 2D view';
   } else {
     map.easeTo({ pitch: 0, bearing: 0, duration: 800 });
-    try { map.setTerrain(null); } catch(e) {}
     elToggle3D.textContent = '3D';
     elToggle3D.title = 'Switch to 3D view';
   }
