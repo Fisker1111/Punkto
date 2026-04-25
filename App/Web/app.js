@@ -570,6 +570,26 @@ function toggle3D() {
 // Event wiring
 // ---------------------------------------------------------------------------
 
+
+// ---------------------------------------------------------------------------
+// Cache reset
+// ---------------------------------------------------------------------------
+
+async function resetCache() {
+  if (!confirm('Clear local data and reload?')) return;
+  try { await db.delete(); } catch(e) {}
+  localStorage.removeItem('punkto_cursor');
+  if ('serviceWorker' in navigator) {
+    const regs = await navigator.serviceWorker.getRegistrations();
+    for (const r of regs) await r.unregister();
+  }
+  if ('caches' in window) {
+    const keys = await caches.keys();
+    for (const k of keys) await caches.delete(k);
+  }
+  location.reload(true);
+}
+
 function wireEvents() {
   // Panel toggle
   elFabPanel.addEventListener('click', () => setPanelOpen(!panelOpen));
