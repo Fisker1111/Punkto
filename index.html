@@ -375,6 +375,23 @@
       letter-spacing: 0.05em;
     }
     #toggle-3d:hover { background: var(--border); }
+    /* ── Reset cache button ──────────────────────────────── */
+    #btn-reset {
+      position: absolute;
+      top: 86px;
+      right: 10px;
+      z-index: 10;
+      background: var(--surface);
+      color: #ff6666;
+      border: 1px solid #442222;
+      border-radius: 4px;
+      padding: 4px 10px;
+      font-family: inherit;
+      font-size: 11px;
+      cursor: pointer;
+      letter-spacing: 0.05em;
+    }
+    #btn-reset:hover { background: #1a0808; }
 
     /* ── MapLibre popup overrides ─────────────────────────── */
     .punkto-popup .maplibregl-popup-content {
@@ -405,6 +422,8 @@
 
   <!-- 3D toggle -->
   <button id="toggle-3d" title="Switch to 3D view">2D</button>
+
+  <button id="btn-reset" title="Clear local cache and resync">&#8635; reset</button>
 
   <!-- Map container -->
   <div id="map">

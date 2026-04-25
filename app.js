@@ -631,6 +631,8 @@ function wireEvents() {
 
   // 3D toggle
   elToggle3D.addEventListener('click', toggle3D);
+  const elReset = document.getElementById('btn-reset');
+  if (elReset) elReset.addEventListener('click', resetCache);
 
   // Add atom
   elFabAdd.addEventListener('click', () => openModal());
