@@ -11,7 +11,6 @@ import { encode, decode } from './geohash3d.js';
 
 const NODE_URL = 'https://punkto.xyz';
 const SYNC_INTERVAL_MS = 30_000;
-const WIRE_PROXIMITY_DEG = 0.5; // connect atoms within this many degrees
 const MAP_STYLE = 'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json';
 const MAP_FALLBACK_STYLE = 'https://demotiles.maplibre.org/style.json';
 
@@ -33,7 +32,7 @@ let map = null;
 let deckOverlay = null;
 let syncTimer = null;
 let isSyncing = false;
-
+let is3D = false;
 // ---------------------------------------------------------------------------
 // DOM refs
 // ---------------------------------------------------------------------------
@@ -54,6 +53,7 @@ const elModalAuthor = document.getElementById('modal-author');
 const elModalSubmit = document.getElementById('modal-submit');
 const elModalCancel = document.getElementById('modal-cancel');
 const elModalError  = document.getElementById('modal-error');
+const elToggle3D    = document.getElementById('toggle-3d');
 
 // ---------------------------------------------------------------------------
 // Utility
@@ -188,23 +188,18 @@ async function syncFeed() {
 // ---------------------------------------------------------------------------
 
 /**
- * Build LineLayer data for atoms within WIRE_PROXIMITY_DEG of each other.
+ * Build LineLayer data connecting ALL atoms (full mesh), capped at 50.
  * Returns array of {sourcePosition, targetPosition} objects.
  */
 function buildWireMesh(atoms) {
   const lines = [];
-  for (let i = 0; i < atoms.length; i++) {
-    for (let j = i + 1; j < atoms.length; j++) {
-      const a = atoms[i];
-      const b = atoms[j];
-      const dLat = Math.abs(a.lat - b.lat);
-      const dLon = Math.abs(a.lon - b.lon);
-      if (dLat < WIRE_PROXIMITY_DEG && dLon < WIRE_PROXIMITY_DEG) {
-        lines.push({
-          sourcePosition: [a.lon, a.lat, a.alt],
-          targetPosition: [b.lon, b.lat, b.alt],
-        });
-      }
+  const cap = Math.min(atoms.length, 50);
+  for (let i = 0; i < cap; i++) {
+    for (let j = i + 1; j < cap; j++) {
+      lines.push({
+        sourcePosition: [atoms[i].lon, atoms[i].lat, atoms[i].alt],
+        targetPosition: [atoms[j].lon, atoms[j].lat, atoms[j].alt],
+      });
     }
   }
   return lines;
@@ -212,12 +207,12 @@ function buildWireMesh(atoms) {
 
 /**
  * Map altitude to RGBA color. Higher = brighter cyan.
- * alt range: -500 to 8500 → intensity 0.2 to 1.0
+ * alt range: -500 to 8500 → intensity 120–255
  */
 function altToColor(alt) {
   const t = Math.max(0, Math.min(1, (alt + 500) / 9000));
-  const intensity = Math.round(40 + t * 215); // 40–255
-  return [0, intensity, Math.round(200 + t * 55), 220]; // RGBA cyan-ish
+  const intensity = Math.round(120 + t * 135); // 120–255 (was 40–255)
+  return [0, intensity, 255, 240];
 }
 
 async function renderAtoms() {
@@ -230,13 +225,15 @@ async function renderAtoms() {
     color: altToColor(a.alt),
     punkto: a.punkto,
     text: a.x,
+    f: a.f,
+    label: (a.x || a.f || '').slice(0, 40),
   }));
 
   // Only build wire mesh for nearby clusters (limit to avoid O(n²) explosion)
-  const wireAtoms = atoms.slice(0, 500); // cap at 500 for performance
+  const wireAtoms = atoms.slice(0, 50); // cap at 50 for full-mesh performance
   const wireData = buildWireMesh(wireAtoms);
 
-  const { ScatterplotLayer, LineLayer, MapboxOverlay } = window.deck;
+  const { ScatterplotLayer, LineLayer, TextLayer, MapboxOverlay } = window.deck;
 
   const layers = [
     new LineLayer({
@@ -254,24 +251,46 @@ async function renderAtoms() {
       data: scatterData,
       getPosition: d => d.position,
       getFillColor: d => d.color,
-      getRadius: 6,
+      getRadius: 10,
       radiusUnits: 'pixels',
-      radiusMinPixels: 3,
-      radiusMaxPixels: 14,
+      radiusMinPixels: 6,
+      radiusMaxPixels: 18,
       pickable: true,
       autoHighlight: true,
       highlightColor: [255, 255, 100, 255],
       onClick: info => {
-        if (info.object) {
-          const a = info.object;
-          const msg = [
-            a.text || '(no text)',
-            a.punkto,
-          ].join('\n');
-          // Brief tooltip via console; in production would show popover
-          console.log('[click]', msg);
-        }
+        if (!info.object || !map) return;
+        const a = info.object;
+        const loc = decodeAtomLocation(a.punkto);
+        const coordStr = loc ? fmtCoords(loc.lat, loc.lon, loc.alt) : '';
+        const timeStr = fmtTime(a.t);
+        const html = [
+          a.text ? `<div class="popup-text">${escHtml(a.text)}</div>` : '',
+          `<div class="popup-meta">${escHtml(a.f || 'anon')} · ${timeStr}</div>`,
+          `<div class="popup-canon">${escHtml(a.punkto)}</div>`,
+          coordStr ? `<div class="popup-coords">${coordStr}</div>` : '',
+        ].filter(Boolean).join('');
+        new maplibregl.Popup({ closeButton: true, maxWidth: '280px', className: 'punkto-popup' })
+          .setLngLat(info.coordinate.slice(0, 2))
+          .setHTML(html)
+          .addTo(map);
       },
+    }),
+    new TextLayer({
+      id: 'atom-labels',
+      data: scatterData.filter(d => d.label),
+      getPosition: d => d.position,
+      getText: d => d.label,
+      getSize: 13,
+      getColor: [0, 220, 255, 220],
+      getBackgroundColor: [10, 10, 10, 180],
+      background: true,
+      backgroundPadding: [4, 2],
+      getTextAnchor: 'start',
+      getAlignmentBaseline: 'center',
+      getPixelOffset: [14, 0],
+      fontFamily: 'monospace',
+      pickable: false,
     }),
   ];
 
@@ -483,6 +502,23 @@ function initMap() {
 }
 
 // ---------------------------------------------------------------------------
+// 3D toggle
+// ---------------------------------------------------------------------------
+
+function toggle3D() {
+  is3D = !is3D;
+  if (is3D) {
+    map.easeTo({ pitch: 60, bearing: -20, duration: 800 });
+    elToggle3D.textContent = '2D';
+    elToggle3D.title = 'Switch to 2D view';
+  } else {
+    map.easeTo({ pitch: 0, bearing: 0, duration: 800 });
+    elToggle3D.textContent = '3D';
+    elToggle3D.title = 'Switch to 3D view';
+  }
+}
+
+// ---------------------------------------------------------------------------
 // Event wiring
 // ---------------------------------------------------------------------------
 
@@ -490,6 +526,9 @@ function wireEvents() {
   // Panel toggle
   elFabPanel.addEventListener('click', () => setPanelOpen(!panelOpen));
   elPanelClose.addEventListener('click', () => setPanelOpen(false));
+
+  // 3D toggle
+  elToggle3D.addEventListener('click', toggle3D);
 
   // Add atom
   elFabAdd.addEventListener('click', () => openModal());
@@ -510,7 +549,6 @@ function wireEvents() {
     }
   });
 }
-
 // ---------------------------------------------------------------------------
 // Boot
 // ---------------------------------------------------------------------------
@@ -534,6 +572,7 @@ async function boot() {
 
   wireEvents();
   initMap();
+  setPanelOpen(true);
 }
 
 document.addEventListener('DOMContentLoaded', boot);
