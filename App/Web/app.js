@@ -73,9 +73,11 @@ function setSyncStatus(state) {
 }
 
 function fmtTime(ms) {
-  const d = new Date(ms);
+  const t = Number(ms);
+  if (!t) return '?';
+  const d = new Date(t);
   const now = Date.now();
-  const diff = now - ms;
+  const diff = now - t;
   if (diff < 60_000)   return 'just now';
   if (diff < 3_600_000) return `${Math.floor(diff / 60_000)}m ago`;
   if (diff < 86_400_000) return `${Math.floor(diff / 3_600_000)}h ago`;
@@ -354,7 +356,7 @@ async function refreshUI() {
       const text = a.x ? escHtml(a.x) : '<span class="empty">no text</span>';
       const meta = [
         a.f ? escHtml(a.f) : null,
-        fmtCoords(a.lat, a.lon, a.alt),
+        escHtml(a.punkto || ''),
       ].filter(Boolean).join(' · ');
       el.innerHTML = `
         <div class="atom-dot"></div>
