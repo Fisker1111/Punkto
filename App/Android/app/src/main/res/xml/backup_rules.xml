@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+   Backup rules for Android Auto Backup (API 23+).
+   Exclude sensitive SharedPreferences (sync cursors) from cloud backup.
+-->
+<full-backup-content>
+    <!-- Include database -->
+    <include domain="database" path="punkto.db" />
+    <!-- Exclude per-node sync cursors (they reference byte offsets that may
+         be invalid after a restore from a different device / time) -->
+    <exclude domain="sharedpref" path="punkto_sync.xml" />
+</full-backup-content>
