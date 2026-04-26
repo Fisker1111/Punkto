@@ -1,6 +1,6 @@
-# Punkto Sync — Peer Discovery and Feed Replication
+# Punkto Sync — Peer Discovery, Feed Replication, and Client Node Selection
 
-> Draft proposal v0.3 — atom identity and signature model added
+> Draft proposal v0.4 — client-side protocol-native load balancing added
 
 ---
 
@@ -127,6 +127,83 @@ No node is trusted more than another.
 Peer hints from `/info` are advisory — the client does not blindly follow them.
 The user or node operator controls which peers are active.
 
+
+---
+
+## 5b. Client Node Selection (Protocol-Native Load Balancing)
+
+Punkto does not use a load balancer. Load distribution is built into the client.
+
+Each client maintains a local node list and distributes writes across healthy nodes.
+
+### Seed List
+
+Clients are configured with a static seed list:
+
+```
+SEED_NODES = [
+  "https://app1.§§secret(SERVER_ALIAS)",
+  "https://app2.§§secret(SERVER_ALIAS)"
+]
+```
+
+Seeds are the starting point — not a fixed topology.
+
+### Peer Discovery
+
+On boot, the client expands the node list by reading `/info` from each seed:
+
+```
+1. For each seed in SEED_NODES:
+   a. GET <seed>/info
+   b. Read peers[] from response
+   c. Add any new peer URLs to local node list (if not already present)
+2. Result: local node list = seeds ∪ discovered peers
+```
+
+Peer hints are accepted automatically at the node list level for known-good seeds.
+Nodes discovered via peers-of-peers (second-hop) are not auto-added in v0.1.
+
+### Write Routing
+
+When posting an atom, the client selects a node using round-robin over healthy nodes:
+
+```
+1. Build candidate list = healthy nodes from local node list
+2. Pick next node in rotation (round-robin index)
+3. POST /atom to selected node
+4. On success → advance rotation index
+5. On failure → mark node as failing, try next candidate
+6. If all nodes fail → return error to user
+```
+
+The atom reaches the full network via node-to-node sync (§6).
+A write to any single node is sufficient — replication handles distribution.
+
+### Health Tracking
+
+Each node in the client's list has a health state:
+
+| State       | Condition                        | Behavior                        |
+|-------------|----------------------------------|---------------------------------|
+| `ok`        | Last request succeeded           | Included in write rotation      |
+| `failing`   | 2+ consecutive request errors    | Still tried, lower priority     |
+| `unavailable` | 5+ consecutive errors          | Excluded from rotation          |
+| `recovering`| 60s backoff elapsed              | Retried once; promoted if ok    |
+
+Health state is in-memory only — it resets on app restart.
+
+### Read (Sync)
+
+Sync always reads from ALL known nodes regardless of health state.
+A temporarily unavailable node is retried on next sync cycle.
+See §6 for full feed replication rules.
+
+### Design Principle
+
+> Load balancing is a client responsibility, not a network responsibility.
+> No proxy. No coordinator. No single point of failure.
+
 ---
 
 ## 6. Feed Replication (Node to Node)
@@ -246,9 +323,9 @@ Each node periodically pulls append-only feeds from known peers, validates recei
 | Canonical JSON    | Sorted keys, no whitespace, UTF-8                                 |
 | Signature         | `sign(canonical_atom_bytes_without_sig, private_key)`            |
 | Node identity     | `PUNKTO_NODE_NAME` env var → `/info`                             |
-| Peer list         | `PUNKTO_PEERS` env var → `/info`                                 |
-| Client discovery  | Bootstrap from one URL → read peers[] as hints                   |
-| Peer trust        | User-controlled — no automatic peer adoption                     |
+| Client discovery  | Boot from seed list → read peers[] → expand node list        |
+| Peer trust        | Peers from known seeds auto-added; second-hop peers ignored  |
+| Write routing     | Round-robin over healthy nodes; failover to next on error    |
 | Replication       | Pull `/feed?since=<cursor>` on interval (60s)                    |
 | Cursor storage    | Byte offset per peer in `sync_state.json`                        |
 | Deduplication     | By `atom_id` before append                                       |
