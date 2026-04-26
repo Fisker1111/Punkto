@@ -11,7 +11,7 @@ import { encode, decode } from './geohash3d.js';
 
 const NODE_URL = 'https://punkto.xyz';
 const SYNC_INTERVAL_MS = 30_000;
-const MAP_STYLE = 'https://tiles.openfreemap.org/styles/dark';
+const MAP_STYLE = 'https://tiles.openfreemap.org/styles/liberty';
 
 // ---------------------------------------------------------------------------
 // Dexie (IndexedDB)
@@ -481,16 +481,17 @@ function initMap() {
   });
 
   // Add navigation controls
-  map.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'top-right');
+  map.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'bottom-right');
 
   // Try to geolocate
   map.addControl(
     new maplibregl.GeolocateControl({
       positionOptions: { enableHighAccuracy: true },
       trackUserLocation: false,
+      showUserLocation: true,
       showAccuracyCircle: false,
     }),
-    'top-right'
+    'bottom-right'
   );
 
   // deck.gl overlay
