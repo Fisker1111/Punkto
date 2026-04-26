@@ -31,6 +31,12 @@ db.version(3).stores({
   atoms: '++id, punkto, t, lat, lon, alt',
   meta:  'key',
 }).upgrade(tx => tx.table('atoms').clear());
+// v4: add nodes table for per-node sync cursors and peer discovery
+db.version(4).stores({
+  atoms: '++id, punkto, t, lat, lon, alt',
+  meta:  'key',
+  nodes: 'url',
+});
 
 // ---------------------------------------------------------------------------
 // State
@@ -123,13 +129,24 @@ function encodeCurrentLocation(mapInst) {
 // IndexedDB helpers
 // ---------------------------------------------------------------------------
 
-async function getStoredCursor() {
-  const row = await db.meta.get('cursor');
-  return row ? row.value : 0;
+async function getNodeCursor(url) {
+  const row = await db.nodes.get(url);
+  if (row) return row.cursor || 0;
+  // Migrate legacy single cursor from meta table on first access for NODE_URL
+  if (url === NODE_URL) {
+    const legacy = await db.meta.get('cursor');
+    return legacy ? legacy.value : 0;
+  }
+  return 0;
 }
 
+async function setNodeCursor(url, cursor) {
+  await db.nodes.put({ url, cursor });
+}
+
+// Keep legacy helper for submitAtom backward compat
 async function setStoredCursor(cursor) {
-  await db.meta.put({ key: 'cursor', value: cursor });
+  await setNodeCursor(NODE_URL, cursor);
 }
 
 async function upsertAtom(atom) {
@@ -163,33 +180,67 @@ async function syncFeed() {
   isSyncing = true;
   setSyncStatus('syncing');
 
+  let anyError = false;
+
   try {
-    const cursor = await getStoredCursor();
-    const url = `${NODE_URL}/feed${cursor > 0 ? `?since=${cursor}` : ''}`;
-    const res = await fetch(url, { signal: AbortSignal.timeout(15_000) });
+    // Get all known nodes from Dexie; always include DEFAULT NODE_URL
+    const storedNodes = await db.nodes.toArray();
+    const nodeUrls = new Set(storedNodes.map(n => n.url));
+    nodeUrls.add(NODE_URL);
 
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const data = await res.json();
+    for (const url of nodeUrls) {
+      try {
+        const cursor = await getNodeCursor(url);
+        const feedUrl = `${url}/feed${cursor > 0 ? `?since=${cursor}` : ''}`;
+        const res = await fetch(feedUrl, { signal: AbortSignal.timeout(15_000) });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
 
-    if (Array.isArray(data.atoms) && data.atoms.length > 0) {
-      for (const atom of data.atoms) {
-        if (atom.punkto && atom.t) {
-          await upsertAtom(atom);
+        if (Array.isArray(data.atoms) && data.atoms.length > 0) {
+          for (const atom of data.atoms) {
+            if (atom.punkto && atom.t) {
+              await upsertAtom(atom);
+            }
+          }
         }
+
+        if (typeof data.cursor === 'number') {
+          await setNodeCursor(url, data.cursor);
+        }
+      } catch (nodeErr) {
+        console.warn(`[sync] feed error for ${url}:`, nodeErr);
+        anyError = true;
       }
     }
 
-    if (typeof data.cursor === 'number') {
-      await setStoredCursor(data.cursor);
-    }
-
-    setSyncStatus('ok');
+    setSyncStatus(anyError ? 'error' : 'ok');
     await refreshUI();
   } catch (err) {
-    console.warn('[sync] feed error:', err);
+    console.warn('[sync] unexpected error:', err);
     setSyncStatus('error');
   } finally {
     isSyncing = false;
+  }
+}
+
+// Discover peers from /info and register them in the nodes table
+async function discoverPeers() {
+  try {
+    const res = await fetch(`${NODE_URL}/info`, { signal: AbortSignal.timeout(8_000) });
+    if (!res.ok) return;
+    const info = await res.json();
+    const peers = Array.isArray(info.peers) ? info.peers : [];
+    for (const peerUrl of peers) {
+      const url = peerUrl.replace(/\/$/, '');
+      if (!url) continue;
+      const existing = await db.nodes.get(url);
+      if (!existing) {
+        await db.nodes.put({ url, cursor: 0 });
+        console.log('[sync] discovered peer:', url);
+      }
+    }
+  } catch (err) {
+    console.warn('[sync] peer discovery error:', err);
   }
 }
 
@@ -524,7 +575,8 @@ function initMap() {
     }
 
     await refreshUI();
-    // Start sync
+    // Discover peers from /info, then start sync
+    await discoverPeers();
     await syncFeed();
     syncTimer = setInterval(syncFeed, SYNC_INTERVAL_MS);
   });
