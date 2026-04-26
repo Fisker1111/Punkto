@@ -18,8 +18,10 @@ from urllib.parse import urlparse, parse_qs
 # Configuration
 # ---------------------------------------------------------------------------
 HOST = '127.0.0.1'
-PORT = 8002
-DATA_DIR = '/var/www/punkto/data'
+PORT = int(os.environ.get('PUNKTO_PORT', '8002'))
+
+DATA_DIR = os.environ.get('PUNKTO_DATA_DIR', '/var/www/punkto/data')
+NODE_NAME = os.environ.get('PUNKTO_NODE_NAME', 'punkto.xyz')
 ATOMS_FILE = os.path.join(DATA_DIR, 'atoms.ndjson')
 
 PUNKTO_RE = re.compile(r'^p:[0-9a-z]{12}(-[a-zA-Z0-9]+)?$')
@@ -168,7 +170,7 @@ class PunktoHandler(BaseHTTPRequestHandler):
         # /info
         if path == '/info':
             self.send_json(200, {
-                'node': 'punkto.xyz',
+                'node': NODE_NAME,
                 'version': '0.2',
                 'capabilities': ['write', 'sync'],
             })
