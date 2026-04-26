@@ -9,7 +9,7 @@ import { encode, decode } from './geohash3d.js';
 // Constants
 // ---------------------------------------------------------------------------
 
-const NODE_URL = 'https://punkto.xyz';
+const NODE_URL = window.location.origin;
 const SYNC_INTERVAL_MS = 30_000;
 const MAP_STYLE = 'https://tiles.openfreemap.org/styles/liberty';
 
