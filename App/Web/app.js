@@ -13,6 +13,82 @@ const NODE_URL = window.location.origin;
 const SYNC_INTERVAL_MS = 30_000;
 const MAP_STYLE = 'https://tiles.openfreemap.org/styles/liberty';
 
+// Seed nodes for protocol-native load balancing (punkto.sync.md §5b)
+const SEED_NODES = [
+  'https://app1.punkto.xyz',
+  'https://app2.punkto.xyz',
+];
+
+// Node health tracking (in-memory, resets on reload)
+// url -> { health: 'ok'|'failing'|'unavailable'|'recovering', failures: 0, unavailableSince: 0 }
+const nodeRegistry = new Map();
+let writeIndex = 0; // round-robin write pointer
+
+function initNodeRegistry() {
+  const allNodes = new Set([NODE_URL, ...SEED_NODES]);
+  allNodes.forEach(url => {
+    if (!nodeRegistry.has(url)) {
+      nodeRegistry.set(url, { health: 'ok', failures: 0, unavailableSince: 0 });
+    }
+  });
+}
+
+function getHealthyNodes() {
+  const now = Date.now();
+  return [...nodeRegistry.entries()]
+    .filter(([url, s]) => {
+      if (s.health === 'ok' || s.health === 'failing') return true;
+      if (s.health === 'recovering') return true;
+      if (s.health === 'unavailable' && now - s.unavailableSince > 60_000) {
+        s.health = 'recovering';
+        return true;
+      }
+      return false;
+    })
+    .map(([url]) => url);
+}
+
+function markNodeSuccess(url) {
+  const s = nodeRegistry.get(url);
+  if (s) { s.health = 'ok'; s.failures = 0; s.unavailableSince = 0; }
+}
+
+function markNodeFailure(url) {
+  const s = nodeRegistry.get(url);
+  if (!s) return;
+  s.failures++;
+  if (s.failures >= 5) {
+    s.health = 'unavailable';
+    s.unavailableSince = Date.now();
+  } else if (s.failures >= 2) {
+    s.health = 'failing';
+  }
+}
+
+async function postAtomToNetwork(atomBody) {
+  const candidates = getHealthyNodes();
+  if (candidates.length === 0) throw new Error('No healthy nodes available');
+  for (let i = 0; i < candidates.length; i++) {
+    const url = candidates[(writeIndex + i) % candidates.length];
+    try {
+      const res = await fetch(`${url}/atom`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(atomBody),
+        signal: AbortSignal.timeout(10_000),
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      markNodeSuccess(url);
+      writeIndex = (writeIndex + 1) % candidates.length;
+      return await res.json();
+    } catch (e) {
+      console.warn(`[lb] postAtom failed for ${url}:`, e.message);
+      markNodeFailure(url);
+    }
+  }
+  throw new Error('All nodes failed');
+}
+
 // ---------------------------------------------------------------------------
 // Dexie (IndexedDB)
 // ---------------------------------------------------------------------------
@@ -223,24 +299,31 @@ async function syncFeed() {
   }
 }
 
-// Discover peers from /info and register them in the nodes table
+// Discover peers from /info on all known nodes and register them in the nodes table
 async function discoverPeers() {
-  try {
-    const res = await fetch(`${NODE_URL}/info`, { signal: AbortSignal.timeout(8_000) });
-    if (!res.ok) return;
-    const info = await res.json();
-    const peers = Array.isArray(info.peers) ? info.peers : [];
-    for (const peerUrl of peers) {
-      const url = peerUrl.replace(/\/$/, '');
-      if (!url) continue;
-      const existing = await db.nodes.get(url);
-      if (!existing) {
-        await db.nodes.put({ url, cursor: 0 });
-        console.log('[sync] discovered peer:', url);
+  for (const seedUrl of nodeRegistry.keys()) {
+    try {
+      const res = await fetch(`${seedUrl}/info`, { signal: AbortSignal.timeout(8_000) });
+      if (!res.ok) continue;
+      const info = await res.json();
+      const peers = Array.isArray(info.peers) ? info.peers : [];
+      for (const peerUrl of peers) {
+        const url = peerUrl.replace(/\/$/, '');
+        if (!url) continue;
+        // Add to in-memory registry
+        if (!nodeRegistry.has(url)) {
+          nodeRegistry.set(url, { health: 'ok', failures: 0, unavailableSince: 0 });
+          console.log('[lb] discovered peer:', url);
+        }
+        // Register in Dexie for syncFeed
+        const existing = await db.nodes.get(url);
+        if (!existing) {
+          await db.nodes.put({ url, cursor: 0 });
+        }
       }
+    } catch (err) {
+      console.warn(`[lb] peer discovery error for ${seedUrl}:`, err.message);
     }
-  } catch (err) {
-    console.warn('[sync] peer discovery error:', err);
   }
 }
 
@@ -472,19 +555,8 @@ async function submitAtom() {
     // Save author preference
     if (author) localStorage.setItem('punkto-author', author);
 
-    // Post to node
-    const res = await fetch(`${NODE_URL}/atom`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(atom),
-      signal: AbortSignal.timeout(10_000),
-    });
-
-    const json = await res.json();
-
-    if (!res.ok) {
-      throw new Error(json.message || `HTTP ${res.status}`);
-    }
+    // Post via protocol-native round-robin load balancer
+    const json = await postAtomToNetwork(atom);
 
     // Also save locally immediately
     await upsertAtom(atom);
@@ -575,7 +647,18 @@ function initMap() {
     }
 
     await refreshUI();
-    // Discover peers from /info, then start sync
+
+    // Init load balancer registry and seed Dexie nodes table with SEED_NODES
+    initNodeRegistry();
+    for (const url of SEED_NODES) {
+      const existing = await db.nodes.get(url);
+      if (!existing) {
+        await db.nodes.put({ url, cursor: 0 });
+        console.log('[lb] seeded node:', url);
+      }
+    }
+
+    // Discover peers from all known nodes, then start sync
     await discoverPeers();
     await syncFeed();
     syncTimer = setInterval(syncFeed, SYNC_INTERVAL_MS);
