@@ -188,8 +188,31 @@ Copenhagen / wind: 12m/s
 
 Display only. Not reversible to canonical without additional context.
 
+Display only. Not reversible to canonical without additional context.
+
 Derived forms are not canonical and must never replace the canonical representation
 in protocol-level operations.
+
+### Altitude Display
+
+The UI may split the canonical 3D hash into a 2D position and a separate altitude label.
+
+Example:
+
+```
+Canonical:  p:u07qsuustfsh
+UI display: 55.7028°N  12.5088°E  ↕ 13m
+```
+
+Rules:
+
+* The canonical form is never modified — altitude display is a derived view only
+* Altitude is decoded from the hash, not stored as a separate field
+* The UI may label altitude as metres, floors, or any contextually meaningful unit
+* Named layers (e.g. `underground`, `ground`, `floor 3`) are UI concepts — they do not alter the canonical form
+* When copying or sharing a Punkto, always use the canonical `p:` form
+
+> The protocol is 3D. The display can be human.
 
 ---
 

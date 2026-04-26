@@ -1,4 +1,4 @@
-# Punkto UI Guidelines (v0.1)
+# Punkto UI Guidelines (v0.2)
 
 > Punkto is spatial first. The interface must reflect that.
 
@@ -73,7 +73,7 @@ Zealand / 42m / wind: 12m/s
 ### Canonical (on demand)
 
 ```
-p:u4pruydqqvj-42m-9xk3
+p:u4pruydqqvj3-9xk3
 ```
 
 Rules:
@@ -81,6 +81,43 @@ Rules:
 * UI defaults to human-readable
 * canonical form is hidden unless explicitly requested
 * canonical form must never be altered
+
+---
+
+## 5b. Altitude Display
+
+Altitude is encoded inside the canonical 3D hash. The UI must decode and display it as a human-readable label — never as a separate stored field.
+
+### Display format
+
+When showing a Punkto to a user, split the decoded coordinates into:
+
+```
+55.7028°N  12.5088°E  ↕ 13m
+```
+
+or contextually:
+
+```
+Copenhagen  /  floor 3  /  wind: 12m/s
+```
+
+### Rules
+
+* Altitude is always decoded from the canonical hash — never from a stored `z` or `alt` field
+* The UI may express altitude in any meaningful unit: metres, floors, depth, atmospheric layer
+* Named layers (`underground`, `ground level`, `floor 3`, `rooftop`) are UI labels only
+* When copying, sharing, or storing a Punkto, always use the canonical `p:` form
+* The canonical form must never include an altitude suffix
+
+### Canonical vs display
+
+```
+Canonical (protocol):   p:u07qsuustfsh
+UI display:             55.7028°N  12.5088°E  ↕ 13m
+```
+
+> The protocol is 3D. The display can be human.
 
 ---
 
@@ -146,3 +183,18 @@ The UI should feel:
 ## 10. Guiding Idea
 
 > A Punkto should feel like placing a marker in the world, not writing to a database.
+
+---
+
+## 11. Changelog
+
+| Version | Changes |
+|---------|---------|
+| v0.1 | Initial UI guidelines. |
+| v0.2 | §5 canonical example updated to v0.2 format. §5b Altitude Display added: rules for decoding altitude from hash and displaying as human-readable label. |
+
+---
+
+## 12. Status
+
+Draft v0.2
