@@ -6,7 +6,7 @@ import android.view.View
 import android.view.ViewGroup
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import xyz.punkto.android.data.Atom
-import xyz.punkto.android.databinding.root
+import xyz.punkto.android.databinding.FragmentAtomBottomSheetBinding
 import xyz.punkto.android.geohash.Geohash3D
 import java.text.SimpleDateFormat
 import java.util.Date
