@@ -1,4 +1,4 @@
-# Punkto — Core Specification (v0.2)
+# Punkto — Core Specification (v0.3)
 
 > Punkto defines how a point in 3D space is addressed, identified, and referenced.
 
@@ -64,6 +64,44 @@ The `<spatial>` component is a **12-character 3D geohash** compatible with the P
 It encodes latitude, longitude, and altitude interleaved into a single Base32 string.
 At 12 characters, horizontal precision is approximately 2cm. Altitude precision is proportional.
 This is sufficient to address individual cubic meters of physical space.
+
+**Altitude is always part of `<spatial>`. It must never appear as a separate field in the canonical form.**
+
+---
+
+## 3b. Spatial Encoding
+
+The `<spatial>` component encodes three-dimensional space: latitude, longitude, and altitude.
+
+Altitude is embedded in the spatial encoding — not stored as a separate field.
+A Punkto represents a **volume in space**, not just a surface coordinate.
+
+### Requirements
+
+The spatial encoding must be:
+
+* **deterministic** — same input coordinates → same output string
+* **prefix-preserving** — shorter prefixes represent larger spatial volumes
+* **stable** — identical across all conforming implementations
+* **string-safe** — uses URL-safe Base32 characters only
+
+### Algorithm
+
+The encoding follows the **Punkti 3D geohash algorithm**: Base32 with interleaved latitude, longitude, and altitude bits.
+
+This is not implementation-defined. All nodes must use the same algorithm to ensure that `<spatial>` strings are comparable across the network. See §9 (Compatibility) for the Punkti reference.
+
+### Notes
+
+* Standard geohash (Niemeyer) is two-dimensional (lat/lon only)
+* Punkto extends this concept to include altitude as a third dimension
+* The encoding is append-only and precision is additive: each additional character adds one level of spatial resolution
+* A 12-character spatial component uniquely addresses a volume of approximately 2cm × 2cm × 2cm
+
+### Design Principle
+
+> A Punkto represents a volume in space, not just a surface coordinate.
+
 
 ---
 
@@ -230,9 +268,10 @@ Future extensions must not break existing canonical representations.
 |---------|---------|
 | v0.1 | Initial specification. Canonical form `p:<spatial>-<z>-<id>` with separate altitude component. |
 | v0.2 | Altitude moved into 3D geohash. Canonical form simplified to `p:<spatial>-<id>`. Spatial fixed at 12 chars. Added human-writable URI form. Added Punkti compatibility section. |
+| v0.3 | Spatial Encoding section (§3b) added. Requirements, algorithm reference, and design principle made explicit. Clarified that altitude must never appear as a separate field. Algorithm defined as Punkti 3D geohash — not implementation-defined. |
 
 ---
 
 ## 13. Status
 
-Draft v0.2 — 3D geohash canonical form
+Draft v0.3 — explicit spatial encoding definition
