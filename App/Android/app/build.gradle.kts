@@ -6,11 +6,11 @@ plugins {
 }
 
 android {
-    namespace = "com.punkto.android"
+    namespace = "xyz.punkto.android"
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "com.punkto.android"
+        applicationId = "xyz.punkto.android"
         minSdk = 26
         targetSdk = 35
         versionCode = 1
