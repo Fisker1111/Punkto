@@ -1,4 +1,4 @@
-# Punkto Node Specification (v0.1)
+# Punkto Node Specification (v0.2)
 
 > A Punkto node stores, serves, and optionally shares Punkto atoms.
 
@@ -68,7 +68,7 @@ EnableAI=true
 | `EnableShare` | Node exposes public/shareable views                                |
 | `EnableWrite` | Node accepts new atoms through `POST /atom`                        |
 | `EnableSync`  | Node supports feed-based synchronization                           |
-| `EnableAI`    | Node allows AI clients to read/write through documented interfaces |
+| `EnableAI`    | Discovery hint: node welcomes AI clients (not a gate)              |
 
 Capabilities do not change canonical Punkto identity.
 
@@ -96,38 +96,69 @@ A minimal atom record contains:
 
 ```json
 {
-  "punkto": "p:u4pruydqqvj-42m-9xk3",
-  "timestamp": "2026-04-25T10:00:00Z",
+  "punkto": "p:u4pruydqqvj3-9xk3",
+  "t": 1745598371000,
   "author": "ed25519:abc123...",
-  "signature": "sig:xyz...",
+  "sig": "base64:...",
   "payload": "wind: 12m/s"
 }
 ```
 
-### Required fields
+### Fields
 
-* `punkto`
-* `timestamp`
-* `payload`
+| Field     | Type    | Required | Description                                        |
+|-----------|---------|----------|----------------------------------------------------||
+| `punkto`  | string  | yes      | Canonical `p:` address                             |
+| `t`       | int64   | yes      | Unix timestamp in milliseconds (13 digits)         |
+| `payload` | string  | yes      | Atom content                                       |
+| `author`  | string  | no       | Public key identifier (`ed25519:...`)              |
+| `sig`     | string  | no       | Signature of canonical atom bytes without `sig`    |
 
-### Recommended fields
-
-* `author`
-* `signature`
-
-For v0.1, unsigned local records may exist, but signed records are preferred.
+For v0.1, unsigned atoms are allowed. Signed atoms are preferred.
 
 ---
 
-## 6. Canonical Rule
+## 6. Atom Identity and Signature
+
+### Identity
+
+Each atom has a stable identity derived from its content:
+
+```
+atom_id = SHA-256(canonical_atom_bytes_without_sig)
+```
+
+**Canonical JSON rules:**
+- Keys sorted lexicographically
+- No whitespace
+- UTF-8 encoding
+- The `sig` field is excluded
+
+`atom_id` is computed locally. It is never stored inside the atom and must never be trusted from external input.
+
+### Signature
+
+The signature covers the atom **without the `sig` field**:
+
+```
+sig = sign(canonical_atom_bytes_without_sig, private_key)
+```
+
+Verification must reconstruct canonical JSON without `sig` before checking.
+
+---
+
+## 7. Canonical Rule
 
 Nodes must use the canonical Punkto form for storage and equality.
 
 Canonical form:
 
 ```txt
-p:<spatial>-<z>-<id>
+p:<spatial>-<id>
 ```
+
+Where `<spatial>` is a 12-character Base32 3D geohash.
 
 A node must not silently rewrite canonical identifiers.
 
@@ -135,7 +166,7 @@ Derived forms such as `punkto://...` or web URLs may be accepted at API edges, b
 
 ---
 
-## 7. Minimal HTTP API
+## 8. Minimal HTTP API
 
 A v0.1 node should expose:
 
@@ -150,7 +181,7 @@ GET  /punkto/<canonical>
 
 ---
 
-## 8. Endpoint: `GET /health`
+## 9. Endpoint: `GET /health`
 
 Returns basic node status.
 
@@ -164,7 +195,7 @@ Example response:
 
 ---
 
-## 9. Endpoint: `GET /info`
+## 10. Endpoint: `GET /info`
 
 Returns node metadata and capabilities.
 
@@ -172,30 +203,18 @@ Example response:
 
 ```json
 {
-  "name": "punkto-node-01",
-  "version": "0.1",
-  "protocol": "punkto",
-  "protocolVersion": "0.1",
-  "capabilities": {
-    "EnablePWA": true,
-    "EnableShare": true,
-    "EnableWrite": true,
-    "EnableSync": true,
-    "EnableAI": false
-  },
-  "endpoints": [
-    "/health",
-    "/info",
-    "/feed",
-    "/atom",
-    "/punkto/<canonical>"
-  ]
+  "node": "punkto-node-01",
+  "version": "0.2",
+  "capabilities": ["write", "sync"],
+  "peers": ["https://app2.example.com"]
 }
 ```
 
+See `punkto.sync.md` for peer declaration rules.
+
 ---
 
-## 10. Endpoint: `POST /atom`
+## 11. Endpoint: `POST /atom`
 
 Accepts a Punkto atom.
 
@@ -203,10 +222,9 @@ Example request:
 
 ```json
 {
-  "punkto": "p:u4pruydqqvj-42m-9xk3",
-  "timestamp": "2026-04-25T10:00:00Z",
+  "punkto": "p:u4pruydqqvj3-9xk3",
+  "t": 1745598371000,
   "author": "ed25519:abc123...",
-  "signature": "sig:xyz...",
   "payload": "wind: 12m/s"
 }
 ```
@@ -216,14 +234,12 @@ Example response:
 ```json
 {
   "status": "accepted",
-  "cursor": "000000000001",
-  "punkto": "p:u4pruydqqvj-42m-9xk3"
+  "cursor": 1024,
+  "punkto": "p:u4pruydqqvj3-9xk3"
 }
 ```
 
-If `EnableWrite=false`, the node must reject writes.
-
-Example:
+If `EnableWrite=false`, the node must reject writes:
 
 ```json
 {
@@ -233,7 +249,7 @@ Example:
 
 ---
 
-## 11. Endpoint: `GET /feed`
+## 12. Endpoint: `GET /feed`
 
 Returns atoms in append order.
 
@@ -241,11 +257,11 @@ Example response:
 
 ```json
 {
-  "cursor": "000000000003",
+  "cursor": 1024,
   "atoms": [
     {
-      "punkto": "p:u4pruydqqvj-42m-9xk3",
-      "timestamp": "2026-04-25T10:00:00Z",
+      "punkto": "p:u4pruydqqvj3-9xk3",
+      "t": 1745598371000,
       "payload": "wind: 12m/s"
     }
   ]
@@ -255,31 +271,31 @@ Example response:
 ### Incremental sync
 
 ```txt
-GET /feed?since=000000000003
+GET /feed?since=1024
 ```
 
-Returns atoms appended after the cursor.
+Returns atoms appended after the cursor. Cursor is a byte offset into `atoms.ndjson`.
 
 ---
 
-## 12. Endpoint: `GET /punkto/<canonical>`
+## 13. Endpoint: `GET /punkto/<canonical>`
 
 Returns atoms for one canonical Punkto.
 
 Example:
 
 ```txt
-GET /punkto/p:u4pruydqqvj-42m-9xk3
+GET /punkto/p:u4pruydqqvj3-9xk3
 ```
 
 Example response:
 
 ```json
 {
-  "punkto": "p:u4pruydqqvj-42m-9xk3",
+  "punkto": "p:u4pruydqqvj3-9xk3",
   "atoms": [
     {
-      "timestamp": "2026-04-25T10:00:00Z",
+      "t": 1745598371000,
       "payload": "wind: 12m/s"
     }
   ]
@@ -288,25 +304,23 @@ Example response:
 
 ---
 
-## 13. Sharing
+## 14. Sharing
 
 If `EnableShare=true`, a node may expose human-friendly public URLs.
 
 Example:
 
 ```txt
-https://node.example/p/u4pruydqqvj/42m/9xk3
+https://node.example/p/u4pruydqqvj3/9xk3
 ```
 
 Public share URLs are derived views.
 
 They must resolve back to canonical Punkto form before lookup.
 
-If `EnableShare=false`, the node may still support canonical API access depending on configuration.
-
 ---
 
-## 14. PWA Mode
+## 15. PWA Mode
 
 If `EnablePWA=true`, the node may serve a Punkto web interface.
 
@@ -318,15 +332,15 @@ The PWA should allow users to:
 * inspect canonical IDs on demand
 * sync when connectivity is available
 
-The PWA is optional.
-
-A node without a PWA is still a valid node.
+The PWA is optional. A node without a PWA is still a valid node.
 
 ---
 
-## 15. Synchronization
+## 16. Synchronization
 
 If `EnableSync=true`, nodes should sync using feed-based pull replication.
+
+See `punkto.sync.md` for the full replication model.
 
 Basic sync model:
 
@@ -337,36 +351,32 @@ Basic sync model:
 Nodes should tolerate:
 
 * partial feeds
-* duplicate atoms
+* duplicate atoms (deduplicated by `atom_id`)
 * out-of-order timestamps
 * unavailable peers
 
-Append order is local to each node.
-
-Timestamp order is informational.
-
 ---
 
-## 16. Validation Rules
+## 17. Validation Rules
 
-A node should reject atoms when:
+A node must reject atoms when:
 
 * `punkto` is missing
 * `punkto` does not use canonical `p:` form
-* `timestamp` is missing
+* `t` is missing
 * `payload` is missing
 * JSON is malformed
 
 A node may reject atoms when:
 
-* signature is invalid
+* `sig` is present but invalid
 * payload is too large
 * author is blocked
 * writes are disabled
 
 ---
 
-## 17. Error Format
+## 18. Error Format
 
 Errors should use a simple JSON structure:
 
@@ -381,7 +391,7 @@ Common errors:
 
 * `invalid_json`
 * `invalid_punkto`
-* `missing_timestamp`
+* `missing_t`
 * `missing_payload`
 * `writes_disabled`
 * `sync_disabled`
@@ -389,7 +399,7 @@ Common errors:
 
 ---
 
-## 18. Non-goals for v0.1
+## 19. Non-goals for v0.1
 
 Punkto nodes v0.1 do not require:
 
@@ -404,7 +414,7 @@ Punkto nodes v0.1 do not require:
 
 ---
 
-## 19. Guiding Idea
+## 20. Guiding Idea
 
 > A Punkto node is not the source of truth.
 >
@@ -412,6 +422,15 @@ Punkto nodes v0.1 do not require:
 
 ---
 
-## 20. Status
+## 21. Changelog
 
-Draft v0.1 — minimal node behavior
+| Version | Changes |
+|---------|---------|
+| v0.1 | Initial specification. |
+| v0.2 | Field names aligned: `timestamp` → `t` (Unix ms int64), `signature` → `sig`. Canonical form updated to v0.2 (`p:<spatial>-<id>`). Atom identity and signature section added (§6). Cursor defined as byte offset. `EnableAI` clarified as discovery hint. |
+
+---
+
+## 22. Status
+
+Draft v0.2

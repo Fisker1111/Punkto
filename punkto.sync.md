@@ -1,6 +1,6 @@
 # Punkto Sync — Peer Discovery and Feed Replication
 
-> Draft proposal v0.2 — revised after peer review
+> Draft proposal v0.3 — atom identity and signature model added
 
 ---
 
@@ -15,24 +15,73 @@ This proposal covers the minimal mechanism needed for a small, intentional netwo
 
 ## 2. Atom Identity
 
-Each atom has a stable identity derived from its content:
+Each atom has a stable identity derived from its full content:
 
 ```
-atom_id = hash(canonical_atom_bytes)
+atom_id = SHA-256(canonical_atom_bytes)
 ```
 
-Where `canonical_atom_bytes` is the atom serialized to canonical JSON (keys sorted, no whitespace).
+**Canonical JSON rules:**
+
+- Keys sorted lexicographically
+- No whitespace (no spaces, no newlines)
+- UTF-8 encoding
+- The `sig` field is **excluded** when computing `atom_id`
+
+Example:
+
+```json
+{"payload":"wind: 12m/s","punkto":"p:u4pruydqqvj3-9xk3","t":1745598371000}
+```
 
 **Rules:**
 
-- `atom_id` is computed locally — it is never transmitted
-- Two atoms at the same `punkto` and `t` are not duplicates unless their content is identical
+- `atom_id` is computed locally — it is never stored inside the atom
+- `atom_id` must never be trusted from external input
+- Two atoms at the same `punkto` and `t` are not duplicates unless their full content is identical
 - Nodes use `atom_id` to detect and skip duplicates during sync
-- Recommended hash: SHA-256 (first 16 bytes as hex for compactness)
+- Hash: full SHA-256, hex-encoded (64 characters)
 
 ---
 
-## 3. Peer Declaration
+## 3. Atom Signature
+
+A signed atom includes a `sig` field. The signature covers the atom **without the `sig` field**:
+
+```
+signature = sign(canonical_atom_bytes_without_sig, private_key)
+```
+
+**Canonical signed atom structure (v0.1):**
+
+```json
+{
+  "punkto": "p:u4pruydqqvj3-9xk3",
+  "t": 1745598371000,
+  "author": "ed25519:abc123...",
+  "payload": "wind: 12m/s",
+  "sig": "base64:..."
+}
+```
+
+**Rules:**
+
+- The `sig` field is excluded when generating or verifying the signature
+- All other fields are included in the signed bytes (canonical JSON, sorted keys, no whitespace)
+- `sig` is optional in v0.1 — unsigned atoms are allowed for local-first usage
+- `author` identifies the public key used for signing
+- Verification must reconstruct canonical JSON without `sig` before checking
+
+**Design:**
+
+- One identity → `atom_id`
+- One signature → signs the core atom
+- No secondary IDs, no embedded IDs, no hidden fields
+- `atom_id` and signature are independent — an atom can have both, either, or neither
+
+---
+
+## 4. Peer Declaration
 
 Each node declares its known peers in the `/info` response.
 
@@ -62,7 +111,7 @@ PUNKTO_PEERS=https://app2.punkto.xyz,https://app3.punkto.xyz
 
 ---
 
-## 4. Client Bootstrap
+## 5. Client Bootstrap
 
 A PWA or client bootstraps from one known node URL (hardcoded or user-saved).
 
@@ -80,7 +129,7 @@ The user or node operator controls which peers are active.
 
 ---
 
-## 5. Feed Replication (Node to Node)
+## 6. Feed Replication (Node to Node)
 
 Each node with `sync` capability periodically pulls from its configured peers.
 
@@ -91,7 +140,7 @@ Each node with `sync` capability periodically pulls from its configured peers.
    b. GET <peer>/feed?since=<cursor>
    c. For each received atom:
       - Validate as if it were a local write (see punkto.node.md §16)
-      - Compute atom_id = hash(canonical_atom_bytes)
+      - Compute atom_id = SHA-256(canonical_atom_bytes_without_sig)
       - If atom_id already known — skip
       - Otherwise append to local atoms.ndjson
    d. Save new cursor to sync_state.json
@@ -112,7 +161,7 @@ Cursors are stable because `atoms.ndjson` is append-only.
 
 ---
 
-## 6. Loop Safety
+## 7. Loop Safety
 
 When two nodes peer with each other (app1 ↔ app2), atoms flow in both directions.
 Without deduplication, atoms loop forever.
@@ -126,7 +175,7 @@ Without deduplication, atoms loop forever.
 
 ---
 
-## 7. Validation
+## 8. Validation
 
 Every atom received from a peer is validated using the same rules as local writes.
 
@@ -146,17 +195,17 @@ There is no relaxed validation mode for peer data.
 
 ---
 
-## 8. Conflict Handling
+## 9. Conflict Handling
 
 There are no conflicts. Atoms are immutable and append-only.
 
-- Duplicate atoms are detected by `atom_id` (hash of canonical atom bytes) and silently skipped
+- Duplicate atoms are detected by `atom_id` (SHA-256 of canonical atom bytes without sig) and silently skipped
 - Out-of-order timestamps are accepted
 - Each node maintains its own append order
 
 ---
 
-## 9. Topology
+## 10. Topology
 
 Peers form a manually configured mesh, not a tree or ring.
 
@@ -170,7 +219,7 @@ Each node lists its direct peers. Indirect discovery (reading peers-of-peers) is
 
 ---
 
-## 10. Non-Goals (v0.1)
+## 11. Non-Goals (v0.1)
 
 - Automatic peer discovery
 - Peer-of-peer crawling
@@ -181,7 +230,7 @@ Each node lists its direct peers. Indirect discovery (reading peers-of-peers) is
 
 ---
 
-## 11. Summary
+## 12. Summary
 
 Punkto Sync v0.1 uses manually configured peer lists and pull-based feed replication.
 
@@ -191,26 +240,29 @@ Nodes do not resolve conflicts.
 
 Each node periodically pulls append-only feeds from known peers, validates received atoms identically to local writes, deduplicates by `atom_id`, and appends new valid atoms to local storage.
 
-| Component         | Mechanism                                         |
-|-------------------|---------------------------------------------------|
-| Atom identity     | `atom_id = hash(canonical_atom_bytes)`            |
-| Node identity     | `PUNKTO_NODE_NAME` env var → `/info`              |
-| Peer list         | `PUNKTO_PEERS` env var → `/info`                  |
-| Client discovery  | Bootstrap from one URL → read peers[] as hints    |
-| Peer trust        | User-controlled — no automatic peer adoption      |
-| Replication       | Pull `/feed?since=<cursor>` on interval (60s)     |
-| Cursor storage    | Byte offset per peer in `sync_state.json`         |
-| Deduplication     | By `atom_id` before append                        |
-| Validation        | Same rules as local writes — no relaxed mode      |
-| Conflict handling | None needed (immutable append-only)               |
+| Component         | Mechanism                                                         |
+|-------------------|-------------------------------------------------------------------|
+| Atom identity     | `atom_id = SHA-256(canonical_atom_bytes_without_sig)`            |
+| Canonical JSON    | Sorted keys, no whitespace, UTF-8                                 |
+| Signature         | `sign(canonical_atom_bytes_without_sig, private_key)`            |
+| Node identity     | `PUNKTO_NODE_NAME` env var → `/info`                             |
+| Peer list         | `PUNKTO_PEERS` env var → `/info`                                 |
+| Client discovery  | Bootstrap from one URL → read peers[] as hints                   |
+| Peer trust        | User-controlled — no automatic peer adoption                     |
+| Replication       | Pull `/feed?since=<cursor>` on interval (60s)                    |
+| Cursor storage    | Byte offset per peer in `sync_state.json`                        |
+| Deduplication     | By `atom_id` before append                                       |
+| Validation        | Same rules as local writes — no relaxed mode                     |
+| Conflict handling | None needed (immutable append-only)                              |
 
 ---
 
 ## Changelog
 
+- **v0.3** — Accepted peer proposal: `atom_id` is full SHA-256 (not truncated), canonical JSON rules made explicit (sorted keys, no whitespace, UTF-8), signature model defined (`sig` excluded from signed bytes), `sig` as field name (not `signature`), no secondary IDs
 - **v0.2** — Peer review revisions: introduced `atom_id` for deduplication, added peer trust rules (no blind adoption), explicit loop safety section, validation parity with local writes, stronger summary
 - **v0.1** — Initial draft
 
 ---
 
-*Punkto Sync — draft v0.2*
+*Punkto Sync — draft v0.3*
