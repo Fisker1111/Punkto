@@ -25,4 +25,5 @@
     <!-- System bars -->
     <color name="colorStatusBar">#0A0A0A</color>
     <color name="colorNavigationBar">#0A0A0A</color>
+    <color name="ic_launcher_background">#0D1117</color>
 </resources>
