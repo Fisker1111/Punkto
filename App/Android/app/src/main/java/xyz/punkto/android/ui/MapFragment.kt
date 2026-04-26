@@ -26,7 +26,7 @@ import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.Priority
 import xyz.punkto.android.R
 import xyz.punkto.android.data.Atom
-import xyz.punkto.android.databinding.FragmentMapBinding
+import xyz.punkto.android.databinding.root
 import xyz.punkto.android.geohash.Geohash3D
 import kotlinx.coroutines.launch
 import org.maplibre.android.camera.CameraPosition
