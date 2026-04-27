@@ -52,5 +52,5 @@
 }
 
 # Punkto data models
--keep class com.punkto.android.data.** { *; }
--keep class com.punkto.android.network.** { *; }
+-keep class xyz.punkto.android.data.** { *; }
+-keep class xyz.punkto.android.network.** { *; }

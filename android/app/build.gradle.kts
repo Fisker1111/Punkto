@@ -24,9 +24,27 @@ android {
         buildConfigField("String", "NODE_URL_APP2",   "\"https://app2.punkto.xyz\"")
     }
 
+
+    signingConfigs {
+        create("release") {
+            // Set via environment variables or local.properties — never commit keystore paths.
+            // PUNKTO_KEYSTORE, PUNKTO_KEY_ALIAS, PUNKTO_KEY_PASS, PUNKTO_STORE_PASS
+            val keystore = System.getenv("PUNKTO_KEYSTORE") ?: project.findProperty("punkto.keystore")?.toString() ?: ""
+            val keyAlias = System.getenv("PUNKTO_KEY_ALIAS") ?: project.findProperty("punkto.keyAlias")?.toString() ?: ""
+            val keyPass  = System.getenv("PUNKTO_KEY_PASS")  ?: project.findProperty("punkto.keyPass")?.toString()  ?: ""
+            val storePass = System.getenv("PUNKTO_STORE_PASS") ?: project.findProperty("punkto.storePass")?.toString() ?: ""
+            if (keystore.isNotEmpty()) {
+                storeFile = file(keystore)
+                this.keyAlias = keyAlias
+                this.keyPassword = keyPass
+                storePassword = storePass
+            }
+        }
+    }
     buildTypes {
         release {
             isMinifyEnabled = true
+            signingConfig = signingConfigs.getByName("release")
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
