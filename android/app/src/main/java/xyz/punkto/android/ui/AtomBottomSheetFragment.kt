@@ -53,8 +53,10 @@ class AtomBottomSheetFragment : BottomSheetDialogFragment() {
         // Decode lat/lon/alt from geohash
         try {
             val (lat, lon, alt) = Geohash3D.fromPunkto(atom.punkto)
+            val floor = (alt / 3.5).toInt()
+            val floorLabel = if (floor > 0) "  ·  Floor $floor" else ""
             binding.tvCoords.text = String.format(
-                Locale.US, "%.6f°, %.6f° · %.0f m", lat, lon, alt
+                Locale.US, "%.6f°, %.6f°  ·  %.0f m%s", lat, lon, alt, floorLabel
             )
         } catch (e: Exception) {
             binding.tvCoords.text = atom.punkto

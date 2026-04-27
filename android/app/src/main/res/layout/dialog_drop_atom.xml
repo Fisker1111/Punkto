@@ -12,7 +12,6 @@
         android:hint="@string/hint_author"
         android:layout_marginBottom="12dp"
         style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox">
-
         <com.google.android.material.textfield.TextInputEditText
             android:id="@+id/et_author"
             android:layout_width="match_parent"
@@ -20,15 +19,14 @@
             android:inputType="textPersonName"
             android:maxLines="1"
             android:maxLength="64" />
-
     </com.google.android.material.textfield.TextInputLayout>
 
     <com.google.android.material.textfield.TextInputLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:hint="@string/hint_text"
+        android:layout_marginBottom="16dp"
         style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox">
-
         <com.google.android.material.textfield.TextInputEditText
             android:id="@+id/et_text"
             android:layout_width="match_parent"
@@ -38,7 +36,89 @@
             android:maxLines="6"
             android:maxLength="512"
             android:gravity="top" />
-
     </com.google.android.material.textfield.TextInputLayout>
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/label_altitude"
+        android:textColor="@color/colorPrimary"
+        android:textSize="11sp"
+        android:textAllCaps="true"
+        android:letterSpacing="0.1"
+        android:layout_marginBottom="8dp" />
+
+    <RadioGroup
+        android:id="@+id/rg_alt_mode"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginBottom="10dp">
+
+        <RadioButton
+            android:id="@+id/rb_gps_alt"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:checked="true"
+            android:text="@string/rb_gps_alt" />
+
+        <RadioButton
+            android:id="@+id/rb_floor"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/rb_floor" />
+
+    </RadioGroup>
+
+    <LinearLayout
+        android:id="@+id/row_floor_picker"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:visibility="gone">
+
+        <Button
+            android:id="@+id/btn_floor_down"
+            android:layout_width="44dp"
+            android:layout_height="44dp"
+            android:text="-"
+            android:textSize="20sp"
+            android:padding="0dp"
+            style="@style/Widget.MaterialComponents.Button.OutlinedButton" />
+
+        <TextView
+            android:id="@+id/tv_floor_label"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:text="Ground floor"
+            android:textSize="15sp"
+            android:textColor="@color/colorOnBackground" />
+
+        <Button
+            android:id="@+id/btn_floor_up"
+            android:layout_width="44dp"
+            android:layout_height="44dp"
+            android:text="+"
+            android:textSize="20sp"
+            android:padding="0dp"
+            style="@style/Widget.MaterialComponents.Button.OutlinedButton" />
+
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/tv_gps_alt_display"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:text="--"
+        android:textSize="14sp"
+        android:textColor="@color/colorOnBackground"
+        android:alpha="0.7"
+        android:fontFamily="monospace" />
 
 </LinearLayout>

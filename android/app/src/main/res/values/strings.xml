@@ -1,34 +1,31 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- App -->
     <string name="app_name">Punkto</string>
-
-    <!-- Map controls -->
     <string name="btn_3d">3D</string>
     <string name="btn_2d">2D</string>
+    <string name="btn_compass">&#8853;</string>
     <string name="fab_drop_atom_desc">Drop atom at current location</string>
-
-    <!-- Drop atom dialog -->
+    <string name="fab_my_location_desc">Center on my location</string>
     <string name="dialog_drop_atom_title">Drop Atom</string>
     <string name="hint_author">Author (optional)</string>
     <string name="hint_text">Message (optional)</string>
     <string name="action_drop">Drop</string>
-
-    <!-- Bottom sheet labels -->
+    <string name="label_altitude">Altitude</string>
+    <string name="rb_gps_alt">GPS altitude</string>
+    <string name="rb_floor">Set floor</string>
+    <string name="hud_alt">%.0f m  ·  Floor %d</string>
+    <string name="hud_alt_low">%.0f m</string>
     <string name="label_address">Address</string>
     <string name="label_coords">Coordinates</string>
+    <string name="label_floor">Floor</string>
     <string name="label_author">Author</string>
     <string name="label_message">Message</string>
     <string name="label_time">Time</string>
-
-    <!-- Status / errors -->
-    <string name="error_no_location">Waiting for GPS fix…</string>
-    <string name="atom_posted_ok">Atom dropped: %1$s…</string>
+    <string name="error_no_location">Waiting for GPS fix&#8230;</string>
+    <string name="atom_posted_ok">Atom dropped: %1$s&#8230;</string>
     <string name="atom_post_error">Failed to post atom: %1$s</string>
-    <string name="sync_started">Syncing…</string>
+    <string name="sync_started">Syncing&#8230;</string>
     <string name="permission_rationale">Location permission is needed to show your position on the map and to encode atom coordinates.</string>
-
-    <!-- Node settings -->
     <string name="pref_node_url">Node URL</string>
     <string name="default_node_url_hint">https://your-node.example.com</string>
 </resources>

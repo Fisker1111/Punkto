@@ -9,7 +9,9 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.EditText
+import android.widget.Button
+import android.widget.RadioGroup
+import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.core.content.ContextCompat
@@ -24,6 +26,7 @@ import com.google.android.gms.location.LocationRequest
 import com.google.android.gms.location.LocationResult
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.Priority
+import com.google.android.material.textfield.TextInputEditText
 import xyz.punkto.android.R
 import xyz.punkto.android.data.Atom
 import xyz.punkto.android.databinding.FragmentMapBinding
@@ -42,6 +45,7 @@ import org.maplibre.android.style.sources.GeoJsonSource
 import org.maplibre.geojson.Feature
 import org.maplibre.geojson.FeatureCollection
 import org.maplibre.geojson.Point
+import kotlin.math.abs
 
 class MapFragment : Fragment(), OnMapReadyCallback {
 
@@ -54,17 +58,12 @@ class MapFragment : Fragment(), OnMapReadyCallback {
     private var mapLibreMap: MapLibreMap? = null
     private var mapStyle: Style? = null
 
-    // Location
     private lateinit var fusedLocationClient: FusedLocationProviderClient
     private var locationCallback: LocationCallback? = null
 
-    // Map state
     private var is3D = false
     private val atomSourceId = "punkto-atoms-source"
-    private val atomLayerId = "punkto-atoms-layer"
-    private val atomLayerTappableId = "punkto-atoms-tappable"
-
-    // Keep a handle for tapping: atomId → Atom
+    private val atomLayerId  = "punkto-atoms-layer"
     private var atomFeatureMap = mutableMapOf<String, Atom>()
 
     // -------------------------------------------------------------------------
@@ -89,18 +88,18 @@ class MapFragment : Fragment(), OnMapReadyCallback {
 
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(requireActivity())
 
-        binding.fabDropAtom.setOnClickListener { onFabDropAtom() }
-        binding.btnToggle3d.setOnClickListener { onToggle3D() }
+        binding.fabDropAtom.setOnClickListener  { onFabDropAtom() }
+        binding.btnToggle3d.setOnClickListener  { onToggle3D() }
+        binding.fabMyLocation.setOnClickListener { onMyLocation() }
+        binding.btnCompass.setOnClickListener   { onResetBearing() }
 
-        // Observe ViewModel
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
-                launch {
-                    viewModel.atoms.collect { atoms -> renderAtoms(atoms) }
-                }
-                launch {
-                    viewModel.postResult.collect { result -> handlePostResult(result) }
-                }
+                launch { viewModel.atoms.collect           { atoms  -> renderAtoms(atoms) } }
+                launch { viewModel.postResult.collect      { result -> handlePostResult(result) } }
+                launch { viewModel.currentLocation.collect { loc    ->
+                    if (loc != null) updateAltitudeHud(loc.altitude)
+                }}
             }
         }
     }
@@ -109,39 +108,24 @@ class MapFragment : Fragment(), OnMapReadyCallback {
     // MapLibre callbacks
     // -------------------------------------------------------------------------
 
-    override fun onMapReady(mapboxMap: MapLibreMap) {
-        mapLibreMap = mapboxMap
-
-        mapboxMap.setStyle(MAP_STYLE_URL) { style ->
+    override fun onMapReady(map: MapLibreMap) {
+        mapLibreMap = map
+        map.setStyle(MAP_STYLE_URL) { style ->
             mapStyle = style
             setupAtomLayer(style)
             startLocationUpdatesIfPermitted()
-
-            // Move camera to last known location if available
             viewModel.currentLocation.value?.let { loc ->
-                mapboxMap.moveCamera(
-                    CameraUpdateFactory.newLatLngZoom(LatLng(loc.latitude, loc.longitude), 15.0)
-                )
+                map.moveCamera(CameraUpdateFactory.newLatLngZoom(
+                    LatLng(loc.latitude, loc.longitude), 15.0))
             }
-
-            // Render any already-loaded atoms
             renderAtoms(viewModel.atoms.value)
         }
-
-        // Tap listener for atom markers
-        mapboxMap.addOnMapClickListener { latLng ->
-            handleMapTap(latLng)
-            true
-        }
+        map.addOnMapClickListener { latLng -> handleMapTap(latLng); true }
     }
 
     private fun setupAtomLayer(style: Style) {
-        // Source
-        val source = GeoJsonSource(atomSourceId, FeatureCollection.fromFeatures(emptyList()))
-        style.addSource(source)
-
-        // Layer — teal circles
-        val circleLayer = CircleLayer(atomLayerId, atomSourceId).apply {
+        style.addSource(GeoJsonSource(atomSourceId, FeatureCollection.fromFeatures(emptyList())))
+        style.addLayer(CircleLayer(atomLayerId, atomSourceId).apply {
             setProperties(
                 PropertyFactory.circleRadius(7f),
                 PropertyFactory.circleColor("#00CCDD"),
@@ -149,8 +133,7 @@ class MapFragment : Fragment(), OnMapReadyCallback {
                 PropertyFactory.circleStrokeWidth(1.5f),
                 PropertyFactory.circleStrokeColor("#FFFFFF")
             )
-        }
-        style.addLayer(circleLayer)
+        })
     }
 
     // -------------------------------------------------------------------------
@@ -158,24 +141,18 @@ class MapFragment : Fragment(), OnMapReadyCallback {
     // -------------------------------------------------------------------------
 
     private fun renderAtoms(atoms: List<Atom>) {
-        val style = mapStyle ?: return
-        val source = style.getSourceAs<GeoJsonSource>(atomSourceId) ?: return
-
+        val source = mapStyle?.getSourceAs<GeoJsonSource>(atomSourceId) ?: return
         atomFeatureMap.clear()
         val features = atoms.mapNotNull { atom ->
             try {
                 val (lat, lon, _) = Geohash3D.fromPunkto(atom.punkto)
-                val feature = Feature.fromGeometry(
-                    Point.fromLngLat(lon, lat)
-                ).also { f ->
-                    // Embed atomId as a feature property for tap lookup
-                    f.addStringProperty("atomId", atom.atomId)
-                    f.addStringProperty("punkto", atom.punkto)
+                Feature.fromGeometry(Point.fromLngLat(lon, lat)).also { f ->
+                    f.addStringProperty("atomId",  atom.atomId)
+                    f.addStringProperty("punkto",  atom.punkto)
+                    atomFeatureMap[atom.atomId] = atom
                 }
-                atomFeatureMap[atom.atomId] = atom
-                feature
             } catch (e: Exception) {
-                Log.w(TAG, "renderAtoms: skipping malformed atom ${atom.punkto}: ${e.message}")
+                Log.w(TAG, "skip ${atom.punkto}: ${e.message}")
                 null
             }
         }
@@ -187,51 +164,77 @@ class MapFragment : Fragment(), OnMapReadyCallback {
     // -------------------------------------------------------------------------
 
     private fun handleMapTap(latLng: LatLng): Boolean {
-        val map = mapLibreMap ?: return false
-        val point = map.projection.toScreenLocation(latLng)
-        val rect = android.graphics.RectF(
-            point.x - TAP_SLOP_PX, point.y - TAP_SLOP_PX,
-            point.x + TAP_SLOP_PX, point.y + TAP_SLOP_PX
-        )
-        val features = map.queryRenderedFeatures(rect, atomLayerId)
-        if (features.isEmpty()) return false
-
-        val atomId = features.first().getStringProperty("atomId") ?: return false
-        val atom = atomFeatureMap[atomId] ?: return false
-
+        val map   = mapLibreMap ?: return false
+        val pt    = map.projection.toScreenLocation(latLng)
+        val rect  = android.graphics.RectF(
+            pt.x - TAP_SLOP_PX, pt.y - TAP_SLOP_PX,
+            pt.x + TAP_SLOP_PX, pt.y + TAP_SLOP_PX)
+        val feat  = map.queryRenderedFeatures(rect, atomLayerId).firstOrNull() ?: return false
+        val atomId = feat.getStringProperty("atomId") ?: return false
+        val atom  = atomFeatureMap[atomId] ?: return false
         AtomBottomSheetFragment.newInstance(atom)
             .show(childFragmentManager, AtomBottomSheetFragment.TAG)
         return true
     }
 
     // -------------------------------------------------------------------------
-    // FAB — drop atom
+    // FAB — drop atom with floor picker
     // -------------------------------------------------------------------------
 
     private fun onFabDropAtom() {
-        val location = viewModel.currentLocation.value
-        if (location == null) {
+        val loc = viewModel.currentLocation.value
+        if (loc == null) {
             Toast.makeText(requireContext(), getString(R.string.error_no_location), Toast.LENGTH_SHORT).show()
             return
         }
-        showDropAtomDialog(location.latitude, location.longitude, location.altitude)
+        showDropAtomDialog(loc.latitude, loc.longitude, loc.altitude)
     }
 
-    private fun showDropAtomDialog(lat: Double, lon: Double, alt: Double) {
-        val dialogView = LayoutInflater.from(requireContext())
-            .inflate(R.layout.dialog_drop_atom, null)
-        val etAuthor = dialogView.findViewById<EditText>(R.id.et_author)
-        val etText   = dialogView.findViewById<EditText>(R.id.et_text)
+    private fun showDropAtomDialog(lat: Double, lon: Double, gpsAlt: Double) {
+        val dv = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_drop_atom, null)
+
+        val etAuthor    = dv.findViewById<TextInputEditText>(R.id.et_author)
+        val etText      = dv.findViewById<TextInputEditText>(R.id.et_text)
+        val rgAltMode   = dv.findViewById<RadioGroup>(R.id.rg_alt_mode)
+        val rowFloor    = dv.findViewById<View>(R.id.row_floor_picker)
+        val tvFloor     = dv.findViewById<TextView>(R.id.tv_floor_label)
+        val btnDown     = dv.findViewById<Button>(R.id.btn_floor_down)
+        val btnUp       = dv.findViewById<Button>(R.id.btn_floor_up)
+        val tvGpsAlt    = dv.findViewById<TextView>(R.id.tv_gps_alt_display)
+
+        tvGpsAlt.text = String.format("GPS: %.1f m", gpsAlt)
+        var floor = altToFloor(gpsAlt)
+
+        fun refreshLabel() {
+            val alt = floorToAlt(floor)
+            tvFloor.text = when {
+                floor == 0 -> "Ground floor  ·  0 m"
+                floor > 0  -> "Floor $floor  ·  ${String.format("%.1f", alt)} m"
+                else       -> "Basement ${-floor}  ·  ${String.format("%.1f", alt)} m"
+            }
+        }
+        refreshLabel()
+
+        btnDown.setOnClickListener { if (floor > -5)   { floor--; refreshLabel() } }
+        btnUp.setOnClickListener   { if (floor < 200)  { floor++; refreshLabel() } }
+
+        rgAltMode.setOnCheckedChangeListener { _, id ->
+            when (id) {
+                R.id.rb_gps_alt -> { rowFloor.visibility = View.GONE;    tvGpsAlt.visibility = View.VISIBLE }
+                R.id.rb_floor   -> { rowFloor.visibility = View.VISIBLE; tvGpsAlt.visibility = View.GONE    }
+            }
+        }
 
         AlertDialog.Builder(requireContext())
             .setTitle(R.string.dialog_drop_atom_title)
-            .setView(dialogView)
+            .setView(dv)
             .setPositiveButton(R.string.action_drop) { _, _ ->
-                val author = etAuthor.text.toString().trim()
-                val text   = etText.text.toString().trim()
+                val finalAlt = if (rgAltMode.checkedRadioButtonId == R.id.rb_floor)
+                    floorToAlt(floor) else gpsAlt
                 viewModel.postAtom(
-                    lat = lat, lon = lon, alt = alt,
-                    author = author, text = text
+                    lat    = lat, lon  = lon,  alt    = finalAlt,
+                    author = etAuthor.text.toString().trim(),
+                    text   = etText.text.toString().trim()
                 )
             }
             .setNegativeButton(android.R.string.cancel, null)
@@ -245,47 +248,82 @@ class MapFragment : Fragment(), OnMapReadyCallback {
     private fun onToggle3D() {
         val map = mapLibreMap ?: return
         is3D = !is3D
-        val pitch = if (is3D) 60.0 else 0.0
-        val camera = CameraPosition.Builder()
-            .tilt(pitch)
-            .build()
-        map.animateCamera(CameraUpdateFactory.newCameraPosition(camera), 600)
-        binding.btnToggle3d.text = if (is3D) getString(R.string.btn_2d) else getString(R.string.btn_3d)
+        map.animateCamera(CameraUpdateFactory.newCameraPosition(
+            CameraPosition.Builder().tilt(if (is3D) 60.0 else 0.0).build()), 600)
+        binding.btnToggle3d.text = getString(if (is3D) R.string.btn_2d else R.string.btn_3d)
     }
+
+    // -------------------------------------------------------------------------
+    // My Location
+    // -------------------------------------------------------------------------
+
+    private fun onMyLocation() {
+        val loc = viewModel.currentLocation.value
+        if (loc == null) {
+            Toast.makeText(requireContext(), getString(R.string.error_no_location), Toast.LENGTH_SHORT).show()
+            return
+        }
+        mapLibreMap?.animateCamera(
+            CameraUpdateFactory.newLatLngZoom(LatLng(loc.latitude, loc.longitude), 17.0), 600)
+    }
+
+    // -------------------------------------------------------------------------
+    // Compass — reset bearing to north
+    // -------------------------------------------------------------------------
+
+    private fun onResetBearing() {
+        val map = mapLibreMap ?: return
+        val cur = map.cameraPosition
+        map.animateCamera(CameraUpdateFactory.newCameraPosition(
+            CameraPosition.Builder()
+                .bearing(0.0).tilt(cur.tilt).zoom(cur.zoom).target(cur.target)
+                .build()), 400)
+    }
+
+    // -------------------------------------------------------------------------
+    // Altitude HUD
+    // -------------------------------------------------------------------------
+
+    private fun updateAltitudeHud(alt: Double) {
+        val tv = binding.tvAltitudeHud
+        tv.visibility = View.VISIBLE
+        val floor = altToFloor(alt)
+        tv.text = if (abs(alt) >= 2.0)
+            getString(R.string.hud_alt, alt, floor)
+        else
+            getString(R.string.hud_alt_low, alt)
+    }
+
+    // -------------------------------------------------------------------------
+    // Floor / altitude helpers
+    // -------------------------------------------------------------------------
+
+    private fun altToFloor(alt: Double): Int = (alt / FLOOR_HEIGHT_M).toInt()
+    private fun floorToAlt(floor: Int): Double = floor * FLOOR_HEIGHT_M
 
     // -------------------------------------------------------------------------
     // Location
     // -------------------------------------------------------------------------
 
-    fun onLocationPermissionGranted() {
-        startLocationUpdatesIfPermitted()
-    }
+    fun onLocationPermissionGranted() = startLocationUpdatesIfPermitted()
 
     @SuppressLint("MissingPermission")
     private fun startLocationUpdatesIfPermitted() {
-        val fineGranted = ContextCompat.checkSelfPermission(
-            requireContext(), Manifest.permission.ACCESS_FINE_LOCATION
-        ) == PackageManager.PERMISSION_GRANTED
-        val coarseGranted = ContextCompat.checkSelfPermission(
-            requireContext(), Manifest.permission.ACCESS_COARSE_LOCATION
-        ) == PackageManager.PERMISSION_GRANTED
+        val ok = ContextCompat.checkSelfPermission(requireContext(),
+            Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED ||
+            ContextCompat.checkSelfPermission(requireContext(),
+            Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED
+        if (!ok) return
 
-        if (!fineGranted && !coarseGranted) return
-
-        val request = LocationRequest.Builder(
-            Priority.PRIORITY_HIGH_ACCURACY,
-            LOCATION_INTERVAL_MS
-        ).setMinUpdateIntervalMillis(LOCATION_FASTEST_MS).build()
-
-        val callback = object : LocationCallback() {
-            override fun onLocationResult(result: LocationResult) {
-                result.lastLocation?.let { loc ->
-                    viewModel.updateLocation(loc)
-                }
+        val req = LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY, LOCATION_INTERVAL_MS)
+            .setMinUpdateIntervalMillis(LOCATION_FASTEST_MS).build()
+        val cb = object : LocationCallback() {
+            override fun onLocationResult(r: LocationResult) {
+                r.lastLocation?.let { viewModel.updateLocation(it) }
             }
         }
-        locationCallback = callback
-        fusedLocationClient.requestLocationUpdates(request, callback, Looper.getMainLooper())
+        locationCallback = cb
+        fusedLocationClient.requestLocationUpdates(req, cb, Looper.getMainLooper())
     }
 
     private fun stopLocationUpdates() {
@@ -294,28 +332,22 @@ class MapFragment : Fragment(), OnMapReadyCallback {
     }
 
     // -------------------------------------------------------------------------
-    // Post result handling
+    // Post result
     // -------------------------------------------------------------------------
 
     private fun handlePostResult(result: AtomViewModel.PostResult) {
         when (result) {
             is AtomViewModel.PostResult.Success -> {
-                Toast.makeText(
-                    requireContext(),
-                    getString(R.string.atom_posted_ok, result.atomId.take(12)),
-                    Toast.LENGTH_SHORT
-                ).show()
+                Toast.makeText(requireContext(),
+                    getString(R.string.atom_posted_ok, result.atomId.take(12)), Toast.LENGTH_SHORT).show()
                 viewModel.clearPostResult()
             }
             is AtomViewModel.PostResult.Error -> {
-                Toast.makeText(
-                    requireContext(),
-                    getString(R.string.atom_post_error, result.message),
-                    Toast.LENGTH_LONG
-                ).show()
+                Toast.makeText(requireContext(),
+                    getString(R.string.atom_post_error, result.message), Toast.LENGTH_LONG).show()
                 viewModel.clearPostResult()
             }
-            else -> { /* Idle / Loading — no UI action */ }
+            else -> {}
         }
     }
 
@@ -323,54 +355,25 @@ class MapFragment : Fragment(), OnMapReadyCallback {
     // MapLibre lifecycle delegation
     // -------------------------------------------------------------------------
 
-    override fun onStart() {
-        super.onStart()
-        mapView.onStart()
-    }
-
-    override fun onResume() {
-        super.onResume()
-        mapView.onResume()
-        startLocationUpdatesIfPermitted()
-    }
-
-    override fun onPause() {
-        super.onPause()
-        mapView.onPause()
-        stopLocationUpdates()
-    }
-
-    override fun onStop() {
-        super.onStop()
-        mapView.onStop()
-    }
-
-    override fun onDestroyView() {
-        super.onDestroyView()
-        mapView.onDestroy()
-        _binding = null
-    }
-
-    override fun onSaveInstanceState(outState: Bundle) {
-        super.onSaveInstanceState(outState)
-        mapView.onSaveInstanceState(outState)
-    }
-
-    override fun onLowMemory() {
-        super.onLowMemory()
-        mapView.onLowMemory()
-    }
+    override fun onStart()        { super.onStart();    mapView.onStart() }
+    override fun onResume()       { super.onResume();   mapView.onResume(); startLocationUpdatesIfPermitted() }
+    override fun onPause()        { super.onPause();    mapView.onPause();  stopLocationUpdates() }
+    override fun onStop()         { super.onStop();     mapView.onStop() }
+    override fun onDestroyView()  { super.onDestroyView(); mapView.onDestroy(); _binding = null }
+    override fun onSaveInstanceState(out: Bundle) { super.onSaveInstanceState(out); mapView.onSaveInstanceState(out) }
+    override fun onLowMemory()    { super.onLowMemory(); mapView.onLowMemory() }
 
     // -------------------------------------------------------------------------
     // Companion
     // -------------------------------------------------------------------------
 
     companion object {
-        private const val TAG = "MapFragment"
-        private const val MAP_STYLE_URL = "https://tiles.openfreemap.org/styles/liberty"
+        private const val TAG                = "MapFragment"
+        private const val MAP_STYLE_URL      = "https://tiles.openfreemap.org/styles/liberty"
         private const val LOCATION_INTERVAL_MS = 5_000L
         private const val LOCATION_FASTEST_MS  = 2_000L
-        private const val TAP_SLOP_PX = 32f
+        private const val TAP_SLOP_PX        = 32f
+        private const val FLOOR_HEIGHT_M     = 3.5  // typical floor-to-floor height in metres
 
         fun newInstance() = MapFragment()
     }
