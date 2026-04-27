@@ -116,3 +116,77 @@ See `punkto.md` for the full address format specification.
 Early development. Spec v0.2. Single-node live at punkto.xyz.
 
 Next: p2p sync, multi-node replication.
+
+---
+
+## Python core library & CLI
+
+The `core/` directory is a pure-stdlib Python library for working with Punkto addresses.
+
+### Install (no dependencies)
+
+```bash
+git clone https://github.com/Fisker1111/Punkto
+cd Punkto
+```
+
+### Generate a Punkto address
+
+```bash
+python3 -m core.cli make 55.7028 12.5088 13
+# p:u07qsuustfsh
+```
+
+### Decode an address
+
+```bash
+python3 -m core.cli decode p:u07qsuustfsh
+# lat=55.702820 lon=12.508793 alt=13.0m  (±2.4m)
+```
+
+### Convert between forms
+
+```bash
+python3 -m core.cli uri p:u07qsuustfsh
+# punkto://u07qsuustfsh
+
+python3 -m core.cli https p:u07qsuustfsh
+# https://punkto.xyz/p/u07qsuustfsh
+
+python3 -m core.cli resolve punkto://u07qsuustfsh
+# p:u07qsuustfsh
+```
+
+### Write an atom to a live node
+
+```bash
+python3 -m core.cli write 55.7028 12.5088 13 "Hello from Bellahøj"
+# Posted: p:u07qsuustfsh-a4x9k2
+```
+
+### Read atoms at a location
+
+```bash
+python3 -m core.cli read p:u07qsuustfsh
+```
+
+### All CLI commands
+
+| Command | Description |
+|---|---|
+| `make <lat> <lon> [alt]` | Generate canonical address |
+| `bare <lat> <lon> [alt]` | Spatial-only address (no id) |
+| `decode <p:...>` | Decode to lat/lon/alt |
+| `resolve <any>` | Any form → canonical |
+| `validate <s>` | Validate format (exit 0/1) |
+| `uri <p:...>` | Convert to `punkto://` form |
+| `https <p:...>` | Convert to HTTPS URL |
+| `near <a> <b>` | Check proximity |
+| `id` | Generate a random short ID |
+| `write <lat> <lon> <alt> <text>` | Post atom to node |
+| `read <p:...>` | Read atoms at Punkto |
+| `feed` | Read full node feed |
+| `info` | Node info |
+
+Default node: `https://punkto.xyz` — override with `PUNKTO_NODE=https://your.node`.
+

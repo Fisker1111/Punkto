@@ -30,6 +30,18 @@ try:
 except ImportError:
     pass
 
+
+# ---------------------------------------------------------------------------
+# Configuration
+# ---------------------------------------------------------------------------
+HOST = '127.0.0.1'
+PORT = int(os.environ.get('PUNKTO_PORT', '8002'))
+
+DATA_DIR = os.environ.get('PUNKTO_DATA_DIR', '/var/www/punkto/data')
+NODE_NAME = os.environ.get('PUNKTO_NODE_NAME', 'punkto.xyz')
+ATOMS_FILE = os.path.join(DATA_DIR, 'atoms.ndjson')
+SYNC_STATE_FILE = os.path.join(DATA_DIR, 'sync_state.json')
+
 PEERS_ENV = os.environ.get('PUNKTO_PEERS', '')
 PEERS = [p.strip().rstrip('/') for p in PEERS_ENV.split(',') if p.strip()]
 
