@@ -72,6 +72,17 @@
 
     </RadioGroup>
 
+    <TextView
+        android:id="@+id/tv_alt_hint"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/hint_indoor_alt"
+        android:textSize="11sp"
+        android:alpha="0.6"
+        android:layout_marginBottom="4dp"
+        android:textColor="@color/colorOnBackground" />
+
+
     <LinearLayout
         android:id="@+id/row_floor_picker"
         android:layout_width="match_parent"

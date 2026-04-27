@@ -28,4 +28,8 @@
     <string name="permission_rationale">Location permission is needed to show your position on the map and to encode atom coordinates.</string>
     <string name="pref_node_url">Node URL</string>
     <string name="default_node_url_hint">https://your-node.example.com</string>
+    <string name="hint_indoor_alt">Indoors? GPS altitude may be off &#8212; use Set Floor instead.</string>
+    <string name="action_copy">Copy address</string>
+    <string name="action_share">Share</string>
+    <string name="empty_atoms">No atoms nearby yet. Drop the first one!</string>
 </resources>

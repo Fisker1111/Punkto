@@ -48,6 +48,16 @@ class AtomViewModel(application: Application) : AndroidViewModel(application) {
     private val _postResult = MutableStateFlow<PostResult>(PostResult.Idle)
     val postResult: StateFlow<PostResult> = _postResult.asStateFlow()
 
+    /** Sync activity indicator for the UI sync dot. */
+    private val _isSyncing = MutableStateFlow(false)
+    val isSyncing: StateFlow<Boolean> = _isSyncing.asStateFlow()
+
+    // -------------------------------------------------------------------------
+    // Pagination state (B2)
+    // -------------------------------------------------------------------------
+
+    private var currentCursor: Int = 0
+
     // -------------------------------------------------------------------------
     // Public actions
     // -------------------------------------------------------------------------
@@ -106,8 +116,10 @@ class AtomViewModel(application: Application) : AndroidViewModel(application) {
 
     /**
      * Enqueue a one-off WorkManager sync, e.g. when returning to foreground.
+     * Sets isSyncing true for the duration of the direct coroutine path.
      */
     fun triggerSync() {
+        _isSyncing.value = true
         val constraints = Constraints.Builder()
             .setRequiredNetworkType(NetworkType.CONNECTED)
             .build()
@@ -117,6 +129,30 @@ class AtomViewModel(application: Application) : AndroidViewModel(application) {
             .build()
         WorkManager.getInstance(getApplication()).enqueue(request)
         Log.d(TAG, "triggerSync: one-time sync enqueued")
+        // Reset cursor so next loadMore starts fresh
+        currentCursor = 0
+        _isSyncing.value = false
+    }
+
+    /**
+     * Load the next page of atoms from the feed using the current cursor.
+     * Appends results to local Room DB via repository.
+     */
+    fun loadMore() {
+        viewModelScope.launch {
+            _isSyncing.value = true
+            try {
+                val page = repository.fetchFeed(cursor = currentCursor)
+                if (page.nextCursor != null) {
+                    currentCursor = page.nextCursor
+                }
+                Log.d(TAG, "loadMore: got ${page.atoms.size} atoms, hasMore=${page.hasMore}, nextCursor=${page.nextCursor}")
+            } catch (e: Exception) {
+                Log.e(TAG, "loadMore exception: ${e.message}", e)
+            } finally {
+                _isSyncing.value = false
+            }
+        }
     }
 
     /** Reset the post result state back to idle (call after dialog dismiss). */

@@ -37,11 +37,36 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="2dp"
-            android:layout_marginBottom="12dp"
+            android:layout_marginBottom="8dp"
             android:fontFamily="monospace"
             android:textColor="@color/colorOnBackground"
             android:textSize="14sp"
             android:textIsSelectable="true" />
+
+        <!-- Copy / Share actions (C7) -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginBottom="12dp">
+            <Button
+                android:id="@+id/btn_copy_address"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="36dp"
+                android:text="@string/action_copy"
+                android:textSize="12sp"
+                android:layout_marginEnd="8dp"
+                style="@style/Widget.MaterialComponents.Button.OutlinedButton" />
+            <Button
+                android:id="@+id/btn_share"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="36dp"
+                android:text="@string/action_share"
+                android:textSize="12sp"
+                style="@style/Widget.MaterialComponents.Button.OutlinedButton" />
+        </LinearLayout>
 
         <!-- Coordinates -->
         <TextView

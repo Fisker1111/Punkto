@@ -1,9 +1,11 @@
 package xyz.punkto.android.ui
 
+import android.content.Context
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import xyz.punkto.android.data.Atom
 import xyz.punkto.android.databinding.FragmentAtomBottomSheetBinding
@@ -18,6 +20,7 @@ import java.util.Locale
  * Create via [newInstance], passing the [Atom] entity.
  * The fragment shows the canonical Punkto address, decoded lat/lon/alt,
  * author, text payload, and a human-readable timestamp.
+ * Copy and Share actions are available for the Punkto address.
  */
 class AtomBottomSheetFragment : BottomSheetDialogFragment() {
 
@@ -44,6 +47,7 @@ class AtomBottomSheetFragment : BottomSheetDialogFragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         populateViews()
+        wireActions()
     }
 
     private fun populateViews() {
@@ -70,6 +74,29 @@ class AtomBottomSheetFragment : BottomSheetDialogFragment() {
 
         // Timestamp
         binding.tvTime.text = formatTimestamp(atom.t)
+    }
+
+    private fun wireActions() {
+        // C7 — Copy Punkto address to clipboard
+        binding.btnCopyAddress.setOnClickListener {
+            val clipboard = requireContext()
+                .getSystemService(Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager
+            clipboard.setPrimaryClip(
+                android.content.ClipData.newPlainText("Punkto", atom.punkto)
+            )
+            Toast.makeText(requireContext(), "Copied!", Toast.LENGTH_SHORT).show()
+        }
+
+        // C7 — Share Punkto address as URL
+        binding.btnShare.setOnClickListener {
+            val hash = atom.punkto.removePrefix("p:")
+            val url = "https://punkto.xyz/p/$hash"
+            val intent = android.content.Intent(android.content.Intent.ACTION_SEND).apply {
+                type = "text/plain"
+                putExtra(android.content.Intent.EXTRA_TEXT, url)
+            }
+            startActivity(android.content.Intent.createChooser(intent, "Share Punkto"))
+        }
     }
 
     private fun formatTimestamp(unixMs: Long): String {

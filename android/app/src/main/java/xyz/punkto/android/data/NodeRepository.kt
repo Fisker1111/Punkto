@@ -144,6 +144,37 @@ class NodeRepository(
         Result.failure(Exception("All nodes failed"))
     }
 
+    // -------------------------------------------------------------------------
+    // B2 — paginated feed fetch
+    // -------------------------------------------------------------------------
+
+    /**
+     * Fetch a single page of atoms from the first available seed node.
+     *
+     * @param cursor  Byte offset into atoms.ndjson (0 = start)
+     * @param limit   Max atoms to return per page (hint — server may return fewer)
+     * @return [FeedPage] with persisted atoms, optional nextCursor, and hasMore flag
+     */
+    suspend fun fetchFeed(
+        cursor: Int = 0,
+        limit: Int = 100
+    ): FeedPage = withContext(Dispatchers.IO) {
+        val nodeUrl = nodeStates.keys.firstOrNull() ?: SEED_NODES.first()
+        val api = RetrofitClient.buildApi(nodeUrl)
+        val feedResponse = api.getFeed(since = cursor.toLong())
+        val feedAtoms = feedResponse.atoms ?: emptyList()
+        val serverCursor = feedResponse.cursor
+        val nextCursor = if (serverCursor != null && serverCursor > cursor) serverCursor.toInt() else null
+        val hasMore = nextCursor != null
+
+        // Persist new atoms to Room so they appear in the live DB flow
+        val entities = feedAtoms.mapNotNull { fa -> feedAtomToEntity(fa, nodeUrl) }
+        if (entities.isNotEmpty()) atomDao.insertAll(entities)
+
+        Log.d(TAG, "fetchFeed: cursor=$cursor got=${feedAtoms.size} nextCursor=$nextCursor")
+        FeedPage(atoms = entities, nextCursor = nextCursor, hasMore = hasMore)
+    }
+
     /**
      * Sync feed from ALL known nodes regardless of health.
      * Returns total number of new atoms persisted.
@@ -301,8 +332,20 @@ class NodeRepository(
     }
 
     // -------------------------------------------------------------------------
+    // Data classes
+    // -------------------------------------------------------------------------
+
+    /** Result of a paginated feed fetch (B2). */
+    data class FeedPage(
+        val atoms: List<Atom>,
+        val nextCursor: Int?,
+        val hasMore: Boolean
+    )
+
+    // -------------------------------------------------------------------------
     // Companion
     // -------------------------------------------------------------------------
+
 
     companion object {
         private const val TAG = "NodeRepository"
