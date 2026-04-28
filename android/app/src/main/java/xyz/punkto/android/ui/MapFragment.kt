@@ -241,11 +241,11 @@ class MapFragment : Fragment(), OnMapReadyCallback {
             setProperties(
                 PropertyFactory.circleRadius(
                     step(get("point_count"), literal(16f),
-                        stop(10, 22f), stop(50, 30f))
+                        stop(literal(10), literal(22f)), stop(literal(50), literal(30f)))
                 ),
                 PropertyFactory.circleColor(
                     step(get("point_count"), literal("#00CCDD"),
-                        stop(10, "#2E86FF"), stop(50, "#9B59B6"))
+                        stop(literal(10), literal("#2E86FF")), stop(literal(50), literal("#9B59B6")))
                 ),
                 PropertyFactory.circleOpacity(0.85f),
                 PropertyFactory.circleStrokeWidth(2f),
@@ -258,10 +258,7 @@ class MapFragment : Fragment(), OnMapReadyCallback {
         val countLayer = SymbolLayer("cluster-count", atomSourceId).apply {
             setFilter(has("point_count"))
             setProperties(
-                PropertyFactory.textField(
-                    org.maplibre.android.style.expressions.Expression.toString(
-                        get("point_count"))
-                ),
+                PropertyFactory.textField("{point_count}"),
                 PropertyFactory.textSize(12f),
                 PropertyFactory.textColor("#FFFFFF"),
                 PropertyFactory.textIgnorePlacement(true),
@@ -279,8 +276,8 @@ class MapFragment : Fragment(), OnMapReadyCallback {
                     step(
                         get("altitude"),
                         literal("#00CCDD"),   // ground: 0–3.5 m
-                        stop(3.5,  "#2E86FF"), // floor 1–3: 3.5–14 m
-                        stop(14.0, "#9B59B6")  // floor 4+: 14 m+
+                        stop(literal(3.5),  literal("#2E86FF")), // floor 1–3
+                        stop(literal(14.0), literal("#9B59B6"))  // floor 4+
                     )
                 ),
                 PropertyFactory.circleOpacity(0.85f),
@@ -297,17 +294,21 @@ class MapFragment : Fragment(), OnMapReadyCallback {
 
     @SuppressLint("MissingPermission")
     private fun enableLocationComponent(map: MapLibreMap, style: Style) {
-        val locationComponent = map.locationComponent
-        val hasPermission = ContextCompat.checkSelfPermission(
-            requireContext(), Manifest.permission.ACCESS_FINE_LOCATION
-        ) == PackageManager.PERMISSION_GRANTED
-        if (!hasPermission) return
-        locationComponent.activateLocationComponent(
-            LocationComponentActivationOptions.builder(requireContext(), style).build()
-        )
-        locationComponent.isLocationComponentEnabled = true
-        locationComponent.cameraMode = CameraMode.NONE
-        locationComponent.renderMode = RenderMode.COMPASS
+        try {
+            val locationComponent = map.locationComponent
+            val hasPermission = ContextCompat.checkSelfPermission(
+                requireContext(), Manifest.permission.ACCESS_FINE_LOCATION
+            ) == PackageManager.PERMISSION_GRANTED
+            if (!hasPermission) return
+            locationComponent.activateLocationComponent(
+                LocationComponentActivationOptions.builder(requireContext(), style).build()
+            )
+            locationComponent.isLocationComponentEnabled = true
+            locationComponent.cameraMode = CameraMode.NONE
+            locationComponent.renderMode = RenderMode.COMPASS
+        } catch (e: Exception) {
+            Log.w(TAG, "LocationComponent unavailable: ${e.message}")
+        }
     }
 
     // -------------------------------------------------------------------------
