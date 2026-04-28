@@ -134,4 +134,36 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 
+    <!-- Crosshair overlay — fixed center of screen -->
+    <ImageView
+        android:id="@+id/iv_crosshair"
+        android:layout_width="64dp"
+        android:layout_height="64dp"
+        android:elevation="3dp"
+        android:importantForAccessibility="no"
+        android:src="@drawable/ic_crosshair"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <!-- Crosshair address label — shows Punkto address at crosshair -->
+    <TextView
+        android:id="@+id/tv_crosshair_label"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="6dp"
+        android:alpha="0.85"
+        android:background="@color/colorSurface"
+        android:elevation="3dp"
+        android:fontFamily="monospace"
+        android:paddingHorizontal="8dp"
+        android:paddingVertical="3dp"
+        android:textColor="@color/colorPrimary"
+        android:textSize="10sp"
+        android:visibility="gone"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/iv_crosshair" />
+
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -1,0 +1,69 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="64dp"
+    android:height="64dp"
+    android:viewportWidth="64"
+    android:viewportHeight="64">
+
+    <!-- Shadow paths (dark, offset 1px) -->
+    <!-- Horizontal left shadow -->
+    <path
+        android:pathData="M5,33 L26,33"
+        android:strokeColor="#66000000"
+        android:strokeWidth="2.5"
+        android:strokeLineCap="round" />
+    <!-- Horizontal right shadow -->
+    <path
+        android:pathData="M38,33 L59,33"
+        android:strokeColor="#66000000"
+        android:strokeWidth="2.5"
+        android:strokeLineCap="round" />
+    <!-- Vertical top shadow -->
+    <path
+        android:pathData="M33,5 L33,26"
+        android:strokeColor="#66000000"
+        android:strokeWidth="2.5"
+        android:strokeLineCap="round" />
+    <!-- Vertical bottom shadow -->
+    <path
+        android:pathData="M33,38 L33,59"
+        android:strokeColor="#66000000"
+        android:strokeWidth="2.5"
+        android:strokeLineCap="round" />
+
+    <!-- Main white crosshair lines -->
+    <!-- Horizontal left -->
+    <path
+        android:pathData="M4,32 L25,32"
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="2"
+        android:strokeLineCap="round" />
+    <!-- Horizontal right -->
+    <path
+        android:pathData="M39,32 L60,32"
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="2"
+        android:strokeLineCap="round" />
+    <!-- Vertical top -->
+    <path
+        android:pathData="M32,4 L32,25"
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="2"
+        android:strokeLineCap="round" />
+    <!-- Vertical bottom -->
+    <path
+        android:pathData="M32,39 L32,60"
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="2"
+        android:strokeLineCap="round" />
+
+    <!-- Center dot shadow -->
+    <path
+        android:pathData="M32,32 m-3.5,0 a3.5,3.5 0 1,0 7,0 a3.5,3.5 0 1,0 -7,0"
+        android:fillColor="#66000000" />
+
+    <!-- Center dot (cyan accent) -->
+    <path
+        android:pathData="M32,32 m-2.5,0 a2.5,2.5 0 1,0 5,0 a2.5,2.5 0 1,0 -5,0"
+        android:fillColor="#00CCDD" />
+
+</vector>

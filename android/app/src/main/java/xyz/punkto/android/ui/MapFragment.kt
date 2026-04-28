@@ -221,6 +221,8 @@ class MapFragment : Fragment(), OnMapReadyCallback {
             handleMapTap(latLng)
             true
         }
+        map.addOnCameraIdleListener { updateCrosshairLabel() }
+        map.addOnCameraMoveListener { updateCrosshairLabel() }
     }
 
     private fun setupAtomLayer(style: Style) {
@@ -367,12 +369,30 @@ class MapFragment : Fragment(), OnMapReadyCallback {
 
     private fun onFabDropAtom() {
         resetIdleTimer()
-        val loc = viewModel.currentLocation.value
-        if (loc == null) {
+        // Use crosshair (map center) for lat/lon; GPS for altitude default
+        val center = mapLibreMap?.cameraPosition?.target
+        val gpsAlt = viewModel.currentLocation.value?.altitude ?: 0.0
+        if (center == null) {
             Toast.makeText(requireContext(), getString(R.string.error_no_location), Toast.LENGTH_SHORT).show()
             return
         }
-        showDropAtomDialog(loc.latitude, loc.longitude, loc.altitude)
+        showDropAtomDialog(center.latitude, center.longitude, gpsAlt)
+    }
+
+    // -------------------------------------------------------------------------
+    // Crosshair label — updates as map moves
+    // -------------------------------------------------------------------------
+
+    private fun updateCrosshairLabel() {
+        val center = mapLibreMap?.cameraPosition?.target ?: return
+        val tv = binding.tvCrosshairLabel
+        try {
+            val spatial = Geohash3D.encode(center.latitude, center.longitude, 0.0, 12)
+            tv.text = "p:$spatial"
+            tv.visibility = View.VISIBLE
+        } catch (e: Exception) {
+            tv.visibility = View.GONE
+        }
     }
 
     private fun showDropAtomDialog(lat: Double, lon: Double, gpsAlt: Double) {
