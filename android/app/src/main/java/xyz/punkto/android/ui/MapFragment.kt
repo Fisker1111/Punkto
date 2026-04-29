@@ -387,7 +387,7 @@ class MapFragment : Fragment(), OnMapReadyCallback {
         val center = mapLibreMap?.cameraPosition?.target ?: return
         val tv = binding.tvCrosshairLabel
         try {
-            val spatial = Geohash3D.encode(center.latitude, center.longitude, 0.0, 12)
+            val spatial = Geohash3D.encode(center.latitude, center.longitude, 0.0)
             tv.text = "p:$spatial"
             tv.visibility = View.VISIBLE
         } catch (e: Exception) {
