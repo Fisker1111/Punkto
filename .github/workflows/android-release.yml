@@ -1,0 +1,109 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Punkto Android — Release Bundle (Google Play Internal Testing)
+#
+# Produces a signed release AAB (.aab) ready for upload to Google Play.
+# Does NOT upload automatically — upload the artifact manually first.
+#
+# Triggers:
+#   • Manual dispatch (workflow_dispatch) — run from GitHub Actions tab
+#   • Push of a version tag  v*.*.* (e.g. v1.0.3)
+#
+# Required GitHub Secrets:
+#   PUNKTO_KEYSTORE_BASE64  — base64-encoded .jks / .keystore file
+#   PUNKTO_KEY_ALIAS        — key alias inside the keystore
+#   PUNKTO_KEY_PASS         — key password
+#   PUNKTO_STORE_PASS       — keystore store password
+#
+# versionCode is auto-set to github.run_number (increments on every run).
+# versionName defaults to the tag name (e.g. v1.0.3) or "1.0.<run_number>".
+# ─────────────────────────────────────────────────────────────────────────────
+name: Android Release Bundle
+
+on:
+  workflow_dispatch:
+    inputs:
+      version_name:
+        description: "Version name (e.g. 1.0.3)"
+        required: false
+        default: ""
+  push:
+    tags:
+      - "v*.*.*"
+
+jobs:
+  release-bundle:
+    name: Build signed release AAB
+    runs-on: ubuntu-latest
+
+    steps:
+      # ── 1. Checkout ────────────────────────────────────────────────────────
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # ── 2. Java 17 ─────────────────────────────────────────────────────────
+      - name: Set up Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      # ── 3. Gradle wrapper cache ─────────────────────────────────────────────
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      # ── 4. Executable bit ───────────────────────────────────────────────────
+      - name: Make gradlew executable
+        working-directory: android
+        run: chmod +x ./gradlew
+
+      # ── 5. Decode keystore from base64 secret ───────────────────────────────
+      - name: Decode release keystore
+        run: |
+          echo "${{ secrets.PUNKTO_KEYSTORE_BASE64 }}" | base64 --decode > /tmp/punkto-release.keystore
+          echo "Keystore written to /tmp/punkto-release.keystore"
+
+      # ── 6. Resolve version strings ──────────────────────────────────────────
+      - name: Resolve version
+        id: version
+        run: |
+          VERSION_CODE=${{ github.run_number }}
+
+          # versionName: prefer manual input → tag name → fallback
+          if [ -n "${{ github.event.inputs.version_name }}" ]; then
+            VERSION_NAME="${{ github.event.inputs.version_name }}"
+          elif [ -n "${{ github.ref_name }}" ] && [[ "${{ github.ref_name }}" == v* ]]; then
+            VERSION_NAME="${GITHUB_REF_NAME#v}"
+          else
+            VERSION_NAME="1.0.${VERSION_CODE}"
+          fi
+
+          echo "version_code=$VERSION_CODE"  >> "$GITHUB_OUTPUT"
+          echo "version_name=$VERSION_NAME"  >> "$GITHUB_OUTPUT"
+          echo "versionCode=$VERSION_CODE  versionName=$VERSION_NAME"
+
+      # ── 7. Build signed release AAB ─────────────────────────────────────────
+      - name: Build release AAB
+        working-directory: android
+        env:
+          PUNKTO_KEYSTORE: /tmp/punkto-release.keystore
+          PUNKTO_KEY_ALIAS: ${{ secrets.PUNKTO_KEY_ALIAS }}
+          PUNKTO_KEY_PASS:  ${{ secrets.PUNKTO_KEY_PASS }}
+          PUNKTO_STORE_PASS: ${{ secrets.PUNKTO_STORE_PASS }}
+        run: |
+          ./gradlew bundleRelease \
+            -PversionCode=${{ steps.version.outputs.version_code }} \
+            -PversionName=${{ steps.version.outputs.version_name }}
+
+      # ── 8. Upload AAB as artifact ────────────────────────────────────────────
+      - name: Upload release AAB
+        uses: actions/upload-artifact@v4
+        with:
+          name: punkto-release-aab-${{ steps.version.outputs.version_name }}-${{ steps.version.outputs.version_code }}
+          path: android/app/build/outputs/bundle/release/*.aab
+          retention-days: 30
+          if-no-files-found: error
+
+      # ── 9. Clean up keystore from runner ────────────────────────────────────
+      - name: Clean up keystore
+        if: always()
+        run: rm -f /tmp/punkto-release.keystore
