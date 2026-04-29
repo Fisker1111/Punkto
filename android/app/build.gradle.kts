@@ -70,6 +70,15 @@ android {
         buildConfig = true
     }
 
+    lint {
+        abortOnError = true
+        warningsAsErrors = false
+        // UI control symbols (-, +, --) and floor labels are intentional, not missing translations
+        disable += "HardcodedText"
+        // ContentDescription on crosshair ImageView is not needed (decorative)
+        disable += "ContentDescription"
+    }
+
     packaging {
         resources {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
