@@ -4,6 +4,7 @@
     <string name="btn_3d">3D</string>
     <string name="btn_2d">2D</string>
     <string name="btn_compass">&#8853;</string>
+    <string name="btn_my_location">&#8853;</string>
     <string name="fab_drop_atom_desc">Drop atom at current location</string>
     <string name="fab_my_location_desc">Center on my location</string>
     <string name="dialog_drop_atom_title">Drop Atom</string>

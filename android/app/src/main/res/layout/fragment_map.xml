@@ -14,33 +14,52 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <Button
-        android:id="@+id/btn_toggle_3d"
-        android:layout_width="56dp"
-        android:layout_height="36dp"
+    <!-- Right-rail vertical control cluster -->
+    <LinearLayout
+        android:id="@+id/rail_controls"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
         android:layout_marginTop="80dp"
         android:layout_marginEnd="12dp"
-        android:backgroundTint="@color/colorSurface"
+        android:orientation="vertical"
         android:elevation="4dp"
-        android:text="@string/btn_3d"
-        android:textColor="@color/colorPrimary"
-        android:textSize="12sp"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toTopOf="parent">
 
-    <Button
-        android:id="@+id/btn_compass"
-        android:layout_width="56dp"
-        android:layout_height="36dp"
-        android:layout_marginTop="8dp"
-        android:layout_marginEnd="12dp"
-        android:backgroundTint="@color/colorSurface"
-        android:elevation="4dp"
-        android:text="@string/btn_compass"
-        android:textColor="@color/colorOnBackground"
-        android:textSize="18sp"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/btn_toggle_3d" />
+        <Button
+            android:id="@+id/btn_toggle_3d"
+            android:layout_width="56dp"
+            android:layout_height="36dp"
+            android:backgroundTint="@color/colorSurface"
+            android:elevation="4dp"
+            android:text="@string/btn_3d"
+            android:textColor="@color/colorPrimary"
+            android:textSize="12sp" />
+
+        <Button
+            android:id="@+id/btn_compass"
+            android:layout_width="56dp"
+            android:layout_height="36dp"
+            android:layout_marginTop="8dp"
+            android:backgroundTint="@color/colorSurface"
+            android:elevation="4dp"
+            android:text="@string/btn_compass"
+            android:textColor="@color/colorOnBackground"
+            android:textSize="18sp" />
+
+        <Button
+            android:id="@+id/btn_my_location"
+            android:layout_width="56dp"
+            android:layout_height="36dp"
+            android:layout_marginTop="8dp"
+            android:backgroundTint="@color/colorSurface"
+            android:contentDescription="@string/fab_my_location_desc"
+            android:elevation="4dp"
+            android:text="@string/btn_my_location"
+            android:textColor="@color/colorPrimary"
+            android:textSize="14sp" />
+
+    </LinearLayout>
 
     <!-- Sync indicator dot (C9) -->
     <View
@@ -106,21 +125,6 @@
         android:layout_marginBottom="8dp" />
 
     <com.google.android.material.floatingactionbutton.FloatingActionButton
-        android:id="@+id/fab_my_location"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginEnd="20dp"
-        android:layout_marginBottom="12dp"
-        android:contentDescription="@string/fab_my_location_desc"
-        android:elevation="6dp"
-        android:src="@android:drawable/ic_menu_mylocation"
-        app:backgroundTint="@color/colorSurface"
-        app:fabSize="mini"
-        app:tint="@color/colorPrimary"
-        app:layout_constraintBottom_toTopOf="@id/fab_drop_atom"
-        app:layout_constraintEnd_toEndOf="parent" />
-
-    <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/fab_drop_atom"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -158,7 +162,7 @@
         android:elevation="3dp"
         android:fontFamily="monospace"
         android:paddingHorizontal="8dp"
-        android:paddingVertical="3dp"
+        android:paddingVertical="6dp"
         android:textColor="@color/colorPrimary"
         android:textSize="10sp"
         android:visibility="gone"

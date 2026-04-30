@@ -18,6 +18,10 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.core.content.ContextCompat
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.updatePadding
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.Lifecycle
@@ -182,7 +186,7 @@ class MapFragment : Fragment(), OnMapReadyCallback {
 
         binding.fabDropAtom.setOnClickListener  { onFabDropAtom() }
         binding.btnToggle3d.setOnClickListener  { onToggle3D() }
-        binding.fabMyLocation.setOnClickListener { onMyLocation() }
+        binding.btnMyLocation.setOnClickListener { onMyLocation() }
         binding.btnCompass.setOnClickListener   { onResetBearing() }
 
         viewLifecycleOwner.lifecycleScope.launch {
@@ -196,6 +200,14 @@ class MapFragment : Fragment(), OnMapReadyCallback {
                     binding.syncIndicator.visibility = if (syncing) View.VISIBLE else View.GONE
                 }}
             }
+        }
+
+        updateToggle3dButton()
+
+        ViewCompat.setOnApplyWindowInsetsListener(binding.railControls) { view, insets ->
+            val statusBarHeight = insets.getInsets(WindowInsetsCompat.Type.statusBars()).top
+            view.updatePadding(top = statusBarHeight + 8)
+            insets
         }
     }
 
@@ -462,7 +474,21 @@ class MapFragment : Fragment(), OnMapReadyCallback {
         is3D = !is3D
         map.animateCamera(CameraUpdateFactory.newCameraPosition(
             CameraPosition.Builder().tilt(if (is3D) 60.0 else 0.0).build()), 600)
-        binding.btnToggle3d.text = getString(if (is3D) R.string.btn_2d else R.string.btn_3d)
+        updateToggle3dButton()
+    }
+
+    private fun updateToggle3dButton() {
+        binding.btnToggle3d.text = getString(if (is3D) R.string.btn_3d else R.string.btn_2d)
+        val tint = if (is3D)
+            ContextCompat.getColor(requireContext(), R.color.colorPrimary)
+        else
+            ContextCompat.getColor(requireContext(), R.color.colorSurface)
+        binding.btnToggle3d.backgroundTintList = android.content.res.ColorStateList.valueOf(tint)
+        val textColor = if (is3D)
+            ContextCompat.getColor(requireContext(), R.color.colorBackground)
+        else
+            ContextCompat.getColor(requireContext(), R.color.colorPrimary)
+        binding.btnToggle3d.setTextColor(textColor)
     }
 
     // -------------------------------------------------------------------------
@@ -585,6 +611,8 @@ class MapFragment : Fragment(), OnMapReadyCallback {
         startLocationUpdatesIfPermitted()
         registerNetworkCallback()
         resetIdleTimer()
+        val window = requireActivity().window
+        WindowCompat.getInsetsController(window, requireView()).isAppearanceLightStatusBars = false
     }
     override fun onPause()  {
         super.onPause()
