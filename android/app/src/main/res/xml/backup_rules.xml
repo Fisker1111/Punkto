@@ -1,9 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<!--
-    Backup rules for AutoBackup (Android 12+).
-    Allowlist mode: only database/punkto.db is backed up.
-    SharedPreferences are excluded by default in allowlist mode.
--->
-<full-backup-content>
-    <include domain="database" path="punkto.db" />
-</full-backup-content>
