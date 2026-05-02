@@ -42,18 +42,21 @@ punkto://dk/copenhagen/bellahoj
 
 ```
 Punkto/
-├── App/
-│   └── Web/              ← PWA source (copy this to self-host)
-│       ├── index.html    ← App shell, MapLibre + deck.gl
-│       ├── app.js        ← Map, sync, atom rendering
-│       ├── sw.js         ← Service worker (offline-first)
-│       ├── manifest.json ← PWA manifest
-│       ├── geohash3d.js  ← 3D geohash encoder/decoder
-│       └── node.py       ← Minimal Python node (stdlib only)
+├── pwa/                  ← PWA source (copy this to self-host)
+│   ├── index.html        ← App shell, MapLibre + deck.gl
+│   ├── app.js            ← Map, sync, atom rendering
+│   ├── sw.js             ← Service worker (offline-first)
+│   ├── manifest.json     ← PWA manifest
+│   ├── geohash3d.js      ← 3D geohash encoder/decoder
+│   └── node.py           ← Minimal Python node (stdlib only)
+│
+├── android/              ← Native Android app (Kotlin, MapLibre, Room)
+├── core/                 ← Python library + CLI (stdlib only)
 │
 ├── punkto.md             ← Canonical address format (source of truth)
 ├── punkto.node.md        ← Node API spec (endpoints, storage, sync)
 ├── punkto.manifest.md    ← Storage and replication rules
+├── punkto.sync.md        ← Peer discovery and replication
 ├── punkto.ui.md          ← UI principles
 └── punkto.ai.md          ← How AI agents interact as nodes
 ```
@@ -66,11 +69,11 @@ Punkto/
 
 ```bash
 git clone https://github.com/Fisker1111/Punkto
-cd Punkto/App/Web
+cd Punkto/pwa
 python3 node.py          # runs on port 8002
 ```
 
-Serve `App/Web/` as static files from your web server and proxy `/atom`, `/feed`, `/health`, `/info` to the Python node.
+Serve `pwa/` as static files from your web server and proxy `/atom`, `/feed`, `/health`, `/info` to the Python node.
 
 ### Nginx example
 
