@@ -559,6 +559,84 @@
     .popup-meta { color: #00ccdd; font-size: 11px; }
     .popup-canon { color: #444; font-size: 10px; margin-top: 4px; word-break: break-all; }
     .popup-coords { color: #555; font-size: 10px; }
+
+    /* -------- DOM atom bubbles (MapLibre markers) -------- */
+    .atom-bubble {
+      position: relative;
+      max-width: 240px;
+      padding: 8px 10px;
+      background: #0f0f0fee;
+      color: #e0f4ff;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      font-size: 13px;
+      line-height: 1.35;
+      opacity: 1;
+      transition: opacity 0.2s ease, border-color 0.2s ease, max-width 0.2s ease;
+      pointer-events: auto;
+      border: 1px solid transparent;
+      /* Anchor: bottom of bubble sits ABOVE the atom dot (marker anchor='bottom'
+         means [0,0] of this element aligns with the lng/lat point). We lift it
+         a few px so the tail doesn't overlap the scatterplot dot. */
+      margin-bottom: 8px;
+      cursor: default;
+      user-select: text;
+    }
+    .atom-bubble-text {
+      color: #e0f4ff;
+      font-size: 13px;
+      line-height: 1.35;
+      word-wrap: break-word;
+      overflow-wrap: break-word;
+    }
+    .atom-bubble-meta {
+      margin-top: 4px;
+      color: #7ab8c8;
+      font-size: 11px;
+      display: flex;
+      gap: 4px;
+      align-items: center;
+    }
+    .atom-bubble-author { color: #7ab8c8; }
+    .atom-bubble-dot    { color: #7ab8c8; opacity: 0.7; }
+    .atom-bubble-time   { color: #7ab8c8; opacity: 0.85; }
+    .atom-bubble a {
+      color: #4ad7ff;
+      text-decoration: none;
+    }
+    .atom-bubble a:hover { text-decoration: underline; }
+    .atom-bubble b { font-weight: 600; }
+    .atom-bubble i { font-style: italic; }
+    .atom-bubble-tail {
+      position: absolute;
+      left: 12px;
+      bottom: -6px;
+      width: 0;
+      height: 0;
+      border-left: 4px solid transparent;
+      border-right: 4px solid transparent;
+      border-top: 6px solid #0f0f0fee;
+    }
+    /* Compact mode (zoom 12-15): tighter and clamped to 2 lines */
+    .atom-bubble--compact {
+      max-width: 160px;
+    }
+    .atom-bubble--compact .atom-bubble-text {
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    /* Deep-link / selected focus */
+    .atom-bubble--focus {
+      border: 1px solid #ffb84a;
+      max-width: 260px;
+    }
+    .atom-bubble--focus.atom-bubble--compact {
+      max-width: 180px;
+    }
   </style>
 </head>
 <body>

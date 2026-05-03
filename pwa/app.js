@@ -135,6 +135,11 @@ let isSyncing = false;
 let is3D = true;
 let initialSyncDone = false;
 let deepLinkPunkto = null; // captured at boot, consumed after first refreshUI
+
+// DOM bubble markers: punkto_id -> maplibregl.Marker
+const atomMarkers = new Map();
+// Currently focused punkto id (without 'p:') for atom-bubble--focus class
+let focusedPunktoId = null;
 // ---------------------------------------------------------------------------
 // DOM refs
 // ---------------------------------------------------------------------------
@@ -248,6 +253,15 @@ async function focusPunkto(id) {
 
   // Update title for shareability
   document.title = `Punkto · ${punkto}`;
+
+  // Mark this atom's bubble as focused (amber border). Clear any prior focus.
+  if (focusedPunktoId && focusedPunktoId !== id) {
+    const prev = atomMarkers.get(`p:${focusedPunktoId}`);
+    if (prev) prev.getElement().classList.remove('atom-bubble--focus');
+  }
+  focusedPunktoId = id;
+  const cur = atomMarkers.get(punkto);
+  if (cur) cur.getElement().classList.add('atom-bubble--focus');
 
   // Highlight matching atom item if present in the list (after refreshUI)
   // refreshUI repopulates children; we search on next tick.
@@ -439,7 +453,7 @@ async function renderAtoms() {
     label: (a.x || a.f || '').slice(0, 40),
   }));
 
-  const { ScatterplotLayer, TextLayer, MapboxOverlay } = window.deck;
+  const { ScatterplotLayer, MapboxOverlay } = window.deck;
 
   const layers = [
     new ScatterplotLayer({
@@ -472,26 +486,101 @@ async function renderAtoms() {
           .addTo(map);
       },
     }),
-    new TextLayer({
-      id: 'atom-labels',
-      data: scatterData.filter(d => d.label),
-      getPosition: d => d.position,
-      getText: d => d.label,
-      getSize: 13,
-      getColor: [0, 220, 255, 220],
-      getBackgroundColor: [10, 10, 10, 180],
-      background: true,
-      backgroundPadding: [4, 2],
-      getTextAnchor: 'start',
-      getAlignmentBaseline: 'center',
-      getPixelOffset: [14, 0],
-      fontFamily: 'monospace',
-      characterSet: 'auto',
-      pickable: false,
-    }),
   ];
 
   deckOverlay.setProps({ layers });
+
+  // --- DOM bubble markers (MapLibre) ------------------------------------
+  // Reconcile atomMarkers map with current atom set. For Phase 1 we render
+  // ALL markers at once; LOD is done via updateBubbleVisibility. With only
+  // ~tens of atoms this is fine. Viewport culling = TODO Phase 2.
+  if (map) {
+    const seen = new Set();
+    for (const a of atoms) {
+      if (!a.punkto) continue;
+      seen.add(a.punkto);
+      let marker = atomMarkers.get(a.punkto);
+      if (!marker) {
+        const el = buildBubbleElement(a);
+        marker = new maplibregl.Marker({ element: el, anchor: 'bottom' })
+          .setLngLat([a.lon, a.lat])
+          .addTo(map);
+        atomMarkers.set(a.punkto, marker);
+      } else {
+        // Update content in place so edits (t changes, etc.) refresh without
+        // a DOM flicker. Position is stable per punkto so no setLngLat needed.
+        const el = marker.getElement();
+        updateBubbleElement(el, a);
+      }
+    }
+    // Remove markers for atoms that disappeared (e.g. after hide-handle change)
+    for (const [pid, marker] of atomMarkers) {
+      if (!seen.has(pid)) {
+        marker.remove();
+        atomMarkers.delete(pid);
+      }
+    }
+    updateBubbleVisibility();
+  }
+}
+
+/**
+ * Build a fresh DOM element for an atom bubble. Used when a new marker is
+ * created. Structure matches ui.md spec:
+ *   .atom-bubble > .atom-bubble-body ( .atom-bubble-text + .atom-bubble-meta )
+ *                + .atom-bubble-tail
+ */
+function buildBubbleElement(atom) {
+  const el = document.createElement('div');
+  el.className = 'atom-bubble';
+  el.dataset.punkto = atom.punkto || '';
+  // Mark the focused atom if applicable (e.g. deep-link target)
+  if (focusedPunktoId && atom.punkto === `p:${focusedPunktoId}`) {
+    el.classList.add('atom-bubble--focus');
+  }
+  updateBubbleElement(el, atom);
+  return el;
+}
+
+/**
+ * (Re)render the inner HTML of a bubble element from an atom record.
+ */
+function updateBubbleElement(el, atom) {
+  const textHtml = renderAtomText(atom.x || '');
+  const author = escHtml(atom.f || 'anon');
+  const timeStr = escHtml(fmtRelativeTime(atom.t));
+  el.innerHTML = `
+    <div class="atom-bubble-body">
+      <div class="atom-bubble-text">${textHtml || '<span style="opacity:0.5">no text</span>'}</div>
+      <div class="atom-bubble-meta">
+        <span class="atom-bubble-author">${author}</span>
+        <span class="atom-bubble-dot">·</span>
+        <span class="atom-bubble-time">${timeStr}</span>
+      </div>
+    </div>
+    <div class="atom-bubble-tail"></div>
+  `;
+}
+
+/**
+ * Zoom-based LOD for bubbles:
+ *   zoom < 12  → hide (dots only)
+ *   12 ≤ z <16 → compact (clamped 2 lines, 160px)
+ *   z ≥ 16     → full (240px)
+ * Called after renderAtoms and from map zoomend/moveend handlers.
+ */
+function updateBubbleVisibility() {
+  if (!map) return;
+  const z = map.getZoom();
+  for (const [, marker] of atomMarkers) {
+    const el = marker.getElement();
+    if (z < 8) {
+      el.style.display = 'none';
+    } else {
+      el.style.display = '';
+      el.classList.toggle('atom-bubble--compact', z < 14);
+    }
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -561,6 +650,65 @@ function escHtml(str) {
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;');
+}
+
+/**
+ * Relative time formatter for bubble meta line.
+ * tSec is accepted as ms (we already store Date.now() in atom.t).
+ */
+function fmtRelativeTime(t) {
+  const ms = Number(t);
+  if (!ms) return '?';
+  const diff = Date.now() - ms;
+  if (diff < 60_000)       return 'just now';
+  if (diff < 3_600_000)    return `${Math.floor(diff / 60_000)}m ago`;
+  if (diff < 86_400_000)   return `${Math.floor(diff / 3_600_000)}h ago`;
+  if (diff < 604_800_000)  return `${Math.floor(diff / 86_400_000)}d ago`;
+  if (diff < 2_419_200_000)return `${Math.floor(diff / 604_800_000)}w ago`;
+  return fmtTime(ms);
+}
+
+/**
+ * Markdown-lite renderer for atom text. Returns HTML string safe for innerHTML.
+ * Supported:
+ *   **bold** → <b>bold</b>
+ *   *italic* → <i>italic</i>
+ *   [text](https://url) → safe anchor (rejects javascript:, data:, etc.)
+ *   bare https?://… → auto-linked
+ *   \n → <br>
+ * Emoji render natively via system font — no special handling.
+ *
+ * Security: everything is HTML-escaped FIRST, then markdown is applied to
+ * the escaped text. URL schemes are whitelisted to http(s) only, so a
+ * payload like [click](javascript:alert(1)) simply does not match the regex
+ * (which requires the url to start with http:// or https://) and remains
+ * rendered as literal text.
+ */
+function renderAtomText(raw) {
+  if (!raw) return '';
+  // 1. HTML-escape everything first.
+  let s = escHtml(raw);
+
+  // 2. Bold BEFORE italic so ** isn't eaten by the italic regex.
+  s = s.replace(/\*\*([^*]+)\*\*/g, '<b>$1</b>');
+  // Italic (single-star, non-greedy). After escHtml the user's * is still *.
+  s = s.replace(/\*([^*]+)\*/g, '<i>$1</i>');
+
+  // 3. Markdown links [text](http(s)://…) BEFORE bare-URL auto-link so we
+  //    don't double-wrap. Note escHtml turns ] into ] untouched and ) into ).
+  s = s.replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g, (_m, label, url) => {
+    return `<a href="${url}" target="_blank" rel="noopener noreferrer nofollow">${label}</a>`;
+  });
+
+  // 4. Bare URL auto-linker. Only http(s). Keep preceding whitespace or start.
+  s = s.replace(/(^|[\s>])((?:https?:\/\/)[^\s<]+)/g, (_m, pre, url) => {
+    return `${pre}<a href="${url}" target="_blank" rel="noopener noreferrer nofollow">${url}</a>`;
+  });
+
+  // 5. Newlines → <br>
+  s = s.replace(/\n/g, '<br>');
+
+  return s;
 }
 
 // ---------------------------------------------------------------------------
@@ -659,8 +807,8 @@ function initMap() {
   map = new maplibregl.Map({
     container: 'map',
     style: MAP_STYLE,
-    center: [10, 50],
-    zoom: 3,
+    center: [12.5, 55.7],
+    zoom: 9,
     pitch: 45,
     bearing: -10,
     antialias: true,
@@ -693,6 +841,10 @@ function initMap() {
 
   map.on('load', async () => {
     console.log('[map] loaded');
+
+    // Update DOM bubble LOD whenever zoom or pan changes.
+    map.on('zoomend', updateBubbleVisibility);
+    map.on('moveend', updateBubbleVisibility);
 
     // Add 3D building extrusion layer (OpenFreeMap has openmaptiles source)
     try {
