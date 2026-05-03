@@ -123,6 +123,8 @@ let deckOverlay = null;
 let syncTimer = null;
 let isSyncing = false;
 let is3D = true;
+let initialSyncDone = false;
+let deepLinkPunkto = null; // captured at boot, consumed after first refreshUI
 // ---------------------------------------------------------------------------
 // DOM refs
 // ---------------------------------------------------------------------------
@@ -144,6 +146,11 @@ const elModalSubmit = document.getElementById('modal-submit');
 const elModalCancel = document.getElementById('modal-cancel');
 const elModalError  = document.getElementById('modal-error');
 const elToggle3D    = document.getElementById('toggle-3d');
+const elBtnSettings = document.getElementById('btn-settings');
+const elSettingsMenu = document.getElementById('settings-menu');
+const elSettingsReset = document.getElementById('settings-reset');
+const elSettingsNode = document.getElementById('settings-node');
+const elSettingsCount = document.getElementById('settings-count');
 
 // ---------------------------------------------------------------------------
 // Utility
@@ -186,6 +193,54 @@ function decodeAtomLocation(punktoStr) {
   } catch {
     return null;
   }
+}
+
+// ---------------------------------------------------------------------------
+// Deep-link: /p/<id> → open and focus a punkto
+// ---------------------------------------------------------------------------
+
+/**
+ * Parse a /p/<id> pathname. id = 12 base32 chars, optional '-suffix' (alnum).
+ * Returns the full punkto id (without 'p:' prefix) or null.
+ */
+function parseDeepLinkPunktoId() {
+  const m = /^\/p\/([0-9a-z]{12}(?:-[a-zA-Z0-9]+)?)\/?$/.exec(location.pathname || '');
+  return m ? m[1] : null;
+}
+
+/**
+ * Focus a punkto by id: center map, open panel, highlight matching atom if cached.
+ * Safe to call when no matching atom exists locally — we still center on the coords.
+ */
+async function focusPunkto(id) {
+  if (!id) return;
+  const punkto = `p:${id}`;
+  const loc = decodeAtomLocation(punkto);
+  if (!loc || !map) return;
+
+  // Center + zoom
+  map.flyTo({ center: [loc.lon, loc.lat], zoom: 16, duration: 1200 });
+
+  // Open panel so user sees atom list
+  setPanelOpen(true);
+
+  // Update title for shareability
+  document.title = `Punkto · ${punkto}`;
+
+  // Highlight matching atom item if present in the list (after refreshUI)
+  // refreshUI repopulates children; we search on next tick.
+  requestAnimationFrame(() => {
+    const items = elAtomList.querySelectorAll('.atom-item');
+    for (const item of items) {
+      const metaEl = item.querySelector('.atom-meta');
+      if (metaEl && metaEl.textContent.includes(punkto)) {
+        item.style.background = 'rgba(0, 229, 255, 0.08)';
+        item.style.borderLeft = '2px solid var(--cyan)';
+        item.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        break;
+      }
+    }
+  });
 }
 
 // ---------------------------------------------------------------------------
@@ -448,12 +503,22 @@ async function renderAtoms() {
 async function refreshUI() {
   const total = await db.atoms.count();
   elCountNum.textContent = total;
+  // Keep settings info (if menu is open) in sync
+  if (elSettingsCount) elSettingsCount.textContent = String(total);
 
   // Render recent 50 in panel
   const recent = await db.atoms.orderBy('t').reverse().limit(50).toArray();
 
   if (recent.length === 0) {
-    elAtomEmpty.style.display = 'block';
+    // Only show the empty placeholder AFTER the first sync has completed.
+    // During cold boot (cache empty + sync in progress) we keep it hidden so
+    // users see a clean list instead of a flash of "No atoms yet".
+    if (initialSyncDone) {
+      elAtomEmpty.textContent = 'No atoms yet.';
+      elAtomEmpty.style.display = 'block';
+    } else {
+      elAtomEmpty.style.display = 'none';
+    }
     // Remove all items except empty placeholder
     Array.from(elAtomList.children).forEach(c => {
       if (c.id !== 'atom-list-empty') c.remove();
@@ -661,6 +726,14 @@ function initMap() {
     // Discover peers from all known nodes, then start sync
     await discoverPeers();
     await syncFeed();
+    initialSyncDone = true;
+    await refreshUI();
+
+    // If the user opened a /p/<id> deep-link, focus it now that atoms are loaded
+    if (deepLinkPunkto) {
+      await focusPunkto(deepLinkPunkto);
+    }
+
     syncTimer = setInterval(syncFeed, SYNC_INTERVAL_MS);
   });
 }
@@ -692,7 +765,7 @@ function toggle3D() {
 // ---------------------------------------------------------------------------
 
 async function resetCache() {
-  if (!confirm('Clear local data and reload?')) return;
+  if (!confirm('This will delete all locally cached atoms and reload the app. Continue?')) return;
   try { await db.delete(); } catch(e) {}
   if ('serviceWorker' in navigator) {
     const regs = await navigator.serviceWorker.getRegistrations();
@@ -705,6 +778,48 @@ async function resetCache() {
   location.reload(true);
 }
 
+// ---------------------------------------------------------------------------
+// Settings menu
+// ---------------------------------------------------------------------------
+
+let settingsOpen = false;
+
+function updateSettingsInfo(count) {
+  if (elSettingsNode) {
+    try {
+      elSettingsNode.textContent = new URL(NODE_URL).host;
+    } catch {
+      elSettingsNode.textContent = NODE_URL;
+    }
+  }
+  if (elSettingsCount && typeof count === 'number') {
+    elSettingsCount.textContent = String(count);
+  }
+}
+
+async function openSettingsMenu() {
+  settingsOpen = true;
+  elSettingsMenu.classList.add('open');
+  elSettingsMenu.setAttribute('aria-hidden', 'false');
+  try {
+    const count = await db.atoms.count();
+    updateSettingsInfo(count);
+  } catch {
+    updateSettingsInfo(0);
+  }
+}
+
+function closeSettingsMenu() {
+  settingsOpen = false;
+  elSettingsMenu.classList.remove('open');
+  elSettingsMenu.setAttribute('aria-hidden', 'true');
+}
+
+function toggleSettingsMenu() {
+  if (settingsOpen) closeSettingsMenu();
+  else openSettingsMenu();
+}
+
 function wireEvents() {
   // Panel toggle
   elFabPanel.addEventListener('click', () => setPanelOpen(!panelOpen));
@@ -712,8 +827,28 @@ function wireEvents() {
 
   // 3D toggle
   elToggle3D.addEventListener('click', toggle3D);
-  const elReset = document.getElementById('btn-reset');
-  if (elReset) elReset.addEventListener('click', resetCache);
+
+  // Settings menu
+  if (elBtnSettings) {
+    elBtnSettings.addEventListener('click', e => {
+      e.stopPropagation();
+      toggleSettingsMenu();
+    });
+  }
+  if (elSettingsMenu) {
+    // Prevent clicks inside the menu from closing it
+    elSettingsMenu.addEventListener('click', e => e.stopPropagation());
+  }
+  if (elSettingsReset) {
+    elSettingsReset.addEventListener('click', () => {
+      closeSettingsMenu();
+      resetCache();
+    });
+  }
+  // Close settings on outside click
+  document.addEventListener('click', () => {
+    if (settingsOpen) closeSettingsMenu();
+  });
 
   // Add atom
   elFabAdd.addEventListener('click', () => openModal());
@@ -731,6 +866,7 @@ function wireEvents() {
     if (e.key === 'Escape') {
       closeModal();
       setPanelOpen(false);
+      if (settingsOpen) closeSettingsMenu();
     }
   });
 }
@@ -753,6 +889,29 @@ async function boot() {
   if (!window.Dexie) {
     console.error('[punkto] Dexie not loaded — check CDN script tag');
     return;
+  }
+
+  // Capture /p/<id> deep-link BEFORE wiring so map load can act on it.
+  deepLinkPunkto = parseDeepLinkPunktoId();
+  if (deepLinkPunkto) {
+    console.log('[punkto] deep-link detected:', `p:${deepLinkPunkto}`);
+  }
+
+  // Cache-first: pre-render cached atom count and hide empty state flash.
+  // This runs before the map finishes loading so users never see the
+  // "No atoms yet. Syncing…" placeholder when IndexedDB already has atoms.
+  try {
+    const cachedCount = await db.atoms.count();
+    elCountNum.textContent = cachedCount;
+    if (elSettingsCount) elSettingsCount.textContent = String(cachedCount);
+    if (cachedCount > 0) {
+      elAtomEmpty.style.display = 'none';
+    } else {
+      // Keep hidden until initial sync completes.
+      elAtomEmpty.style.display = 'none';
+    }
+  } catch (e) {
+    console.warn('[punkto] cache-first prerender failed:', e);
   }
 
   wireEvents();

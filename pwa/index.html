@@ -375,23 +375,67 @@
       letter-spacing: 0.05em;
     }
     #toggle-3d:hover { background: var(--border); }
-    /* ── Reset cache button ──────────────────────────────── */
-    #btn-reset {
-      position: absolute;
-      top: 86px;
-      right: 10px;
-      z-index: 10;
-      background: var(--surface);
-      color: #ff6666;
-      border: 1px solid #442222;
-      border-radius: 4px;
-      padding: 4px 10px;
-      font-family: inherit;
-      font-size: 11px;
+    /* ── Settings button ──────────────────────────────────── */
+    #btn-settings {
+      width: 44px;
+      height: 44px;
+      background: transparent;
+      color: var(--text-dim);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      font-size: 18px;
+      line-height: 1;
       cursor: pointer;
-      letter-spacing: 0.05em;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      transition: color 0.2s, background 0.2s;
     }
-    #btn-reset:hover { background: #1a0808; }
+    #btn-settings:hover { color: var(--cyan); background: var(--surface2); }
+    #btn-settings:active { transform: scale(0.95); }
+
+    /* ── Settings menu popover ────────────────────────────── */
+    #settings-menu {
+      position: absolute;
+      top: calc(var(--bar-h) + 4px);
+      right: 10px;
+      z-index: 150;
+      min-width: 240px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.6);
+      padding: 6px;
+      display: none;
+      font-size: 12px;
+    }
+    #settings-menu.open { display: block; }
+    .settings-info {
+      padding: 8px 10px;
+      color: var(--text-dim);
+      font-size: 11px;
+      line-height: 1.5;
+      border-bottom: 1px solid var(--border);
+    }
+    .settings-info .k { color: var(--text-dim); }
+    .settings-info .v { color: var(--text); }
+    .settings-item {
+      display: block;
+      width: 100%;
+      text-align: left;
+      padding: 10px 12px;
+      background: none;
+      border: none;
+      border-radius: 4px;
+      color: var(--text);
+      font-family: inherit;
+      font-size: 12px;
+      cursor: pointer;
+    }
+    .settings-item:hover { background: var(--surface2); }
+    .settings-item.danger { color: #ff6666; }
+    .settings-item.danger:hover { background: #1a0808; }
 
     /* ── MapLibre popup overrides ─────────────────────────── */
     .punkto-popup .maplibregl-popup-content {
@@ -418,12 +462,21 @@
     <div class="title">punkto</div>
     <div id="atom-count"><span id="count-num">0</span> atoms</div>
     <div id="sync-indicator" title="sync status"></div>
+    <button id="btn-settings" title="Settings" aria-label="Settings">⚙</button>
+  </div>
+
+  <!-- Settings popover menu -->
+  <div id="settings-menu" role="menu" aria-hidden="true">
+    <div class="settings-info">
+      <div><span class="k">node:</span> <span class="v" id="settings-node">—</span></div>
+      <div><span class="k">cached:</span> <span class="v" id="settings-count">0</span> atoms</div>
+      <div><span class="k">version:</span> <span class="v">v0.2</span></div>
+    </div>
+    <button class="settings-item danger" id="settings-reset" role="menuitem">Reset local cache…</button>
   </div>
 
   <!-- 3D toggle -->
   <button id="toggle-3d" title="Switch to 3D view">2D</button>
-
-  <button id="btn-reset" title="Clear local cache and resync">&#8635; reset</button>
 
   <!-- Map container -->
   <div id="map">
