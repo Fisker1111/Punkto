@@ -151,6 +151,7 @@ const elSettingsMenu = document.getElementById('settings-menu');
 const elSettingsReset = document.getElementById('settings-reset');
 const elSettingsNode = document.getElementById('settings-node');
 const elSettingsCount = document.getElementById('settings-count');
+const elOnboardingHint = document.getElementById('onboarding-hint');
 
 // ---------------------------------------------------------------------------
 // Utility
@@ -734,6 +735,9 @@ function initMap() {
       await focusPunkto(deepLinkPunkto);
     }
 
+    // Show first-visit onboarding hint (skipped for deep-link visitors and repeat users)
+    showOnboarding();
+
     syncTimer = setInterval(syncFeed, SYNC_INTERVAL_MS);
   });
 }
@@ -776,6 +780,69 @@ async function resetCache() {
     for (const k of keys) await caches.delete(k);
   }
   location.reload(true);
+}
+
+// ---------------------------------------------------------------------------
+// First-visit onboarding hint
+// ---------------------------------------------------------------------------
+
+const ONBOARDING_KEY = 'punkto.onboarded';
+const ONBOARDING_TIMEOUT_MS = 10_000;
+let onboardingShown = false;
+let onboardingTimer = null;
+let onboardingDismissHandlers = null;
+
+function shouldShowOnboarding() {
+  if (!elOnboardingHint) return false;
+  if (deepLinkPunkto) return false; // deep-link visitors already know
+  try {
+    return localStorage.getItem(ONBOARDING_KEY) !== '1';
+  } catch {
+    return false;
+  }
+}
+
+function dismissOnboarding() {
+  if (!onboardingShown) return;
+  onboardingShown = false;
+  if (elOnboardingHint) {
+    elOnboardingHint.classList.remove('open');
+    elOnboardingHint.setAttribute('aria-hidden', 'true');
+  }
+  if (onboardingTimer) { clearTimeout(onboardingTimer); onboardingTimer = null; }
+  // Remove dismiss listeners
+  if (onboardingDismissHandlers) {
+    const { onInteract, onMapMove } = onboardingDismissHandlers;
+    document.removeEventListener('pointerdown', onInteract, true);
+    document.removeEventListener('keydown', onInteract, true);
+    if (map) {
+      map.off('movestart', onMapMove);
+      map.off('zoomstart', onMapMove);
+    }
+    onboardingDismissHandlers = null;
+  }
+  try { localStorage.setItem(ONBOARDING_KEY, '1'); } catch {}
+}
+
+function showOnboarding() {
+  if (!shouldShowOnboarding()) return;
+  onboardingShown = true;
+  elOnboardingHint.classList.add('open');
+  elOnboardingHint.setAttribute('aria-hidden', 'false');
+
+  // Auto-dismiss after timeout
+  onboardingTimer = setTimeout(dismissOnboarding, ONBOARDING_TIMEOUT_MS);
+
+  // Dismiss on any user interaction. Use capture so we catch before handlers.
+  const onInteract = () => dismissOnboarding();
+  const onMapMove = () => dismissOnboarding();
+  onboardingDismissHandlers = { onInteract, onMapMove };
+  document.addEventListener('pointerdown', onInteract, true);
+  document.addEventListener('keydown', onInteract, true);
+  if (map) {
+    map.on('movestart', onMapMove);
+    map.on('zoomstart', onMapMove);
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -851,7 +918,10 @@ function wireEvents() {
   });
 
   // Add atom
-  elFabAdd.addEventListener('click', () => openModal());
+  elFabAdd.addEventListener('click', () => {
+    dismissOnboarding();
+    openModal();
+  });
   elModalCancel.addEventListener('click', closeModal);
   elModalOverlay.addEventListener('click', e => {
     if (e.target === elModalOverlay) closeModal();

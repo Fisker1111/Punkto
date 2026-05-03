@@ -71,6 +71,27 @@
       letter-spacing: 0.08em;
       flex: 1;
     }
+    #topbar .title-group {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      line-height: 1.1;
+      min-width: 0;
+    }
+    #topbar .title-group .title {
+      flex: 0 0 auto;
+      font-size: 16px;
+    }
+    #topbar .tagline {
+      font-size: 10px;
+      color: var(--text-dim);
+      letter-spacing: 0.04em;
+      margin-top: 1px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
     #sync-indicator {
       width: 8px; height: 8px;
       border-radius: 50%;
@@ -127,9 +148,15 @@
       cursor: pointer;
       font-size: 18px;
       line-height: 1;
-      padding: 2px 6px;
+      width: 44px;
+      height: 44px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      border-radius: 6px;
     }
-    #panel-close:hover { color: var(--text); }
+    #panel-close:hover { color: var(--text); background: var(--surface2); }
 
     #atom-list {
       flex: 1;
@@ -333,6 +360,59 @@
       min-height: 16px;
     }
 
+    /* ── Modal public-and-permanent notice ────────────────── */
+    #modal-notice {
+      margin-top: 10px;
+      padding: 8px 10px;
+      font-size: 11px;
+      line-height: 1.4;
+      color: #d8b46a;
+      background: rgba(216, 180, 106, 0.06);
+      border: 1px solid rgba(216, 180, 106, 0.2);
+      border-radius: 6px;
+      letter-spacing: 0.02em;
+    }
+    #modal-notice .icon { margin-right: 4px; }
+
+    /* ── Onboarding hint (first-visit) ────────────────────── */
+    #onboarding-hint {
+      position: absolute;
+      bottom: calc(84px + var(--safe-b));
+      right: 18px;
+      max-width: 240px;
+      padding: 10px 12px;
+      background: var(--surface);
+      border: 1px solid var(--cyan-dim);
+      border-radius: 8px;
+      color: var(--text);
+      font-size: 12px;
+      line-height: 1.4;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.5);
+      z-index: 115;
+      display: none;
+      animation: hint-fade-in 0.3s ease;
+    }
+    #onboarding-hint.open { display: block; }
+    #onboarding-hint .hint-plus {
+      color: var(--cyan);
+      font-weight: 700;
+    }
+    #onboarding-hint .hint-arrow {
+      position: absolute;
+      bottom: -7px;
+      right: 22px;
+      width: 12px;
+      height: 12px;
+      background: var(--surface);
+      border-right: 1px solid var(--cyan-dim);
+      border-bottom: 1px solid var(--cyan-dim);
+      transform: rotate(45deg);
+    }
+    @keyframes hint-fade-in {
+      from { opacity: 0; transform: translateY(6px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
     /* ── Map crosshair ────────────────────────────────────── */
     #crosshair {
       position: absolute;
@@ -367,14 +447,29 @@
       background: var(--surface);
       color: var(--cyan);
       border: 1px solid var(--border);
-      border-radius: 4px;
-      padding: 4px 10px;
+      border-radius: 6px;
+      min-width: 44px;
+      height: 44px;
+      padding: 0 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
       font-family: inherit;
-      font-size: 12px;
+      font-size: 13px;
       cursor: pointer;
       letter-spacing: 0.05em;
     }
     #toggle-3d:hover { background: var(--border); }
+
+    /* ── MapLibre control size overrides (44×44 touch targets) ── */
+    .maplibregl-ctrl-group button,
+    .maplibregl-ctrl button {
+      width: 44px !important;
+      height: 44px !important;
+    }
+    .maplibregl-ctrl-group {
+      border-radius: 6px !important;
+    }
     /* ── Settings button ──────────────────────────────────── */
     #btn-settings {
       width: 44px;
@@ -459,7 +554,10 @@
 
   <!-- Top bar -->
   <div id="topbar">
-    <div class="title">punkto</div>
+    <div class="title-group">
+      <div class="title">punkto</div>
+      <div class="tagline">points in 3D space</div>
+    </div>
     <div id="atom-count"><span id="count-num">0</span> atoms</div>
     <div id="sync-indicator" title="sync status"></div>
     <button id="btn-settings" title="Settings" aria-label="Settings">⚙</button>
@@ -487,6 +585,12 @@
   <button id="fab-panel" title="Recent atoms">☰</button>
   <button id="fab-add" title="Add atom at map center">+</button>
 
+  <!-- First-visit onboarding hint (hidden by default; shown by app.js when appropriate) -->
+  <div id="onboarding-hint" aria-hidden="true">
+    <div class="hint-text">Tap <span class="hint-plus">+</span> to drop an atom at the map center</div>
+    <div class="hint-arrow"></div>
+  </div>
+
   <!-- Bottom panel -->
   <div id="panel">
     <div id="panel-header">
@@ -503,6 +607,9 @@
     <div id="modal">
       <h2>+ New Atom</h2>
       <div id="modal-location">…</div>
+      <div id="modal-notice">
+        <span class="icon">⚠</span>Public and permanent — this cannot be deleted.
+      </div>
       <textarea id="modal-text" placeholder="What's here? (optional)"></textarea>
       <div id="modal-author-row">
         <input id="modal-author" type="text" placeholder="your name / handle (optional)" />
