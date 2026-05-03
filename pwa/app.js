@@ -413,26 +413,6 @@ async function discoverPeers() {
 
 
 /**
- * Flat ground reference grid around centroid of atoms — spatial reference for 3D cloud.
- */
-function buildGroundGrid(atoms) {
-  const lines = [];
-  if (atoms.length === 0) return lines;
-  const cLon = atoms.reduce((s, a) => s + a.lon, 0) / atoms.length;
-  const cLat = atoms.reduce((s, a) => s + a.lat, 0) / atoms.length;
-  const range = 0.08; // ~9km
-  const step  = 0.01; // ~1km grid spacing
-  const alt   = 0;
-  for (let x = -range; x <= range + 1e-9; x = Math.round((x + step) * 1e9) / 1e9) {
-    lines.push({ sourcePosition: [cLon + x, cLat - range, alt], targetPosition: [cLon + x, cLat + range, alt] });
-  }
-  for (let y = -range; y <= range + 1e-9; y = Math.round((y + step) * 1e9) / 1e9) {
-    lines.push({ sourcePosition: [cLon - range, cLat + y, alt], targetPosition: [cLon + range, cLat + y, alt] });
-  }
-  return lines;
-}
-
-/**
  * Map altitude to RGBA color. Higher = brighter cyan.
  * alt range: -500 to 8500 → intensity 120–255
  */
@@ -459,19 +439,9 @@ async function renderAtoms() {
     label: (a.x || a.f || '').slice(0, 40),
   }));
 
-  const { ScatterplotLayer, LineLayer, TextLayer, MapboxOverlay } = window.deck;
+  const { ScatterplotLayer, TextLayer, MapboxOverlay } = window.deck;
 
   const layers = [
-    new LineLayer({
-      id: 'ground-grid',
-      data: buildGroundGrid(atoms),
-      getSourcePosition: d => d.sourcePosition,
-      getTargetPosition: d => d.targetPosition,
-      getColor: [0, 140, 160, 140],
-      getWidth: 1,
-      widthUnits: 'pixels',
-      pickable: false,
-    }),
     new ScatterplotLayer({
       id: 'atoms',
       data: scatterData,
@@ -516,6 +486,7 @@ async function renderAtoms() {
       getAlignmentBaseline: 'center',
       getPixelOffset: [14, 0],
       fontFamily: 'monospace',
+      characterSet: 'auto',
       pickable: false,
     }),
   ];
