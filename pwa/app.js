@@ -19,6 +19,16 @@ const SEED_NODES = [
   'https://app2.punkto.xyz',
 ];
 
+// Atoms whose author handle (case-insensitive) matches any of these are hidden
+// from the UI (map dots + panel list + counters). The atoms remain in Dexie and
+// on disk — the log is append-only — we just filter at render time.
+const HIDDEN_AUTHOR_HANDLES = new Set([
+  'test',
+  'sync-test',
+  'cors-test',
+  'browser-test',
+]);
+
 // Node health tracking (in-memory, resets on reload)
 // url -> { health: 'ok'|'failing'|'unavailable'|'recovering', failures: 0, unavailableSince: 0 }
 const nodeRegistry = new Map();
@@ -150,6 +160,7 @@ const elBtnSettings = document.getElementById('btn-settings');
 const elSettingsMenu = document.getElementById('settings-menu');
 const elSettingsReset = document.getElementById('settings-reset');
 const elSettingsNode = document.getElementById('settings-node');
+const elSettingsPeers = document.getElementById('settings-peers');
 const elSettingsCount = document.getElementById('settings-count');
 const elOnboardingHint = document.getElementById('onboarding-hint');
 
@@ -196,6 +207,16 @@ function decodeAtomLocation(punktoStr) {
   }
 }
 
+/**
+ * Return true if an atom (DB record or feed entry) should be hidden from the UI
+ * because its author handle is a known test/system handle. Case-insensitive.
+ */
+function isHiddenAtom(atom) {
+  const f = typeof atom?.f === 'string' ? atom.f.trim().toLowerCase() : '';
+  if (!f) return false;
+  return HIDDEN_AUTHOR_HANDLES.has(f);
+}
+
 // ---------------------------------------------------------------------------
 // Deep-link: /p/<id> → open and focus a punkto
 // ---------------------------------------------------------------------------
@@ -230,6 +251,9 @@ async function focusPunkto(id) {
 
   // Highlight matching atom item if present in the list (after refreshUI)
   // refreshUI repopulates children; we search on next tick.
+  // NOTE: if the targeted punkto's atoms are all filtered (hidden test/system
+  // handles), they won't be in the rendered list and the loop simply exits
+  // without highlighting — the fly-to still works, which is the desired UX.
   requestAnimationFrame(() => {
     const items = elAtomList.querySelectorAll('.atom-item');
     for (const item of items) {
@@ -421,7 +445,9 @@ function altToColor(alt) {
 async function renderAtoms() {
   if (!deckOverlay) return;
 
-  const atoms = await db.atoms.orderBy('t').reverse().toArray();
+  // Filter out hidden system/test atoms so they never appear on the map either.
+  const atoms = (await db.atoms.orderBy('t').reverse().toArray())
+    .filter(a => !isHiddenAtom(a));
 
   const scatterData = atoms.map(a => ({
     position: [a.lon, a.lat, a.alt],
@@ -502,13 +528,17 @@ async function renderAtoms() {
 // ---------------------------------------------------------------------------
 
 async function refreshUI() {
-  const total = await db.atoms.count();
+  // Compute the visible-atom count (after filtering hidden system/test handles).
+  // The full DB count is not exposed in the UI — users see only the clean subset.
+  const allAtoms = await db.atoms.orderBy('t').reverse().toArray();
+  const visibleAtoms = allAtoms.filter(a => !isHiddenAtom(a));
+  const total = visibleAtoms.length;
   elCountNum.textContent = total;
   // Keep settings info (if menu is open) in sync
   if (elSettingsCount) elSettingsCount.textContent = String(total);
 
-  // Render recent 50 in panel
-  const recent = await db.atoms.orderBy('t').reverse().limit(50).toArray();
+  // Render recent 50 visible atoms in panel
+  const recent = visibleAtoms.slice(0, 50);
 
   if (recent.length === 0) {
     // Only show the empty placeholder AFTER the first sync has completed.
@@ -850,17 +880,125 @@ function showOnboarding() {
 // ---------------------------------------------------------------------------
 
 let settingsOpen = false;
+let lastSyncLag = 0; // peer_max_cursor - local_cursor (0 means up-to-date)
 
-function updateSettingsInfo(count) {
-  if (elSettingsNode) {
-    try {
-      elSettingsNode.textContent = new URL(NODE_URL).host;
-    } catch {
-      elSettingsNode.textContent = NODE_URL;
-    }
+function hostOf(url) {
+  try { return new URL(url).host; } catch { return url; }
+}
+
+/**
+ * Fetch the current cursor (byte offset) of a node by asking /feed with an
+ * unreachably large `since` value — node.py clamps it to file_size and returns
+ * `{cursor, atoms: []}`. Zero-payload, cheap, works against any Punkto node.
+ * Returns a non-negative integer cursor, or null on error.
+ */
+async function fetchNodeCursor(url) {
+  try {
+    const res = await fetch(`${url}/feed?since=999999999999`, {
+      signal: AbortSignal.timeout(6_000),
+    });
+    if (!res.ok) return null;
+    const data = await res.json();
+    return typeof data.cursor === 'number' ? data.cursor : null;
+  } catch {
+    return null;
   }
+}
+
+/**
+ * Fetch /info for a node. Returns null on error, or the parsed JSON on success.
+ */
+async function fetchNodeInfo(url) {
+  try {
+    const res = await fetch(`${url}/info`, {
+      signal: AbortSignal.timeout(6_000),
+    });
+    if (!res.ok) return null;
+    return await res.json();
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Refresh visible atom count in settings header. Synchronous, cheap — safe to
+ * call from the UI-render path.
+ */
+function updateSettingsCount(count) {
   if (elSettingsCount && typeof count === 'number') {
     elSettingsCount.textContent = String(count);
+  }
+}
+
+/**
+ * Refresh the node + peer info block in the settings menu. Runs on-demand
+ * (each time the menu opens) so we never poll. Updates topbar sync-indicator
+ * to reflect lag status. Gracefully degrades when peers are unreachable or
+ * when /info doesn't advertise a peer list.
+ */
+async function refreshSettingsNetworkInfo() {
+  if (!elSettingsNode) return;
+
+  // Render the node row immediately with a "…" cursor placeholder so the menu
+  // feels responsive while fetches are in flight.
+  elSettingsNode.innerHTML = `${escHtml(hostOf(NODE_URL))} <span class="dim">(cursor …)</span>`;
+  if (elSettingsPeers) elSettingsPeers.innerHTML = '<span class="dim">checking…</span>';
+
+  // 1. Get local /info → peer URLs (fall back to SEED_NODES if absent).
+  const localInfo = await fetchNodeInfo(NODE_URL);
+  let peerUrls = Array.isArray(localInfo?.peers) ? localInfo.peers.slice() : [];
+  if (peerUrls.length === 0) {
+    // Fall back to seed nodes minus current origin
+    peerUrls = SEED_NODES.filter(u => u.replace(/\/$/, '') !== NODE_URL.replace(/\/$/, ''));
+  }
+  peerUrls = peerUrls.map(u => u.replace(/\/$/, ''));
+
+  // 2. Fetch cursors in parallel: local + each peer.
+  const [localCursor, ...peerCursors] = await Promise.all([
+    fetchNodeCursor(NODE_URL),
+    ...peerUrls.map(u => fetchNodeCursor(u)),
+  ]);
+
+  // 3. Compute lag (local behind highest peer).
+  const reachablePeerCursors = peerCursors.filter(c => typeof c === 'number');
+  const maxPeerCursor = reachablePeerCursors.length
+    ? Math.max(...reachablePeerCursors) : 0;
+  const lag = (typeof localCursor === 'number' && maxPeerCursor > localCursor)
+    ? (maxPeerCursor - localCursor) : 0;
+  lastSyncLag = lag;
+
+  // 4. Render node row
+  const warnIcon = lag > 0 ? ' <span class="lag-warn" title="This node is behind peers">⚠</span>' : '';
+  const localCursorStr = typeof localCursor === 'number'
+    ? `cursor ${localCursor}` : 'unreachable';
+  elSettingsNode.innerHTML =
+    `${escHtml(hostOf(NODE_URL))} <span class="dim">(${localCursorStr})</span>${warnIcon}`;
+
+  // 5. Render peers list
+  if (elSettingsPeers) {
+    if (peerUrls.length === 0) {
+      elSettingsPeers.innerHTML = '<span class="dim">none</span>';
+    } else {
+      const rows = peerUrls.map((url, i) => {
+        const c = peerCursors[i];
+        if (typeof c !== 'number') {
+          return `${escHtml(hostOf(url))} <span class="dim">(unreachable)</span>`;
+        }
+        const diff = typeof localCursor === 'number' ? (c - localCursor) : 0;
+        let diffStr = '';
+        if (diff > 0) diffStr = ` <span class="lag-warn">↓${diff} behind</span>`;
+        else if (diff < 0) diffStr = ` <span class="dim">↑${-diff} ahead</span>`;
+        return `${escHtml(hostOf(url))} <span class="dim">(cursor ${c}${diffStr ? '' : ''})</span>${diffStr}`;
+      });
+      elSettingsPeers.innerHTML = rows.join('<br>');
+    }
+  }
+
+  // 6. Topbar indicator: amber dot when behind, regardless of sync state
+  if (elSyncDot) {
+    elSyncDot.classList.toggle('lagging', lag > 0);
+    if (lag > 0) elSyncDot.title = `Behind peers by ${lag} bytes`;
+    else elSyncDot.title = 'sync status';
   }
 }
 
@@ -868,12 +1006,15 @@ async function openSettingsMenu() {
   settingsOpen = true;
   elSettingsMenu.classList.add('open');
   elSettingsMenu.setAttribute('aria-hidden', 'false');
+  // Update visible atom count immediately from the DB-backed UI state
   try {
-    const count = await db.atoms.count();
-    updateSettingsInfo(count);
+    const all = await db.atoms.toArray();
+    updateSettingsCount(all.filter(a => !isHiddenAtom(a)).length);
   } catch {
-    updateSettingsInfo(0);
+    updateSettingsCount(0);
   }
+  // Kick off network info refresh (no await — menu is already visible).
+  refreshSettingsNetworkInfo();
 }
 
 function closeSettingsMenu() {
@@ -971,7 +1112,9 @@ async function boot() {
   // This runs before the map finishes loading so users never see the
   // "No atoms yet. Syncing…" placeholder when IndexedDB already has atoms.
   try {
-    const cachedCount = await db.atoms.count();
+    // Count only visible atoms so the number matches what actually renders.
+    const cachedAll = await db.atoms.toArray();
+    const cachedCount = cachedAll.filter(a => !isHiddenAtom(a)).length;
     elCountNum.textContent = cachedCount;
     if (elSettingsCount) elSettingsCount.textContent = String(cachedCount);
     if (cachedCount > 0) {

@@ -102,6 +102,11 @@
     #sync-indicator.ok     { background: #00e676; }
     #sync-indicator.syncing{ background: #ffeb3b; animation: pulse 1s infinite; }
     #sync-indicator.error  { background: var(--danger); }
+    /* Amber ring when this node is behind peers. Wins over .ok visually. */
+    #sync-indicator.lagging {
+      background: #ffb300;
+      box-shadow: 0 0 0 2px rgba(255, 179, 0, 0.25);
+    }
     @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
 
     #atom-count {
@@ -515,6 +520,12 @@
     }
     .settings-info .k { color: var(--text-dim); }
     .settings-info .v { color: var(--text); }
+    .settings-info .dim { color: var(--text-dim); font-size: 10px; }
+    .settings-info .lag-warn {
+      color: #ffb300;
+      font-weight: bold;
+      font-size: 10px;
+    }
     .settings-item {
       display: block;
       width: 100%;
@@ -566,9 +577,10 @@
   <!-- Settings popover menu -->
   <div id="settings-menu" role="menu" aria-hidden="true">
     <div class="settings-info">
-      <div><span class="k">node:</span> <span class="v" id="settings-node">—</span></div>
-      <div><span class="k">cached:</span> <span class="v" id="settings-count">0</span> atoms</div>
-      <div><span class="k">version:</span> <span class="v">v0.2</span></div>
+      <div><span class="k">node:</span>    <span class="v" id="settings-node">—</span></div>
+      <div><span class="k">peers:</span>   <span class="v" id="settings-peers">—</span></div>
+      <div><span class="k">cached:</span>  <span class="v" id="settings-count">0</span> atoms</div>
+      <div><span class="k">version:</span> <span class="v">v0.3</span></div>
     </div>
     <button class="settings-item danger" id="settings-reset" role="menuitem">Reset local cache…</button>
   </div>
@@ -598,7 +610,7 @@
       <button id="panel-close">✕</button>
     </div>
     <div id="atom-list">
-      <div id="atom-list-empty">No atoms yet. Syncing…</div>
+      <div id="atom-list-empty">No atoms yet.</div>
     </div>
   </div>
 
