@@ -450,6 +450,32 @@ function altToColor(alt) {
 }
 
 /**
+ * Convert an integer hue (0–359) to an RGBA tuple using HSL(hue, 65%, 50%).
+ * Used to tint ScatterplotLayer dots so each atom dot matches its bubble's
+ * author hue, making the bubble ↔ dot pairing visually explicit.
+ */
+function hueToRgba(hue, alpha = 240) {
+  const s = 0.65, l = 0.5;
+  const c = (1 - Math.abs(2 * l - 1)) * s;
+  const h = hue / 60;
+  const x = c * (1 - Math.abs((h % 2) - 1));
+  let r = 0, g = 0, b = 0;
+  if (h < 1)      [r, g, b] = [c, x, 0];
+  else if (h < 2) [r, g, b] = [x, c, 0];
+  else if (h < 3) [r, g, b] = [0, c, x];
+  else if (h < 4) [r, g, b] = [0, x, c];
+  else if (h < 5) [r, g, b] = [x, 0, c];
+  else            [r, g, b] = [c, 0, x];
+  const m = l - c / 2;
+  return [
+    Math.round((r + m) * 255),
+    Math.round((g + m) * 255),
+    Math.round((b + m) * 255),
+    alpha,
+  ];
+}
+
+/**
  * Phase 2: deterministic author → hue mapping for subtle bubble tinting.
  * Returns an integer hue 0–360, or null for anon/empty authors (keeps
  * the default neutral hue defined in CSS).
@@ -538,7 +564,13 @@ async function renderAtoms(newAtomIds = null) {
 
   const scatterData = atoms.map(a => ({
     position: [a.lon, a.lat, a.alt],
-    color: altToColor(a.alt),
+    // Tint each dot with its author hue so the leader line visually matches
+    // the bubble sitting above. Falls back to altitude gradient when the
+    // atom has no author (anon) or the hash returned null.
+    color: (() => {
+      const h = hashAuthorHue(a.f);
+      return h != null ? hueToRgba(h) : altToColor(a.alt);
+    })(),
     punkto: a.punkto,
     text: a.x,
     f: a.f,
@@ -554,10 +586,10 @@ async function renderAtoms(newAtomIds = null) {
       data: scatterData,
       getPosition: d => d.position,
       getFillColor: d => d.color,
-      getRadius: 10,
+      getRadius: 12,
       radiusUnits: 'pixels',
-      radiusMinPixels: 6,
-      radiusMaxPixels: 18,
+      radiusMinPixels: 8,
+      radiusMaxPixels: 20,
       pickable: true,
       autoHighlight: true,
       highlightColor: [255, 255, 100, 255],
@@ -590,7 +622,9 @@ async function renderAtoms(newAtomIds = null) {
       let justCreated = false;
       if (!marker) {
         el = buildBubbleElement(a, count, group);
-        marker = new maplibregl.Marker({ element: el, anchor: 'bottom' })
+        // Offset pulls the bubble 16px upward so the atom dot stays visible
+        // beneath it and the SVG leader line has room to connect them.
+        marker = new maplibregl.Marker({ element: el, anchor: 'bottom', offset: [0, -16] })
           .setLngLat([a.lon, a.lat])
           .addTo(map);
         atomMarkers.set(pid, marker);
@@ -619,6 +653,9 @@ async function renderAtoms(newAtomIds = null) {
       }
     }
     updateBubbleVisibility();
+    // Re-draw leader lines so newly-added or removed bubbles sync immediately,
+    // even before the next MapLibre `render` event fires.
+    drawLeaderLines();
 
     // Phase 2: fit-to-atoms on first render only. Deep-link flyTo wins.
     if (!hasBootFit) {
@@ -758,6 +795,88 @@ function updateBubbleVisibility() {
       el.classList.toggle('atom-bubble--compact', z < 14);
     }
   }
+}
+
+// ---------------------------------------------------------------------------
+// Leader lines (SVG overlay) — connect each bubble to its atom dot
+// ---------------------------------------------------------------------------
+
+let svgLeaderOverlay = null;
+
+/**
+ * Ensure the SVG overlay exists inside the map container. Called once from
+ * initMap() and safe to call again (idempotent) in case the container is
+ * rebuilt.
+ */
+function ensureLeaderOverlay() {
+  if (!map) return null;
+  if (svgLeaderOverlay && svgLeaderOverlay.isConnected) return svgLeaderOverlay;
+  const container = map.getContainer();
+  let svg = container.querySelector('#leader-lines');
+  if (!svg) {
+    svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    svg.setAttribute('id', 'leader-lines');
+    // Keep the SVG non-interactive so clicks pass through to the map/dots.
+    svg.setAttribute('aria-hidden', 'true');
+    container.appendChild(svg);
+  }
+  svgLeaderOverlay = svg;
+  return svg;
+}
+
+/**
+ * Draw one <line> per visible bubble from the atom dot (map-projected
+ * [lon,lat]) up to the bottom-center of the bubble DOM.
+ *
+ * Performance: called on every map `render` event (~60 fps during pan/zoom).
+ * Per-frame cost: one bounding-rect read per bubble + map.project() per
+ * atom. With the current LOD cap (< 200 bubbles) this stays well under 1ms.
+ *
+ * Colors: matches the bubble's author hue so the line visually extends the
+ * bubble down to its dot. Anon/unknown authors use neutral hue 210.
+ */
+function drawLeaderLines() {
+  if (!map || atomMarkers.size === 0) {
+    if (svgLeaderOverlay) svgLeaderOverlay.innerHTML = '';
+    return;
+  }
+  const svg = ensureLeaderOverlay();
+  if (!svg) return;
+
+  const containerRect = map.getContainer().getBoundingClientRect();
+  const parts = [];
+
+  for (const [pid, marker] of atomMarkers) {
+    const el = marker.getElement();
+    // Skip hidden-by-LOD bubbles so lines disappear in lockstep with them.
+    if (!el || el.style.display === 'none') continue;
+
+    // Atom dot position: project the marker's lngLat into screen space.
+    const lngLat = marker.getLngLat();
+    const dotPt = map.project([lngLat.lng, lngLat.lat]);
+    if (!dotPt || !isFinite(dotPt.x) || !isFinite(dotPt.y)) continue;
+
+    // Bubble bottom-center in container coordinates.
+    const bubbleRect = el.getBoundingClientRect();
+    if (bubbleRect.width === 0 && bubbleRect.height === 0) continue;
+    const bubbleX = bubbleRect.left + bubbleRect.width / 2 - containerRect.left;
+    const bubbleY = bubbleRect.bottom - containerRect.top;
+
+    // Author hue via the atom attached to the element, fallback 210.
+    const group = el._punktoGroup;
+    const atom = group && group.length ? group[0] : null;
+    const h = atom ? hashAuthorHue(atom.f) : null;
+    const hue = h != null ? h : 210;
+
+    parts.push(
+      `<line x1="${dotPt.x.toFixed(1)}" y1="${dotPt.y.toFixed(1)}"` +
+      ` x2="${bubbleX.toFixed(1)}" y2="${bubbleY.toFixed(1)}"` +
+      ` stroke="hsl(${hue}, 55%, 55%)" stroke-width="1.5"` +
+      ` stroke-opacity="0.65" stroke-linecap="round" />`
+    );
+  }
+
+  svg.innerHTML = parts.join('');
 }
 
 // ---------------------------------------------------------------------------
@@ -1020,8 +1139,13 @@ function initMap() {
     console.log('[map] loaded');
 
     // Update DOM bubble LOD whenever zoom or pan changes.
-    map.on('zoomend', updateBubbleVisibility);
-    map.on('moveend', updateBubbleVisibility);
+    map.on('zoomend', () => { updateBubbleVisibility(); drawLeaderLines(); });
+    map.on('moveend', () => { updateBubbleVisibility(); drawLeaderLines(); });
+
+    // Ensure the SVG overlay exists and is redrawn on every map render event
+    // so leader lines track pan/zoom/pitch/bearing smoothly.
+    ensureLeaderOverlay();
+    map.on('render', drawLeaderLines);
 
     // Add 3D building extrusion layer (OpenFreeMap has openmaptiles source)
     try {

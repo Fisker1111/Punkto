@@ -567,10 +567,9 @@
       opacity: 1;
       transition: opacity 0.2s ease, border-color 0.2s ease, max-width 0.2s ease;
       pointer-events: auto;
-      /* Anchor: bottom of bubble sits ABOVE the atom dot (marker anchor='bottom'
-         means [0,0] of this element aligns with the lng/lat point). We lift it
-         a few px so the tail doesn't overlap the scatterplot dot. */
-      margin-bottom: 8px;
+      /* Bubble floats above the atom dot; the gap is created via the MapLibre
+         marker offset ([0,-16]) in app.js so an SVG leader line can be drawn
+         from the dot up to the bubble's bottom edge. */
       cursor: pointer;
       user-select: text;
     }
@@ -615,18 +614,20 @@
     .atom-bubble a:hover { text-decoration: underline; }
     .atom-bubble b { font-weight: 600; }
     .atom-bubble i { font-style: italic; }
-    /* Speech-bubble tail as pseudo-element on body — inherits --author-hue
-       from body so tint stays consistent with the bubble background. */
-    .atom-bubble-body::after {
-      content: '';
+    /* Speech-bubble tail removed — leader lines (SVG) now visually connect
+       each bubble to its atom dot, making the pairing explicit at any zoom. */
+    /* SVG overlay for leader lines: sits above the map canvas but below the
+       MapLibre marker DOM (markers are rendered in MapLibre's own container
+       with higher stacking). pointer-events:none so clicks pass through. */
+    #leader-lines {
       position: absolute;
-      left: 12px;
-      bottom: -6px;
-      width: 0;
-      height: 0;
-      border-left: 4px solid transparent;
-      border-right: 4px solid transparent;
-      border-top: 6px solid hsl(var(--author-hue, 210), 18%, 11%);
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 1;
+      overflow: visible;
     }
     /* Compact mode (zoom 12-15): tighter and clamped to 2 lines */
     .atom-bubble--compact {
