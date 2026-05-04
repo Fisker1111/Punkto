@@ -3,7 +3,7 @@
  * Cache-first for app shell, network-first for API endpoints.
  */
 
-const CACHE_NAME = 'punkto-v18';
+const CACHE_NAME = 'punkto-v20';
 
 const APP_SHELL = [
   '/',

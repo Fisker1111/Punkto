@@ -564,24 +564,31 @@
     .atom-bubble {
       position: relative;
       max-width: 240px;
-      padding: 8px 10px;
-      background: #0f0f0fee;
-      color: #e0f4ff;
-      border-radius: 12px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.4);
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      font-size: 13px;
-      line-height: 1.35;
       opacity: 1;
       transition: opacity 0.2s ease, border-color 0.2s ease, max-width 0.2s ease;
       pointer-events: auto;
-      border: 1px solid transparent;
       /* Anchor: bottom of bubble sits ABOVE the atom dot (marker anchor='bottom'
          means [0,0] of this element aligns with the lng/lat point). We lift it
          a few px so the tail doesn't overlap the scatterplot dot. */
       margin-bottom: 8px;
-      cursor: default;
+      cursor: pointer;
       user-select: text;
+    }
+    /* Inner body carries the tint (MapLibre rewrites outer style on pan/zoom
+       so the --author-hue custom property would get clobbered there; setting
+       it on a MapLibre-untouched inner element is stable). */
+    .atom-bubble-body {
+      position: relative;
+      padding: 8px 10px;
+      background: hsl(var(--author-hue, 210), 18%, 11%);
+      color: #e0f4ff;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+      border: 1px solid transparent;
+      border-left: 2px solid hsl(var(--author-hue, 210), 40%, 45%);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      font-size: 13px;
+      line-height: 1.35;
     }
     .atom-bubble-text {
       color: #e0f4ff;
@@ -592,15 +599,15 @@
     }
     .atom-bubble-meta {
       margin-top: 4px;
-      color: #7ab8c8;
+      color: hsl(var(--author-hue, 210), 35%, 68%);
       font-size: 11px;
       display: flex;
       gap: 4px;
       align-items: center;
     }
-    .atom-bubble-author { color: #7ab8c8; }
-    .atom-bubble-dot    { color: #7ab8c8; opacity: 0.7; }
-    .atom-bubble-time   { color: #7ab8c8; opacity: 0.85; }
+    .atom-bubble-author { color: hsl(var(--author-hue, 210), 35%, 68%); }
+    .atom-bubble-dot    { color: hsl(var(--author-hue, 210), 35%, 68%); opacity: 0.7; }
+    .atom-bubble-time   { color: hsl(var(--author-hue, 210), 35%, 68%); opacity: 0.85; }
     .atom-bubble a {
       color: #4ad7ff;
       text-decoration: none;
@@ -608,7 +615,10 @@
     .atom-bubble a:hover { text-decoration: underline; }
     .atom-bubble b { font-weight: 600; }
     .atom-bubble i { font-style: italic; }
-    .atom-bubble-tail {
+    /* Speech-bubble tail as pseudo-element on body — inherits --author-hue
+       from body so tint stays consistent with the bubble background. */
+    .atom-bubble-body::after {
+      content: '';
       position: absolute;
       left: 12px;
       bottom: -6px;
@@ -616,7 +626,7 @@
       height: 0;
       border-left: 4px solid transparent;
       border-right: 4px solid transparent;
-      border-top: 6px solid #0f0f0fee;
+      border-top: 6px solid hsl(var(--author-hue, 210), 18%, 11%);
     }
     /* Compact mode (zoom 12-15): tighter and clamped to 2 lines */
     .atom-bubble--compact {
@@ -630,12 +640,41 @@
       text-overflow: ellipsis;
     }
     /* Deep-link / selected focus */
-    .atom-bubble--focus {
+    .atom-bubble--focus .atom-bubble-body {
       border: 1px solid #ffb84a;
+      border-left: 2px solid #ffb84a;
+    }
+    .atom-bubble--focus {
       max-width: 260px;
     }
     .atom-bubble--focus.atom-bubble--compact {
       max-width: 180px;
+    }
+    /* Phase 2: count badge for multi-atom punktos (+N) */
+    .atom-bubble-count {
+      position: absolute;
+      top: -6px;
+      right: -6px;
+      padding: 2px 6px;
+      border-radius: 10px;
+      font-size: 10px;
+      font-weight: 600;
+      line-height: 1;
+      background: #ffb84a;
+      color: #1a1a1a;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.3);
+      cursor: pointer;
+      user-select: none;
+      pointer-events: auto;
+    }
+    /* Phase 2: new-atom arrival pulse */
+    @keyframes atom-bubble-pop {
+      0%   { transform: scale(0.3); opacity: 0; }
+      60%  { transform: scale(1.08); opacity: 1; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+    .atom-bubble--new {
+      animation: atom-bubble-pop 0.55s cubic-bezier(0.34, 1.56, 0.64, 1);
     }
   </style>
 </head>

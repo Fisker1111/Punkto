@@ -140,6 +140,12 @@ let deepLinkPunkto = null; // captured at boot, consumed after first refreshUI
 const atomMarkers = new Map();
 // Currently focused punkto id (without 'p:') for atom-bubble--focus class
 let focusedPunktoId = null;
+// Phase 2: first-render fit-to-atoms flag. True after the first successful
+// boot fit (or boot where there were no atoms). Subsequent renders never
+// re-fit to avoid jarring viewport changes.
+let hasBootFit = false;
+// Phase 2: track which DB primary keys belong to atoms seen before the most
+// recent syncFeed() run, so we can detect fresh arrivals and pulse them.
 // ---------------------------------------------------------------------------
 // DOM refs
 // ---------------------------------------------------------------------------
@@ -337,8 +343,11 @@ async function upsertAtom(atom) {
     .and(a => a.t === atom.t)
     .first();
   if (!existing) {
-    await db.atoms.add(record);
+    // Return the newly assigned auto-increment id so syncFeed can flag fresh arrivals.
+    const newId = await db.atoms.add(record);
+    return { inserted: true, id: newId };
   }
+  return { inserted: false, id: existing.id };
 }
 
 // ---------------------------------------------------------------------------
@@ -351,6 +360,7 @@ async function syncFeed() {
   setSyncStatus('syncing');
 
   let anyError = false;
+  const newAtomIds = new Set();
 
   try {
     // Get all known nodes from Dexie; always include DEFAULT NODE_URL
@@ -369,7 +379,10 @@ async function syncFeed() {
         if (Array.isArray(data.atoms) && data.atoms.length > 0) {
           for (const atom of data.atoms) {
             if (atom.punkto && atom.t) {
-              await upsertAtom(atom);
+              const r = await upsertAtom(atom);
+              if (r && r.inserted && !isHiddenAtom(atom)) {
+                newAtomIds.add(r.id);
+              }
             }
           }
         }
@@ -384,7 +397,7 @@ async function syncFeed() {
     }
 
     setSyncStatus(anyError ? 'error' : 'ok');
-    await refreshUI();
+    await refreshUI(newAtomIds);
   } catch (err) {
     console.warn('[sync] unexpected error:', err);
     setSyncStatus('error');
@@ -436,12 +449,92 @@ function altToColor(alt) {
   return [0, intensity, 255, 240];
 }
 
-async function renderAtoms() {
+/**
+ * Phase 2: deterministic author → hue mapping for subtle bubble tinting.
+ * Returns an integer hue 0–360, or null for anon/empty authors (keeps
+ * the default neutral hue defined in CSS).
+ * Simple djb2-style hash — stable across reloads and devices.
+ */
+function hashAuthorHue(author) {
+  if (!author) return null;
+  const s = String(author).trim().toLowerCase();
+  if (!s || s === 'anon') return null;
+  let h = 5381;
+  for (let i = 0; i < s.length; i++) {
+    h = ((h << 5) + h + s.charCodeAt(i)) | 0;
+  }
+  return Math.abs(h) % 360;
+}
+
+/**
+ * Phase 2: build and show a MapLibre popup for one or more atoms at a
+ * given lngLat. If `atomOrAtoms` is an array with length > 1, renders a
+ * 'N atoms at this Punkto' heading followed by a list. Otherwise renders
+ * the single-atom popup (same markup the ScatterplotLayer produced).
+ */
+function openAtomPopup(atomOrAtoms, lngLat) {
+  if (!map) return;
+  const atoms = Array.isArray(atomOrAtoms) ? atomOrAtoms : [atomOrAtoms];
+  if (atoms.length === 0) return;
+
+  let html = '';
+  if (atoms.length === 1) {
+    const a = atoms[0];
+    const loc = decodeAtomLocation(a.punkto);
+    const coordStr = loc ? fmtCoords(loc.lat, loc.lon, loc.alt) : '';
+    const timeStr = fmtTime(a.t);
+    const text = a.text || a.x || '';
+    html = [
+      text ? `<div class="popup-text">${escHtml(text)}</div>` : '',
+      `<div class="popup-meta">${escHtml(a.f || 'anon')} · ${timeStr}</div>`,
+      `<div class="popup-canon">${escHtml(a.punkto)}</div>`,
+      coordStr ? `<div class="popup-coords">${coordStr}</div>` : '',
+    ].filter(Boolean).join('');
+  } else {
+    // Multi-atom: sort newest first, show all
+    const sorted = atoms.slice().sort((a, b) => (b.t || 0) - (a.t || 0));
+    const head = `<div class="popup-meta" style="font-weight:600;">${sorted.length} atoms at this Punkto</div>`;
+    const items = sorted.map(a => {
+      const text = a.text || a.x || '';
+      const timeStr = fmtTime(a.t);
+      return [
+        '<div class="popup-atom" style="margin-top:8px;padding-top:6px;border-top:1px solid #333;">',
+        text ? `<div class="popup-text">${escHtml(text)}</div>` : '',
+        `<div class="popup-meta">${escHtml(a.f || 'anon')} · ${timeStr}</div>`,
+        '</div>',
+      ].filter(Boolean).join('');
+    }).join('');
+    const canon = sorted[0].punkto;
+    const loc = decodeAtomLocation(canon);
+    const coordStr = loc ? fmtCoords(loc.lat, loc.lon, loc.alt) : '';
+    html = head + items +
+      `<div class="popup-canon" style="margin-top:8px;">${escHtml(canon)}</div>` +
+      (coordStr ? `<div class="popup-coords">${coordStr}</div>` : '');
+  }
+
+  new maplibregl.Popup({ closeButton: true, maxWidth: '280px', className: 'punkto-popup' })
+    .setLngLat(lngLat)
+    .setHTML(html)
+    .addTo(map);
+}
+
+async function renderAtoms(newAtomIds = null) {
   if (!deckOverlay) return;
 
   // Filter out hidden system/test atoms so they never appear on the map either.
   const atoms = (await db.atoms.orderBy('t').reverse().toArray())
     .filter(a => !isHiddenAtom(a));
+
+  // Phase 2: per-punkto aggregation for count badges and multi-atom popups.
+  // atomsByPunkto maps a canonical punkto id → array of atoms (newest first,
+  // preserving the orderBy('t').reverse() ordering above).
+  const atomsByPunkto = new Map();
+  for (const a of atoms) {
+    if (!a.punkto) continue;
+    const arr = atomsByPunkto.get(a.punkto);
+    if (arr) arr.push(a);
+    else atomsByPunkto.set(a.punkto, [a]);
+  }
 
   const scatterData = atoms.map(a => ({
     position: [a.lon, a.lat, a.alt],
@@ -471,19 +564,8 @@ async function renderAtoms() {
       onClick: info => {
         if (!info.object || !map) return;
         const a = info.object;
-        const loc = decodeAtomLocation(a.punkto);
-        const coordStr = loc ? fmtCoords(loc.lat, loc.lon, loc.alt) : '';
-        const timeStr = fmtTime(a.t);
-        const html = [
-          a.text ? `<div class="popup-text">${escHtml(a.text)}</div>` : '',
-          `<div class="popup-meta">${escHtml(a.f || 'anon')} · ${timeStr}</div>`,
-          `<div class="popup-canon">${escHtml(a.punkto)}</div>`,
-          coordStr ? `<div class="popup-coords">${coordStr}</div>` : '',
-        ].filter(Boolean).join('');
-        new maplibregl.Popup({ closeButton: true, maxWidth: '280px', className: 'punkto-popup' })
-          .setLngLat(info.coordinate.slice(0, 2))
-          .setHTML(html)
-          .addTo(map);
+        const group = atomsByPunkto.get(a.punkto) || [a];
+        openAtomPopup(group.length > 1 ? group : group[0], info.coordinate.slice(0, 2));
       },
     }),
   ];
@@ -496,21 +578,37 @@ async function renderAtoms() {
   // ~tens of atoms this is fine. Viewport culling = TODO Phase 2.
   if (map) {
     const seen = new Set();
-    for (const a of atoms) {
-      if (!a.punkto) continue;
-      seen.add(a.punkto);
-      let marker = atomMarkers.get(a.punkto);
+    // Iterate unique punktos; render the latest atom as the visible bubble
+    // (atoms array is already newest-first, so the first entry in each
+    // atomsByPunkto bucket is the latest). Count badge reflects total.
+    for (const [pid, group] of atomsByPunkto) {
+      const a = group[0];
+      seen.add(pid);
+      const count = group.length;
+      let marker = atomMarkers.get(pid);
+      let el;
+      let justCreated = false;
       if (!marker) {
-        const el = buildBubbleElement(a);
+        el = buildBubbleElement(a, count, group);
         marker = new maplibregl.Marker({ element: el, anchor: 'bottom' })
           .setLngLat([a.lon, a.lat])
           .addTo(map);
-        atomMarkers.set(a.punkto, marker);
+        atomMarkers.set(pid, marker);
+        justCreated = true;
       } else {
         // Update content in place so edits (t changes, etc.) refresh without
         // a DOM flicker. Position is stable per punkto so no setLngLat needed.
-        const el = marker.getElement();
-        updateBubbleElement(el, a);
+        el = marker.getElement();
+        updateBubbleElement(el, a, count, group);
+      }
+      // New-atom pulse: if any atom in this group is in newAtomIds, pulse.
+      if (newAtomIds && newAtomIds.size > 0 && group.some(x => newAtomIds.has(x.id))) {
+        el.classList.remove('atom-bubble--new'); // restart animation if still lingering
+        // Force reflow so re-adding the class replays the keyframes
+        // eslint-disable-next-line no-unused-expressions
+        void el.offsetWidth;
+        el.classList.add('atom-bubble--new');
+        setTimeout(() => el.classList.remove('atom-bubble--new'), 700);
       }
     }
     // Remove markers for atoms that disappeared (e.g. after hide-handle change)
@@ -521,6 +619,34 @@ async function renderAtoms() {
       }
     }
     updateBubbleVisibility();
+
+    // Phase 2: fit-to-atoms on first render only. Deep-link flyTo wins.
+    if (!hasBootFit) {
+      hasBootFit = true;
+      if (!deepLinkPunkto && atoms.length > 0) {
+        try {
+          let minLon = Infinity, minLat = Infinity, maxLon = -Infinity, maxLat = -Infinity;
+          for (const a of atoms) {
+            if (a.lon < minLon) minLon = a.lon;
+            if (a.lon > maxLon) maxLon = a.lon;
+            if (a.lat < minLat) minLat = a.lat;
+            if (a.lat > maxLat) maxLat = a.lat;
+          }
+          if (isFinite(minLon) && isFinite(minLat)) {
+            map.fitBounds(
+              [[minLon, minLat], [maxLon, maxLat]],
+              {
+                padding: { top: 80, bottom: 200, left: 40, right: 40 },
+                maxZoom: 14,
+                duration: 0,
+              }
+            );
+          }
+        } catch (e) {
+          console.warn('[renderAtoms] fitBounds failed:', e);
+        }
+      }
+    }
   }
 }
 
@@ -530,7 +656,7 @@ async function renderAtoms() {
  *   .atom-bubble > .atom-bubble-body ( .atom-bubble-text + .atom-bubble-meta )
  *                + .atom-bubble-tail
  */
-function buildBubbleElement(atom) {
+function buildBubbleElement(atom, count = 1, group = null) {
   const el = document.createElement('div');
   el.className = 'atom-bubble';
   el.dataset.punkto = atom.punkto || '';
@@ -538,17 +664,43 @@ function buildBubbleElement(atom) {
   if (focusedPunktoId && atom.punkto === `p:${focusedPunktoId}`) {
     el.classList.add('atom-bubble--focus');
   }
-  updateBubbleElement(el, atom);
+  updateBubbleElement(el, atom, count, group);
+
+  // Phase 2: bubble-body click → open popup. Badge click and anchor
+  // clicks are handled separately (stopPropagation / early-return).
+  el.addEventListener('click', (ev) => {
+    // Let anchors inside markdown-rendered text behave normally.
+    if (ev.target.closest('a')) return;
+    // Badge has its own handler attached in updateBubbleElement.
+    if (ev.target.closest('.atom-bubble-count')) return;
+    const loc = decodeAtomLocation(atom.punkto);
+    if (!loc) return;
+    // Read the current group from the element's stashed reference so
+    // re-renders (which may update the group) stay in sync.
+    const currentGroup = el._punktoGroup || [atom];
+    const payload = currentGroup.length > 1 ? currentGroup : currentGroup[0];
+    openAtomPopup(payload, [loc.lon, loc.lat]);
+  });
+
   return el;
 }
 
 /**
  * (Re)render the inner HTML of a bubble element from an atom record.
  */
-function updateBubbleElement(el, atom) {
+function updateBubbleElement(el, atom, count = 1, group = null) {
   const textHtml = renderAtomText(atom.x || '');
   const author = escHtml(atom.f || 'anon');
   const timeStr = escHtml(fmtRelativeTime(atom.t));
+
+  // Phase 2: stash group on element so click handler (set once in
+  // buildBubbleElement) always sees the freshest atom list.
+  el._punktoGroup = group || [atom];
+
+  const badgeHtml = count > 1
+    ? `<span class="atom-bubble-count" title="${count} atoms at this Punkto">+${count - 1}</span>`
+    : '';
+
   el.innerHTML = `
     <div class="atom-bubble-body">
       <div class="atom-bubble-text">${textHtml || '<span style="opacity:0.5">no text</span>'}</div>
@@ -558,8 +710,33 @@ function updateBubbleElement(el, atom) {
         <span class="atom-bubble-time">${timeStr}</span>
       </div>
     </div>
-    <div class="atom-bubble-tail"></div>
+    ${badgeHtml}
   `;
+
+  // Phase 2: per-author hue tint. Set on the inner body element (NOT on el)
+  // because MapLibre rewrites the outer element's style.cssText on every
+  // pan/zoom, which would wipe the CSS custom property. The inner element
+  // is untouched by MapLibre so the tint persists.
+  const body = el.querySelector('.atom-bubble-body');
+  if (body) {
+    const hue = hashAuthorHue(atom.f);
+    if (hue != null) body.style.setProperty('--author-hue', String(hue));
+    else body.style.removeProperty('--author-hue');
+  }
+
+  // Wire badge click → popup with all atoms at this punkto.
+  if (count > 1) {
+    const badge = el.querySelector('.atom-bubble-count');
+    if (badge) {
+      badge.addEventListener('click', (ev) => {
+        ev.stopPropagation();
+        const loc = decodeAtomLocation(atom.punkto);
+        if (!loc) return;
+        const currentGroup = el._punktoGroup || [atom];
+        openAtomPopup(currentGroup, [loc.lon, loc.lat]);
+      });
+    }
+  }
 }
 
 /**
@@ -587,7 +764,7 @@ function updateBubbleVisibility() {
 // Panel / atom list UI
 // ---------------------------------------------------------------------------
 
-async function refreshUI() {
+async function refreshUI(newAtomIds = null) {
   // Compute the visible-atom count (after filtering hidden system/test handles).
   // The full DB count is not exposed in the UI — users see only the clean subset.
   const allAtoms = await db.atoms.orderBy('t').reverse().toArray();
@@ -641,7 +818,7 @@ async function refreshUI() {
   }
 
   // Re-render deck.gl
-  await renderAtoms();
+  await renderAtoms(newAtomIds);
 }
 
 function escHtml(str) {
