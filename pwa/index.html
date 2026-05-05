@@ -365,6 +365,74 @@
       min-height: 16px;
     }
 
+    /* ── Modal altitude input ─────────────────────────────── */
+    #modal-altitude {
+      margin-bottom: 12px;
+      padding: 10px 12px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+    }
+    #modal-altitude-primary {
+      font-size: 13px;
+      color: var(--text);
+      font-weight: 600;
+      margin-bottom: 6px;
+    }
+    #modal-altitude-primary .alt-cyan { color: var(--cyan); }
+    #modal-altitude-slider {
+      width: 100%;
+      min-height: 44px;
+      -webkit-appearance: none;
+      appearance: none;
+      background: transparent;
+      outline: none;
+      cursor: pointer;
+      touch-action: manipulation;
+    }
+    #modal-altitude-slider::-webkit-slider-runnable-track {
+      height: 4px;
+      background: var(--border);
+      border-radius: 2px;
+    }
+    #modal-altitude-slider::-moz-range-track {
+      height: 4px;
+      background: var(--border);
+      border-radius: 2px;
+    }
+    #modal-altitude-slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: var(--cyan);
+      border: 2px solid var(--bg);
+      margin-top: -9px;
+      cursor: pointer;
+      box-shadow: 0 0 4px rgba(0, 229, 255, 0.4);
+    }
+    #modal-altitude-slider::-moz-range-thumb {
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: var(--cyan);
+      border: 2px solid var(--bg);
+      cursor: pointer;
+    }
+    #modal-altitude-secondary {
+      font-size: 11px;
+      color: var(--text-dim);
+      margin-top: 4px;
+    }
+    #modal-altitude-hint {
+      font-size: 10px;
+      color: var(--text-dim);
+      margin-top: 3px;
+      font-style: italic;
+      letter-spacing: 0.02em;
+    }
+
     /* ── Modal public-and-permanent notice ────────────────── */
     #modal-notice {
       margin-top: 10px;
@@ -739,6 +807,12 @@
       <div id="modal-location">…</div>
       <div id="modal-notice">
         <span class="icon">⚠</span>Public and permanent — this cannot be deleted.
+      </div>
+      <div id="modal-altitude">
+        <div id="modal-altitude-primary">Ground level</div>
+        <input id="modal-altitude-slider" type="range" min="0" max="100" step="1" value="0" />
+        <div id="modal-altitude-secondary">+0 m above ground</div>
+        <div id="modal-altitude-hint"></div>
       </div>
       <textarea id="modal-text" placeholder="What's here? (optional)"></textarea>
       <div id="modal-author-row">
