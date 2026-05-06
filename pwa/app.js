@@ -607,6 +607,39 @@ async function renderAtoms(newAtomIds = null) {
     }),
   ];
 
+  // Iteration 1b: lollipop sticks. For each atom with altitude > 0, draw a
+  // vertical line from ground up to the atom's altitude. Color matches the
+  // author hue (same as the dot/bubble) so the stick visually extends the
+  // bubble's identity all the way down to the surface.
+  const { LineLayer } = window.deck;
+  if (LineLayer) {
+    const lollipopData = atoms
+      .filter(a => (a.alt || 0) > 0)
+      .map(a => {
+        const h = hashAuthorHue(a.f);
+        const baseRgba = h != null ? hueToRgba(h) : altToColor(a.alt);
+        // Apply ~0.6 opacity by overriding the alpha channel.
+        const color = [baseRgba[0], baseRgba[1], baseRgba[2], 153];
+        return {
+          source: [a.lon, a.lat, 0],
+          target: [a.lon, a.lat, a.alt],
+          color,
+        };
+      });
+    layers.push(
+      new LineLayer({
+        id: 'atom-lollipops',
+        data: lollipopData,
+        getSourcePosition: d => d.source,
+        getTargetPosition: d => d.target,
+        getColor: d => d.color,
+        getWidth: 2,
+        widthUnits: 'pixels',
+        pickable: false,
+      })
+    );
+  }
+
   deckOverlay.setProps({ layers });
 
   // --- DOM bubble markers (MapLibre) ------------------------------------
@@ -743,6 +776,16 @@ function updateBubbleElement(el, atom, count = 1, group = null) {
     ? `<span class="atom-bubble-count" title="${count} atoms at this Punkto">+${count - 1}</span>`
     : '';
 
+  // Iteration 1b: altitude badge for atoms above ground.
+  // Decoded from the canonical punkto string so it matches the lollipop stick
+  // and the dot's 3D position. Hidden when alt === 0 (ground level).
+  let altBadgeHtml = '';
+  const _loc = atom.punkto ? decodeAtomLocation(atom.punkto) : null;
+  if (_loc && _loc.alt > 0) {
+    const altRounded = Math.round(_loc.alt);
+    altBadgeHtml = `<span class="atom-bubble-alt" title="altitude: ${altRounded} m">+${altRounded}m</span>`;
+  }
+
   el.innerHTML = `
     <div class="atom-bubble-body">
       <div class="atom-bubble-text">${textHtml || '<span style="opacity:0.5">no text</span>'}</div>
@@ -751,6 +794,7 @@ function updateBubbleElement(el, atom, count = 1, group = null) {
         <span class="atom-bubble-dot">·</span>
         <span class="atom-bubble-time">${timeStr}</span>
       </div>
+      ${altBadgeHtml}
     </div>
     ${badgeHtml}
   `;
@@ -861,11 +905,27 @@ function drawLeaderLines() {
     const dotPt = map.project([lngLat.lng, lngLat.lat]);
     if (!dotPt || !isFinite(dotPt.x) || !isFinite(dotPt.y)) continue;
 
-    // Bubble bottom-center in container coordinates.
+    // Iteration 1b fix: instead of anchoring the line at the bubble's
+    // bottom-center (which makes the line visibly cross the bubble body),
+    // compute the bubble's rectangle edge facing the dot via a standard
+    // line-rectangle intersection from the bubble center toward the dot.
     const bubbleRect = el.getBoundingClientRect();
     if (bubbleRect.width === 0 && bubbleRect.height === 0) continue;
-    const bubbleX = bubbleRect.left + bubbleRect.width / 2 - containerRect.left;
-    const bubbleY = bubbleRect.bottom - containerRect.top;
+    const cx = bubbleRect.left + bubbleRect.width / 2 - containerRect.left;
+    const cy = bubbleRect.top + bubbleRect.height / 2 - containerRect.top;
+    const dx = dotPt.x - cx;
+    const dy = dotPt.y - cy;
+    let bubbleX = cx;
+    let bubbleY = cy;
+    if (dx !== 0 || dy !== 0) {
+      const hw = bubbleRect.width / 2;
+      const hh = bubbleRect.height / 2;
+      const tx = dx !== 0 ? hw / Math.abs(dx) : Infinity;
+      const ty = dy !== 0 ? hh / Math.abs(dy) : Infinity;
+      const t = Math.min(tx, ty);
+      bubbleX = cx + dx * t;
+      bubbleY = cy + dy * t;
+    }
 
     // Author hue via the atom attached to the element, fallback 210.
     const group = el._punktoGroup;
