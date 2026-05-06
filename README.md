@@ -116,9 +116,41 @@ See `punkto.md` for the full address format specification.
 
 ## Status
 
-Early development. Spec v0.2. Single-node live at punkto.xyz.
+Early development — dogfood stage. Spec **v0.3**.
 
-Next: p2p sync, multi-node replication.
+- **Live nodes**: two synced Punkto nodes (`app1.punkto.xyz`, `app2.punkto.xyz`), symmetric infra
+- **Atoms**: ~21 on the live feed, mostly test content
+- **PWA**: at **v22** — altitude input with building-aware floor picker just shipped
+- **Python core + CLI**: complete, stdlib-only
+- **Android**: paused on `android-native-paused` branch; PWA-first for v1.0
+- **AI-discoverable**: `robots.txt`, `llms.txt`, `openapi.json`, `sitemap.xml`, server-rendered `/p/<id>` with OpenGraph
+
+### Roadmap
+
+- **Phase 1 (in progress)** — full 3D UX: altitude input ✅, lollipop sticks + altitude badges, 3D-default view
+- **Phase 2** — ground truth via Open-Elevation API; "Floor 17" resolves to absolute altitude above sea level
+- **Phase 3** — building stack view, altitude filter, floor-specific deep links
+- **Later** — end-to-end signature validation, multi-node discovery beyond `PUNKTO_PEERS`, real users
+
+### Known issues
+
+- **No real users yet** — launch depends on Phase 1+2 completing (~1 week of AI-driven iteration)
+- **`app1` SSL cert does not auto-renew** — manually placed cert in `/etc/ssl/punkto/`; will break on expiry. Fix: migrate to Let's Encrypt to match `app2`
+- **Crypto signatures** (`sig` field) defined in spec v0.3 but not end-to-end validated in the live pipeline yet
+- **AI agents can discover Punkto but can't yet meaningfully act on it** — discovery surfaces exist, incentive and tooling don't
+
+---
+
+## Philosophy
+
+> A Punkto is not a database entry — it's a coordinate in reality that can carry meaning.
+
+- **Local-first, not cloud-first** — no central authority, no global coordination required
+- **3D-first, 2D-graceful** — altitude is a first-class dimension; UI reveals it where data exists, hides it when not
+- **Simple > clever · explicit > implicit · readable > compact** (except the canonical format itself, which is compact by design)
+- **Minimum protocol, maximum composability** — Punkti defines atoms + replication only; everything else is an app on top
+- **Backward compatibility is sacred** — the canonical format never breaks
+- **Append-only, signed** — atoms are never rewritten; signatures bind identity to content
 
 ---
 
