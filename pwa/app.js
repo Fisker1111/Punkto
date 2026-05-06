@@ -1114,21 +1114,43 @@ function detectBuildingAtCenter() {
                 || (l.id && l.id.toLowerCase().includes('building')))
       .map(l => l.id);
     if (layers.length === 0) return { building: null };
-    const features = map.queryRenderedFeatures(screenPt, { layers });
+    // Box query with ~30px tolerance so users don't need pixel-perfect centering.
+    // If the crosshair is near a building (e.g. between towers or on a narrow gap),
+    // we still detect the nearby building and offer a floor picker.
+    const R = 30;
+    const box = [
+      [screenPt.x - R, screenPt.y - R],
+      [screenPt.x + R, screenPt.y + R],
+    ];
+    const features = map.queryRenderedFeatures(box, { layers });
     if (!features || features.length === 0) return { building: null };
-    const props = features[0].properties || {};
-    let height = Number(props.render_height);
-    if (!Number.isFinite(height) || height <= 0) height = Number(props.height);
-    if (!Number.isFinite(height) || height <= 0) {
-      const levels = Number(props['building:levels']);
-      if (Number.isFinite(levels) && levels > 0) height = levels * FLOOR_HEIGHT_M;
+    // Among candidates, pick the one with the greatest height (most relevant for
+    // a floor picker). Fall back through render_height, height, building:levels.
+    const heightOf = (props) => {
+      let h = Number(props.render_height);
+      if (!Number.isFinite(h) || h <= 0) h = Number(props.height);
+      if (!Number.isFinite(h) || h <= 0) {
+        const levels = Number(props['building:levels']);
+        if (Number.isFinite(levels) && levels > 0) h = levels * FLOOR_HEIGHT_M;
+      }
+      return Number.isFinite(h) && h > 0 ? h : 0;
+    };
+    let best = null;
+    let bestHeight = 0;
+    for (const f of features) {
+      const h = heightOf(f.properties || {});
+      if (h > bestHeight) {
+        best = f;
+        bestHeight = h;
+      }
     }
-    if (!Number.isFinite(height) || height < FLOOR_HEIGHT_M) {
+    if (!best || bestHeight < FLOOR_HEIGHT_M) {
       return { building: null };
     }
+    const props = best.properties || {};
     const name = (props.name && String(props.name).trim()) || null;
-    const maxFloor = Math.max(1, Math.floor(height / FLOOR_HEIGHT_M));
-    return { building: { name, height, maxFloor } };
+    const maxFloor = Math.max(1, Math.floor(bestHeight / FLOOR_HEIGHT_M));
+    return { building: { name, height: bestHeight, maxFloor } };
   } catch (e) {
     console.warn('[modal] detectBuildingAtCenter failed:', e);
     return { building: null };
