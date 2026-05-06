@@ -178,6 +178,7 @@ const elSettingsNode = document.getElementById('settings-node');
 const elSettingsPeers = document.getElementById('settings-peers');
 const elSettingsCount = document.getElementById('settings-count');
 const elOnboardingHint = document.getElementById('onboarding-hint');
+const elCrosshairReadout = document.getElementById('crosshair-readout');
 
 // ---------------------------------------------------------------------------
 // Utility
@@ -1158,6 +1159,26 @@ function detectBuildingAtCenter() {
 }
 
 /**
+ * Update the live crosshair readout (the small "scope" label below the
+ * crosshair). Shows the detected building's name, floors, and height, or
+ * nothing if no building is beneath the crosshair.
+ */
+function updateCrosshairReadout() {
+  if (!elCrosshairReadout) return;
+  const { building } = detectBuildingAtCenter();
+  if (!building) {
+    elCrosshairReadout.textContent = '';
+    return;
+  }
+  const h = Math.round(building.height);
+  const parts = [];
+  if (building.name) parts.push(building.name);
+  parts.push(`${building.maxFloor}F`);
+  parts.push(`${h}m`);
+  elCrosshairReadout.textContent = parts.join(' · ');
+}
+
+/**
  * Read the altitude (in metres) currently selected in the modal.
  * Returns 0 if the slider or state is in any unexpected form.
  */
@@ -1365,8 +1386,8 @@ function initMap() {
     console.log('[map] loaded');
 
     // Update DOM bubble LOD whenever zoom or pan changes.
-    map.on('zoomend', () => { updateBubbleVisibility(); drawLeaderLines(); });
-    map.on('moveend', () => { updateBubbleVisibility(); drawLeaderLines(); });
+    map.on('zoomend', () => { updateBubbleVisibility(); drawLeaderLines(); updateCrosshairReadout(); });
+    map.on('moveend', () => { updateBubbleVisibility(); drawLeaderLines(); updateCrosshairReadout(); });
 
     // Ensure the SVG overlay exists and is redrawn on every map render event
     // so leader lines track pan/zoom/pitch/bearing smoothly.
