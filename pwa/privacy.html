@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Privacy Policy — Punkto</title>
+<style>
+  body { font-family: system-ui, sans-serif; max-width: 700px; margin: 48px auto; padding: 0 24px; line-height: 1.7; color: #eee; background: #0a0a0a; }
+  h1 { color: #00ccdd; } h2 { color: #00ccdd; margin-top: 2em; }
+  a { color: #00ccdd; } p, li { color: #ccc; }
+</style>
+</head>
+<body>
+<h1>Privacy Policy</h1>
+<p><strong>Punkto</strong> · <a href="https://punkto.xyz">punkto.xyz</a><br>
+Last updated: April 2026</p>
+
+<h2>What Punkto does</h2>
+<p>Punkto is a location-based messaging app. You can drop short messages (atoms) tied to real-world 3D coordinates and see messages left by others at the same location.</p>
+
+<h2>Data we collect</h2>
+<ul>
+  <li><strong>Location</strong> — your device GPS coordinates are used to encode the Punkto address when you drop an atom. Coordinates are embedded in the atom and stored on the node server.</li>
+  <li><strong>Atom content</strong> — the text and optional author name you enter when dropping an atom. This is stored on our node server and visible to anyone at the same location.</li>
+  <li><strong>No account required</strong> — we do not collect email addresses, phone numbers, or any account information.</li>
+  <li><strong>No tracking</strong> — we do not use analytics, advertising SDKs, or third-party trackers.</li>
+</ul>
+
+<h2>Data storage</h2>
+<p>Atoms are stored in an append-only log on our server at <code>punkto.xyz</code>. Atoms are public and can be read by anyone querying the node. Atoms are not attributed to device identifiers.</p>
+
+<h2>Location permission</h2>
+<p>The Android app requests <em>Precise Location</em> permission to encode your GPS coordinates into the Punkto address. Location is only accessed when the app is open. We do not request background location.</p>
+
+<h2>Third-party services</h2>
+<ul>
+  <li><strong>MapLibre / OpenFreeMap</strong> — map tiles are loaded from <a href="https://openfreemap.org">openfreemap.org</a>. Their privacy policy applies to tile requests.</li>
+  <li><strong>AWS terrain tiles</strong> — elevation tiles are loaded from AWS. No personal data is sent.</li>
+  <li><strong>Google Play Services Location</strong> — used on Android to obtain device GPS coordinates.</li>
+</ul>
+
+<h2>Data deletion</h2>
+<p>Because atoms are stored in an append-only public log, individual atom deletion is not currently supported. Do not include personally identifiable information in atom messages.</p>
+
+<h2>Contact</h2>
+<p>Questions? Open an issue at <a href="https://github.com/Fisker1111/Punkto">github.com/Fisker1111/Punkto</a>.</p>
+
+<p style="margin-top:3em;opacity:0.4;font-size:12px">Punkto is open-source software. Protocol spec: <a href="/">punkto.xyz</a></p>
+</body>
+</html>

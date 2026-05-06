@@ -11,3 +11,4 @@ build/
 .DS_Store
 .a0proj/
 *.promptinclude.md
+documents/

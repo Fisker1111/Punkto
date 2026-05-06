@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Punkto — Reset</title>
+  <style>
+    body { background:#0a0a0a; color:#00ccdd; font-family:monospace;
+           display:flex; align-items:center; justify-content:center;
+           height:100vh; margin:0; flex-direction:column; gap:16px; }
+    p { color:#888; font-size:13px; }
+  </style>
+</head>
+<body>
+  <div>↺ clearing cache...</div>
+  <p id="status">Please wait</p>
+  <script>
+  async function nuke() {
+    const s = document.getElementById('status');
+    try {
+      if ('serviceWorker' in navigator) {
+        const regs = await navigator.serviceWorker.getRegistrations();
+        for (const r of regs) { await r.unregister(); }
+        s.textContent = 'Service workers unregistered (' + regs.length + ')';
+      }
+      if ('caches' in window) {
+        const keys = await caches.keys();
+        for (const k of keys) await caches.delete(k);
+        s.textContent += ' · caches cleared (' + keys.length + ')';
+      }
+    } catch(e) {
+      s.textContent = 'Error: ' + e.message;
+    }
+    setTimeout(() => { window.location.replace('/'); }, 1200);
+  }
+  nuke();
+  </script>
+</body>
+</html>
