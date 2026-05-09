@@ -1,0 +1,334 @@
+#!/usr/bin/env python3
+"""Smoke tests for punkto-relay v0.1.
+
+Usage:
+    python3 test_relay.py
+
+Starts a relay on 127.0.0.1:18000 in a background thread, exercises every
+endpoint, and verifies buffer rotation. Cleans up its own data dir.
+Works with or without pytest installed.
+"""
+
+from __future__ import annotations
+
+import os
+import shutil
+import sys
+import tempfile
+import threading
+import time
+import traceback
+from typing import Any, Dict
+
+
+TEST_HOST = "127.0.0.1"
+TEST_PORT = 18000
+BASE_URL = f"http://{TEST_HOST}:{TEST_PORT}"
+
+
+# Configure relay env BEFORE importing the module so its module-level config picks it up.
+_TMPDIR = tempfile.mkdtemp(prefix="punkto-relay-test-")
+os.environ["PUNKTO_HOST"] = TEST_HOST
+os.environ["PUNKTO_PORT"] = str(TEST_PORT)
+os.environ["PUNKTO_DATA_DIR"] = _TMPDIR
+os.environ["PUNKTO_NODE_NAME"] = "relay-test"
+os.environ["PUNKTO_PEERS"] = ""  # no peers
+os.environ["PUNKTO_BUFFER_ATOMS"] = "5"
+os.environ["PUNKTO_BUFFER_HOURS"] = "168"
+os.environ["PUNKTO_LATEST_LIMIT"] = "10"
+os.environ["PUNKTO_SYNC_INTERVAL"] = "3600"  # effectively disabled
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+
+import requests  # noqa: E402
+
+import relay  # noqa: E402
+
+
+_server = None
+_server_thread: threading.Thread | None = None
+
+
+def _start_server() -> None:
+    global _server, _server_thread
+    server, _, _ = relay.build_server(host=TEST_HOST, port=TEST_PORT)
+    _server = server
+    _server_thread = threading.Thread(target=server.serve_forever, daemon=True, name="relay-test")
+    _server_thread.start()
+    # wait for server to be ready
+    for _ in range(40):
+        try:
+            r = requests.get(f"{BASE_URL}/health", timeout=1)
+            if r.status_code == 200:
+                return
+        except Exception:
+            pass
+        time.sleep(0.05)
+    raise RuntimeError("relay test server did not come up")
+
+
+def _stop_server() -> None:
+    if _server is not None:
+        _server.shutdown()
+        _server.server_close()
+    shutil.rmtree(_TMPDIR, ignore_errors=True)
+
+
+def _atom(punkto: str = "p:u07qsuustfsh", t: int | None = None, **extra: Any) -> Dict[str, Any]:
+    if t is None:
+        t = relay._now_ms()
+    a = {"punkto": punkto, "t": t}
+    a.update(extra)
+    return a
+
+
+# ---------------------------------------------------------------------------
+# Tests
+# ---------------------------------------------------------------------------
+
+
+def test_health() -> None:
+    r = requests.get(f"{BASE_URL}/health", timeout=5)
+    assert r.status_code == 200, r.text
+    body = r.json()
+    assert body["status"] == "ok"
+    assert body["node"] == "relay-test"
+    assert isinstance(body["buffer_size"], int)
+
+
+def test_info() -> None:
+    r = requests.get(f"{BASE_URL}/info", timeout=5)
+    assert r.status_code == 200, r.text
+    body = r.json()
+    assert body["node"] == "relay-test"
+    assert body["version"] == relay.VERSION
+    assert body["buffer_atoms_max"] == 5
+    assert body["buffer_hours_max"] == 168
+    assert body["peers"] == []
+    assert isinstance(body["buffer_size"], int)
+
+
+def test_post_valid_atom() -> None:
+    a = _atom(f="alice", x="hello world")
+    r = requests.post(f"{BASE_URL}/atom", json=a, timeout=5)
+    assert r.status_code == 201, r.text
+    body = r.json()
+    assert body["status"] == "accepted"
+    assert body["atom_id"] == relay.compute_atom_id(a)
+    assert body["punkto"] == a["punkto"]
+
+
+def test_post_duplicate_atom() -> None:
+    a = _atom(t=relay._now_ms() - 1000, f="bob", x="dup test")
+    first = requests.post(f"{BASE_URL}/atom", json=a, timeout=5)
+    assert first.status_code == 201, first.text
+    aid = first.json()["atom_id"]
+    second = requests.post(f"{BASE_URL}/atom", json=a, timeout=5)
+    assert second.status_code == 200, second.text
+    body = second.json()
+    assert body["status"] == "duplicate"
+    assert body["atom_id"] == aid
+
+
+def test_post_invalid_missing_punkto() -> None:
+    r = requests.post(f"{BASE_URL}/atom", json={"t": relay._now_ms()}, timeout=5)
+    assert r.status_code in (400, 422), r.text
+    body = r.json()
+    assert body["error"] == "invalid_punkto"
+
+
+def test_post_invalid_punkto_format() -> None:
+    r = requests.post(f"{BASE_URL}/atom", json={"punkto": "nope", "t": relay._now_ms()}, timeout=5)
+    assert r.status_code in (400, 422), r.text
+    body = r.json()
+    assert body["error"] == "invalid_punkto"
+
+
+def test_post_invalid_timestamp() -> None:
+    r = requests.post(f"{BASE_URL}/atom", json={"punkto": "p:u07qsuustfsh", "t": "now"}, timeout=5)
+    assert r.status_code == 400, r.text
+    body = r.json()
+    assert body["error"] == "invalid_timestamp"
+
+
+def test_post_no_f_no_x_accepted() -> None:
+    """Per v0.1: only punkto and t are required. f and x are optional."""
+    a = _atom(t=relay._now_ms() - 2000, punkto="p:u07qskyuhbus")
+    r = requests.post(f"{BASE_URL}/atom", json=a, timeout=5)
+    assert r.status_code == 201, r.text
+    body = r.json()
+    assert body["status"] == "accepted"
+
+
+def test_latest() -> None:
+    r = requests.get(f"{BASE_URL}/latest", timeout=5)
+    assert r.status_code == 200, r.text
+    body = r.json()
+    assert isinstance(body["atoms"], list)
+    assert len(body["atoms"]) > 0
+    assert body["node"] == "relay-test"
+    assert isinstance(body["served_at"], int)
+    assert isinstance(body["buffer_size"], int)
+    # Sorted newest first by t
+    ts = [int(a["t"]) for a in body["atoms"]]
+    assert ts == sorted(ts, reverse=True), f"atoms not sorted desc by t: {ts}"
+
+
+def test_feed_initial() -> None:
+    r = requests.get(f"{BASE_URL}/feed", timeout=5)
+    assert r.status_code == 200, r.text
+    body = r.json()
+    assert isinstance(body["atoms"], list)
+    assert isinstance(body["cursor"], int)
+
+
+def test_buffer_rotation() -> None:
+    """Post atoms beyond PUNKTO_BUFFER_ATOMS=5; verify oldest are pruned."""
+    # Use unique punktos and timestamps so atom_ids are distinct.
+    base_t = relay._now_ms() - 10_000
+    canonical_pool = [
+        "p:u07qsuustfsh",
+        "p:u07qskyuhbus",
+        "p:u07qjn4k2sus",
+        "p:u07qjh7k02zy",
+        "p:u07qsvy8txhf",
+        "p:u07qskyuhbmw",
+        "p:u07qskyuhbuu",
+        "p:u07qskyuhsqu",
+        "p:u07quvubhgbd",
+        "p:u07qskyuhbmy",
+    ]
+    for i, p in enumerate(canonical_pool):
+        a = _atom(punkto=p, t=base_t + i * 100, f="rot", x=f"rotation-{i}")
+        r = requests.post(f"{BASE_URL}/atom", json=a, timeout=5)
+        assert r.status_code in (200, 201), r.text
+
+    # Buffer must not exceed max_atoms=5
+    info = requests.get(f"{BASE_URL}/info", timeout=5).json()
+    assert info["buffer_size"] <= 5, f"buffer_size {info['buffer_size']} > 5"
+
+    # Latest should reflect the most recent atoms (text contains 'rotation-N' for highest N)
+    latest = requests.get(f"{BASE_URL}/latest", timeout=5).json()
+    assert len(latest["atoms"]) <= 5
+    texts = [str(a.get("x", "")) for a in latest["atoms"]]
+    # Newest few rotation-N entries should be present; rotation-0 should be gone.
+    assert any("rotation-9" in t for t in texts), f"latest does not contain newest atom: {texts}"
+    assert not any(t == "rotation-0" for t in texts), f"oldest atom not pruned: {texts}"
+
+
+def test_p_atom_id_known() -> None:
+    a = _atom(punkto="p:u07qsuustfsh", t=relay._now_ms() - 500, f="og", x="og card test")
+    r = requests.post(f"{BASE_URL}/atom", json=a, timeout=5)
+    assert r.status_code in (200, 201)
+    aid = r.json()["atom_id"]
+    page = requests.get(f"{BASE_URL}/p/{aid}", timeout=5)
+    assert page.status_code == 200
+    html = page.text
+    assert "og:title" in html
+    assert "twitter:card" in html
+    assert aid in html or "og card test" in html
+
+
+def test_p_atom_id_unknown() -> None:
+    bogus = "0" * 64
+    page = requests.get(f"{BASE_URL}/p/{bogus}", timeout=5)
+    assert page.status_code == 200
+    assert "Punkto" in page.text
+
+
+def test_p_canonical_bare() -> None:
+    """`/p/<spatial>` (no `p:` prefix) renders the most recent atom at that location."""
+    canonical = "p:u07qjn4k2sus"
+    bare = canonical[2:]
+    a_old = _atom(punkto=canonical, t=relay._now_ms() - 5000, f="old", x="older message")
+    a_new = _atom(punkto=canonical, t=relay._now_ms() - 100, f="new", x="newest at this place")
+    for a in (a_old, a_new):
+        r = requests.post(f"{BASE_URL}/atom", json=a, timeout=5)
+        assert r.status_code in (200, 201)
+    page = requests.get(f"{BASE_URL}/p/{bare}", timeout=5)
+    assert page.status_code == 200
+    html = page.text
+    assert "og:title" in html
+    assert "twitter:card" in html
+    assert canonical in html  # canonical form rendered in body
+    assert "newest at this place" in html  # latest atom selected
+    assert "older message" not in html  # older atom not shown
+
+
+def test_p_canonical_with_prefix() -> None:
+    """`/p/p:<spatial>` (with literal `p:` prefix) also works."""
+    canonical = "p:u07qjh7k02zy"
+    a = _atom(punkto=canonical, t=relay._now_ms() - 200, f="prefixed", x="with prefix link")
+    r = requests.post(f"{BASE_URL}/atom", json=a, timeout=5)
+    assert r.status_code in (200, 201)
+    page = requests.get(f"{BASE_URL}/p/{canonical}", timeout=5)
+    assert page.status_code == 200
+    html = page.text
+    assert "og:title" in html
+    assert canonical in html
+    assert "with prefix link" in html
+
+
+def test_p_canonical_unknown() -> None:
+    """Valid canonical form with no atoms in buffer renders the no-atoms fallback."""
+    page = requests.get(f"{BASE_URL}/p/u07q000000zz", timeout=5)
+    assert page.status_code == 200
+    assert "Punkto" in page.text
+
+
+def test_options_cors() -> None:
+    r = requests.options(f"{BASE_URL}/atom", timeout=5)
+    assert r.status_code == 204
+    assert r.headers.get("Access-Control-Allow-Origin") == "*"
+
+
+ALL_TESTS = [
+    test_health,
+    test_info,
+    test_post_valid_atom,
+    test_post_duplicate_atom,
+    test_post_invalid_missing_punkto,
+    test_post_invalid_punkto_format,
+    test_post_invalid_timestamp,
+    test_post_no_f_no_x_accepted,
+    test_latest,
+    test_feed_initial,
+    test_buffer_rotation,
+    test_p_atom_id_known,
+    test_p_atom_id_unknown,
+    test_p_canonical_bare,
+    test_p_canonical_with_prefix,
+    test_p_canonical_unknown,
+    test_options_cors,
+]
+
+
+def main() -> int:
+    _start_server()
+    failures = 0
+    try:
+        for fn in ALL_TESTS:
+            name = fn.__name__
+            try:
+                fn()
+                print(f"  PASS  {name}")
+            except AssertionError as e:
+                failures += 1
+                print(f"  FAIL  {name}: {e}")
+                traceback.print_exc()
+            except Exception as e:
+                failures += 1
+                print(f"  ERROR {name}: {e}")
+                traceback.print_exc()
+    finally:
+        _stop_server()
+    total = len(ALL_TESTS)
+    if failures == 0:
+        print(f"\n  {total}/{total} tests passed")
+        return 0
+    print(f"\n  {total - failures}/{total} tests passed, {failures} failed")
+    return 1
+
+
+if __name__ == "__main__":
+    sys.exit(main())
