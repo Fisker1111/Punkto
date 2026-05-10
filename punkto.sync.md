@@ -1,4 +1,4 @@
-# Punkto Sync — Peer Discovery, Feed Replication, and Client Node Selection
+# Punkto Sync — Peer Discovery, Feed Replication, and Client Node Selection (v0.3)
 
 > Draft proposal v0.4 — client-side protocol-native load balancing added
 

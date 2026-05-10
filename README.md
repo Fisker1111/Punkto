@@ -7,8 +7,10 @@ Punkto is a minimal system for addressing points in 3D space and attaching small
 Every atom is a board
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![Spec](https://img.shields.io/badge/spec-v0.4-blue.svg)](punkto.md)
+[![Repo release](https://img.shields.io/badge/release-v0.4-blue.svg)](https://github.com/Fisker1111/Punkto/releases/tag/v0.4)
 [![Live](https://img.shields.io/badge/live-punkto.xyz-green.svg)](https://www.punkto.xyz)
+
+> Status: **v0.x public draft**. The `v0.4` release tag refers to the *repository*, not a single protocol version — individual specs evolve independently. See the per-spec versions in [Status](#status) and [Documentation](#documentation).
 
 ## Live
 
@@ -21,8 +23,8 @@ Every atom is a board
 - Every location in the world has a canonical address: `p:<12-char-3D-geohash>`
 - You drop an **atom** (a short signed message) at a real-world coordinate
 - Atoms are stored in an append-only NDJSON log on a relay node
-- Relays exchange atoms via a simple `/latest` pull protocol
-- Anyone can verify any atom offline using its signature
+- Relays expose two read endpoints. `/feed?since=<cursor>` is a byte-offset stream — used by the PWA for resumable sync and by relay-to-relay replication. `/latest` returns the most recent N atoms in a single response — preferred for new clients and Flow-TV-style live displays. Both are first-class today; `/feed` may eventually be replaced by `/latest` for clients while staying for peer sync.
+- Signed atoms can be verified offline by clients or with `tools/punkto-key.py verify`. Today's relays store `sig` and `pubkey` when present but do not yet reject unsigned atoms — relay-side signature enforcement is planned for v0.5.
 - The PWA shows atoms as 3D bubbles on a map (MapLibre + deck.gl)
 
 ### Canonical form

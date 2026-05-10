@@ -1,4 +1,4 @@
-# Punkto Relay — Flow TV Architecture for the Live Network
+# Punkto Relay — Flow TV Architecture for the Live Network (v0.1)
 
 > Draft v0.1 — Three roles: relay, client, archive
 

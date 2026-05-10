@@ -99,3 +99,27 @@ Tests start a relay on `127.0.0.1:18000`, exercise every endpoint, and verify bu
 ## Spec
 
 Authoritative spec: [`../punkto.relay.md`](../punkto.relay.md). Atom format: [`../punkto.md`](../punkto.md). Sync model: [`../punkto.sync.md`](../punkto.sync.md).
+
+## Verifying a production deployment
+
+After deploying, run these from the host to confirm the relay is healthy and TLS is auto-renewing:
+
+```bash
+# 1. TLS certificate state and renewal
+sudo certbot certificates                 # cert age + auto-renew configured
+sudo systemctl list-timers | grep certbot # renewal timer is active
+
+# 2. Relay service
+sudo systemctl status punkto-relay         # active and enabled
+sudo journalctl -u punkto-relay -n 50      # recent log lines
+
+# 3. Public endpoints
+curl -sI https://YOUR-DOMAIN/health        # 200 OK from public
+curl -s  https://YOUR-DOMAIN/info | jq .   # buffer size, version, capabilities
+curl -s  https://YOUR-DOMAIN/latest | head # recent atoms (NDJSON)
+
+# 4. Peer sync state (if PUNKTO_PEERS is configured)
+curl -s  https://YOUR-DOMAIN/info | jq '.peers'
+```
+
+If any of these fail or report unexpected values, check `sudo journalctl -u punkto-relay -n 200` for clues, and consult [`../punkto.relay.md`](../punkto.relay.md) for the expected behaviour.
