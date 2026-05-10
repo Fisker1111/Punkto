@@ -261,6 +261,7 @@ async function focusPunkto(id) {
 
   // Open panel so user sees atom list
   setPanelOpen(true);
+  setupKeyManagement();
 
   // Update title for shareability
   document.title = `Punkto · ${punkto}`;
@@ -1770,6 +1771,7 @@ async function boot() {
 document.addEventListener('DOMContentLoaded', boot);
 
 // --- Key Management Handlers (added by assistant) ---
+function setupKeyManagement() {
 let currentIdentity = null;
 
 // Helper to display key info in settings
@@ -1887,3 +1889,5 @@ document.getElementById('btn-export-key').addEventListener('click', () => {
 });
 
 // --- End Key Management Handlers ---
+
+}

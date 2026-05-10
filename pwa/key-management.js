@@ -1,5 +1,4 @@
-// key-management.js — Punkto identity management in PWA
-// Matches tools/punkto-keygen-v0.1.py derivation exactly.
+// key-management.js — Punkto identity management (matches Python tool exactly)
 
 // BIP39 English wordlist (2048 words)
 const BIP39_WORDS = [
@@ -2057,95 +2056,68 @@ const BIP39_WORDS = [
 // Punkto custom Base32 alphabet (same as punkti/geohash3d)
 const GEOHASH_ALPHABET = "0123456789bcdefghjkmnpqrstuvwxyz";
 
-// Utility: get random bytes (CSP RNG)
+// Get random bytes using CSPRNG
 function getRandomBytes(n) {
   const bytes = new Uint8Array(n);
   crypto.getRandomValues(bytes);
   return bytes;
 }
 
-// BIP39: entropy (16 bytes) → 12 words
-function entropyToMnemonic(entropy) {
+// BIP39: entropy (16 bytes) → 12 words (matches Python tool)
+async function entropyToMnemonic(entropy) {
   if (entropy.length !== 16) throw new Error('Need 128 bits (16 bytes) for 12 words');
-  // SHA-256 checksum (top 4 bits)
-  const hash = new Uint8Array(32);
-  crypto.subtle.digest('SHA-256', entropy).then(h => {
-    // This is async, we'll handle differently
-  });
-  // Synchronous checksum for simplicity
-  const sha256 = sha256(entropy);
-  const checksumBits = sha256[0] >> 4; // top 4 bits
-  let bits = 0n;
-  for (let i = 0; i < 16; i++) {
-    bits = (bits << 8n) | BigInt(entropy[i]);
-  }
-  bits = (bits << 4n) | BigInt(checksumBits);
-  const words = [];
-  for (let i = 0; i < 12; i++) {
-    const idx = Number((bits >> BigInt((11 * (11 - i)))) & 0x7FF;
-    words.push(BIP39_WORDS[idx]);
-  }
-  return words;
-}
-
-// Simplified synchronous SHA-256 (we'll use a minimal implementation)
-function sha256(data) {
-  // Use SubtleCrypto asynchronously - we need a sync version
-  // For now, we'll implement a minimal SHA-256
-  throw new Error('Use async SHA-256 via crypto.subtle');
-}
-
-// Generate new identity (async)
-async function generateIdentity() {
-  // 1. 16 bytes entropy
-  const entropy = getRandomBytes(16);
-
-  // 2. BIP39 mnemonic (checksum)
-  const shaHash = await crypto.subtle.digest('SHA-256', entropy);
-  const shaBytes = new Uint8Array(shaHash);
-  const checksum = shaBytes[0] >> 4; // top 4 bits
-
+  // Compute SHA-256 checksum (top 4 bits)
+  const hashBuffer = await crypto.subtle.digest('SHA-256', entropy);
+  const hashBytes = new Uint8Array(hashBuffer);
+  const checksum = hashBytes[0] >> 4; // top 4 bits
+  // Combine entropy and checksum into a BigInt
   let bits = 0n;
   for (let i = 0; i < 16; i++) {
     bits = (bits << 8n) | BigInt(entropy[i]);
   }
   bits = (bits << 4n) | BigInt(checksum);
-
+  // Extract 12 words of 11 bits each
   const words = [];
-  for (let i = 11; i >= 0; i--) {
-    const idx = Number((bits >> BigInt(5 * i)) & 0x1Fn);
+  for (let i = 0; i < 12; i++) {
+    const shift = 11 * (11 - i);
+    const idx = Number((bits >> BigInt(shift)) & 0x7FFn);
     words.push(BIP39_WORDS[idx]);
   }
-  const mnemonic = words;
+  return words;
+}
 
-  // 3. PBKDF2-HMAC-SHA512 (2048 iterations, salt='mnemonic')
+// Mnemonic to seed (PBKDF2-HMAC-SHA512, matches Python tool)
+async function mnemonicToSeed(mnemonic) {
   const mnemonicStr = mnemonic.join(' ');
   const salt = new TextEncoder().encode('mnemonic');
   const mnemonicBytes = new TextEncoder().encode(mnemonicStr);
-
   const baseKey = await crypto.subtle.importKey('raw', mnemonicBytes, 'PBKDF2', false, ['deriveBits']);
-  const seedBytes = await crypto.subtle.deriveBits(
+  const seedBuffer = await crypto.subtle.deriveBits(
     { name: 'PBKDF2', salt: salt, iterations: 2048, hash: 'SHA-512' },
     baseKey,
     512 // 64 bytes
   );
-  const seed = new Uint8Array(seedBytes);
+  return new Uint8Array(seedBuffer);
+}
 
-  // 4. First 32 bytes = Ed25519 private key seed
+// Generate new identity (matches Python tool exactly)
+async function generateIdentity() {
+  // 1. 16 bytes random entropy
+  const entropy = getRandomBytes(16);
+  // 2. BIP39 mnemonic
+  const mnemonic = await entropyToMnemonic(entropy);
+  // 3. PBKDF2 seed
+  const seed = await mnemonicToSeed(mnemonic);
+  // 4. Ed25519 keypair from first 32 bytes of seed
   const privKeySeed = seed.slice(0, 32);
-
-  // 5. Ed25519 keypair (using TweetNaCl)
   const keypair = nacl.sign.keyPair.fromSeed(privKeySeed);
   const pubkey = keypair.publicKey; // 32 bytes
-  const privkey = keypair.secretKey; // 64 bytes (includes pubkey)
-
-  // 6. Encode pubkey as base64
+  // 5. Pubkey as base64
   const pubkeyB64 = btoa(String.fromCharCode(...pubkey));
-
-  // 7. Author ID = base32_geohash(SHA-256(pubkey))[:12]
-  const pubkeyHash = await crypto.subtle.digest('SHA-256', pubkey);
-  const authorId = base32Geohash(new Uint8Array(pubkeyHash)).slice(0, 12);
-
+  // 6. Author ID: base32(SHA-256(pubkey))[:12] (custom Base32)
+  const pubkeyHashBuffer = await crypto.subtle.digest('SHA-256', pubkey);
+  const pubkeyHash = new Uint8Array(pubkeyHashBuffer);
+  const authorId = base32Geohash(pubkeyHash).slice(0, 12);
   return {
     mnemonic: mnemonic,
     pubkey: pubkeyB64,
@@ -2155,7 +2127,7 @@ async function generateIdentity() {
   };
 }
 
-// Custom Base32 encoding (geohash alphabet)
+// Custom Base32 encoding (matches Python tool's base32_geohash)
 function base32Geohash(data) {
   const alphabet = GEOHASH_ALPHABET;
   let bits = 0n;
@@ -2196,7 +2168,6 @@ function importKeyFromJson(jsonStr) {
 
 // Sign an atom (canonical bytes without sig)
 async function signAtom(atom, secretKey) {
-  // Canonical JSON: sorted keys, no whitespace
   const payload = { ...atom };
   delete payload.sig;
   const canonical = JSON.stringify(payload, Object.keys(payload).sort());
@@ -2218,4 +2189,4 @@ function verifyAtom(atom) {
   return nacl.sign.detached.verify(msgBytes, sigBytes, pubkeyBytes);
 }
 
-console.log('[Punkto] key-management.js loaded');
+console.log('[Punkto] key-management.js loaded (corrected)');
