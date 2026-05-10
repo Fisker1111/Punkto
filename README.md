@@ -287,3 +287,8 @@ Start with [`CONTRIBUTING.md`](CONTRIBUTING.md). For security issues, see [`SECU
 ---
 
 > *Punkto begins. Anyone, anywhere, can sign atoms.*
+
+## PWA v28 (latest)
+- Client-side key management: generate/import/export Ed25519 identities
+- CORS headers fixed on relays for cross-origin requests
+- Service worker cache bumped to punkto-v28

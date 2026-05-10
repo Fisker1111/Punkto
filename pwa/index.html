@@ -20,6 +20,10 @@
 
   <!-- Dexie.js 3.2.4 -->
   <script src="https://unpkg.com/dexie@3.2.4/dist/dexie.min.js"></script>
+  <!-- TweetNaCl.js for Ed25519 -->
+  <script src="https://unpkg.com/tweetnacl@1.0.3/nacl.min.js"></script>
+  <!-- Key management functions -->
+  <script src="key-management.js"></script>
 
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -779,6 +783,47 @@
     .atom-bubble--new {
       animation: atom-bubble-pop 0.55s cubic-bezier(0.34, 1.56, 0.64, 1);
     }
+
+    .settings-separator {
+      height: 1px;
+      background: var(--border);
+      margin: 8px 14px;
+    }
+    .settings-section-title {
+      padding: 8px 14px 4px;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--text-dim);
+    }
+    .warning {
+      color: #ff9800;
+      font-size: 10px;
+      margin-bottom: 6px;
+      line-height: 1.3;
+    }
+    #key-info {
+      margin-top: 8px;
+    }
+    #key-info button {
+      background: var(--surface2);
+      border: none;
+      color: var(--text);
+      padding: 6px 10px;
+      border-radius: 4px;
+      font-size: 11px;
+      cursor: pointer;
+      margin-right: 8px;
+    }
+    #key-info button:hover {
+      background: var(--border);
+    }
+    .key-mnemonic {
+      word-break: break-all;
+      font-size: 10px;
+      color: var(--text-dim);
+      max-width: 200px;
+    }
   </style>
 </head>
 <body>
@@ -800,8 +845,25 @@
       <div><span class="k">node:</span>    <span class="v" id="settings-node">—</span></div>
       <div><span class="k">peers:</span>   <span class="v" id="settings-peers">—</span></div>
       <div><span class="k">cached:</span>  <span class="v" id="settings-count">0</span> atoms</div>
-      <div><span class="k">version:</span> <span class="v">v0.3</span></div>
+      <div><span class="k">version:</span> <span class="v">v28</span></div>
     </div>
+    
+      <div class="settings-separator"></div>
+      <div class="settings-section-title">Identity & Keys</div>
+      <div class="settings-item" id="btn-generate-key">Generate New Key</div>
+      <div class="settings-item" id="btn-import-key">Import Key from JSON</div>
+      <div class="settings-item" id="btn-save-key-local">Save to LocalStorage</div>
+      <div class="settings-item" id="btn-load-key-local">Load from LocalStorage</div>
+      <div id="key-info" class="settings-info" style="display:none;">
+        <div class="warning">⚠️ Write down or print your 12-word mnemonic immediately. Never store it digitally.</div>
+        <div><span class="k">Author ID:</span> <span class="v" id="key-author-id">—</span></div>
+        <div><span class="k">Pubkey:</span> <span class="v" id="key-pubkey">—</span></div>
+        <div><span class="k">Mnemonic:</span> <span class="v key-mnemonic" id="key-mnemonic">—</span></div>
+        <div style="margin-top:8px;">
+          <button id="btn-print-mnemonic">Print Mnemonic</button>
+          <button id="btn-export-key">Export Key JSON</button>
+        </div>
+      </div>
     <button class="settings-item danger" id="settings-reset" role="menuitem">Reset local cache…</button>
   </div>
 
