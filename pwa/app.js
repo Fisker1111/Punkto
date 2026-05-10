@@ -1532,7 +1532,6 @@ function hostOf(url) {
 }
 
 /**
- * Fetch the current cursor (byte offset) of a node by asking /feed with an
  * unreachably large `since` value — node.py clamps it to file_size and returns
  * `{cursor, atoms: []}`. Zero-payload, cheap, works against any Punkto node.
  * Returns a non-negative integer cursor, or null on error.
