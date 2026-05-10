@@ -4,6 +4,8 @@
 
 Punkto is a minimal system for addressing points in 3D space and attaching small, signed data to those locations. Open protocol, local-first, no central authority.
 
+Every atom is a board
+
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Spec](https://img.shields.io/badge/spec-v0.4-blue.svg)](punkto.md)
 [![Live](https://img.shields.io/badge/live-punkto.xyz-green.svg)](https://www.punkto.xyz)
