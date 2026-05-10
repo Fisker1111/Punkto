@@ -311,25 +311,6 @@ function encodeCurrentLocation(mapInst, altMeters = 0) {
 // IndexedDB helpers
 // ---------------------------------------------------------------------------
 
-async function getNodeCursor(url) {
-  const row = await db.nodes.get(url);
-  if (row) return row.cursor || 0;
-  // Migrate legacy single cursor from meta table on first access for NODE_URL
-  if (url === NODE_URL) {
-    const legacy = await db.meta.get('cursor');
-    return legacy ? legacy.value : 0;
-  }
-  return 0;
-}
-
-async function setNodeCursor(url, cursor) {
-  await db.nodes.put({ url, cursor });
-}
-
-// Keep legacy helper for submitAtom backward compat
-async function setStoredCursor(cursor) {
-  await setNodeCursor(NODE_URL, cursor);
-}
 
 async function upsertAtom(atom) {
   // Decode location from punkto field
@@ -376,9 +357,8 @@ async function syncFeed() {
 
     for (const url of nodeUrls) {
       try {
-        const cursor = await getNodeCursor(url);
-        const feedUrl = `${url}/feed${cursor > 0 ? `?since=${cursor}` : ''}`;
-        const res = await fetch(feedUrl, { signal: AbortSignal.timeout(15_000) });
+        const latestUrl = `${url}/latest`;
+        const res = await fetch(latestUrl, { signal: AbortSignal.timeout(15_000) });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const data = await res.json();
 
@@ -392,12 +372,8 @@ async function syncFeed() {
             }
           }
         }
-
-        if (typeof data.cursor === 'number') {
-          await setNodeCursor(url, data.cursor);
-        }
       } catch (nodeErr) {
-        console.warn(`[sync] feed error for ${url}:`, nodeErr);
+        console.warn(`[sync] latest error for ${url}:`, nodeErr);
         anyError = true;
       }
     }
@@ -1320,7 +1296,6 @@ async function submitAtom() {
     await upsertAtom(atom);
     // Update cursor if returned
     if (typeof json.cursor === 'number') {
-      await setStoredCursor(json.cursor);
     }
 
     closeModal();
@@ -1551,7 +1526,6 @@ function showOnboarding() {
 // ---------------------------------------------------------------------------
 
 let settingsOpen = false;
-let lastSyncLag = 0; // peer_max_cursor - local_cursor (0 means up-to-date)
 
 function hostOf(url) {
   try { return new URL(url).host; } catch { return url; }
@@ -1563,18 +1537,6 @@ function hostOf(url) {
  * `{cursor, atoms: []}`. Zero-payload, cheap, works against any Punkto node.
  * Returns a non-negative integer cursor, or null on error.
  */
-async function fetchNodeCursor(url) {
-  try {
-    const res = await fetch(`${url}/feed?since=999999999999`, {
-      signal: AbortSignal.timeout(6_000),
-    });
-    if (!res.ok) return null;
-    const data = await res.json();
-    return typeof data.cursor === 'number' ? data.cursor : null;
-  } catch {
-    return null;
-  }
-}
 
 /**
  * Fetch /info for a node. Returns null on error, or the parsed JSON on success.
@@ -1626,8 +1588,6 @@ async function refreshSettingsNetworkInfo() {
 
   // 2. Fetch cursors in parallel: local + each peer.
   const [localCursor, ...peerCursors] = await Promise.all([
-    fetchNodeCursor(NODE_URL),
-    ...peerUrls.map(u => fetchNodeCursor(u)),
   ]);
 
   // 3. Compute lag (local behind highest peer).
@@ -1636,7 +1596,6 @@ async function refreshSettingsNetworkInfo() {
     ? Math.max(...reachablePeerCursors) : 0;
   const lag = (typeof localCursor === 'number' && maxPeerCursor > localCursor)
     ? (maxPeerCursor - localCursor) : 0;
-  lastSyncLag = lag;
 
   // 4. Render node row
   const warnIcon = lag > 0 ? ' <span class="lag-warn" title="This node is behind peers">⚠</span>' : '';
