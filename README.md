@@ -2,32 +2,31 @@
 
 > A coordinate in reality that can carry meaning.
 
-Punkto is a minimal system for addressing points in 3D space and attaching small, signed data to those locations.
+Punkto is a minimal system for addressing points in 3D space and attaching small, signed data to those locations. Open protocol, local-first, no central authority.
+
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Spec](https://img.shields.io/badge/spec-v0.4-blue.svg)](punkto.md)
+[![Live](https://img.shields.io/badge/live-punkto.xyz-green.svg)](https://www.punkto.xyz)
 
 ## Live
 
-🌍 **https://punkto.xyz** — PWA, works offline, no account needed.
+🌍 **https://www.punkto.xyz** — PWA, works offline, no account needed.
 
 ---
 
 ## What it does
 
 - Every location in the world has a canonical address: `p:<12-char-3D-geohash>`
-- You drop an **atom** (a short message) at a real-world coordinate
-- Atoms are stored in an append-only NDJSON log
-- Nodes sync with each other using byte-offset cursors
-- The PWA shows atoms as a **3D point cloud** on a map (MapLibre + deck.gl)
+- You drop an **atom** (a short signed message) at a real-world coordinate
+- Atoms are stored in an append-only NDJSON log on a relay node
+- Relays exchange atoms via a simple `/latest` pull protocol
+- Anyone can verify any atom offline using its signature
+- The PWA shows atoms as 3D bubbles on a map (MapLibre + deck.gl)
 
 ### Canonical form
 
 ```
 p:u07qskyuhbus        ← 12-char 3D geohash (lat + lon + alt interleaved)
-```
-
-### URI form
-
-```
-punkto://dk/copenhagen/bellahoj
 ```
 
 ### Atom (minimum)
@@ -36,58 +35,130 @@ punkto://dk/copenhagen/bellahoj
 { "punkto": "p:u07qskyuhbus", "t": 1777147183712 }
 ```
 
+With identity (full):
+
+```json
+{
+  "f": "cw8sj6q5xzsc",
+  "pubkey": "nVM1dfmtw+FO9pQzj1b0Sg+/x8tIi+NHAAxpNeAR0l0=",
+  "punkto": "p:u07qskyuhbus",
+  "t": 1777147183712,
+  "x": "hello, world",
+  "sig": "<base64 Ed25519 signature>"
+}
+```
+
 ---
 
-## Repo structure
+## Repository structure
 
 ```
 Punkto/
-├── pwa/                  ← PWA source (copy this to self-host)
-│   ├── index.html        ← App shell, MapLibre + deck.gl
+├── pwa/                  ← Reference PWA (vanilla JS, MapLibre, deck.gl)
+│   ├── index.html        ← App shell
 │   ├── app.js            ← Map, sync, atom rendering
 │   ├── sw.js             ← Service worker (offline-first)
 │   ├── manifest.json     ← PWA manifest
 │   ├── geohash3d.js      ← 3D geohash encoder/decoder
-│   └── node.py           ← Minimal Python node (stdlib only)
+│   ├── privacy.html      ← Privacy page
+│   └── reset.html        ← Local-data reset page
 │
-├── android/              ← Native Android app (Kotlin, MapLibre, Room)
-├── core/                 ← Python library + CLI (stdlib only)
+├── relay/                ← Reference relay node (Python stdlib + requests)
+│   ├── relay.py          ← Single-file relay server
+│   ├── README.md         ← Operator guide
+│   ├── requirements.txt  ← Just `requests`
+│   ├── test_relay.py     ← Smoke tests
+│   ├── .env.example      ← Configuration template
+│   └── systemd/          ← Production systemd unit
 │
-├── punkto.md             ← Canonical address format (source of truth)
-├── punkto.node.md        ← Node API spec (endpoints, storage, sync)
-├── punkto.manifest.md    ← Storage and replication rules
-├── punkto.sync.md        ← Peer discovery and replication
-├── punkto.ui.md          ← UI principles
-└── punkto.ai.md          ← How AI agents interact as nodes
+├── core/                 ← Pure-Python core library + CLI (stdlib only)
+│   ├── punkto.py         ← Address encode/decode
+│   ├── geohash3d.py      ← 3D geohash implementation
+│   └── cli.py            ← Command-line tools
+│
+├── tools/                ← Standalone CLI utilities
+│   ├── punkto-keygen-v0.1.py   ← Mint a fresh identity (12-word mnemonic)
+│   └── punkto-key.py            ← Full identity toolkit (new/import/sign/verify)
+│
+├── punkto.md             ← Address format & atom (the protocol's heart)
+├── punkto.sync.md        ← Replication: canonical bytes, atom_id, peer sync
+├── punkto.node.md        ← Node API: endpoints, storage, behavior
+├── punkto.relay.md       ← Relay role: rolling buffer, /latest, three-role model
+├── punkto.identity.md    ← Identity: Ed25519, BIP39 mnemonic, Author ID
+├── punkto.manifest.md    ← Atom data model & storage
+├── punkto.ui.md          ← UX guidelines
+├── punkto.ai.md          ← AI agents as Punkto nodes
+│
+├── README.md             ← This file
+├── LICENSE               ← MIT
+├── CONTRIBUTING.md       ← How to contribute
+├── CODE_OF_CONDUCT.md    ← Contributor Covenant 2.1
+├── SECURITY.md           ← Vulnerability disclosure policy
+└── CHANGELOG.md          ← Version history
 ```
 
 ---
 
-## Self-hosting
+## Documentation
 
-### Node (Python, stdlib only)
+All specs are authoritative source-of-truth Markdown files in this repository:
+
+| Spec | Topic |
+|---|---|
+| [`punkto.md`](punkto.md) | Address format, canonical form, atom basics |
+| [`punkto.identity.md`](punkto.identity.md) | Ed25519 keys, 12-word BIP39 mnemonic, Author ID |
+| [`punkto.sync.md`](punkto.sync.md) | Canonical JSON, atom_id, signature, peer replication |
+| [`punkto.node.md`](punkto.node.md) | Node HTTP API: `/atom`, `/feed`, `/health`, `/info` |
+| [`punkto.relay.md`](punkto.relay.md) | Relay role, rolling buffer, `/latest`, three-role architecture |
+| [`punkto.manifest.md`](punkto.manifest.md) | Atom data model and storage rules |
+| [`punkto.ui.md`](punkto.ui.md) | UI principles for any Punkto client |
+| [`punkto.ai.md`](punkto.ai.md) | AI agents as Punkto nodes |
+
+Also of interest:
+
+- [`relay/README.md`](relay/README.md) — operator guide for running a relay
+- [`CONTRIBUTING.md`](CONTRIBUTING.md) — how to contribute
+- [`SECURITY.md`](SECURITY.md) — how to report vulnerabilities
+- [`CHANGELOG.md`](CHANGELOG.md) — what changed and when
+
+---
+
+## Quick start
+
+### Run the PWA locally
+
+No build step — just static files.
 
 ```bash
-git clone https://github.com/Fisker1111/Punkto
+git clone https://github.com/Fisker1111/Punkto.git
 cd Punkto/pwa
-python3 node.py          # runs on port 8002
+python3 -m http.server 8080
+# Open http://localhost:8080
 ```
 
-Serve `pwa/` as static files from your web server and proxy `/atom`, `/feed`, `/health`, `/info` to the Python node.
+By default the PWA talks to `https://www.punkto.xyz`. Edit `pwa/app.js` to point at your own relay.
 
-### Nginx example
+### Run a relay node
 
-```nginx
-server {
-  listen 443 ssl;
-  server_name your.domain;
-  root /var/www/punkto;
-
-  location ~* ^/(atom|feed|health|info|punkto/) {
-    proxy_pass http://127.0.0.1:8002;
-  }
-}
+```bash
+git clone https://github.com/Fisker1111/Punkto.git
+cd Punkto/relay
+pip install -r requirements.txt
+python3 relay.py
+# Listens on http://127.0.0.1:8000
 ```
+
+See [`relay/README.md`](relay/README.md) for configuration, deployment, and operator notes.
+
+### Mint a Punkto identity
+
+```bash
+pip install cryptography   # or: sudo apt install python3-cryptography
+wget https://raw.githubusercontent.com/Fisker1111/Punkto/main/tools/punkto-keygen-v0.1.py
+python3 punkto-keygen-v0.1.py
+```
+
+Produces a 12-word recovery phrase + Author ID + public key. Write the words on paper.
 
 ---
 
@@ -96,48 +167,55 @@ server {
 | Layer | Technology |
 |---|---|
 | Map | [MapLibre GL JS](https://maplibre.org/) |
-| 3D rendering | [deck.gl](https://deck.gl/) ScatterplotLayer + PointCloudLayer |
+| 3D rendering | [deck.gl](https://deck.gl/) (Scatterplot, PointCloud, Line layers) |
 | Local storage | [Dexie.js](https://dexie.org/) (IndexedDB) |
-| 3D geohash | Custom `geohash3d.js` (12-char, 60-bit, alt interleaved) |
-| Node | Python 3 stdlib — no dependencies |
-| Sync | Byte-offset cursor, append-only NDJSON |
+| 3D geohash | Custom `geohash3d.js` (12-char Base32, 60-bit, lat/lon/alt interleaved) |
+| Relay | Python 3 stdlib + `requests` (only dep) |
+| Sync | Pull-based `/latest`, rolling buffer (Flow TV semantics) |
+| Identity | Ed25519 + 12-word BIP39 mnemonic |
 | Tiles | [OpenFreeMap](https://openfreemap.org/) (open, no API key) |
 | Terrain | AWS elevation tiles (Terrarium encoding) |
 
 ---
 
-## Protocol
+## Three roles
 
-Punkto is built on the **Punkti protocol** — open, local-first, no central authority.
+Punkto separates concerns across three independently-scalable roles ([`punkto.relay.md`](punkto.relay.md)):
 
-See `punkto.md` for the full address format specification.
+| Role | Stores | Cost profile | Free? |
+|---|---|---|---|
+| **Relay** | Rolling buffer — last N atoms or last T time | Tiny RAM, no DB scans | Free, easy to run |
+| **Client** (PWA, native) | User's local slice (IndexedDB) | User's device | Free, user-owned |
+| **Archive** (future) | Full history, indexed, searchable | Heavy I/O, real DB | Optionally paid |
+
+Relays are a public commons. Clients are user-owned. Archives are optional and may be operated commercially without breaking the protocol's open nature.
 
 ---
 
 ## Status
 
-Early development — dogfood stage. Spec **v0.3**.
+Early public release — **v0.4**, dogfood stage.
 
-- **Live nodes**: two synced Punkto nodes (`app1.punkto.xyz`, `app2.punkto.xyz`), symmetric infra
-- **Atoms**: ~21 on the live feed, mostly test content
-- **PWA**: at **v22** — altitude input with building-aware floor picker just shipped
-- **Python core + CLI**: complete, stdlib-only
-- **Android**: paused on `android-native-paused` branch; PWA-first for v1.0
-- **AI-discoverable**: `robots.txt`, `llms.txt`, `openapi.json`, `sitemap.xml`, server-rendered `/p/<id>` with OpenGraph
+- **Live nodes**: two synced reference relays (`app1.punkto.xyz`, `app2.punkto.xyz`) — both on Let's Encrypt, auto-renewing, served via nginx + systemd-managed `punkto-relay.service`
+- **Atoms**: 20+ on the live feed, mostly seed/test content
+- **PWA**: at v26 — 3D altitude input, building-aware floor picker, lollipop leader lines, Open Graph deep links
+- **Relay**: v0.1 — rolling buffer (10 000 atoms or 7 days), `/latest`, peer sync, `/p/<id>` server-rendered cards
+- **Identity**: v0.1 — `tools/punkto-keygen-v0.1.py` and `tools/punkto-key.py` produce byte-identical results across implementations
+- **AI-discoverable**: `robots.txt`, `llms.txt`, `openapi.json`, `sitemap.xml`, server-rendered `/p/<id>` with OpenGraph + JSON-LD
 
 ### Roadmap
 
-- **Phase 1 (in progress)** — full 3D UX: altitude input ✅, lollipop sticks + altitude badges, 3D-default view
-- **Phase 2** — ground truth via Open-Elevation API; "Floor 17" resolves to absolute altitude above sea level
-- **Phase 3** — building stack view, altitude filter, floor-specific deep links
-- **Later** — end-to-end signature validation, multi-node discovery beyond `PUNKTO_PEERS`, real users
+- **v0.5** — relay-side signature verification (`PUNKTO_REQUIRE_SIG=true`); PWA identity UI (mint, import, export, print recovery card)
+- **v0.6** — Phase 2 altitude: Open-Elevation ground lookup so "Floor 17" resolves to absolute altitude above sea level
+- **v0.7** — Phase 3 altitude: building stack view, altitude filter, floor-specific deep links
+- **v1.0** — first reference Archive node, third-party relay implementations in other languages, real users in multiple cities
 
 ### Known issues
 
-- **No real users yet** — launch depends on Phase 1+2 completing (~1 week of AI-driven iteration)
-- **`app1` SSL cert does not auto-renew** — manually placed cert in `/etc/ssl/punkto/`; will break on expiry. Fix: migrate to Let's Encrypt to match `app2`
-- **Crypto signatures** (`sig` field) defined in spec v0.3 but not end-to-end validated in the live pipeline yet
-- **AI agents can discover Punkto but can't yet meaningfully act on it** — discovery surfaces exist, incentive and tooling don't
+- **Relay v0.1 stores `sig` and `pubkey` but does not verify signatures yet** — verification is planned for relay v0.2
+- **Flow TV pruning is active**: atoms older than 7 days age out of the relay buffer. This is by design; archives are the future home of long-term history
+- **No PWA identity UI yet** — keys must currently be minted via the Python CLI (`tools/punkto-keygen-v0.1.py`); browser-based key UX is on the v0.5 roadmap
+- **Real-user adoption is small** — early dogfood phase; growing the network is the next priority after v0.5
 
 ---
 
@@ -147,10 +225,11 @@ Early development — dogfood stage. Spec **v0.3**.
 
 - **Local-first, not cloud-first** — no central authority, no global coordination required
 - **3D-first, 2D-graceful** — altitude is a first-class dimension; UI reveals it where data exists, hides it when not
-- **Simple > clever · explicit > implicit · readable > compact** (except the canonical format itself, which is compact by design)
-- **Minimum protocol, maximum composability** — Punkti defines atoms + replication only; everything else is an app on top
-- **Backward compatibility is sacred** — the canonical format never breaks
+- **Simple > clever · explicit > implicit · readable > compact** (except the canonical address format itself, which is compact by design)
+- **Minimum protocol, maximum composability** — Punkto defines atoms + replication only; everything else is an app on top
+- **Backward compatibility is sacred** — once v1.0, the canonical format never breaks
 - **Append-only, signed** — atoms are never rewritten; signatures bind identity to content
+- **Forgettable by default** — relays carry the now; clients keep what they witnessed; archives serve those who ask
 
 ---
 
@@ -158,70 +237,49 @@ Early development — dogfood stage. Spec **v0.3**.
 
 The `core/` directory is a pure-stdlib Python library for working with Punkto addresses.
 
-### Install (no dependencies)
-
 ```bash
-git clone https://github.com/Fisker1111/Punkto
-cd Punkto
-```
-
-### Generate a Punkto address
-
-```bash
+# Generate a Punkto address
 python3 -m core.cli make 55.7028 12.5088 13
-# p:u07qsuustfsh
-```
+# → p:u07qsuustfsh
 
-### Decode an address
-
-```bash
+# Decode an address
 python3 -m core.cli decode p:u07qsuustfsh
-# lat=55.702820 lon=12.508793 alt=13.0m  (±2.4m)
-```
+# → lat=55.702820 lon=12.508793 alt=13.0m  (±2.4m)
 
-### Convert between forms
-
-```bash
-python3 -m core.cli uri p:u07qsuustfsh
-# punkto://u07qsuustfsh
-
+# Convert between forms
 python3 -m core.cli https p:u07qsuustfsh
-# https://punkto.xyz/p/u07qsuustfsh
+# → https://www.punkto.xyz/p/u07qsuustfsh
 
-python3 -m core.cli resolve punkto://u07qsuustfsh
-# p:u07qsuustfsh
-```
-
-### Write an atom to a live node
-
-```bash
+# Write an atom to a live relay
 python3 -m core.cli write 55.7028 12.5088 13 "Hello from Bellahøj"
-# Posted: p:u07qsuustfsh-a4x9k2
 ```
 
-### Read atoms at a location
+Default relay: `https://www.punkto.xyz` — override with `PUNKTO_NODE=https://your.relay`.
 
-```bash
-python3 -m core.cli read p:u07qsuustfsh
-```
+---
 
-### All CLI commands
+## License
 
-| Command | Description |
-|---|---|
-| `make <lat> <lon> [alt]` | Generate canonical address |
-| `bare <lat> <lon> [alt]` | Spatial-only address (no id) |
-| `decode <p:...>` | Decode to lat/lon/alt |
-| `resolve <any>` | Any form → canonical |
-| `validate <s>` | Validate format (exit 0/1) |
-| `uri <p:...>` | Convert to `punkto://` form |
-| `https <p:...>` | Convert to HTTPS URL |
-| `near <a> <b>` | Check proximity |
-| `id` | Generate a random short ID |
-| `write <lat> <lon> <alt> <text>` | Post atom to node |
-| `read <p:...>` | Read atoms at Punkto |
-| `feed` | Read full node feed |
-| `info` | Node info |
+Punkto is released under the [MIT License](LICENSE).
 
-Default node: `https://punkto.xyz` — override with `PUNKTO_NODE=https://your.node`.
+Copyright © 2026 Fisker. The protocol itself is uncopyrightable; what's licensed is this reference implementation. You're free to use, modify, sublicense, and distribute under MIT terms.
 
+---
+
+## Contributing
+
+Contributions are very welcome — typo fixes, spec clarifications, performance improvements, new language implementations, or running a relay in your city.
+
+Start with [`CONTRIBUTING.md`](CONTRIBUTING.md). For security issues, see [`SECURITY.md`](SECURITY.md).
+
+---
+
+## Get in touch
+
+- **Issues & discussion**: [GitHub Issues](https://github.com/Fisker1111/Punkto/issues)
+- **Security**: fisker@protonmail.ch (see [SECURITY.md](SECURITY.md))
+- **Live PWA**: [punkto.xyz](https://www.punkto.xyz)
+
+---
+
+> *Punkto begins. Anyone, anywhere, can sign atoms.*
