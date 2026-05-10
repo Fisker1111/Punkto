@@ -1768,3 +1768,122 @@ async function boot() {
 }
 
 document.addEventListener('DOMContentLoaded', boot);
+
+// --- Key Management Handlers (added by assistant) ---
+let currentIdentity = null;
+
+// Helper to display key info in settings
+function displayKeyInfo(identity) {
+  const keyInfo = document.getElementById('key-info');
+  const authorIdEl = document.getElementById('key-author-id');
+  const pubkeyEl = document.getElementById('key-pubkey');
+  const mnemonicEl = document.getElementById('key-mnemonic');
+
+  if (!identity) {
+    keyInfo.style.display = 'none';
+    return;
+  }
+
+  keyInfo.style.display = 'block';
+  authorIdEl.textContent = identity.authorId;
+  pubkeyEl.textContent = identity.pubkey.slice(0, 20) + '...';
+  mnemonicEl.textContent = identity.mnemonic.join(' ');
+}
+
+// Generate new key
+document.getElementById('btn-generate-key').addEventListener('click', async () => {
+  try {
+    const identity = await generateIdentity();
+    currentIdentity = identity;
+    displayKeyInfo(identity);
+    alert('New key generated! Write down the 12-word mnemonic immediately: ' + identity.mnemonic.join(' '));
+  } catch (err) {
+    console.error('[Punkto] Failed to generate key:', err);
+    alert('Error generating key: ' + err.message);
+  }
+});
+
+// Import key from JSON file
+document.getElementById('btn-import-key').addEventListener('click', () => {
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = '.json';
+  input.onchange = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const text = await file.text();
+    try {
+      const identity = importKeyFromJson(text);
+      currentIdentity = identity;
+      displayKeyInfo(identity);
+      alert('Key imported successfully!');
+    } catch (err) {
+      console.error('[Punkto] Failed to import key:', err);
+      alert('Error importing key: ' + err.message);
+    }
+  };
+  input.click();
+});
+
+// Save to localStorage
+document.getElementById('btn-save-key-local').addEventListener('click', () => {
+  if (!currentIdentity) {
+    alert('Generate or import a key first!');
+    return;
+  }
+  if (!confirm('Warning: localStorage is not secure. Only save temporarily. Continue?')) {
+    return;
+  }
+  localStorage.setItem('punkto-identity', JSON.stringify(currentIdentity));
+  alert('Key saved to localStorage!');
+});
+
+// Load from localStorage
+document.getElementById('btn-load-key-local').addEventListener('click', () => {
+  const saved = localStorage.getItem('punkto-identity');
+  if (!saved) {
+    alert('No key found in localStorage!');
+    return;
+  }
+  try {
+    const identity = JSON.parse(saved);
+    currentIdentity = identity;
+    displayKeyInfo(identity);
+    alert('Key loaded from localStorage!');
+  } catch (err) {
+    console.error('[Punkto] Failed to load key:', err);
+    alert('Error loading key: ' + err.message);
+  }
+});
+
+// Print mnemonic (opens print-friendly window)
+document.getElementById('btn-print-mnemonic').addEventListener('click', () => {
+  if (!currentIdentity) {
+    alert('Generate or import a key first!');
+    return;
+  }
+  const mnemonicHtml = currentIdentity.mnemonic.map((w, i) => '<span class="word">' + (i+1) + '. ' + w + '</span>').join(' ');
+  const printContent = '<!DOCTYPE html><html><head><title>Punkto Key Mnemonic</title><style>body{font-family:monospace;padding:20px;}h1{color:#00e5ff;}.warning{color:#ff9800;margin-bottom:20px;}.mnemonic{font-size:18px;line-height:1.5;}.word{margin-right:10px;display:inline-block;}</style></head><body><h1>Punkto Identity — KEEP SAFE</h1><div class="warning">⚠️ Write these words on paper immediately. Never store digitally.</div><div class="mnemonic">' + mnemonicHtml + '</div><div style="margin-top:20px;"><div>Author ID: ' + currentIdentity.authorId + '</div><div>Pubkey: ' + currentIdentity.pubkey + '</div></div></body></html>';
+  const printWindow = window.open('', '_blank');
+  printWindow.document.write(printContent);
+  printWindow.document.close();
+  printWindow.print();
+});
+
+// Export key as JSON file
+document.getElementById('btn-export-key').addEventListener('click', () => {
+  if (!currentIdentity) {
+    alert('Generate or import a key first!');
+    return;
+  }
+  const jsonStr = exportKeyJson(currentIdentity);
+  const blob = new Blob([jsonStr], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'punkto-key.json';
+  a.click();
+  URL.revokeObjectURL(url);
+});
+
+// --- End Key Management Handlers ---
