@@ -202,7 +202,7 @@ Early public release — **v0.4**, dogfood stage.
 
 - **Live nodes**: two synced reference relays (`app1.punkto.xyz`, `app2.punkto.xyz`) — both on Let's Encrypt, auto-renewing, served via nginx + systemd-managed `punkto-relay.service`
 - **Atoms**: 20+ on the live feed, mostly seed/test content
-- **PWA**: at v26 — 3D altitude input, building-aware floor picker, lollipop leader lines, Open Graph deep links
+- **PWA**: at v27 — 3D altitude input, building-aware floor picker, lollipop leader lines, Open Graph deep links
 - **Relay**: v0.1 — rolling buffer (10 000 atoms or 7 days), `/latest`, peer sync, `/p/<id>` server-rendered cards
 - **Identity**: v0.1 — `tools/punkto-keygen-v0.1.py` and `tools/punkto-key.py` produce byte-identical results across implementations
 - **AI-discoverable**: `robots.txt`, `llms.txt`, `openapi.json`, `sitemap.xml`, server-rendered `/p/<id>` with OpenGraph + JSON-LD
