@@ -21,7 +21,7 @@
   <!-- Dexie.js 3.2.4 -->
   <script src="https://unpkg.com/dexie@3.2.4/dist/dexie.min.js"></script>
   <!-- TweetNaCl.js for Ed25519 -->
-  <script src="https://unpkg.com/tweetnacl@1.0.3/nacl.min.js"></script>
+  <script src="/nacl.min.js"></script>
   <!-- Key management functions -->
   <script src="key-management.js"></script>
 
@@ -923,7 +923,8 @@
   </div>
 
   <!-- App (ES module) -->
-  <script type="module" src="/app.js"></script>
+  <script src="/key-management.js"></script>
+<script type="module" src="/app.js"></script>
 
   <!-- Service worker registration -->
   <script>

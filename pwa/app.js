@@ -1768,11 +1768,68 @@ async function boot() {
   setPanelOpen(true);
 }
 
-document.addEventListener('DOMContentLoaded', boot);
+boot();
 
 // --- Key Management Handlers (added by assistant) ---
 function setupKeyManagement() {
-let currentIdentity = null;
+  const settingsMenu = document.getElementById('settings-menu');
+  if (!settingsMenu) {
+    console.error('[Punkto] Settings menu not found');
+    return;
+  }
+
+  settingsMenu.addEventListener('click', async (e) => {
+    const btn = e.target.closest('.settings-item');
+    if (!btn) return;
+
+    const id = btn.id;
+
+    // Generate New Key
+    if (id === 'btn-generate-key') {
+      e.preventDefault();
+      try {
+        if (typeof window.generateIdentity !== 'function') {
+          alert('Key generation module not loaded. Check console for errors.');
+          return;
+        }
+        const identity = await generateIdentity();
+        currentIdentity = identity;
+        displayKeyInfo(identity);
+        alert('New key generated! Write the 12 words on paper immediately.');
+      } catch (err) {
+        console.error('[Punkto] Generate key failed:', err);
+        alert('Failed to generate key: ' + err.message);
+      }
+      return;
+    }
+
+    // Import Key
+    if (id === 'btn-import-key') {
+      // ... existing import logic ...
+    }
+
+    // Save to LocalStorage
+    if (id === 'btn-save-key') {
+      // ... existing save logic ...
+    }
+
+    // Load from LocalStorage
+    if (id === 'btn-load-key') {
+      // ... existing load logic ...
+    }
+
+    // Print Mnemonic
+    if (id === 'btn-print-mnemonic') {
+      // ... existing print logic ...
+    }
+
+    // Export Key JSON
+    if (id === 'btn-export-key') {
+      // ... existing export logic ...
+    }
+  });
+
+  let currentIdentity = null;
 
 // Helper to display key info in settings
 function displayKeyInfo(identity) {
