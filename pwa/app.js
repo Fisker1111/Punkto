@@ -1771,6 +1771,8 @@ async function boot() {
 boot();
 
 // --- Key Management Handlers (added by assistant) ---
+let currentIdentity = null; // Module-scoped identity storage
+
 function setupKeyManagement() {
   const settingsMenu = document.getElementById('settings-menu');
   if (!settingsMenu) {
@@ -1829,7 +1831,6 @@ function setupKeyManagement() {
     }
   });
 
-  let currentIdentity = null;
 
 // Helper to display key info in settings
 function displayKeyInfo(identity) {
