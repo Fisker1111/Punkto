@@ -1971,3 +1971,24 @@ if ('serviceWorker' in navigator) {
     });
   });
 }
+
+// Improved Service Worker auto-update (fixes stale cache issues)
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', async () => {
+    const registrations = await navigator.serviceWorker.getRegistrations();
+    for (const reg of registrations) {
+      reg.update();
+      reg.addEventListener('updatefound', () => {
+        const newWorker = reg.installing;
+        newWorker.addEventListener('statechange', () => {
+          if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+            if (confirm('New Punkto version available! Reload now to update?')) {
+              newWorker.postMessage({ type: 'SKIP_WAITING' });
+              window.location.reload();
+            }
+          }
+        });
+      });
+    }
+  });
+}
