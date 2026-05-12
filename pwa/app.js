@@ -1949,3 +1949,25 @@ document.getElementById('btn-export-key').addEventListener('click', () => {
 // --- End Key Management Handlers ---
 
 }
+
+// Service Worker auto-update check (added to fix stale cache issues)
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.getRegistrations().then(registrations => {
+      registrations.forEach(reg => {
+        reg.update();
+        reg.addEventListener('updatefound', () => {
+          const newWorker = reg.installing;
+          newWorker.addEventListener('statechange', () => {
+            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+              if (confirm('New Punkto version available! Reload to update?')) {
+                newWorker.postMessage({ type: 'SKIP_WAITING' });
+                window.location.reload();
+              }
+            }
+          });
+        });
+      });
+    });
+  });
+}
