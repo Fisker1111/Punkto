@@ -170,6 +170,13 @@ const elModalAltitudeSlider    = document.getElementById('modal-altitude-slider'
 const elModalAltitudePrimary   = document.getElementById('modal-altitude-primary');
 const elModalAltitudeSecondary = document.getElementById('modal-altitude-secondary');
 const elModalAltitudeHint      = document.getElementById('modal-altitude-hint');
+const elModalGroundBtn         = document.getElementById('modal-ground-btn');
+const elModalRoofBtn           = document.getElementById('modal-roof-btn');
+const elModalDeviceAltBtn      = document.getElementById('modal-device-alt-btn');
+const elModalFloorMinus        = document.getElementById('modal-floor-minus');
+const elModalFloorPlus         = document.getElementById('modal-floor-plus');
+const elModalFloorValue        = document.getElementById('modal-floor-value');
+const elModalManualAltitude    = document.getElementById('modal-manual-altitude-value');
 const elToggle3D    = document.getElementById('toggle-3d');
 const elBtnSettings = document.getElementById('btn-settings');
 const elSettingsMenu = document.getElementById('settings-menu');
@@ -301,6 +308,10 @@ function encodeCurrentLocation(mapInst, altMeters = 0) {
   const center = mapInst.getCenter();
   const lat = center.lat;
   const lon = center.lng;
+  return encodeLocation(lat, lon, altMeters);
+}
+
+function encodeLocation(lat, lon, altMeters = 0) {
   // Guard against non-numeric input; fall back to ground level.
   const alt = Number.isFinite(altMeters) ? altMeters : 0;
   const hash = encode(lat, lon, alt, 12);
@@ -559,6 +570,17 @@ async function renderAtoms(newAtomIds = null) {
     t: a.t,
     label: (a.x || a.f || '').slice(0, 40),
   }));
+  if (placementDraft) {
+    scatterData.push({
+      position: [placementDraft.lon, placementDraft.lat, placementDraft.altitude_m || 0],
+      color: [255, 220, 80, 255],
+      punkto: 'draft',
+      text: 'Placement preview',
+      f: 'draft',
+      t: Date.now(),
+      label: 'draft',
+    });
+  }
 
   const { ScatterplotLayer, MapboxOverlay } = window.deck;
 
@@ -603,6 +625,13 @@ async function renderAtoms(newAtomIds = null) {
           color,
         };
       });
+    if (placementDraft && (placementDraft.altitude_m || 0) > 0) {
+      lollipopData.push({
+        source: [placementDraft.lon, placementDraft.lat, 0],
+        target: [placementDraft.lon, placementDraft.lat, placementDraft.altitude_m || 0],
+        color: [255, 220, 80, 180],
+      });
+    }
     layers.push(
       new LineLayer({
         id: 'atom-lollipops',
@@ -971,9 +1000,18 @@ async function refreshUI(newAtomIds = null) {
         <div class="atom-body">
           <div class="atom-text">${text}</div>
           <div class="atom-meta">${meta}</div>
+          <button class="btn btn-secondary show-in-3d-btn" type="button">Show in 3D</button>
         </div>
         <div class="atom-time">${fmtTime(a.t)}</div>
       `;
+      const showBtn = el.querySelector('.show-in-3d-btn');
+      if (showBtn) {
+        showBtn.addEventListener('click', (ev) => {
+          ev.stopPropagation();
+          const id = String(a.punkto || '').replace(/^p:/, '');
+          focusPunkto(id);
+        });
+      }
       elAtomList.appendChild(el);
     }
   }
@@ -1076,6 +1114,7 @@ let modalAltitudeState = {
   mode: 'meter',   // 'floor' | 'meter'
   building: null,  // { name, height, maxFloor } | null
 };
+let placementDraft = null;
 
 /**
  * Detect whether the map center is over a building feature.
@@ -1201,7 +1240,16 @@ function updateAltitudeLabels() {
       : '(estimated, no building detected)';
   }
   // Keep the location display in sync with chosen altitude.
+  if (placementDraft) {
+    placementDraft.altitude_m = getModalAltitudeMeters();
+    if (modalAltitudeState.mode === 'floor') {
+      placementDraft.floor_hint = Math.round(Number(elModalAltitudeSlider.value) || 0);
+    } else {
+      placementDraft.floor_hint = Math.round(placementDraft.altitude_m / FLOOR_HEIGHT_M);
+    }
+  }
   refreshModalLocationDisplay();
+  renderPlacementPreview();
 }
 
 /**
@@ -1210,7 +1258,8 @@ function updateAltitudeLabels() {
 function refreshModalLocationDisplay() {
   if (!map || !elModalLocation) return;
   const alt = getModalAltitudeMeters();
-  const punkto = encodeCurrentLocation(map, alt);
+  const center = placementDraft ? { lat: placementDraft.lat, lng: placementDraft.lon } : map.getCenter();
+  const punkto = encodeLocation(center.lat, center.lng, alt);
   const loc = decodeAtomLocation(punkto);
   let suffix = '';
   if (alt > 0) {
@@ -1250,6 +1299,8 @@ function setupAltitudeInput() {
     elModalAltitudeSlider.value = '0';
   }
   updateAltitudeLabels();
+  if (elModalRoofBtn) elModalRoofBtn.disabled = !building;
+  if (elModalDeviceAltBtn) elModalDeviceAltBtn.disabled = true;
 }
 
 function openModal() {
@@ -1260,6 +1311,15 @@ function openModal() {
 
   // Configure altitude input (building-aware) and render labels/location.
   setupAltitudeInput();
+  const center = map ? map.getCenter() : { lat: 0, lng: 0 };
+  placementDraft = {
+    lat: center.lat,
+    lon: center.lng,
+    altitude_m: 0,
+    floor_hint: 0,
+    placement_mode: 'ground',
+  };
+  requestDeviceAltitude();
 
   elModalOverlay.classList.add('open');
   setTimeout(() => elModalText.focus(), 80);
@@ -1269,13 +1329,50 @@ function closeModal() {
   elModalOverlay.classList.remove('open');
   // Reset altitude state so next open is friction-free at ground level.
   if (elModalAltitudeSlider) elModalAltitudeSlider.value = '0';
+  placementDraft = null;
+  renderPlacementPreview();
+}
+
+function renderPlacementPreview() {
+  renderAtoms();
+}
+
+function setAltitudeMeters(meters, mode = 'manual') {
+  const v = Math.max(0, Math.round(Number(meters) || 0));
+  if (modalAltitudeState.mode === 'floor') {
+    const floor = Math.round(v / FLOOR_HEIGHT_M);
+    elModalAltitudeSlider.value = String(floor);
+    if (elModalFloorValue) elModalFloorValue.value = String(floor);
+  } else {
+    elModalAltitudeSlider.value = String(v);
+  }
+  if (elModalManualAltitude) elModalManualAltitude.value = String(v);
+  if (placementDraft) placementDraft.placement_mode = mode;
+  updateAltitudeLabels();
+}
+
+function requestDeviceAltitude() {
+  if (!navigator.geolocation || !elModalDeviceAltBtn) return;
+  navigator.geolocation.getCurrentPosition((pos) => {
+    const alt = pos?.coords?.altitude;
+    if (alt == null || !Number.isFinite(alt)) {
+      elModalDeviceAltBtn.style.display = 'none';
+      return;
+    }
+    elModalDeviceAltBtn.style.display = '';
+    elModalDeviceAltBtn.disabled = false;
+    elModalDeviceAltBtn.dataset.altitude = String(Math.round(alt));
+  }, () => {
+    elModalDeviceAltBtn.style.display = 'none';
+  }, { enableHighAccuracy: true, timeout: 5000 });
 }
 
 async function submitAtom() {
   const text   = elModalText.value.trim();
   const author = elModalAuthor.value.trim();
   const altMeters = getModalAltitudeMeters();
-  const punkto = encodeCurrentLocation(map, altMeters);
+  const center = placementDraft ? { lat: placementDraft.lat, lng: placementDraft.lon } : map.getCenter();
+  const punkto = encodeLocation(center.lat, center.lng, altMeters);
   const t      = Date.now();
 
   const atom = { punkto, t };
@@ -1368,6 +1465,17 @@ function initMap() {
     // so leader lines track pan/zoom/pitch/bearing smoothly.
     ensureLeaderOverlay();
     map.on('render', drawLeaderLines);
+    map.on('click', (e) => {
+      if (!elModalOverlay.classList.contains('open')) {
+        openModal();
+      }
+      if (placementDraft) {
+        placementDraft.lat = e.lngLat.lat;
+        placementDraft.lon = e.lngLat.lng;
+        refreshModalLocationDisplay();
+        renderPlacementPreview();
+      }
+    });
 
     // Add 3D building extrusion layer (OpenFreeMap has openmaptiles source)
     try {
@@ -1746,6 +1854,34 @@ function wireEvents() {
     elModalAltitudeSlider.addEventListener('input', updateAltitudeLabels);
     elModalAltitudeSlider.addEventListener('change', updateAltitudeLabels);
   }
+  if (elModalGroundBtn) elModalGroundBtn.addEventListener('click', () => setAltitudeMeters(0, 'ground'));
+  if (elModalRoofBtn) elModalRoofBtn.addEventListener('click', () => {
+    const b = modalAltitudeState.building;
+    if (!b) return;
+    setAltitudeMeters(b.height, 'roof');
+  });
+  if (elModalFloorMinus) elModalFloorMinus.addEventListener('click', () => {
+    const v = Math.max(0, (Number(elModalFloorValue?.value) || 0) - 1);
+    if (elModalFloorValue) elModalFloorValue.value = String(v);
+    setAltitudeMeters(v * FLOOR_HEIGHT_M, 'manual');
+  });
+  if (elModalFloorPlus) elModalFloorPlus.addEventListener('click', () => {
+    const v = (Number(elModalFloorValue?.value) || 0) + 1;
+    if (elModalFloorValue) elModalFloorValue.value = String(v);
+    setAltitudeMeters(v * FLOOR_HEIGHT_M, 'manual');
+  });
+  if (elModalFloorValue) elModalFloorValue.addEventListener('input', () => {
+    const v = Math.max(0, Number(elModalFloorValue.value) || 0);
+    setAltitudeMeters(v * FLOOR_HEIGHT_M, 'manual');
+  });
+  if (elModalManualAltitude) elModalManualAltitude.addEventListener('input', () => {
+    setAltitudeMeters(Number(elModalManualAltitude.value) || 0, 'manual');
+  });
+  if (elModalDeviceAltBtn) elModalDeviceAltBtn.addEventListener('click', () => {
+    const alt = Number(elModalDeviceAltBtn.dataset.altitude);
+    if (!Number.isFinite(alt)) return;
+    setAltitudeMeters(alt, 'device');
+  });
 
   // Handle keyboard escape
   document.addEventListener('keydown', e => {

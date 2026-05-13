@@ -436,6 +436,12 @@
       font-style: italic;
       letter-spacing: 0.02em;
     }
+    #modal-placement-controls { display: grid; gap: 8px; margin-top: 10px; }
+    #modal-placement-modes, #modal-floor-stepper, #modal-manual-altitude {
+      display: flex; gap: 8px; align-items: center;
+    }
+    #modal-floor-value, #modal-manual-altitude-value { width: 84px; }
+    .show-in-3d-btn { margin-top: 6px; }
 
     /* ── Modal public-and-permanent notice ────────────────── */
     #modal-notice {
@@ -1010,16 +1016,34 @@
   <!-- Add atom modal -->
   <div id="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="modal-title">
     <div id="modal">
-      <h2 id="modal-title">+ New Atom</h2>
+      <h2 id="modal-title">Place punkti</h2>
       <div id="modal-location">…</div>
       <div id="modal-notice">
         <span class="icon">⚠</span>Public and permanent — this cannot be deleted.
       </div>
       <div id="modal-altitude">
+        <div><strong>Height</strong></div>
         <div id="modal-altitude-primary">Ground level</div>
         <input id="modal-altitude-slider" type="range" min="0" max="100" step="1" value="0" />
         <div id="modal-altitude-secondary">+0 m above ground</div>
         <div id="modal-altitude-hint"></div>
+        <div id="modal-placement-controls">
+          <div id="modal-placement-modes">
+            <button class="btn btn-secondary" id="modal-ground-btn" type="button">Ground</button>
+            <button class="btn btn-secondary" id="modal-roof-btn" type="button">Roof</button>
+            <button class="btn btn-secondary" id="modal-device-alt-btn" type="button">Use my altitude</button>
+          </div>
+          <div id="modal-floor-stepper">
+            <span>Floor</span>
+            <button class="btn btn-secondary" id="modal-floor-minus" type="button">-</button>
+            <input id="modal-floor-value" type="number" step="1" value="0" />
+            <button class="btn btn-secondary" id="modal-floor-plus" type="button">+</button>
+          </div>
+          <div id="modal-manual-altitude">
+            <span>Height (m)</span>
+            <input id="modal-manual-altitude-value" type="number" step="1" value="0" />
+          </div>
+        </div>
       </div>
       <textarea id="modal-text" placeholder="What's here? (optional)"></textarea>
       <div id="modal-author-row">
@@ -1028,7 +1052,7 @@
       <div id="modal-error"></div>
       <div id="modal-actions">
         <button class="btn btn-secondary" id="modal-cancel">Cancel</button>
-        <button class="btn btn-primary" id="modal-submit">Drop Atom</button>
+        <button class="btn btn-primary" id="modal-submit">Place here</button>
       </div>
     </div>
   </div>
