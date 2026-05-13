@@ -918,12 +918,29 @@
       color: var(--text-dim);
       max-width: 200px;
     }
+
+    /* Accessibility: visible keyboard focus */
+    button:focus-visible,
+    input:focus-visible,
+    textarea:focus-visible {
+      outline: 2px solid var(--cyan);
+      outline-offset: 2px;
+    }
+
+    /* Accessibility: respect reduced motion */
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation: none !important;
+        transition: none !important;
+        scroll-behavior: auto !important;
+      }
+    }
   </style>
 </head>
 <body>
 
   <!-- Top bar -->
-  <div id="topbar">
+  <header id="topbar" role="banner">
     <div class="title-group">
       <div class="title">punkto</div>
       <div class="tagline">points in 3D space</div>
@@ -931,7 +948,7 @@
     <div id="atom-count"><span id="count-num">0</span> atoms</div>
     <div id="sync-indicator" title="sync status"></div>
     <button id="btn-settings" title="Settings" aria-label="Settings">⚙</button>
-  </div>
+  </header>
 
   <!-- Settings popover menu -->
   <div id="settings-menu" role="menu" aria-hidden="true">
@@ -962,16 +979,16 @@
   </div>
 
   <!-- 3D toggle -->
-  <button id="toggle-3d" title="Switch to 3D view">2D</button>
+  <button id="toggle-3d" title="Switch to 3D view" aria-label="Switch map between 2D and 3D">2D</button>
 
   <!-- Map container -->
-  <div id="map">
+  <main id="map" role="main" aria-label="Punkto map">
     <div id="crosshair"><span id="crosshair-readout"></span></div>
-  </div>
+  </main>
 
   <!-- Floating buttons -->
-  <button id="fab-panel" title="Recent atoms">☰</button>
-  <button id="fab-add" title="Add atom at map center">+</button>
+  <button id="fab-panel" title="Recent atoms" aria-label="Show recent atoms">☰</button>
+  <button id="fab-add" title="Add atom at map center" aria-label="Add atom at map center">+</button>
 
   <!-- First-visit onboarding hint (hidden by default; shown by app.js when appropriate) -->
   <div id="onboarding-hint" aria-hidden="true">
@@ -983,7 +1000,7 @@
   <div id="panel">
     <div id="panel-header">
       <div class="label">recent atoms</div>
-      <button id="panel-close">✕</button>
+      <button id="panel-close" aria-label="Close recent atoms panel">✕</button>
     </div>
     <div id="atom-list">
       <div id="atom-list-empty">No atoms yet.</div>
@@ -991,9 +1008,9 @@
   </div>
 
   <!-- Add atom modal -->
-  <div id="modal-overlay">
+  <div id="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="modal-title">
     <div id="modal">
-      <h2>+ New Atom</h2>
+      <h2 id="modal-title">+ New Atom</h2>
       <div id="modal-location">…</div>
       <div id="modal-notice">
         <span class="icon">⚠</span>Public and permanent — this cannot be deleted.
@@ -1031,7 +1048,6 @@
     }
   </script>
 
-</body>
   <!-- Mnemonic modal (Generate New Key) -->
   <div id="mnemonic-overlay">
     <div id="mnemonic-box">
@@ -1046,4 +1062,5 @@
     </div>
   </div>
 
+</body>
 </html>
