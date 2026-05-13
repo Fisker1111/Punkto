@@ -513,20 +513,11 @@ class RelayHandler(BaseHTTPRequestHandler):
 
     # -- helpers -------------------------------------------------------------
 
-    def _cors(self) -> Dict[str, str]:
-        return {
-            "Access-Control-Allow-Origin": "*",
-            "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
-            "Access-Control-Allow-Headers": "Content-Type, Authorization",
-            "Access-Control-Max-Age": "86400",
-        }
 
     def _send(self, code: int, body: bytes, content_type: str, extra: Optional[Dict[str, str]] = None) -> None:
         self.send_response(code)
         self.send_header("Content-Type", content_type)
         self.send_header("Content-Length", str(len(body)))
-        for k, v in self._cors().items():
-            self.send_header(k, v)
         if extra:
             for k, v in extra.items():
                 self.send_header(k, v)

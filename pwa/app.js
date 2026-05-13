@@ -261,7 +261,6 @@ async function focusPunkto(id) {
 
   // Open panel so user sees atom list
   setPanelOpen(true);
-  setupKeyManagement();
 
   // Update title for shareability
   document.title = `Punkto · ${punkto}`;
@@ -1532,11 +1531,49 @@ function hostOf(url) {
   try { return new URL(url).host; } catch { return url; }
 }
 
+// ---------------------------------------------------------------------------
+// Mnemonic modal — shows generated key words in-app (no window.alert)
+// ---------------------------------------------------------------------------
+function showMnemonicModal(identity) {
+  const overlay = document.getElementById('mnemonic-overlay');
+  const wordsEl = document.getElementById('mnemonic-words');
+  const authorEl = document.getElementById('mnemonic-author');
+  if (!overlay || !wordsEl) return;
+  wordsEl.innerHTML = identity.mnemonic.map((w, i) =>
+    `<div class="mnemonic-word"><span class="wn">${i + 1}.</span>${w}</div>`
+  ).join('');
+  authorEl.textContent = `Author ID: ${identity.authorId}`;
+  overlay.classList.add('open');
+  const copyBtn = document.getElementById('btn-mnemonic-copy');
+  const closeBtn = document.getElementById('btn-mnemonic-close');
+  copyBtn.onclick = () => {
+    navigator.clipboard.writeText(identity.mnemonic.join(' ')).then(() => {
+      copyBtn.textContent = 'Copied!';
+      setTimeout(() => { copyBtn.textContent = 'Copy words'; }, 2000);
+    }).catch(() => {
+      copyBtn.textContent = identity.mnemonic.join(' ');
+    });
+  };
+  closeBtn.onclick = () => overlay.classList.remove('open');
+}
+
 /**
  * unreachably large `since` value — node.py clamps it to file_size and returns
  * `{cursor, atoms: []}`. Zero-payload, cheap, works against any Punkto node.
  * Returns a non-negative integer cursor, or null on error.
  */
+async function fetchNodeCursor(url) {
+  try {
+    const res = await fetch(`${url}/feed?cursor=9999999999`, {
+      signal: AbortSignal.timeout(6_000),
+    });
+    if (!res.ok) return null;
+    const json = await res.json();
+    return typeof json.cursor === 'number' ? json.cursor : null;
+  } catch {
+    return null;
+  }
+}
 
 /**
  * Fetch /info for a node. Returns null on error, or the parsed JSON on success.
@@ -1588,6 +1625,8 @@ async function refreshSettingsNetworkInfo() {
 
   // 2. Fetch cursors in parallel: local + each peer.
   const [localCursor, ...peerCursors] = await Promise.all([
+    fetchNodeCursor(NODE_URL),
+    ...peerUrls.map(fetchNodeCursor),
   ]);
 
   // 3. Compute lag (local behind highest peer).
@@ -1716,12 +1755,26 @@ function wireEvents() {
       if (settingsOpen) closeSettingsMenu();
     }
   });
+  setupKeyManagement(); // registered here, not from atom handler
 }
 // ---------------------------------------------------------------------------
 // Boot
 // ---------------------------------------------------------------------------
 
 async function boot() {
+  console.log('PUNKTO APP.JS LOADED v39 HARD MARKER 2026-05-13-4');
+  window.PUNKTO_APP_VERSION = 'v39-hard-marker-2026-05-13-4';
+
+  // Global click capture — diagnostic: logs every click to console
+  document.addEventListener('click', (ev) => {
+    console.log('[CLICK CAPTURE]', {
+      tag: ev.target?.tagName,
+      id: ev.target?.id,
+      cls: ev.target?.className,
+      text: (ev.target?.innerText || ev.target?.textContent || '').trim().slice(0, 40),
+      closestSettingsItem: ev.target?.closest?.('.settings-item')?.id,
+    });
+  }, true);
   console.log('[punkto] booting...');
 
   // Verify deck.gl UMD is available
@@ -1780,9 +1833,11 @@ function setupKeyManagement() {
     return;
   }
 
-  settingsMenu.addEventListener('click', async (e) => {
+  // Use document-level capture phase to bypass any overlay (deck.gl canvas etc) eating clicks
+  document.addEventListener('click', async (e) => {
     const btn = e.target.closest('.settings-item');
     if (!btn) return;
+    console.log('[KEY HANDLER] fired, btn.id=', btn.id);
 
     const id = btn.id;
 
@@ -1794,13 +1849,19 @@ function setupKeyManagement() {
           alert('Key generation module not loaded. Check console for errors.');
           return;
         }
-        const identity = await generateIdentity();
+        console.log('[identity] generateIdentity type:', typeof window.generateIdentity);
+        console.log('[identity] showMnemonicModal type:', typeof showMnemonicModal);
+        const identity = await window.generateIdentity();
+        console.log('[identity] generated:', identity);
         currentIdentity = identity;
         displayKeyInfo(identity);
-        alert('New key generated! Write the 12 words on paper immediately.');
+        console.log('[identity] calling showMnemonicModal...');
+        showMnemonicModal(identity);
+        console.log('[identity] showMnemonicModal done');
       } catch (err) {
         console.error('[Punkto] Generate key failed:', err);
-        alert('Failed to generate key: ' + err.message);
+        console.error('[Punkto] Generate key failed (UI):', err.message);
+        alert('Generate key failed: ' + err.message);
       }
       return;
     }
@@ -1829,7 +1890,7 @@ function setupKeyManagement() {
     if (id === 'btn-export-key') {
       // ... existing export logic ...
     }
-  });
+  }, true); // capture phase — fires before stopPropagation
 
 
 // Helper to display key info in settings
@@ -1849,19 +1910,6 @@ function displayKeyInfo(identity) {
   pubkeyEl.textContent = identity.pubkey.slice(0, 20) + '...';
   mnemonicEl.textContent = identity.mnemonic.join(' ');
 }
-
-// Generate new key
-document.getElementById('btn-generate-key').addEventListener('click', async () => {
-  try {
-    const identity = await generateIdentity();
-    currentIdentity = identity;
-    displayKeyInfo(identity);
-    alert('New key generated! Write down the 12-word mnemonic immediately: ' + identity.mnemonic.join(' '));
-  } catch (err) {
-    console.error('[Punkto] Failed to generate key:', err);
-    alert('Error generating key: ' + err.message);
-  }
-});
 
 // Import key from JSON file
 document.getElementById('btn-import-key').addEventListener('click', () => {

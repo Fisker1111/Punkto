@@ -12,14 +12,15 @@
   <link rel="apple-touch-icon" href="/logo-192.png" />
 
   <!-- MapLibre GL JS 3.6.2 -->
-  <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.css" />
-  <script src="https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.js"></script>
+  <!-- MapLibre GL JS 3.6.2 (self-hosted) -->
+  <link rel="stylesheet" href="/lib/maplibre-gl.css" />
+  <script src="/lib/maplibre-gl.js"></script>
 
-  <!-- deck.gl 8.9.35 standalone UMD (exposes window.deck) -->
-  <script src="https://unpkg.com/deck.gl@8.9.35/dist.min.js"></script>
+  <!-- deck.gl 8.9.35 standalone UMD (self-hosted) -->
+  <script src="/lib/dist.min.js"></script>
 
-  <!-- Dexie.js 3.2.4 -->
-  <script src="https://unpkg.com/dexie@3.2.4/dist/dexie.min.js"></script>
+  <!-- Dexie.js 3.2.4 (self-hosted) -->
+  <script src="/lib/dexie.min.js"></script>
   <!-- TweetNaCl.js for Ed25519 -->
   <script src="/nacl.min.js"></script>
   <!-- Key management functions -->
@@ -450,6 +451,98 @@
     }
     #modal-notice .icon { margin-right: 4px; }
 
+    /* ── Mnemonic modal (Generate New Key) ───────────────────── */
+    #mnemonic-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 300;
+      background: rgba(0,0,0,0.82);
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+    }
+    #mnemonic-overlay.open { display: flex; }
+    #mnemonic-box {
+      background: var(--surface);
+      border: 1px solid var(--cyan-dim);
+      border-radius: 12px;
+      padding: 24px 20px 20px;
+      max-width: 420px;
+      width: 100%;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.7);
+    }
+    #mnemonic-box h2 {
+      color: var(--cyan);
+      font-size: 15px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin: 0 0 6px;
+    }
+    #mnemonic-warning {
+      color: #d8b46a;
+      font-size: 12px;
+      margin-bottom: 16px;
+      line-height: 1.5;
+      padding: 8px 10px;
+      background: rgba(216,180,106,0.07);
+      border: 1px solid rgba(216,180,106,0.25);
+      border-radius: 6px;
+    }
+    #mnemonic-words {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 7px;
+      margin-bottom: 16px;
+    }
+    .mnemonic-word {
+      background: rgba(0,229,255,0.07);
+      border: 1px solid rgba(0,229,255,0.18);
+      border-radius: 6px;
+      padding: 6px 8px;
+      font-size: 13px;
+      font-family: monospace;
+      color: var(--text);
+    }
+    .mnemonic-word .wn {
+      color: var(--text-dim);
+      font-size: 10px;
+      margin-right: 4px;
+    }
+    #mnemonic-author {
+      font-size: 11px;
+      color: var(--text-dim);
+      margin-bottom: 16px;
+      font-family: monospace;
+    }
+    #mnemonic-actions {
+      display: flex;
+      gap: 10px;
+    }
+    #btn-mnemonic-copy {
+      flex: 1;
+      padding: 9px;
+      background: transparent;
+      border: 1px solid var(--cyan-dim);
+      border-radius: 7px;
+      color: var(--cyan);
+      font-size: 13px;
+      cursor: pointer;
+      font-family: monospace;
+    }
+    #btn-mnemonic-close {
+      flex: 2;
+      padding: 9px;
+      background: var(--cyan);
+      border: none;
+      border-radius: 7px;
+      color: #0a0a0a;
+      font-size: 13px;
+      font-weight: bold;
+      cursor: pointer;
+      font-family: monospace;
+    }
+
     /* ── Onboarding hint (first-visit) ────────────────────── */
     #onboarding-hint {
       position: absolute;
@@ -590,6 +683,7 @@
       top: calc(var(--bar-h) + 4px);
       right: 10px;
       z-index: 150;
+      pointer-events: auto;
       min-width: 240px;
       background: var(--surface);
       border: 1px solid var(--border);
@@ -627,6 +721,7 @@
       font-family: inherit;
       font-size: 12px;
       cursor: pointer;
+      pointer-events: auto;
     }
     .settings-item:hover { background: var(--surface2); }
     .settings-item.danger { color: #ff6666; }
@@ -844,7 +939,7 @@
       <div><span class="k">node:</span>    <span class="v" id="settings-node">—</span></div>
       <div><span class="k">peers:</span>   <span class="v" id="settings-peers">—</span></div>
       <div><span class="k">cached:</span>  <span class="v" id="settings-count">0</span> atoms</div>
-      <div><span class="k">version:</span> <span class="v">v30</span></div>
+      <div><span class="k">version:</span> <span class="v">v0.4</span></div>
     </div>
     
       <div class="settings-separator"></div>
@@ -937,4 +1032,18 @@
   </script>
 
 </body>
+  <!-- Mnemonic modal (Generate New Key) -->
+  <div id="mnemonic-overlay">
+    <div id="mnemonic-box">
+      <h2>⚠ New Key Generated</h2>
+      <div id="mnemonic-warning">Write these 12 words on paper immediately.<br>Never store them digitally. This is your only backup.</div>
+      <div id="mnemonic-words"></div>
+      <div id="mnemonic-author"></div>
+      <div id="mnemonic-actions">
+        <button id="btn-mnemonic-copy">Copy words</button>
+        <button id="btn-mnemonic-close">I've written these down ✓</button>
+      </div>
+    </div>
+  </div>
+
 </html>

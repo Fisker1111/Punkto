@@ -1,38 +1,69 @@
-<!DOCTYPE html>
+<!doctype html>
 <html>
 <head>
   <meta charset="utf-8">
-  <title>Punkto — Reset</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Resetting Punkto...</title>
   <style>
-    body { background:#0a0a0a; color:#00ccdd; font-family:monospace;
-           display:flex; align-items:center; justify-content:center;
-           height:100vh; margin:0; flex-direction:column; gap:16px; }
-    p { color:#888; font-size:13px; }
+    body { background: #0a0a0a; color: #00e5ff; font-family: monospace; padding: 32px; }
+    h1 { font-size: 18px; margin-bottom: 16px; }
+    #log { font-size: 12px; color: #888; line-height: 1.8; }
   </style>
 </head>
 <body>
-  <div>↺ clearing cache...</div>
-  <p id="status">Please wait</p>
-  <script>
-  async function nuke() {
-    const s = document.getElementById('status');
-    try {
-      if ('serviceWorker' in navigator) {
-        const regs = await navigator.serviceWorker.getRegistrations();
-        for (const r of regs) { await r.unregister(); }
-        s.textContent = 'Service workers unregistered (' + regs.length + ')';
-      }
-      if ('caches' in window) {
-        const keys = await caches.keys();
-        for (const k of keys) await caches.delete(k);
-        s.textContent += ' · caches cleared (' + keys.length + ')';
-      }
-    } catch(e) {
-      s.textContent = 'Error: ' + e.message;
+<h1>⟳ Resetting Punkto...</h1>
+<div id="log"></div>
+<script>
+(async () => {
+  const log = (msg) => {
+    console.log(msg);
+    document.getElementById('log').innerHTML += msg + '<br>';
+  };
+
+  log('Hard reset started...');
+
+  // 1. Unregister all Service Workers
+  if ('serviceWorker' in navigator) {
+    const regs = await navigator.serviceWorker.getRegistrations();
+    for (const reg of regs) {
+      await reg.unregister();
+      log('Unregistered SW: ' + (reg.scope || 'unknown'));
     }
-    setTimeout(() => { window.location.replace('/'); }, 1200);
   }
-  nuke();
-  </script>
+
+  // 2. Clear all caches
+  if ('caches' in window) {
+    const names = await caches.keys();
+    for (const name of names) {
+      await caches.delete(name);
+      log('Deleted cache: ' + name);
+    }
+  }
+
+  // 3. Clear relevant localStorage keys
+  ['punkto.identity', 'punkto.identity.v1', 'punkto.key', 'punkto.mnemonic'].forEach(k => {
+    if (localStorage.getItem(k) !== null) {
+      localStorage.removeItem(k);
+      log('Cleared localStorage: ' + k);
+    }
+  });
+
+  // 4. Delete IndexedDB databases
+  if (indexedDB && indexedDB.databases) {
+    try {
+      const dbs = await indexedDB.databases();
+      for (const db of dbs) {
+        indexedDB.deleteDatabase(db.name);
+        log('Deleted IndexedDB: ' + db.name);
+      }
+    } catch (e) { /* not all browsers support indexedDB.databases() */ }
+  }
+
+  log('Done! Redirecting...');
+  setTimeout(() => {
+    location.href = '/?reset=' + Date.now();
+  }, 800);
+})();
+</script>
 </body>
 </html>
