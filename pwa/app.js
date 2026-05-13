@@ -1762,8 +1762,8 @@ function wireEvents() {
 // ---------------------------------------------------------------------------
 
 async function boot() {
-  console.log('PUNKTO APP.JS LOADED v39 HARD MARKER 2026-05-13-4');
-  window.PUNKTO_APP_VERSION = 'v39-hard-marker-2026-05-13-4';
+  console.log('PUNKTO APP.JS LOADED v40 HARD MARKER 2026-05-13-5');
+  window.PUNKTO_APP_VERSION = 'v40-hard-marker-2026-05-13-5';
 
   // Global click capture — diagnostic: logs every click to console
   document.addEventListener('click', (ev) => {
