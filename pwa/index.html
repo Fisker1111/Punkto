@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <meta name="theme-color" content="#0a0a0a" />
-  <meta name="description" content="Punkto — address points in 3D space" />
+  <meta name="description" content="Punkto — address What's around you" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <title>Punkto</title>
 
@@ -442,6 +442,24 @@
     }
     #modal-floor-value, #modal-manual-altitude-value { width: 84px; }
     .show-in-3d-btn { margin-top: 6px; }
+
+    .atom-category {
+      display: inline-block;
+      padding: 1px 8px;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      margin-right: 6px;
+      color: var(--text);
+      background: var(--surface2);
+      font-size: 10px;
+    }
+    .atom-verified {
+      color: #00e676;
+      font-size: 10px;
+      font-weight: 600;
+    }
+    .atom-actions { margin-top: 6px; }
+
 
     /* ── Modal public-and-permanent notice ────────────────── */
     #modal-notice {
@@ -948,10 +966,10 @@
   <!-- Top bar -->
   <header id="topbar" role="banner">
     <div class="title-group">
-      <div class="title">punkto</div>
-      <div class="tagline">points in 3D space</div>
+      <div class="title">Punkto</div>
+      <div class="tagline">What's around you</div>
     </div>
-    <div id="atom-count"><span id="count-num">0</span> atoms</div>
+    <div id="atom-count"><span id="count-num">0</span> nearby</div>
     <div id="sync-indicator" title="sync status"></div>
     <button id="btn-settings" title="Settings" aria-label="Settings">⚙</button>
   </header>
@@ -993,8 +1011,8 @@
   </main>
 
   <!-- Floating buttons -->
-  <button id="fab-panel" title="Recent atoms" aria-label="Show recent atoms">☰</button>
-  <button id="fab-add" title="Add atom at map center" aria-label="Add atom at map center">+</button>
+  <button id="fab-panel" title="Nearby notes" aria-label="Show nearby notes">☰</button>
+  <button id="fab-add" title="Leave note here" aria-label="Leave note here">+</button>
 
   <!-- First-visit onboarding hint (hidden by default; shown by app.js when appropriate) -->
   <div id="onboarding-hint" aria-hidden="true">
@@ -1005,7 +1023,7 @@
   <!-- Bottom panel -->
   <div id="panel">
     <div id="panel-header">
-      <div class="label">recent atoms</div>
+      <div class="label">Nearby notes</div>
       <button id="panel-close" aria-label="Close recent atoms panel">✕</button>
     </div>
     <div id="atom-list">
