@@ -215,6 +215,45 @@ function fmtCoords(lat, lon, alt) {
   return `${latStr}, ${lonStr}${altStr}`;
 }
 
+function haversineMeters(lat1, lon1, lat2, lon2) {
+  const R = 6371000;
+  const toRad = d => (d * Math.PI) / 180;
+  const dLat = toRad(lat2 - lat1);
+  const dLon = toRad(lon2 - lon1);
+  const a = Math.sin(dLat / 2) ** 2 +
+    Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) ** 2;
+  return 2 * R * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
+function fmtDistance(meters) {
+  if (!Number.isFinite(meters)) return '';
+  if (meters < 1000) return `${Math.round(meters)} m away`;
+  return `${(meters / 1000).toFixed(1)} km away`;
+}
+
+function deriveTitle(atom) {
+  const raw = String(atom?.x || '').trim();
+  if (!raw) return 'Untitled note';
+  const firstLine = raw.split(/\r?\n/).find(Boolean) || raw;
+  return firstLine.length > 40 ? `${firstLine.slice(0, 40)}…` : firstLine;
+}
+
+function fmtAltitudeLabel(alt) {
+  if (!Number.isFinite(alt) || Math.abs(alt) < 1) return '';
+  const floor = Math.round(alt / 3);
+  if (floor >= 2) return `Floor ${floor}`;
+  return `+${Math.round(alt)} m`;
+}
+
+function deriveCategory(atom) {
+  const c = String(atom?.category || atom?.kind || '').trim();
+  return c || 'Note';
+}
+
+function isVerifiedAtom(atom) {
+  return Boolean(atom?.sig && atom?.pubkey);
+}
+
 /**
  * Extract the spatial part of a canonical punkto and decode to coords.
  * e.g. 'p:u4pruydqqvj3-9xk3' → decode('u4pruydqqvj3')
@@ -964,15 +1003,29 @@ async function refreshUI(newAtomIds = null) {
   // Keep settings info (if menu is open) in sync
   if (elSettingsCount) elSettingsCount.textContent = String(total);
 
-  // Render recent 50 visible atoms in panel
-  const recent = visibleAtoms.slice(0, 50);
+  // Render recent 50 visible atoms in panel, prioritizing nearby notes
+  const center = map ? map.getCenter() : null;
+  const enriched = visibleAtoms.map(a => ({
+    ...a,
+    distance: center ? haversineMeters(center.lat, center.lng, a.lat, a.lon) : NaN,
+  }));
+  enriched.sort((a, b) => {
+    const ad = Number.isFinite(a.distance);
+    const bd = Number.isFinite(b.distance);
+    if (ad && bd) return a.distance - b.distance || (Number(b.t) - Number(a.t));
+    if (ad) return -1;
+    if (bd) return 1;
+    return Number(b.t) - Number(a.t);
+  });
+  const recent = enriched.slice(0, 50);
 
   if (recent.length === 0) {
     // Only show the empty placeholder AFTER the first sync has completed.
     // During cold boot (cache empty + sync in progress) we keep it hidden so
     // users see a clean list instead of a flash of "No atoms yet".
     if (initialSyncDone) {
-      elAtomEmpty.textContent = 'No atoms yet.';
+      elAtomEmpty.innerHTML = '<strong>No notes here yet</strong><br/>Be the first to leave something at this place.<br/><button id="empty-leave-note" class="btn btn-secondary" style="margin-top:8px">Leave note here</button>';
+      requestAnimationFrame(() => { const b = document.getElementById('empty-leave-note'); if (b) b.onclick = openModal; });
       elAtomEmpty.style.display = 'block';
     } else {
       elAtomEmpty.style.display = 'none';
@@ -990,19 +1043,22 @@ async function refreshUI(newAtomIds = null) {
     for (const a of recent) {
       const el = document.createElement('div');
       el.className = 'atom-item';
-      const text = a.x ? escHtml(a.x) : '<span class="empty">no text</span>';
-      const meta = [
-        a.f ? escHtml(a.f) : null,
-        escHtml(a.punkto || ''),
-      ].filter(Boolean).join(' · ');
+      const raw = String(a.x || '').trim();
+      const title = escHtml(deriveTitle(a));
+      const preview = raw ? escHtml(raw.length > 120 ? `${raw.slice(0, 120)}…` : raw) : '<span class="empty">Untitled note</span>';
+      const altitude = fmtAltitudeLabel(Number(a.alt));
+      const category = escHtml(deriveCategory(a));
+      const verified = isVerifiedAtom(a) ? '<span class="atom-verified">Verified</span>' : '';
+      const meta = [fmtDistance(a.distance), altitude, fmtTime(a.t)].filter(Boolean).join(' · ');
       el.innerHTML = `
         <div class="atom-dot"></div>
         <div class="atom-body">
-          <div class="atom-text">${text}</div>
+          <div class="atom-meta"><span class="atom-category">${category}</span>${verified}</div>
+          <div class="atom-text"><strong>${title}</strong></div>
+          <div class="atom-text">${preview}</div>
           <div class="atom-meta">${meta}</div>
-          <button class="btn btn-secondary show-in-3d-btn" type="button">Show in 3D</button>
+          <div class="atom-actions"><button class="btn btn-secondary show-in-3d-btn" type="button">Show in 3D</button></div>
         </div>
-        <div class="atom-time">${fmtTime(a.t)}</div>
       `;
       const showBtn = el.querySelector('.show-in-3d-btn');
       if (showBtn) {
