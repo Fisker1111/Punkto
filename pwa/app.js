@@ -139,6 +139,8 @@ let deepLinkPunkto = null; // captured at boot, consumed after first refreshUI
 // Two-page view shell — Main / 3D
 // ============================================================
 let currentView = 'main'; // 'main' | '3d'
+let _mainFeedAtoms  = [];       // last sorted atom batch for main feed
+let _locationDenied = false;    // true when geolocation denied/unavailable
 
 function showView(view) {
   currentView = view;
@@ -157,13 +159,21 @@ function renderMainFeed() {
   const countEl  = document.getElementById('main-atom-count');
   if (!list) return;
 
-  const atoms = window._mainFeedAtoms || [];
+  const atoms = _mainFeedAtoms;
+  const locEl = document.getElementById('main-empty-location');
   if (atoms.length === 0) {
     list.innerHTML = '';
-    if (emptyEl)  emptyEl.style.display  = '';
-    if (countEl)  countEl.textContent    = '';
+    if (countEl) countEl.textContent = '';
+    if (_locationDenied || !navigator.geolocation) {
+      if (emptyEl)  emptyEl.style.display  = 'none';
+      if (locEl)    locEl.style.display    = '';
+    } else {
+      if (emptyEl)  emptyEl.style.display  = '';
+      if (locEl)    locEl.style.display    = 'none';
+    }
     return;
   }
+  if (locEl)    locEl.style.display    = 'none';
   if (emptyEl)  emptyEl.style.display = 'none';
   if (countEl)  countEl.textContent   = atoms.length + ' nearby';
 
@@ -1094,7 +1104,7 @@ async function refreshUI(newAtomIds = null) {
   });
   const recent = enriched.slice(0, 50);
   // Expose to main-view feed
-  window._mainFeedAtoms = recent;
+  _mainFeedAtoms = recent;
   if (currentView === 'main') renderMainFeed();
 
   if (recent.length === 0) {
@@ -2026,6 +2036,30 @@ function wireEvents() {
     }
   });
 
+  // Geolocation permission detection for location empty state
+  if (navigator.permissions) {
+    navigator.permissions.query({ name: 'geolocation' }).then(perm => {
+      _locationDenied = perm.state === 'denied';
+      perm.onchange = () => {
+        _locationDenied = perm.state === 'denied';
+        if (currentView === 'main') renderMainFeed();
+      };
+    }).catch(() => {});
+  } else if (!navigator.geolocation) {
+    _locationDenied = true;
+  }
+  // 'Enable location' button — triggers a permission prompt
+  document.addEventListener('click', e => {
+    if (e.target && e.target.id === 'main-location-btn') {
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          () => { _locationDenied = false; renderMainFeed(); },
+          () => { _locationDenied = true;  renderMainFeed(); }
+        );
+      }
+    }
+  });
+
   // Bottom navigation
   const elNavMain = document.getElementById('nav-main');
   const elNavAdd  = document.getElementById('nav-add');
@@ -2061,8 +2095,8 @@ function wireEvents() {
 // ---------------------------------------------------------------------------
 
 async function boot() {
-  console.log('PUNKTO APP.JS LOADED v43 HARD MARKER 2026-05-14-3');
-  window.PUNKTO_APP_VERSION = 'v43-hard-marker-2026-05-14-3';
+  console.log('PUNKTO APP.JS LOADED v44 HARD MARKER 2026-05-14-4');
+  window.PUNKTO_APP_VERSION = 'v44-hard-marker-2026-05-14-4';
 
   // Global click capture — diagnostic: logs every click to console
   document.addEventListener('click', (ev) => {

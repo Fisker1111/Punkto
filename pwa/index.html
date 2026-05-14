@@ -961,24 +961,24 @@
     }
 
     /* ============================================================
-       Two-page shell: Main + 3D
+       Two-page shell — Main / 3D
        ============================================================ */
 
-    /* View switching via body class */
-    body.view-main #map        { display: none !important; }
-    body.view-main #fab-panel  { display: none !important; }
-    body.view-main #fab-add    { display: none !important; }
-    body.view-main #panel      { display: none !important; }
-    body.view-main #toggle-3d  { display: none !important; }
+    /* View switching */
+    body.view-main #map          { display: none !important; }
+    body.view-main #fab-panel    { display: none !important; }
+    body.view-main #fab-add      { display: none !important; }
+    body.view-main #panel        { display: none !important; }
+    body.view-main #toggle-3d    { display: none !important; }
     body.view-main #onboarding-hint { display: none !important; }
-    body.view-3d  #main-view   { display: none !important; }
+    body.view-3d  #main-view     { display: none !important; }
 
     /* Main view container */
     #main-view {
       position: fixed;
       inset: 0;
-      top: 56px;    /* below topbar */
-      bottom: 56px; /* above bottom-nav */
+      top: 56px;
+      bottom: 56px;
       background: var(--bg);
       overflow-y: auto;
       display: flex;
@@ -988,127 +988,142 @@
 
     /* Main header */
     #main-header {
-      padding: 20px 16px 14px;
+      padding: 22px 18px 14px;
       border-bottom: 1px solid rgba(255,255,255,0.07);
       flex-shrink: 0;
     }
     #main-header h1 {
-      font-size: 1.45rem;
+      font-size: 1.5rem;
       font-weight: 700;
       color: var(--cyan);
-      margin: 0 0 2px;
-      letter-spacing: -0.01em;
+      margin: 0 0 3px;
+      font-family: system-ui, -apple-system, sans-serif;
+      letter-spacing: -0.02em;
     }
     #main-header .main-subtitle {
-      font-size: 0.82rem;
-      color: rgba(255,255,255,0.45);
+      font-size: 0.84rem;
+      color: rgba(255,255,255,0.42);
       margin: 0;
+      font-family: system-ui, -apple-system, sans-serif;
     }
     #main-header .main-atom-count {
-      display: block;
-      font-size: 0.75rem;
-      color: rgba(255,255,255,0.3);
-      margin-top: 3px;
+      display: inline-block;
+      font-size: 0.73rem;
+      color: rgba(255,255,255,0.28);
+      margin-top: 5px;
+      font-family: system-ui, -apple-system, sans-serif;
     }
 
     /* Feed section */
     #main-feed {
       flex: 1;
       overflow-y: auto;
-      padding: 16px 12px 8px;
+      padding: 18px 14px 12px;
+      -webkit-overflow-scrolling: touch;
     }
     #main-feed-heading {
-      font-size: 0.7rem;
+      font-size: 0.68rem;
       text-transform: uppercase;
-      letter-spacing: 0.1em;
-      color: rgba(255,255,255,0.35);
-      margin: 0 4px 12px;
+      letter-spacing: 0.12em;
+      color: rgba(255,255,255,0.3);
+      margin: 0 2px 14px;
+      font-family: system-ui, -apple-system, sans-serif;
     }
     #main-feed-list {
       display: flex;
       flex-direction: column;
-      gap: 10px;
+      gap: 12px;
     }
 
-    /* Empty states */
+    /* Empty / location states */
     .main-empty {
       text-align: center;
-      padding: 48px 24px;
+      padding: 52px 28px;
     }
     .main-empty h3 {
       font-size: 1.05rem;
       font-weight: 600;
-      color: rgba(255,255,255,0.65);
-      margin: 0 0 8px;
+      color: rgba(255,255,255,0.62);
+      margin: 0 0 9px;
+      font-family: system-ui, -apple-system, sans-serif;
     }
     .main-empty p {
-      font-size: 0.88rem;
-      color: rgba(255,255,255,0.38);
-      margin: 0 0 20px;
-      line-height: 1.5;
+      font-size: 0.87rem;
+      color: rgba(255,255,255,0.36);
+      margin: 0 0 22px;
+      line-height: 1.55;
+      font-family: system-ui, -apple-system, sans-serif;
     }
-    .main-empty .btn-cta {
+    .btn-cta {
       background: var(--cyan);
       color: #000;
       border: none;
-      padding: 10px 26px;
+      padding: 11px 28px;
       border-radius: 24px;
-      font-size: 0.88rem;
+      font-size: 0.87rem;
       font-weight: 600;
       cursor: pointer;
-      transition: opacity 0.15s;
+      font-family: system-ui, -apple-system, sans-serif;
+      transition: opacity 0.14s;
+      -webkit-tap-highlight-color: transparent;
     }
-    .main-empty .btn-cta:hover { opacity: 0.85; }
+    .btn-cta:hover  { opacity: 0.85; }
+    .btn-cta:active { opacity: 0.7; }
 
     /* Feed cards */
     .main-card {
       background: rgba(255,255,255,0.04);
-      border: 1px solid rgba(255,255,255,0.09);
-      border-radius: 12px;
-      padding: 14px 14px 12px;
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 14px;
+      padding: 15px 16px 13px;
       display: flex;
       flex-direction: column;
-      gap: 6px;
+      gap: 7px;
+      -webkit-tap-highlight-color: transparent;
       transition: background 0.12s;
     }
-    .main-card:active { background: rgba(255,255,255,0.08); }
+    .main-card:active { background: rgba(255,255,255,0.07); }
     .main-card-badges {
       display: flex;
       align-items: center;
       gap: 6px;
       flex-wrap: wrap;
-      min-height: 16px;
+      min-height: 18px;
     }
     .main-card-cat {
-      font-size: 0.67rem;
+      font-size: 0.66rem;
       font-weight: 700;
       text-transform: uppercase;
-      letter-spacing: 0.07em;
+      letter-spacing: 0.08em;
       color: var(--cyan);
-      background: rgba(0,255,255,0.09);
-      padding: 2px 8px;
-      border-radius: 10px;
+      background: rgba(0,255,255,0.08);
+      padding: 3px 9px;
+      border-radius: 12px;
+      font-family: system-ui, -apple-system, sans-serif;
     }
     .main-card-verified {
-      font-size: 0.67rem;
+      font-size: 0.66rem;
       font-weight: 600;
-      color: #4caf50;
-      background: rgba(76,175,80,0.1);
-      padding: 2px 8px;
-      border-radius: 10px;
+      color: #66bb6a;
+      background: rgba(102,187,106,0.1);
+      padding: 3px 9px;
+      border-radius: 12px;
+      font-family: system-ui, -apple-system, sans-serif;
     }
     .main-card-title {
-      font-size: 0.92rem;
+      font-size: 0.94rem;
       font-weight: 600;
-      color: rgba(255,255,255,0.88);
+      color: rgba(255,255,255,0.9);
       margin: 0;
       line-height: 1.35;
+      font-family: system-ui, -apple-system, sans-serif;
     }
     .main-card-preview {
-      font-size: 0.83rem;
-      color: rgba(255,255,255,0.5);
+      font-size: 0.84rem;
+      color: rgba(255,255,255,0.48);
       margin: 0;
-      line-height: 1.45;
+      line-height: 1.5;
+      font-family: system-ui, -apple-system, sans-serif;
       display: -webkit-box;
       -webkit-line-clamp: 2;
       -webkit-box-orient: vertical;
@@ -1119,28 +1134,31 @@
       gap: 10px;
       flex-wrap: wrap;
       font-size: 0.72rem;
-      color: rgba(255,255,255,0.32);
-      margin-top: 2px;
+      color: rgba(255,255,255,0.3);
+      font-family: system-ui, -apple-system, sans-serif;
+      margin-top: 1px;
     }
     .main-card-actions {
       display: flex;
       justify-content: flex-end;
-      margin-top: 4px;
+      margin-top: 3px;
     }
     .main-card-show3d {
       background: none;
-      border: 1px solid rgba(255,255,255,0.18);
-      color: rgba(255,255,255,0.65);
-      padding: 5px 14px;
+      border: 1px solid rgba(255,255,255,0.16);
+      color: rgba(255,255,255,0.55);
+      padding: 5px 15px;
       border-radius: 18px;
-      font-size: 0.78rem;
+      font-size: 0.77rem;
+      font-family: system-ui, -apple-system, sans-serif;
       cursor: pointer;
       transition: all 0.14s;
+      -webkit-tap-highlight-color: transparent;
     }
     .main-card-show3d:hover,
     .main-card-show3d:active {
-      background: rgba(0,255,255,0.08);
-      border-color: var(--cyan);
+      background: rgba(0,255,255,0.07);
+      border-color: rgba(0,255,255,0.4);
       color: var(--cyan);
     }
 
@@ -1151,30 +1169,46 @@
       left: 0;
       right: 0;
       height: 56px;
-      background: #0d0d0d;
-      border-top: 1px solid rgba(255,255,255,0.09);
+      background: rgba(10,10,10,0.97);
+      border-top: 1px solid rgba(255,255,255,0.08);
       display: flex;
       align-items: center;
       justify-content: stretch;
       z-index: 1000;
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
     }
     .nav-btn {
       flex: 1;
       background: none;
       border: none;
-      color: rgba(255,255,255,0.42);
-      font-size: 0.83rem;
+      color: rgba(255,255,255,0.38);
+      font-size: 0.82rem;
       font-weight: 500;
       height: 56px;
       cursor: pointer;
       display: flex;
+      flex-direction: column;
       align-items: center;
       justify-content: center;
-      letter-spacing: 0.04em;
+      gap: 3px;
+      letter-spacing: 0.03em;
       transition: color 0.15s;
+      font-family: system-ui, -apple-system, sans-serif;
       -webkit-tap-highlight-color: transparent;
     }
-    .nav-btn.active { color: var(--cyan); font-weight: 600; }
+    .nav-btn.active {
+      color: var(--cyan);
+      font-weight: 600;
+    }
+    .nav-btn-icon {
+      font-size: 1.1rem;
+      line-height: 1;
+    }
+    .nav-btn-label {
+      font-size: 0.68rem;
+      letter-spacing: 0.04em;
+    }
     .nav-add-wrap {
       flex: 1;
       display: flex;
@@ -1185,11 +1219,11 @@
       background: var(--cyan);
       color: #000;
       border: none;
-      width: 44px;
-      height: 44px;
+      width: 46px;
+      height: 46px;
       border-radius: 50%;
-      font-size: 1.5rem;
-      font-weight: 700;
+      font-size: 1.55rem;
+      font-weight: 600;
       line-height: 1;
       cursor: pointer;
       display: flex;
@@ -1197,15 +1231,16 @@
       justify-content: center;
       transition: opacity 0.14s, transform 0.1s;
       -webkit-tap-highlight-color: transparent;
+      box-shadow: 0 2px 12px rgba(0,255,255,0.18);
     }
-    .nav-btn-add:hover   { opacity: 0.85; }
-    .nav-btn-add:active  { transform: scale(0.93); }
+    .nav-btn-add:hover   { opacity: 0.88; }
+    .nav-btn-add:active  { transform: scale(0.91); }
 
-    /* Adjust existing 3D elements to sit above bottom nav */
-    body.view-3d #map        { bottom: 56px !important; }
-    body.view-3d #panel      { bottom: 56px; }
-    body.view-3d #fab-panel  { bottom: calc(56px + 72px); }
-    body.view-3d #fab-add    { bottom: calc(56px + 16px); }
+    /* Adjust 3D-view elements for bottom nav */
+    body.view-3d #map         { bottom: 56px !important; }
+    body.view-3d #panel       { bottom: 56px; }
+    body.view-3d #fab-panel   { bottom: calc(56px + 72px); }
+    body.view-3d #fab-add     { bottom: calc(56px + 16px); }
     body.view-3d #onboarding-hint { bottom: calc(56px + 24px); }
   </style>
 </head>
@@ -1369,14 +1404,19 @@
 
   <!-- Bottom navigation -->
   <nav id="bottom-nav" role="navigation" aria-label="Main navigation">
-    <button class="nav-btn" id="nav-main" aria-label="Main view">Main</button>
+    <button class="nav-btn" id="nav-main" aria-label="Notes feed">
+      <span class="nav-btn-icon">&#9776;</span>
+      <span class="nav-btn-label">Notes</span>
+    </button>
     <div class="nav-add-wrap">
       <button class="nav-btn-add" id="nav-add" aria-label="Leave note here" title="Leave note here">+</button>
     </div>
-    <button class="nav-btn" id="nav-3d" aria-label="3D map view">3D</button>
+    <button class="nav-btn" id="nav-3d" aria-label="3D map">
+      <span class="nav-btn-icon">&#9711;</span>
+      <span class="nav-btn-label">Map</span>
+    </button>
   </nav>
 
-</body>
   <!-- Mnemonic modal (Generate New Key) -->
   <div id="mnemonic-overlay">
     <div id="mnemonic-box">
@@ -1391,4 +1431,5 @@
     </div>
   </div>
 
+</body>
 </html>
