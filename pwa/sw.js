@@ -3,7 +3,7 @@
  * Network-first for JS/HTML (dev-friendly), cache-first for assets.
  */
 
-const CACHE_NAME = 'punkto-v42';
+const CACHE_NAME = 'punkto-v43';
 
 const APP_SHELL = [
   '/',

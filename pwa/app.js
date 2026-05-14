@@ -135,6 +135,79 @@ let isSyncing = false;
 let is3D = true;
 let initialSyncDone = false;
 let deepLinkPunkto = null; // captured at boot, consumed after first refreshUI
+// ============================================================
+// Two-page view shell — Main / 3D
+// ============================================================
+let currentView = 'main'; // 'main' | '3d'
+
+function showView(view) {
+  currentView = view;
+  document.body.classList.remove('view-main', 'view-3d');
+  document.body.classList.add(view === '3d' ? 'view-3d' : 'view-main');
+  const btnMain = document.getElementById('nav-main');
+  const btn3D   = document.getElementById('nav-3d');
+  if (btnMain) btnMain.classList.toggle('active', view === 'main');
+  if (btn3D)   btn3D.classList.toggle('active',   view === '3d');
+  if (view === 'main') renderMainFeed();
+}
+
+function renderMainFeed() {
+  const list     = document.getElementById('main-feed-list');
+  const emptyEl  = document.getElementById('main-empty-notes');
+  const countEl  = document.getElementById('main-atom-count');
+  if (!list) return;
+
+  const atoms = window._mainFeedAtoms || [];
+  if (atoms.length === 0) {
+    list.innerHTML = '';
+    if (emptyEl)  emptyEl.style.display  = '';
+    if (countEl)  countEl.textContent    = '';
+    return;
+  }
+  if (emptyEl)  emptyEl.style.display = 'none';
+  if (countEl)  countEl.textContent   = atoms.length + ' nearby';
+
+  list.innerHTML = atoms.map(atom => {
+    const title    = escHtml(deriveTitle(atom));
+    const cat      = deriveCategory(atom);
+    const verified = isVerifiedAtom(atom);
+    const raw      = String(atom.x || '').trim();
+    const preview  = raw.length > 120 ? raw.slice(0, 120) + '…' : raw;
+    const altLabel = Number.isFinite(Number(atom.alt)) ? fmtAltitudeLabel(Number(atom.alt)) : '';
+    const dist     = Number.isFinite(atom.distance) ? fmtDistance(atom.distance) : '';
+    const time     = atom.t ? fmtTime(atom.t) : '';
+    const meta     = [dist, altLabel, time].filter(Boolean).join(' · ');
+    const atomId   = String(atom.punkto || '').replace(/^p:/, '');
+
+    return '<div class="main-card" data-atom-id="' + escHtml(atomId) + '">
+' +
+      '  <div class="main-card-badges">
+' +
+      (cat      ? '    <span class="main-card-cat">'      + escHtml(cat) + '</span>
+' : '') +
+      (verified ? '    <span class="main-card-verified">✓ Verified</span>
+' : '') +
+      '  </div>
+' +
+      '  <h3 class="main-card-title">' + title + '</h3>
+' +
+      (preview && escHtml(preview) !== title
+        ? '  <p class="main-card-preview">' + escHtml(preview) + '</p>
+'
+        : '') +
+      (meta ? '  <div class="main-card-meta"><span>' + escHtml(meta) + '</span></div>
+' : '') +
+      '  <div class="main-card-actions">
+' +
+      '    <button class="main-card-show3d" data-action="show-in-3d" data-id="' + escHtml(atomId) + '">Show in 3D →</button>
+' +
+      '  </div>
+' +
+      '</div>';
+  }).join('
+');
+}
+
 
 // DOM bubble markers: punkto_id -> maplibregl.Marker
 const atomMarkers = new Map();
@@ -297,6 +370,8 @@ function parseDeepLinkPunktoId() {
  * Safe to call when no matching atom exists locally — we still center on the coords.
  */
 async function focusPunkto(id) {
+  // Switch to 3D page so the map is visible
+  showView('3d');
   if (!id) return;
   const punkto = `p:${id}`;
   const loc = decodeAtomLocation(punkto);
@@ -1018,6 +1093,9 @@ async function refreshUI(newAtomIds = null) {
     return Number(b.t) - Number(a.t);
   });
   const recent = enriched.slice(0, 50);
+  // Expose to main-view feed
+  window._mainFeedAtoms = recent;
+  if (currentView === 'main') renderMainFeed();
 
   if (recent.length === 0) {
     // Only show the empty placeholder AFTER the first sync has completed.
@@ -1947,6 +2025,35 @@ function wireEvents() {
       if (settingsOpen) closeSettingsMenu();
     }
   });
+
+  // Bottom navigation
+  const elNavMain = document.getElementById('nav-main');
+  const elNavAdd  = document.getElementById('nav-add');
+  const elNav3D   = document.getElementById('nav-3d');
+  if (elNavMain) elNavMain.addEventListener('click', () => showView('main'));
+  if (elNav3D)   elNav3D.addEventListener('click',   () => showView('3d'));
+  if (elNavAdd)  elNavAdd.addEventListener('click',  () => {
+    dismissOnboarding();
+    openModal();
+  });
+  // "Show in 3D" clicks delegated on main-feed-list
+  const elMainFeedList = document.getElementById('main-feed-list');
+  if (elMainFeedList) {
+    elMainFeedList.addEventListener('click', e => {
+      const btn = e.target.closest('[data-action="show-in-3d"]');
+      if (!btn) return;
+      e.stopPropagation();
+      const id = btn.dataset.id || '';
+      if (id) focusPunkto(id);
+    });
+  }
+  // "Leave note here" in main empty state
+  document.addEventListener('click', e => {
+    if (e.target && e.target.id === 'main-empty-leave-btn') {
+      dismissOnboarding();
+      openModal();
+    }
+  });
   setupKeyManagement(); // registered here, not from atom handler
 }
 // ---------------------------------------------------------------------------
@@ -1954,8 +2061,8 @@ function wireEvents() {
 // ---------------------------------------------------------------------------
 
 async function boot() {
-  console.log('PUNKTO APP.JS LOADED v42 HARD MARKER 2026-05-14-2');
-  window.PUNKTO_APP_VERSION = 'v42-hard-marker-2026-05-14-2';
+  console.log('PUNKTO APP.JS LOADED v43 HARD MARKER 2026-05-14-3');
+  window.PUNKTO_APP_VERSION = 'v43-hard-marker-2026-05-14-3';
 
   // Global click capture — diagnostic: logs every click to console
   document.addEventListener('click', (ev) => {
@@ -2009,8 +2116,10 @@ async function boot() {
   }
 
   wireEvents();
+  // Default to main view; go straight to 3D if deep-linking to a specific punkto
+  showView(deepLinkPunkto ? '3d' : 'main');
   initMap();
-  setPanelOpen(true);
+  if (deepLinkPunkto) setPanelOpen(false); // panel managed by 3D view when deep-linking
 }
 
 boot();
