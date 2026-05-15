@@ -1,0 +1,70 @@
+# Server 1: handles both punkto.xyz and app1.punkto.xyz
+# Caddy auto-HTTPS via Let's Encrypt
+
+(punkto_site) {
+    root * /srv
+    file_server
+
+    # API / relay endpoints — proxy to relay container
+    @relay_paths path /atom /atom/* /latest /stream /feed /health /info \
+        /llms.txt /robots.txt /sitemap.xml /openapi.json \
+        /punkto.ai.md /punkto.md /punkto.node.md /punkto.sync.md \
+        /punkto.manifest.md /punkto.identity.md /punkto.ui.md \
+        /.well-known/*
+    reverse_proxy @relay_paths relay:8000
+
+    # Pattern-based relay paths
+    @relay_patterns path_regexp relay ^/(punkto(/.*)?|p/.+)$
+    reverse_proxy @relay_patterns relay:8000
+
+    # CORS headers on relay responses
+    @is_relay {
+        path /atom /atom/* /latest /stream /feed /health /info
+        path /punkto* /p/*
+    }
+    header @is_relay Access-Control-Allow-Origin "*"
+    header @is_relay Access-Control-Allow-Methods "GET, POST, OPTIONS"
+    header @is_relay Access-Control-Allow-Headers "Content-Type, Authorization"
+
+    # Service worker — never cache
+    @sw path /sw.js
+    header @sw Cache-Control "no-cache, no-store, must-revalidate"
+    header @sw Pragma "no-cache"
+    header @sw Expires "0"
+
+    # App shell — never cache
+    @app path /app.js /index.html /reset.html
+    header @app Cache-Control "no-cache, no-store, must-revalidate"
+
+    # Static libs — long cache
+    @static_libs path /lib/*
+    header @static_libs Cache-Control "public, max-age=86400, immutable"
+
+    # Security headers
+    header {
+        X-Content-Type-Options  nosniff
+        X-Frame-Options         DENY
+        Referrer-Policy         strict-origin-when-cross-origin
+        -Server
+    }
+
+    encode gzip
+
+    log {
+        output stderr
+        format console
+        level INFO
+    }
+}
+
+punkto.xyz {
+    import punkto_site
+}
+
+www.punkto.xyz {
+    redir https://punkto.xyz{uri} permanent
+}
+
+app1.punkto.xyz {
+    import punkto_site
+}
