@@ -136,30 +136,26 @@ let is3D = true;
 let initialSyncDone = false;
 let deepLinkPunkto = null; // captured at boot, consumed after first refreshUI
 // ============================================================
-// Two-page view shell — Main / 3D
+// Two-view shell — Text / Map
 // ============================================================
-let currentPage = 'atoms'; // 'atoms' | 'space' | 'network' | 'me'
+let currentPage = 'text'; // 'text' | 'map'
 let _mainFeedAtoms  = [];       // last sorted atom batch for main feed
 let _locationDenied = false;    // true when geolocation denied/unavailable
 
-// ── App shell: four top-level pages ──────────────────────────────────────────
-// Pages: 'atoms' | 'space' | 'network' | 'me'
-// Each page maps to a body class (page-atoms, etc.) and a nav button (nav-atoms, etc.).
+// ── App shell: two views (Text / Map) ─────────────────────────────────────────
+// showPage — toggle between 'text' feed and 'map' view.
 function showPage(page) {
   currentPage = page;
-  document.body.classList.remove('page-atoms', 'page-space', 'page-network', 'page-me');
+  document.body.classList.remove('page-text', 'page-map');
   document.body.classList.add('page-' + page);
 
-  // Sync nav active states
-  ['atoms', 'space', 'network', 'me'].forEach(p => {
+  // Sync nav active states for view toggles
+  ['text', 'map'].forEach(p => {
     const btn = document.getElementById('nav-' + p);
     if (btn) btn.classList.toggle('active', p === page);
   });
 
-  // Page-specific on-show hooks
-  if (page === 'atoms')   renderMainFeed();
-  if (page === 'network') renderNetworkPage();
-  if (page === 'me')      renderMePage();
+  if (page === 'text') renderMainFeed();
 }
 
 function renderMainFeed() {
@@ -446,7 +442,7 @@ function parseDeepLinkPunktoId() {
  */
 async function focusPunkto(id) {
   // Switch to 3D page so the map is visible
-  showPage('space');
+  showPage('map');
   if (!id) return;
   const punkto = `p:${id}`;
   const loc = decodeAtomLocation(punkto);
@@ -1170,7 +1166,7 @@ async function refreshUI(newAtomIds = null) {
   const recent = enriched.slice(0, 50);
   // Expose to main-view feed
   _mainFeedAtoms = recent;
-  if (currentPage === 'atoms') renderMainFeed();
+  if (currentPage === 'text') renderMainFeed();
 
   if (recent.length === 0) {
     // Only show the empty placeholder AFTER the first sync has completed.
@@ -2107,7 +2103,7 @@ function wireEvents() {
       _locationDenied = perm.state === 'denied';
       perm.onchange = () => {
         _locationDenied = perm.state === 'denied';
-        if (currentPage === 'atoms') renderMainFeed();
+        if (currentPage === 'text') renderMainFeed();
       };
     }).catch(() => {});
   } else if (!navigator.geolocation) {
@@ -2125,21 +2121,23 @@ function wireEvents() {
     }
   });
 
-  // Bottom navigation
-  // Four-page bottom nav wiring
-  ['atoms', 'space', 'network', 'me'].forEach(p => {
-    const btn = document.getElementById('nav-' + p);
-    if (btn) btn.addEventListener('click', () => showPage(p));
+  // Bottom navigation — Text / Map toggle, + add, ⚙ settings
+  const elNavText     = document.getElementById('nav-text');
+  const elNavMap      = document.getElementById('nav-map');
+  const elNavAddBtn   = document.getElementById('nav-add');
+  const elNavSettings = document.getElementById('nav-settings');
+  if (elNavText)     elNavText.addEventListener('click', () => showPage('text'));
+  if (elNavMap)      elNavMap.addEventListener('click',  () => showPage('map'));
+  if (elNavAddBtn)   elNavAddBtn.addEventListener('click', () => {
+    dismissOnboarding();
+    openModal();
   });
-
-  // Me page: reset button mirrors the settings reset
-  const elMeReset = document.getElementById('me-reset-btn');
-  if (elMeReset) {
-    elMeReset.addEventListener('click', () => {
-      const el = document.getElementById('settings-reset');
-      if (el) el.click();
-    });
-  }
+  if (elNavSettings) elNavSettings.addEventListener('click', e => {
+    e.stopPropagation();
+    renderNetworkPage();
+    renderMePage();
+    toggleSettingsMenu();
+  });
   if (elNavAdd)  elNavAdd.addEventListener('click',  () => {
     dismissOnboarding();
     openModal();
@@ -2170,7 +2168,7 @@ function wireEvents() {
 
 async function boot() {
   console.log('PUNKTO APP.JS LOADED v46 HARD MARKER 2026-05-15-5');
-  window.PUNKTO_APP_VERSION = 'v46-hard-marker-2026-05-15-5';
+  window.PUNKTO_APP_VERSION = 'v47-hard-marker-2026-05-15-6';
 
   // Global click capture — diagnostic: logs every click to console
   document.addEventListener('click', (ev) => {
@@ -2225,7 +2223,7 @@ async function boot() {
 
   wireEvents();
   // Default to main view; go straight to 3D if deep-linking to a specific punkto
-  showPage(deepLinkPunkto ? 'space' : 'atoms');
+  showPage(deepLinkPunkto ? 'map' : 'text');
   initMap();
   if (deepLinkPunkto) setPanelOpen(false); // panel managed by 3D view when deep-linking
 }

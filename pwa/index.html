@@ -965,16 +965,16 @@
        ============================================================ */
 
     /* View switching */
-    body.page-atoms #map          { display: none !important; }
-    body.page-atoms #fab-panel    { display: none !important; }
-    body.page-atoms #fab-add      { display: none !important; }
-    body.page-atoms #panel        { display: none !important; }
-    body.page-atoms #toggle-3d    { display: none !important; }
-    body.page-atoms #onboarding-hint { display: none !important; }
-    body.page-space  #page-atoms     { display: none !important; }
+    body.page-text #map          { display: none !important; }
+    body.page-text #fab-panel    { display: none !important; }
+    body.page-text #fab-add      { display: none !important; }
+    body.page-text #panel        { display: none !important; }
+    body.page-text #toggle-3d    { display: none !important; }
+    body.page-text #onboarding-hint { display: none !important; }
+    body.page-map  #page-text     { display: none !important; }
 
     /* Main view container */
-    #page-atoms {
+    #page-text {
       position: fixed;
       inset: 0;
       top: 56px;
@@ -1162,7 +1162,7 @@
       color: var(--cyan);
     }
 
-    /* Bottom navigation bar */
+    /* Bottom navigation — Text(35%) | Map(35%) | +(15%) | ⚙(15%) */
     #bottom-nav {
       position: fixed;
       bottom: 0;
@@ -1172,118 +1172,55 @@
       background: rgba(10,10,10,0.97);
       border-top: 1px solid rgba(255,255,255,0.08);
       display: flex;
-      align-items: center;
-      justify-content: stretch;
+      align-items: stretch;
       z-index: 1000;
       backdrop-filter: blur(12px);
       -webkit-backdrop-filter: blur(12px);
+      padding-bottom: var(--safe-b);
     }
     .nav-btn {
-      flex: 1;
       background: none;
       border: none;
       color: rgba(255,255,255,0.38);
-      font-size: 0.82rem;
+      font-size: 0.9rem;
       font-weight: 500;
       height: 56px;
       cursor: pointer;
       display: flex;
-      flex-direction: column;
       align-items: center;
       justify-content: center;
-      gap: 3px;
-      letter-spacing: 0.03em;
-      transition: color 0.15s;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      transition: color 0.15s, background 0.15s;
       font-family: system-ui, -apple-system, sans-serif;
       -webkit-tap-highlight-color: transparent;
     }
+    .nav-view   { flex: 35 35 35%; }
+    .nav-add    { flex: 15 15 15%; font-size: 1.5rem; font-weight: 300; }
+    .nav-settings-btn { flex: 15 15 15%; font-size: 1.1rem; }
     .nav-btn.active {
       color: var(--cyan);
-      font-weight: 600;
+      font-weight: 700;
+      background: rgba(0,255,255,0.06);
     }
-    .nav-btn-icon {
-      font-size: 1.1rem;
-      line-height: 1;
-    }
-    .nav-btn-label {
-      font-size: 0.68rem;
-      letter-spacing: 0.04em;
-    }
-    .nav-add-wrap {
-      flex: 1;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-    .nav-btn-add {
-      background: var(--cyan);
-      color: #000;
-      border: none;
-      width: 46px;
-      height: 46px;
-      border-radius: 50%;
-      font-size: 1.55rem;
-      font-weight: 600;
-      line-height: 1;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: opacity 0.14s, transform 0.1s;
-      -webkit-tap-highlight-color: transparent;
-      box-shadow: 0 2px 12px rgba(0,255,255,0.18);
-    }
-    .nav-btn-add:hover   { opacity: 0.88; }
-    .nav-btn-add:active  { transform: scale(0.91); }
+    .nav-add:hover, .nav-settings-btn:hover { color: var(--cyan); }
+    .nav-add:active, .nav-settings-btn:active { transform: scale(0.91); }
 
     /* Adjust 3D-view elements for bottom nav */
-    body.page-space #map         { bottom: 56px !important; }
-    body.page-space #panel       { bottom: 56px; }
-    body.page-space #fab-panel   { bottom: calc(56px + 72px); }
-    body.page-space #fab-add     { bottom: calc(56px + 16px); }
-    body.page-space #onboarding-hint { bottom: calc(56px + 24px); }
+    body.page-map #map         { bottom: 56px !important; }
+    body.page-map #panel       { bottom: 56px; }
+    body.page-map #fab-panel   { bottom: calc(56px + 72px); }
+    body.page-map #fab-add     { bottom: calc(56px + 16px); }
+    body.page-map #onboarding-hint { bottom: calc(56px + 24px); }
 
     /* ============================================================
        Four-page shell additions: Network + Me pages, 4-item nav
        ============================================================ */
 
     /* Hide all pages except the active one */
-    body.page-network #page-atoms  { display: none !important; }
-    body.page-network #page-space  { display: none !important; /* map */ }
-    body.page-network #fab-panel   { display: none !important; }
-    body.page-network #fab-add     { display: none !important; }
-    body.page-network #panel       { display: none !important; }
-    body.page-network #toggle-3d   { display: none !important; }
-    body.page-network #onboarding-hint { display: none !important; }
-    body.page-me #page-atoms       { display: none !important; }
-    body.page-me #page-space       { display: none !important; /* map */ }
-    body.page-me #fab-panel        { display: none !important; }
-    body.page-me #fab-add          { display: none !important; }
-    body.page-me #panel            { display: none !important; }
-    body.page-me #toggle-3d        { display: none !important; }
-    body.page-me #onboarding-hint  { display: none !important; }
     /* Hide Network/Me pages when not active */
-    body.page-atoms  #page-network { display: none !important; }
-    body.page-atoms  #page-me      { display: none !important; }
-    body.page-space  #page-network { display: none !important; }
-    body.page-space  #page-me      { display: none !important; }
-    body.page-network #page-me     { display: none !important; }
-    body.page-me #page-network     { display: none !important; }
 
     /* Shared page container layout */
-    #page-network,
-    #page-me {
-      position: fixed;
-      inset: 0;
-      top: 56px;
-      bottom: 56px;
-      background: var(--bg);
-      overflow-y: auto;
-      display: flex;
-      flex-direction: column;
-      z-index: 10;
-      -webkit-overflow-scrolling: touch;
-    }
 
     /* Page header (shared) */
     .page-header {
@@ -1422,127 +1359,61 @@
     <button id="btn-settings" title="Settings" aria-label="Settings">⚙</button>
   </header>
 
-  <!-- Settings popover — minimal, cache reset only.
-       Key management → Me page | Network status → Network page -->
-  <div id="settings-menu" role="menu" aria-hidden="true">
+  <!-- Settings panel — Network status + Identity/Keys + Reset -->
+  <div id="settings-menu" role="dialog" aria-label="Settings" aria-hidden="true">
+
+    <div class="settings-section-title">Network</div>
+    <div class="settings-info" id="settings-network-info">
+      <div><span class="k">Node</span> <span class="v mono" id="net-node">—</span></div>
+      <div><span class="k">Peers</span> <span class="v" id="net-peers">—</span></div>
+      <div><span class="k">Cached atoms</span> <span class="v" id="net-cached">0</span></div>
+      <div><span class="k">Sync</span> <span class="v" id="net-sync">—</span></div>
+    </div>
+
+    <div class="settings-separator"></div>
+    <div class="settings-section-title">Identity</div>
+    <div class="settings-info" id="settings-identity-info">
+      <div id="me-identity-loaded" style="display:none;">
+        <div><span class="k">Author ID</span> <span class="v mono" id="me-author-id">—</span></div>
+        <div><span class="k">Public key</span> <span class="v mono" id="me-pubkey">—</span></div>
+      </div>
+      <div id="me-identity-empty" class="dim">No key loaded.</div>
+    </div>
+    <button class="settings-item" id="btn-generate-key" type="button">Generate New Key</button>
+    <button class="settings-item" id="btn-import-key" type="button">Import Key from JSON</button>
+    <button class="settings-item" id="btn-save-key-local" type="button">Save to LocalStorage</button>
+    <button class="settings-item" id="btn-load-key-local" type="button">Load from LocalStorage</button>
+    <!-- Hidden key-info for key-management.js compatibility -->
+    <div id="key-info" class="settings-info" style="display:none;">
+      <div><span class="k">Author ID:</span> <span class="v" id="key-author-id">—</span></div>
+      <div><span class="k">Pubkey:</span>    <span class="v" id="key-pubkey">—</span></div>
+      <div><span class="k">Mnemonic:</span>  <span class="v key-mnemonic" id="key-mnemonic">—</span></div>
+      <div style="margin-top:8px;">
+        <button id="btn-print-mnemonic">Print Mnemonic</button>
+        <button id="btn-export-key">Export Key JSON</button>
+      </div>
+    </div>
+
+    <div class="settings-separator"></div>
+    <div class="settings-section-title">App</div>
     <div class="settings-info">
-      <div><span class="k">version:</span> <span class="v">v0.4</span></div>
+      <div><span class="k">Version</span> <span class="v">v0.4</span></div>
     </div>
     <button class="settings-item danger" id="settings-reset" role="menuitem">Reset local cache…</button>
+
   </div>
 
   <!-- 3D toggle -->
   <button id="toggle-3d" title="Switch to 3D view" aria-label="Switch map between 2D and 3D">2D</button>
 
 
-  <!-- ============================================================
-       Network page — node, peers, sync status
-       ============================================================ -->
-  <div id="page-network">
-    <div class="page-header">
-      <h1>Network</h1>
-      <p class="page-subtitle">Nodes &amp; sync status</p>
-    </div>
-    <div class="page-content">
-
-      <section class="info-section">
-        <h2 class="section-heading">Node</h2>
-        <div class="info-row">
-          <span class="info-label">Address</span>
-          <span class="info-value mono" id="net-node">—</span>
-        </div>
-        <div class="info-row">
-          <span class="info-label">Peers</span>
-          <span class="info-value" id="net-peers">—</span>
-        </div>
-        <div class="info-row">
-          <span class="info-label">Cached atoms</span>
-          <span class="info-value" id="net-cached">0</span>
-        </div>
-      </section>
-
-      <section class="info-section">
-        <h2 class="section-heading">Sync</h2>
-        <div class="info-row">
-          <span class="info-label">Status</span>
-          <span class="info-value" id="net-sync">—</span>
-        </div>
-        <div class="info-row">
-          <span class="info-label">Version</span>
-          <span class="info-value">v0.4</span>
-        </div>
-      </section>
-
-    </div>
-  </div>
-
-
-  <!-- ============================================================
-       Me page — identity, keys, crypto state
-       ============================================================ -->
-  <div id="page-me">
-    <div class="page-header">
-      <h1>Me</h1>
-      <p class="page-subtitle">Identity &amp; keys</p>
-    </div>
-    <div class="page-content">
-
-      <section class="info-section">
-        <h2 class="section-heading">Identity</h2>
-        <div id="me-identity-loaded" style="display:none;">
-          <div class="info-row">
-            <span class="info-label">Author ID</span>
-            <span class="info-value mono" id="me-author-id">—</span>
-          </div>
-          <div class="info-row">
-            <span class="info-label">Public key</span>
-            <span class="info-value mono" id="me-pubkey">—</span>
-          </div>
-          <div class="info-row">
-            <span class="info-label">Mnemonic</span>
-            <span class="info-value mono key-mnemonic" id="me-mnemonic">—</span>
-          </div>
-        </div>
-        <div id="me-identity-empty" class="info-empty">
-          No key loaded. Generate or import one below.
-        </div>
-      </section>
-
-      <section class="info-section">
-        <h2 class="section-heading">Keys</h2>
-        <div class="me-actions">
-          <button class="settings-item" id="btn-generate-key" type="button">Generate New Key</button>
-          <button class="settings-item" id="btn-import-key" type="button">Import Key from JSON</button>
-          <button class="settings-item" id="btn-save-key-local" type="button">Save to LocalStorage</button>
-          <button class="settings-item" id="btn-load-key-local" type="button">Load from LocalStorage</button>
-        </div>
-        <!-- Hidden key-info for existing key-management.js compatibility -->
-        <div id="key-info" class="settings-info" style="display:none;">
-          <div><span class="k">Author ID:</span> <span class="v" id="key-author-id">—</span></div>
-          <div><span class="k">Pubkey:</span>    <span class="v" id="key-pubkey">—</span></div>
-          <div><span class="k">Mnemonic:</span>  <span class="v key-mnemonic" id="key-mnemonic">—</span></div>
-          <div style="margin-top:8px;">
-            <button id="btn-print-mnemonic">Print Mnemonic</button>
-            <button id="btn-export-key">Export Key JSON</button>
-          </div>
-        </div>
-      </section>
-
-      <section class="info-section info-section-danger">
-        <h2 class="section-heading">Data</h2>
-        <p class="info-hint">Clears locally cached atoms and resets the app. Your key is not deleted.</p>
-        <button class="btn btn-danger" id="me-reset-btn">Reset local cache…</button>
-      </section>
-
-    </div>
-  </div>
 
   <!-- Map container -->
 
   <!-- ============================================================
        Main View — Text / Feed page (default landing)
        ============================================================ -->
-  <div id="page-atoms">
+  <div id="page-text">
     <div id="main-header">
       <h1>Punkto</h1>
       <p class="main-subtitle">What&#39;s around you</p>
@@ -1651,24 +1522,12 @@
   </script>
 
 
-  <!-- Bottom navigation — four top-level pages -->
+  <!-- Bottom navigation — Text / Map toggle + Add + Settings -->
   <nav id="bottom-nav" role="navigation" aria-label="Main navigation">
-    <button class="nav-btn" id="nav-atoms" aria-label="Text feed">
-      <span class="nav-btn-icon">&#9776;</span>
-      <span class="nav-btn-label">Text</span>
-    </button>
-    <button class="nav-btn" id="nav-space" aria-label="Map view">
-      <span class="nav-btn-icon">&#9711;</span>
-      <span class="nav-btn-label">Map</span>
-    </button>
-    <button class="nav-btn" id="nav-network" aria-label="Network status">
-      <span class="nav-btn-icon">&#8762;</span>
-      <span class="nav-btn-label">Network</span>
-    </button>
-    <button class="nav-btn" id="nav-me" aria-label="Identity and keys">
-      <span class="nav-btn-icon">&#9673;</span>
-      <span class="nav-btn-label">Me</span>
-    </button>
+    <button class="nav-btn nav-view" id="nav-text" aria-label="Text feed">Text</button>
+    <button class="nav-btn nav-view" id="nav-map" aria-label="Map view">Map</button>
+    <button class="nav-btn nav-add" id="nav-add" aria-label="Add atom here">+</button>
+    <button class="nav-btn nav-settings-btn" id="nav-settings" aria-label="Settings">⚙</button>
   </nav>
 
   <!-- Mnemonic modal (Generate New Key) -->
