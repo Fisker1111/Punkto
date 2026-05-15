@@ -6,6 +6,46 @@ This project follows a loose semantic-versioning convention: `vMAJOR.MINOR` for 
 
 ---
 
+## [v0.4+] — 2026-05-15 — Post-launch UX + Docker infrastructure
+
+Iterative improvements applied after the v0.4 public launch. PWA is now at v46.
+
+### Added
+- **Docker deployment** — full containerised stack (Caddy + Python relay) for all reference nodes
+  - `pwa/Dockerfile` — Caddy serving static PWA files
+  - `relay/Dockerfile` — Python relay service
+  - `deploy/docker-compose.yml` — single compose file for all nodes
+  - `deploy/server1/Caddyfile` — auto-TLS for `punkto.xyz`, `app1.punkto.xyz`, `www`
+  - `deploy/app2/Caddyfile` — auto-TLS for `app2.punkto.xyz`
+  - GitHub Actions workflow (`.github/workflows/docker.yml`) — build + push to `ghcr.io/fisker1111/` on push/tag
+- **Four-page UI shell** — app now has four distinct top-level views navigated by bottom bar
+  - **Text** (default) — text-first atom feed, nearby atoms, proximity sort
+  - **Map** — existing MapLibre + deck.gl 3D map, placement preview, altitude controls
+  - **Network** — read-only node, peer, sync, and health status
+  - **Me** — in-browser key generation, import, save/load, identity display
+- **In-browser key management** — generate, import, save to LocalStorage, and load Ed25519 identities without CLI tools
+- **Proximity-first atom list** — atoms sorted by distance from user; distance, category pill, and verified badge shown on each card
+- **Placement preview + altitude controls** — 3D preview in Add-Atom modal; free-altitude and floor-picker input
+- **Mnemonic modal** — replaces `window.alert()` for key generation; works in standalone PWA mode on mobile
+- **ARIA and accessibility pass** — semantic HTML (`<header>`, `<main>`), ARIA roles/labels on all interactive elements, focus-visible CSS, `prefers-reduced-motion` media query
+- **PWA_REVIEW.md** — documents review findings and improvement checklist
+
+### Changed
+- **Navigation labels**: Atoms → Text, Space → Map (v46)
+- **Feed copy**: "Around you" → "Text view", "No notes here yet" → "No text here yet", "Nearby notes" → "Nearby text", "Show in 3D" → "Show on map" (v46)
+- **Default landing**: app now boots into Text feed instead of the 3D map
+- **Deployment**: bare-metal nginx + systemd replaced by Docker on all reference nodes; Caddy handles TLS via Let's Encrypt
+- **Service Worker**: network-first for `.js` and `.html` during development; cache version bumped each release (currently `punkto-v46`)
+- **Settings menu**: stripped to version + reset; Network and Me content moved to dedicated pages
+
+### Removed
+- `deploy.sh` — replaced by `docker compose pull && docker compose up -d`
+- `pwa/node.py` — bare-metal runner, superseded by Docker
+- `relay/systemd/punkto-relay.service` — superseded by Docker
+- Bare-metal nginx configs and certbot cron on all reference nodes
+
+---
+
 ## [v0.4] — 2026-05-10 — Public launch
 
 First public release. Repository goes from private to MIT-licensed open source.

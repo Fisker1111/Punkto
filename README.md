@@ -60,7 +60,7 @@ With identity (full):
 Punkto/
 ├── pwa/                  ← Reference PWA (vanilla JS, MapLibre, deck.gl)
 │   ├── Dockerfile        ← Docker image: Caddy serving static files
-│   ├── index.html        ← App shell (four-page UI: Atoms, Space, Network, Me)
+│   ├── index.html        ← App shell (four-page UI: Text, Map, Network, Me)
 │   ├── app.js            ← App logic, sync, atom rendering, page routing
 │   ├── sw.js             ← Service worker (offline-first)
 │   ├── manifest.json     ← PWA manifest
@@ -236,14 +236,14 @@ Early public release — **v0.4**, dogfood stage.
 
 - **Live nodes**: two synced reference relays (`app1.punkto.xyz`, `app2.punkto.xyz`) — both running Docker (Caddy + Python relay), auto-HTTPS via Let's Encrypt, deployed via `docker compose`
 - **Atoms**: 20+ on the live feed, mostly seed/test content
-- **PWA**: at v27 — 3D altitude input, building-aware floor picker, lollipop leader lines, Open Graph deep links
+- **PWA**: at v46 — four-page UI shell (Text / Map / Network / Me), Docker-deployed, in-browser key generation, 3D altitude input, building-aware floor picker, lollipop leader lines, Open Graph deep links
 - **Relay**: v0.1 — rolling buffer (10 000 atoms or 7 days), `/latest`, peer sync, `/p/<id>` server-rendered cards
 - **Identity**: v0.1 — `tools/punkto-keygen-v0.1.py` and `tools/punkto-key.py` produce byte-identical results across implementations
 - **AI-discoverable**: `robots.txt`, `llms.txt`, `openapi.json`, `sitemap.xml`, server-rendered `/p/<id>` with OpenGraph + JSON-LD
 
 ### Roadmap
 
-- **v0.5** — relay-side signature verification (`PUNKTO_REQUIRE_SIG=true`); PWA identity UI (mint, import, export, print recovery card)
+- **v0.5** — relay-side signature verification (`PUNKTO_REQUIRE_SIG=true`); PWA identity export / print recovery card
 - **v0.6** — Phase 2 altitude: Open-Elevation ground lookup so "Floor 17" resolves to absolute altitude above sea level
 - **v0.7** — Phase 3 altitude: building stack view, altitude filter, floor-specific deep links
 - **v1.0** — first reference Archive node, third-party relay implementations in other languages, real users in multiple cities
@@ -252,7 +252,7 @@ Early public release — **v0.4**, dogfood stage.
 
 - **Relay v0.1 stores `sig` and `pubkey` but does not verify signatures yet** — verification is planned for relay v0.2
 - **Flow TV pruning is active**: atoms older than 7 days age out of the relay buffer. This is by design; archives are the future home of long-term history
-- **No PWA identity UI yet** — keys must currently be minted via the Python CLI (`tools/punkto-keygen-v0.1.py`); browser-based key UX is on the v0.5 roadmap
+- **PWA identity UI is basic** — in-browser key generation and import work; export / print recovery card are on the v0.5 roadmap
 - **Real-user adoption is small** — early dogfood phase; growing the network is the next priority after v0.5
 
 ---
@@ -321,8 +321,3 @@ Start with [`CONTRIBUTING.md`](CONTRIBUTING.md). For security issues, see [`SECU
 ---
 
 > *Punkto begins. Anyone, anywhere, can sign atoms.*
-
-## PWA v28 (latest)
-- Client-side key management: generate/import/export Ed25519 identities
-- CORS headers fixed on relays for cross-origin requests
-- Service worker cache bumped to punkto-v28
