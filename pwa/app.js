@@ -156,6 +156,14 @@ function showPage(page) {
   });
 
   if (page === 'text') renderMainFeed();
+  if (page === 'map') {
+    if (!map) {
+      // First time showing map — initialize now that container is visible
+      initMap();
+    } else {
+      requestAnimationFrame(() => { if (map) map.resize(); });
+    }
+  }
 }
 
 function renderMainFeed() {
@@ -2160,8 +2168,8 @@ function wireEvents() {
 // ---------------------------------------------------------------------------
 
 async function boot() {
-  console.log('PUNKTO APP.JS LOADED v49 HARD MARKER 2026-05-15-8');
-  window.PUNKTO_APP_VERSION = 'v49-hard-marker-2026-05-15-8';
+  console.log('PUNKTO APP.JS LOADED v50 HARD MARKER 2026-05-15-9');
+  window.PUNKTO_APP_VERSION = 'v50-hard-marker-2026-05-15-9';
 
   // Global click capture — diagnostic: logs every click to console
   document.addEventListener('click', (ev) => {
@@ -2217,7 +2225,6 @@ async function boot() {
   wireEvents();
   // Default to main view; go straight to 3D if deep-linking to a specific punkto
   showPage(deepLinkPunkto ? 'map' : 'text');
-  initMap();
   if (deepLinkPunkto) setPanelOpen(false); // panel managed by 3D view when deep-linking
 }
 
