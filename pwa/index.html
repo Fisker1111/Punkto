@@ -11,19 +11,17 @@
   <link rel="manifest" href="/manifest.json" />
   <link rel="apple-touch-icon" href="/logo-192.png" />
 
-  <!-- MapLibre GL JS 3.6.2 -->
-  <!-- MapLibre GL JS 3.6.2 (self-hosted) -->
+  <!-- MapLibre GL JS (self-hosted) -->
   <link rel="stylesheet" href="/lib/maplibre-gl.css" />
   <script src="/lib/maplibre-gl.js"></script>
-
   <!-- deck.gl 8.9.35 standalone UMD (self-hosted) -->
   <script src="/lib/dist.min.js"></script>
-
-  <!-- Dexie.js 3.2.4 (self-hosted) -->
+  <!-- Dexie.js (self-hosted) -->
   <script src="/lib/dexie.min.js"></script>
   <!-- TweetNaCl.js for Ed25519 -->
   <script src="/nacl.min.js"></script>
-  <!-- Key management functions -->
+  <!-- Key management -->
+  <script src="/key-management.js"></script>
 
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -32,98 +30,360 @@
       --bg:        #0a0a0a;
       --surface:   #141414;
       --surface2:  #1e1e1e;
+      --surface3:  #252525;
       --border:    #2a2a2a;
       --text:      #e8e8e8;
-      --text-dim:  #888;
+      --text-dim:  #777;
+      --text-mid:  #aaa;
       --cyan:      #00e5ff;
       --cyan-dim:  #007a8a;
-      --accent:    #00bcd4;
+      --cyan-glow: rgba(0,229,255,0.18);
       --danger:    #ff4444;
-      --bar-h:     52px;
-      --panel-h:   220px;
+      --topbar-h:  52px;
+      --nav-h:     56px;
+      --panel-h:   260px;
       --safe-b:    env(safe-area-inset-bottom, 0px);
     }
 
-    html, body { width: 100%; height: 100%; overflow: hidden; background: var(--bg); color: var(--text); font-family: 'Fira Mono', 'Courier New', monospace; font-size: 13px; }
-
-    /* ── Map ──────────────────────────────────────────────── */
-    #map {
-      position: absolute;
-      inset: 0;
-      top: var(--bar-h);
+    html, body {
+      width: 100%; height: 100%;
+      overflow: hidden;
+      background: var(--bg);
+      color: var(--text);
+      font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
+      font-size: 14px;
+      -webkit-tap-highlight-color: transparent;
     }
-    #map.panel-open { bottom: var(--panel-h); }
 
-    /* ── Top bar ──────────────────────────────────────────── */
+    /* ── Scrollbar ──────────────────────────────────────────── */
+    * { scrollbar-width: thin; scrollbar-color: var(--border) transparent; }
+
+    /* ── Top bar ────────────────────────────────────────────── */
     #topbar {
-      position: absolute;
+      position: fixed;
       top: 0; left: 0; right: 0;
-      height: var(--bar-h);
+      height: var(--topbar-h);
       background: var(--surface);
       border-bottom: 1px solid var(--border);
       display: flex;
       align-items: center;
-      padding: 0 14px;
-      gap: 12px;
-      z-index: 100;
-      backdrop-filter: blur(6px);
+      padding: 0 16px;
+      gap: 10px;
+      z-index: 200;
     }
-    #topbar .title {
-      font-size: 18px;
+    #topbar .brand {
+      font-size: 17px;
       font-weight: 700;
       color: var(--cyan);
-      letter-spacing: 0.08em;
+      letter-spacing: 0.06em;
       flex: 1;
-    }
-    #topbar .title-group {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      line-height: 1.1;
-      min-width: 0;
-    }
-    #topbar .title-group .title {
-      flex: 0 0 auto;
-      font-size: 16px;
     }
     #topbar .tagline {
-      font-size: 10px;
+      font-size: 11px;
       color: var(--text-dim);
-      letter-spacing: 0.04em;
+      font-weight: 400;
       margin-top: 1px;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
+      display: block;
     }
+    #atom-count {
+      font-size: 12px;
+      color: var(--text-dim);
+      white-space: nowrap;
+    }
+    #atom-count span { color: var(--cyan); font-weight: 600; }
     #sync-indicator {
       width: 8px; height: 8px;
       border-radius: 50%;
       background: var(--text-dim);
-      transition: background 0.4s;
       flex-shrink: 0;
+      transition: background 0.4s;
     }
-    #sync-indicator.ok     { background: #00e676; }
-    #sync-indicator.syncing{ background: #ffeb3b; animation: pulse 1s infinite; }
-    #sync-indicator.error  { background: var(--danger); }
-    /* Amber ring when this node is behind peers. Wins over .ok visually. */
-    #sync-indicator.lagging {
-      background: #ffb300;
-      box-shadow: 0 0 0 2px rgba(255, 179, 0, 0.25);
-    }
-    @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
+    #sync-indicator.ok      { background: #00e676; }
+    #sync-indicator.syncing { background: #ffeb3b; animation: pulse 1s infinite; }
+    #sync-indicator.error   { background: var(--danger); }
+    #sync-indicator.lagging { background: #ffb300; box-shadow: 0 0 0 2px rgba(255,179,0,.25); }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.3} }
 
-    #atom-count {
+    /* ── Bottom navigation ──────────────────────────────────── */
+    #bottom-nav {
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      height: calc(var(--nav-h) + var(--safe-b));
+      padding-bottom: var(--safe-b);
+      background: rgba(14,14,14,0.96);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-top: 1px solid var(--border);
+      display: flex;
+      align-items: stretch;
+      z-index: 200;
+    }
+    .nav-btn {
+      background: none;
+      border: none;
       color: var(--text-dim);
-      font-size: 11px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      font-weight: 500;
+      letter-spacing: 0.04em;
+      transition: color 0.15s, background 0.15s;
+      position: relative;
+    }
+    .nav-btn:active { opacity: 0.7; }
+    .nav-view { flex: 35; }
+    .nav-add  { flex: 15; }
+    .nav-settings-btn { flex: 15; font-size: 16px; }
+
+    /* Active indicator — top border */
+    .nav-view.active {
+      color: var(--cyan);
+    }
+    .nav-view.active::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 20%; right: 20%;
+      height: 2px;
+      background: var(--cyan);
+      border-radius: 0 0 2px 2px;
+    }
+    /* + button — pill style */
+    .nav-add {
+      color: var(--bg);
+    }
+    .nav-add::after {
+      content: '+';
+      width: 38px; height: 38px;
+      background: var(--cyan);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      font-weight: 300;
+      color: var(--bg);
+      box-shadow: 0 0 14px var(--cyan-glow);
+      transition: transform 0.12s, box-shadow 0.12s;
+    }
+    .nav-add:active::after { transform: scale(0.92); }
+    /* Hide text inside nav-add since we use ::after */
+    .nav-add { font-size: 0; }
+    .nav-settings-btn:hover, .nav-settings-btn:focus-visible { color: var(--text); }
+
+    /* ── Map (full screen behind nav+topbar) ────────────────── */
+    #map {
+      position: fixed;
+      top: var(--topbar-h);
+      left: 0; right: 0;
+      bottom: calc(var(--nav-h) + var(--safe-b));
+      z-index: 10;
+    }
+    #map.panel-open { bottom: calc(var(--panel-h) + var(--nav-h) + var(--safe-b)); }
+
+    /* ── Crosshair ──────────────────────────────────────────── */
+    #crosshair {
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      pointer-events: none;
+      z-index: 20;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    #crosshair::before, #crosshair::after {
+      content: '';
+      position: absolute;
+      background: rgba(0,229,255,0.7);
+    }
+    #crosshair::before { width: 1px; height: 22px; top: -11px; left: 0; }
+    #crosshair::after  { width: 22px; height: 1px; left: -11px; top: 0; }
+    #crosshair-readout {
+      font-family: 'Fira Mono', monospace;
+      font-size: 10px;
+      color: var(--cyan);
+      margin-top: 14px;
+      text-shadow: 0 1px 4px #000;
       white-space: nowrap;
     }
-    #atom-count span { color: var(--cyan); font-weight: 600; }
 
-    /* ── Bottom panel ─────────────────────────────────────── */
+    /* ── Map overlay controls ───────────────────────────────── */
+    #toggle-3d {
+      position: fixed;
+      right: 14px;
+      bottom: calc(var(--nav-h) + var(--safe-b) + 14px);
+      z-index: 50;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      color: var(--text-dim);
+      font-size: 11px;
+      font-weight: 600;
+      font-family: monospace;
+      letter-spacing: 0.06em;
+      padding: 6px 10px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: color 0.2s, background 0.2s;
+    }
+    #toggle-3d:hover { color: var(--cyan); background: var(--surface3); }
+
+    /* fab-panel: small map overlay to open nearby panel */
+    #fab-panel {
+      position: fixed;
+      left: 14px;
+      bottom: calc(var(--nav-h) + var(--safe-b) + 14px);
+      z-index: 50;
+      width: 38px; height: 38px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 50%;
+      color: var(--text-dim);
+      font-size: 16px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: color 0.2s, background 0.2s;
+    }
+    #fab-panel:hover { color: var(--cyan); background: var(--surface3); }
+    #fab-panel.panel-open { color: var(--cyan); }
+
+    /* fab-add: hidden — + is in bottom nav */
+    #fab-add { display: none !important; }
+
+    /* ── View switching ─────────────────────────────────────── */
+    body.page-text #map          { display: none; }
+    body.page-text #toggle-3d   { display: none; }
+    body.page-text #fab-panel   { display: none; }
+    body.page-text #panel       { display: none; }
+    body.page-text #onboarding-hint { display: none; }
+    body.page-map  #page-text   { display: none; }
+
+    /* ── Text / Feed page ───────────────────────────────────── */
+    #page-text {
+      position: fixed;
+      top: var(--topbar-h);
+      left: 0; right: 0;
+      bottom: calc(var(--nav-h) + var(--safe-b));
+      overflow-y: auto;
+      background: var(--bg);
+      z-index: 10;
+    }
+
+    /* Feed container */
+    #main-feed {
+      padding: 0 0 24px;
+    }
+
+    #main-feed-heading {
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--text-dim);
+      padding: 20px 16px 12px;
+    }
+
+    #main-atom-count {
+      font-size: 11px;
+      color: var(--text-dim);
+      padding: 0 16px 8px;
+      display: block;
+    }
+
+    /* Feed cards */
+    .atom-card {
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      cursor: pointer;
+      transition: background 0.12s;
+    }
+    .atom-card:active { background: var(--surface2); }
+    .atom-card-title {
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--text);
+      line-height: 1.4;
+    }
+    .atom-card-meta {
+      font-size: 11px;
+      color: var(--text-dim);
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .atom-card-meta .dist { color: var(--cyan); font-weight: 500; }
+    .atom-card-actions {
+      display: flex;
+      gap: 8px;
+      margin-top: 2px;
+    }
+    .atom-card-actions button {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      color: var(--text-mid);
+      font-size: 11px;
+      padding: 4px 10px;
+      border-radius: 20px;
+      cursor: pointer;
+      transition: color 0.15s, border-color 0.15s;
+    }
+    .atom-card-actions button:hover { color: var(--cyan); border-color: var(--cyan-dim); }
+
+    /* Category pill */
+    .atom-pill {
+      display: inline-block;
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      padding: 2px 7px;
+      border-radius: 10px;
+      background: var(--surface3);
+      color: var(--text-dim);
+    }
+    .atom-pill.verified { background: rgba(0,229,255,0.1); color: var(--cyan); }
+
+    /* Empty states */
+    .main-empty {
+      padding: 48px 24px;
+      text-align: center;
+      color: var(--text-dim);
+    }
+    .main-empty h3 {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--text-mid);
+      margin-bottom: 8px;
+    }
+    .main-empty p {
+      font-size: 13px;
+      line-height: 1.6;
+      margin-bottom: 20px;
+    }
+    .btn-cta {
+      background: var(--cyan);
+      color: var(--bg);
+      border: none;
+      padding: 10px 24px;
+      border-radius: 24px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity 0.15s;
+    }
+    .btn-cta:active { opacity: 0.8; }
+
+    /* ── Nearby panel (slides up from bottom, map view) ─────── */
     #panel {
-      position: absolute;
-      bottom: 0; left: 0; right: 0;
+      position: fixed;
+      left: 0; right: 0;
+      bottom: calc(var(--nav-h) + var(--safe-b));
       height: var(--panel-h);
       background: var(--surface);
       border-top: 1px solid var(--border);
@@ -131,17 +391,16 @@
       display: flex;
       flex-direction: column;
       transform: translateY(100%);
-      transition: transform 0.3s ease;
-      padding-bottom: var(--safe-b);
+      transition: transform 0.28s cubic-bezier(0.4,0,0.2,1);
     }
     #panel.open { transform: translateY(0); }
 
     #panel-header {
       display: flex;
       align-items: center;
-      padding: 10px 14px 6px;
-      gap: 8px;
+      padding: 10px 16px 8px;
       flex-shrink: 0;
+      border-bottom: 1px solid var(--border);
     }
     #panel-header .label {
       flex: 1;
@@ -149,36 +408,24 @@
       text-transform: uppercase;
       letter-spacing: 0.1em;
       color: var(--text-dim);
+      font-weight: 600;
     }
     #panel-close {
-      background: none;
-      border: none;
-      color: var(--text-dim);
-      cursor: pointer;
-      font-size: 18px;
-      line-height: 1;
-      width: 44px;
-      height: 44px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      flex-shrink: 0;
+      background: none; border: none;
+      color: var(--text-dim); cursor: pointer;
+      font-size: 18px; width: 36px; height: 36px;
+      display: flex; align-items: center; justify-content: center;
       border-radius: 6px;
     }
-    #panel-close:hover { color: var(--text); background: var(--surface2); }
+    #panel-close:hover { background: var(--surface2); color: var(--text); }
 
-    #atom-list {
-      flex: 1;
-      overflow-y: auto;
-      padding: 0 14px 10px;
-    }
-    #atom-list { scrollbar-width: thin; scrollbar-color: var(--border) transparent; }
+    #atom-list { flex: 1; overflow-y: auto; padding: 0 16px 8px; }
 
     .atom-item {
-      padding: 8px 0;
+      padding: 10px 0;
       border-bottom: 1px solid var(--border);
       display: grid;
-      grid-template-columns: auto 1fr auto;
+      grid-template-columns: 8px 1fr auto;
       gap: 0 10px;
       align-items: start;
     }
@@ -187,81 +434,142 @@
       width: 6px; height: 6px;
       border-radius: 50%;
       background: var(--cyan);
-      margin-top: 4px;
-      flex-shrink: 0;
+      margin-top: 5px;
     }
-    .atom-body .atom-text {
-      color: var(--text);
-      word-break: break-word;
-    }
+    .atom-body .atom-text { color: var(--text); font-size: 13px; line-height: 1.4; word-break: break-word; }
     .atom-body .atom-text.empty { color: var(--text-dim); font-style: italic; }
-    .atom-body .atom-meta {
-      font-size: 10px;
-      color: var(--text-dim);
-      margin-top: 2px;
-    }
-    .atom-time {
-      font-size: 10px;
-      color: var(--text-dim);
-      white-space: nowrap;
-    }
-    #atom-list-empty {
-      color: var(--text-dim);
-      font-size: 11px;
-      padding: 20px 0;
-      text-align: center;
-    }
+    .atom-body .atom-meta { font-size: 11px; color: var(--text-dim); margin-top: 3px; }
+    .atom-time { font-size: 11px; color: var(--text-dim); white-space: nowrap; }
+    #atom-list-empty { color: var(--text-dim); font-size: 12px; padding: 24px 0; text-align: center; }
 
-    /* ── Floating buttons ─────────────────────────────────── */
-    #fab-add {
-      position: absolute;
-      bottom: calc(20px + var(--safe-b));
-      right: 18px;
-      width: 52px; height: 52px;
-      border-radius: 50%;
-      background: var(--cyan);
-      color: var(--bg);
-      border: none;
-      font-size: 26px;
-      line-height: 1;
-      cursor: pointer;
-      box-shadow: 0 4px 16px rgba(0,229,255,0.35);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 110;
-      transition: background 0.2s, transform 0.15s;
-    }
-    #fab-add:hover  { background: #33ecff; transform: scale(1.07); }
-    #fab-add:active { transform: scale(0.95); }
-    #fab-add.panel-open { bottom: calc(var(--panel-h) + 16px); }
-
-    #fab-panel {
-      position: absolute;
-      bottom: calc(20px + var(--safe-b));
-      left: 18px;
-      width: 44px; height: 44px;
-      border-radius: 50%;
-      background: var(--surface2);
-      color: var(--text-dim);
+    /* ── Onboarding hint ────────────────────────────────────── */
+    #onboarding-hint {
+      position: fixed;
+      bottom: calc(var(--nav-h) + var(--safe-b) + 66px);
+      right: 16px;
+      background: var(--surface);
       border: 1px solid var(--border);
-      font-size: 18px;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 110;
-      transition: background 0.2s;
+      border-radius: 10px;
+      padding: 8px 14px;
+      font-size: 12px;
+      color: var(--text-mid);
+      z-index: 60;
+      pointer-events: none;
+      animation: fadeIn 0.4s ease;
     }
-    #fab-panel:hover { background: var(--border); color: var(--text); }
-    #fab-panel.panel-open { bottom: calc(var(--panel-h) + 14px); }
+    .hint-plus { color: var(--cyan); font-weight: 700; font-size: 14px; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
 
-    /* ── Modal ────────────────────────────────────────────── */
+    /* ── Settings panel ─────────────────────────────────────── */
+    #settings-menu {
+      position: fixed;
+      inset: 0;
+      top: auto;
+      bottom: calc(var(--nav-h) + var(--safe-b));
+      max-height: 75vh;
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      border-radius: 16px 16px 0 0;
+      z-index: 300;
+      overflow-y: auto;
+      transform: translateY(100%);
+      transition: transform 0.28s cubic-bezier(0.4,0,0.2,1);
+      padding-bottom: 16px;
+    }
+    #settings-menu.open { transform: translateY(0); }
+
+    /* Backdrop */
+    #settings-menu::before {
+      display: none; /* handled via JS overlay */
+    }
+
+    .settings-handle {
+      width: 36px; height: 4px;
+      background: var(--border);
+      border-radius: 2px;
+      margin: 10px auto 6px;
+    }
+
+    .settings-section-title {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--text-dim);
+      padding: 16px 16px 8px;
+    }
+    .settings-separator {
+      height: 1px;
+      background: var(--border);
+      margin: 8px 16px;
+    }
+    .settings-info {
+      padding: 0 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .settings-info > div {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 8px;
+    }
+    .settings-info .k { font-size: 12px; color: var(--text-dim); white-space: nowrap; }
+    .settings-info .v { font-size: 12px; color: var(--text-mid); text-align: right; }
+    .settings-info .mono { font-family: 'Fira Mono', monospace; font-size: 10px; word-break: break-all; }
+    .settings-info .dim  { color: var(--text-dim); font-size: 12px; }
+
+    .settings-item {
+      display: block;
+      width: 100%;
+      background: none;
+      border: none;
+      text-align: left;
+      padding: 12px 16px;
+      color: var(--text-mid);
+      font-size: 13px;
+      cursor: pointer;
+      transition: background 0.12s;
+      border-radius: 6px;
+    }
+    .settings-item:hover, .settings-item:focus-visible { background: var(--surface2); }
+    .settings-item.danger { color: var(--danger); }
+
+    .settings-key-actions {
+      padding: 8px 16px;
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .settings-key-actions button {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      color: var(--text-mid);
+      font-size: 12px;
+      padding: 7px 14px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: color 0.15s, border-color 0.15s;
+    }
+    .settings-key-actions button:hover { color: var(--cyan); border-color: var(--cyan-dim); }
+
+    /* ── Settings overlay backdrop ──────────────────────────── */
+    #settings-backdrop {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.55);
+      z-index: 290;
+    }
+    #settings-backdrop.open { display: block; }
+
+    /* ── Modal (add atom) ───────────────────────────────────── */
     #modal-overlay {
       position: fixed;
       inset: 0;
       background: rgba(0,0,0,0.7);
-      z-index: 200;
+      z-index: 400;
       display: none;
       align-items: flex-end;
       justify-content: center;
@@ -277,49 +585,31 @@
       width: 100%;
       max-width: 560px;
       padding: 20px 20px calc(20px + var(--safe-b));
-      animation: slide-up 0.25s ease;
+      max-height: 90vh;
+      overflow-y: auto;
+      animation: slide-up 0.22s ease;
     }
-    @keyframes slide-up {
-      from { transform: translateY(100%); }
-      to   { transform: translateY(0); }
-    }
+    @keyframes slide-up { from { transform: translateY(100%); } to { transform: translateY(0); } }
 
-    #modal h2 {
-      font-size: 15px;
-      font-weight: 600;
-      color: var(--cyan);
-      margin-bottom: 6px;
-    }
-    #modal-location {
-      font-size: 11px;
-      color: var(--text-dim);
-      margin-bottom: 16px;
-      font-family: monospace;
-    }
+    #modal h2 { font-size: 15px; font-weight: 600; color: var(--cyan); margin-bottom: 6px; }
+    #modal-location { font-size: 11px; color: var(--text-dim); margin-bottom: 16px; font-family: monospace; }
+
     #modal textarea {
       width: 100%;
+      min-height: 80px;
       background: var(--surface2);
       border: 1px solid var(--border);
       border-radius: 8px;
       color: var(--text);
       font-family: inherit;
-      font-size: 13px;
+      font-size: 14px;
       padding: 10px 12px;
-      resize: none;
-      height: 80px;
-      outline: none;
-      transition: border-color 0.2s;
+      resize: vertical;
+      margin-bottom: 10px;
     }
-    #modal textarea:focus { border-color: var(--cyan-dim); }
-    #modal textarea::placeholder { color: var(--text-dim); }
+    #modal textarea:focus { outline: none; border-color: var(--cyan-dim); }
 
-    #modal-author-row {
-      display: flex;
-      gap: 8px;
-      margin-top: 8px;
-    }
-    #modal-author {
-      flex: 1;
+    #modal input[type="text"], #modal input[type="number"] {
       background: var(--surface2);
       border: 1px solid var(--border);
       border-radius: 8px;
@@ -327,1142 +617,264 @@
       font-family: inherit;
       font-size: 13px;
       padding: 8px 12px;
-      outline: none;
-      transition: border-color 0.2s;
     }
-    #modal-author:focus { border-color: var(--cyan-dim); }
-    #modal-author::placeholder { color: var(--text-dim); }
+    #modal input[type="text"]:focus, #modal input[type="number"]:focus {
+      outline: none; border-color: var(--cyan-dim);
+    }
+    #modal-author-row { margin-bottom: 14px; }
+    #modal-author { width: 100%; }
 
-    #modal-actions {
-      display: flex;
-      gap: 10px;
-      margin-top: 14px;
-    }
-    .btn {
-      padding: 10px 18px;
-      border-radius: 8px;
-      border: none;
-      font-family: inherit;
-      font-size: 13px;
-      cursor: pointer;
-      transition: opacity 0.2s;
-    }
-    .btn:disabled { opacity: 0.4; cursor: not-allowed; }
-    .btn-primary {
-      background: var(--cyan);
-      color: var(--bg);
-      font-weight: 700;
-      flex: 1;
-    }
-    .btn-primary:hover:not(:disabled) { background: #33ecff; }
-    .btn-secondary {
-      background: var(--surface2);
-      color: var(--text-dim);
-      border: 1px solid var(--border);
-    }
-    .btn-secondary:hover { color: var(--text); background: var(--border); }
-
-    #modal-error {
-      margin-top: 8px;
-      font-size: 11px;
-      color: var(--danger);
-      min-height: 16px;
-    }
-
-    /* ── Modal altitude input ─────────────────────────────── */
-    #modal-altitude {
-      margin-bottom: 12px;
-      padding: 10px 12px;
-      background: var(--surface2);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-    }
-    #modal-altitude-primary {
-      font-size: 13px;
-      color: var(--text);
-      font-weight: 600;
-      margin-bottom: 6px;
-    }
-    #modal-altitude-primary .alt-cyan { color: var(--cyan); }
-    #modal-altitude-slider {
-      width: 100%;
-      min-height: 44px;
-      -webkit-appearance: none;
-      appearance: none;
-      background: transparent;
-      outline: none;
-      cursor: pointer;
-      touch-action: manipulation;
-    }
-    #modal-altitude-slider::-webkit-slider-runnable-track {
-      height: 4px;
-      background: var(--border);
-      border-radius: 2px;
-    }
-    #modal-altitude-slider::-moz-range-track {
-      height: 4px;
-      background: var(--border);
-      border-radius: 2px;
-    }
-    #modal-altitude-slider::-webkit-slider-thumb {
-      -webkit-appearance: none;
-      appearance: none;
-      width: 22px;
-      height: 22px;
-      border-radius: 50%;
-      background: var(--cyan);
-      border: 2px solid var(--bg);
-      margin-top: -9px;
-      cursor: pointer;
-      box-shadow: 0 0 4px rgba(0, 229, 255, 0.4);
-    }
-    #modal-altitude-slider::-moz-range-thumb {
-      width: 22px;
-      height: 22px;
-      border-radius: 50%;
-      background: var(--cyan);
-      border: 2px solid var(--bg);
-      cursor: pointer;
-    }
-    #modal-altitude-secondary {
-      font-size: 11px;
-      color: var(--text-dim);
-      margin-top: 4px;
-    }
-    #modal-altitude-hint {
-      font-size: 10px;
-      color: var(--text-dim);
-      margin-top: 3px;
-      font-style: italic;
-      letter-spacing: 0.02em;
-    }
-    #modal-placement-controls { display: grid; gap: 8px; margin-top: 10px; }
-    #modal-placement-modes, #modal-floor-stepper, #modal-manual-altitude {
-      display: flex; gap: 8px; align-items: center;
-    }
-    #modal-floor-value, #modal-manual-altitude-value { width: 84px; }
-    .show-in-3d-btn { margin-top: 6px; }
-
-    .atom-category {
-      display: inline-block;
-      padding: 1px 8px;
-      border: 1px solid var(--border);
-      border-radius: 999px;
-      margin-right: 6px;
-      color: var(--text);
-      background: var(--surface2);
-      font-size: 10px;
-    }
-    .atom-verified {
-      color: #00e676;
-      font-size: 10px;
-      font-weight: 600;
-    }
-    .atom-actions { margin-top: 6px; }
-
-
-    /* ── Modal public-and-permanent notice ────────────────── */
     #modal-notice {
-      margin-top: 10px;
-      padding: 8px 10px;
-      font-size: 11px;
-      line-height: 1.4;
-      color: #d8b46a;
-      background: rgba(216, 180, 106, 0.06);
-      border: 1px solid rgba(216, 180, 106, 0.2);
+      background: rgba(255,68,68,0.08);
+      border: 1px solid rgba(255,68,68,0.25);
       border-radius: 6px;
-      letter-spacing: 0.02em;
+      padding: 8px 12px;
+      font-size: 12px;
+      color: #ff7070;
+      margin-bottom: 14px;
+      display: flex;
+      gap: 6px;
+      align-items: flex-start;
     }
-    #modal-notice .icon { margin-right: 4px; }
+    #modal-notice .icon { flex-shrink: 0; }
 
-    /* ── Mnemonic modal (Generate New Key) ───────────────────── */
+    /* Altitude controls */
+    #modal-altitude {
+      margin-bottom: 14px;
+      padding: 12px;
+      background: var(--surface2);
+      border-radius: 8px;
+    }
+    #modal-altitude > div strong { font-size: 12px; color: var(--text-dim); }
+    #modal-altitude-primary { font-size: 14px; font-weight: 600; color: var(--cyan); margin: 4px 0; }
+    #modal-altitude-secondary { font-size: 11px; color: var(--text-dim); margin-bottom: 8px; }
+    #modal-altitude-hint { font-size: 10px; color: var(--text-dim); }
+    #modal-altitude-slider { width: 100%; margin: 8px 0; accent-color: var(--cyan); }
+
+    #modal-placement-modes { display: flex; gap: 6px; flex-wrap: wrap; margin: 8px 0; }
+    #modal-floor-stepper { display: flex; align-items: center; gap: 8px; margin: 6px 0; font-size: 12px; color: var(--text-dim); }
+    #modal-floor-stepper input { width: 48px; text-align: center; }
+    #modal-manual-altitude { display: flex; align-items: center; gap: 8px; margin: 6px 0; font-size: 12px; color: var(--text-dim); }
+    #modal-manual-altitude input { width: 72px; }
+    #modal-placement-controls { margin-top: 8px; }
+
+    .btn { padding: 8px 14px; border-radius: 6px; font-size: 12px; cursor: pointer; transition: opacity 0.15s; border: 1px solid var(--border); }
+    .btn:active { opacity: 0.7; }
+    .btn-secondary { background: var(--surface3); color: var(--text-mid); }
+    .btn-primary { background: var(--cyan); color: var(--bg); border-color: var(--cyan); font-weight: 600; }
+    .btn-secondary:hover { border-color: var(--text-dim); }
+
+    #modal-error { font-size: 12px; color: var(--danger); margin-bottom: 8px; min-height: 16px; }
+    #modal-actions { display: flex; gap: 10px; justify-content: flex-end; }
+
+    /* ── Popup (map click) ──────────────────────────────────── */
+    .maplibregl-popup-content {
+      background: var(--surface) !important;
+      border: 1px solid var(--border) !important;
+      border-radius: 10px !important;
+      padding: 10px 14px !important;
+      color: var(--text) !important;
+      font-family: system-ui, sans-serif !important;
+      font-size: 13px !important;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.5) !important;
+    }
+    .maplibregl-popup-tip { border-top-color: var(--border) !important; }
+    .maplibregl-popup-close-button { color: var(--text-dim) !important; font-size: 16px !important; }
+    .popup-text { font-weight: 500; margin-bottom: 4px; }
+    .popup-meta { font-size: 11px; color: var(--text-dim); }
+    .popup-canon { font-family: monospace; font-size: 10px; color: var(--cyan-dim); margin-top: 4px; word-break: break-all; }
+    .popup-coords { font-size: 10px; color: var(--text-dim); margin-top: 2px; }
+
+    /* ── Mnemonic modal ─────────────────────────────────────── */
     #mnemonic-overlay {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.85);
+      z-index: 500;
       display: none;
-      position: fixed;
-      inset: 0;
-      z-index: 300;
-      background: rgba(0,0,0,0.82);
       align-items: center;
       justify-content: center;
-      padding: 16px;
+      padding: 24px;
     }
     #mnemonic-overlay.open { display: flex; }
+
     #mnemonic-box {
       background: var(--surface);
-      border: 1px solid var(--cyan-dim);
-      border-radius: 12px;
-      padding: 24px 20px 20px;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 24px;
       max-width: 420px;
       width: 100%;
-      box-shadow: 0 8px 32px rgba(0,0,0,0.7);
+      animation: slide-up 0.22s ease;
     }
-    #mnemonic-box h2 {
-      color: var(--cyan);
-      font-size: 15px;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      margin: 0 0 6px;
-    }
+    #mnemonic-box h2 { font-size: 16px; color: var(--danger); margin-bottom: 10px; }
     #mnemonic-warning {
-      color: #d8b46a;
       font-size: 12px;
+      color: var(--text-dim);
       margin-bottom: 16px;
-      line-height: 1.5;
-      padding: 8px 10px;
-      background: rgba(216,180,106,0.07);
-      border: 1px solid rgba(216,180,106,0.25);
-      border-radius: 6px;
+      line-height: 1.6;
     }
     #mnemonic-words {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 7px;
-      margin-bottom: 16px;
+      display: flex; flex-wrap: wrap; gap: 6px;
+      margin-bottom: 12px;
     }
-    .mnemonic-word {
-      background: rgba(0,229,255,0.07);
-      border: 1px solid rgba(0,229,255,0.18);
-      border-radius: 6px;
-      padding: 6px 8px;
-      font-size: 13px;
-      font-family: monospace;
-      color: var(--text);
-    }
-    .mnemonic-word .wn {
-      color: var(--text-dim);
-      font-size: 10px;
-      margin-right: 4px;
-    }
-    #mnemonic-author {
-      font-size: 11px;
-      color: var(--text-dim);
-      margin-bottom: 16px;
-      font-family: monospace;
-    }
-    #mnemonic-actions {
-      display: flex;
-      gap: 10px;
-    }
-    #btn-mnemonic-copy {
-      flex: 1;
-      padding: 9px;
-      background: transparent;
-      border: 1px solid var(--cyan-dim);
-      border-radius: 7px;
-      color: var(--cyan);
-      font-size: 13px;
-      cursor: pointer;
-      font-family: monospace;
-    }
-    #btn-mnemonic-close {
-      flex: 2;
-      padding: 9px;
-      background: var(--cyan);
-      border: none;
-      border-radius: 7px;
-      color: #0a0a0a;
-      font-size: 13px;
-      font-weight: bold;
-      cursor: pointer;
-      font-family: monospace;
-    }
-
-    /* ── Onboarding hint (first-visit) ────────────────────── */
-    #onboarding-hint {
-      position: absolute;
-      bottom: calc(84px + var(--safe-b));
-      right: 18px;
-      max-width: 240px;
-      padding: 10px 12px;
-      background: var(--surface);
-      border: 1px solid var(--cyan-dim);
-      border-radius: 8px;
-      color: var(--text);
-      font-size: 12px;
-      line-height: 1.4;
-      box-shadow: 0 4px 16px rgba(0,0,0,0.5);
-      z-index: 115;
-      display: none;
-      animation: hint-fade-in 0.3s ease;
-    }
-    #onboarding-hint.open { display: block; }
-    #onboarding-hint .hint-plus {
-      color: var(--cyan);
-      font-weight: 700;
-    }
-    #onboarding-hint .hint-arrow {
-      position: absolute;
-      bottom: -7px;
-      right: 22px;
-      width: 12px;
-      height: 12px;
-      background: var(--surface);
-      border-right: 1px solid var(--cyan-dim);
-      border-bottom: 1px solid var(--cyan-dim);
-      transform: rotate(45deg);
-    }
-    @keyframes hint-fade-in {
-      from { opacity: 0; transform: translateY(6px); }
-      to   { opacity: 1; transform: translateY(0); }
-    }
-
-    /* ── Map crosshair ────────────────────────────────────── */
-    #crosshair {
-      position: absolute;
-      top: 50%; left: 50%;
-      transform: translate(-50%, -50%);
-      pointer-events: none;
-      z-index: 50;
-      opacity: 0.6;
-    }
-    #crosshair::before, #crosshair::after {
-      content: '';
-      position: absolute;
-      background: var(--cyan);
-    }
-    #crosshair::before {
-      width: 1px; height: 20px;
-      left: 50%; top: 50%;
-      transform: translate(-50%, -50%);
-    }
-    #crosshair::after {
-      width: 20px; height: 1px;
-      left: 50%; top: 50%;
-      transform: translate(-50%, -50%);
-    }
-    #crosshair-readout {
-      position: absolute;
-      top: 14px;
-      left: 50%;
-      transform: translateX(-50%);
-      white-space: nowrap;
-      font: 10px/1 ui-monospace, Menlo, Monaco, monospace;
-      color: var(--cyan);
-      background: rgba(0, 0, 0, 0.55);
-      padding: 2px 6px;
-      border-radius: 3px;
-      opacity: 0.85;
-      pointer-events: none;
-      letter-spacing: 0.4px;
-    }
-    #crosshair-readout:empty {
-      display: none;
-    }
-
-    /* ── 3D toggle button ─────────────────────────────────── */
-    #toggle-3d {
-      position: absolute;
-      top: 52px;
-      right: 10px;
-      z-index: 10;
-      background: var(--surface);
-      color: var(--cyan);
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      min-width: 44px;
-      height: 44px;
-      padding: 0 12px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-family: inherit;
-      font-size: 13px;
-      cursor: pointer;
-      letter-spacing: 0.05em;
-    }
-    #toggle-3d:hover { background: var(--border); }
-
-    /* ── MapLibre control size overrides (44×44 touch targets) ── */
-    .maplibregl-ctrl-group button,
-    .maplibregl-ctrl button {
-      width: 44px !important;
-      height: 44px !important;
-    }
-    .maplibregl-ctrl-group {
-      border-radius: 6px !important;
-    }
-    /* ── Settings button ──────────────────────────────────── */
-    #btn-settings {
-      width: 44px;
-      height: 44px;
-      background: transparent;
-      color: var(--text-dim);
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      font-size: 18px;
-      line-height: 1;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      flex-shrink: 0;
-      transition: color 0.2s, background 0.2s;
-    }
-    #btn-settings:hover { color: var(--cyan); background: var(--surface2); }
-    #btn-settings:active { transform: scale(0.95); }
-
-    /* ── Settings menu popover ────────────────────────────── */
-    #settings-menu {
-      position: absolute;
-      top: calc(var(--bar-h) + 4px);
-      right: 10px;
-      z-index: 150;
-      pointer-events: auto;
-      min-width: 240px;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      box-shadow: 0 4px 16px rgba(0,0,0,0.6);
-      padding: 6px;
-      display: none;
-      font-size: 12px;
-    }
-    #settings-menu.open { display: block; }
-    .settings-info {
-      padding: 8px 10px;
-      color: var(--text-dim);
-      font-size: 11px;
-      line-height: 1.5;
-      border-bottom: 1px solid var(--border);
-    }
-    .settings-info .k { color: var(--text-dim); }
-    .settings-info .v { color: var(--text); }
-    .settings-info .dim { color: var(--text-dim); font-size: 10px; }
-    .settings-info .lag-warn {
-      color: #ffb300;
-      font-weight: bold;
-      font-size: 10px;
-    }
-    .settings-item {
-      display: block;
-      width: 100%;
-      text-align: left;
-      padding: 10px 12px;
-      background: none;
-      border: none;
-      border-radius: 4px;
-      color: var(--text);
-      font-family: inherit;
-      font-size: 12px;
-      cursor: pointer;
-      pointer-events: auto;
-    }
-    .settings-item:hover { background: var(--surface2); }
-    .settings-item.danger { color: #ff6666; }
-    .settings-item.danger:hover { background: #1a0808; }
-
-    /* ── MapLibre popup overrides ─────────────────────────── */
-    .punkto-popup .maplibregl-popup-content {
-      background: #141414;
-      border: 1px solid #2a2a2a;
-      border-radius: 6px;
-      padding: 10px 12px;
-      font-family: 'Fira Mono', monospace;
-      font-size: 12px;
-      color: #c0c0c0;
-      max-width: 280px;
-    }
-    .punkto-popup .maplibregl-popup-tip { border-top-color: #2a2a2a; }
-    .popup-text { color: #e0e0e0; margin-bottom: 4px; font-size: 13px; }
-    .popup-meta { color: #00ccdd; font-size: 11px; }
-    .popup-canon { color: #444; font-size: 10px; margin-top: 4px; word-break: break-all; }
-    .popup-coords { color: #555; font-size: 10px; }
-
-    /* -------- DOM atom bubbles (MapLibre markers) -------- */
-    .atom-bubble {
-      position: relative;
-      max-width: 240px;
-      opacity: 1;
-      transition: opacity 0.2s ease, border-color 0.2s ease, max-width 0.2s ease;
-      pointer-events: auto;
-      /* Bubble floats above the atom dot; the gap is created via the MapLibre
-         marker offset ([0,-16]) in app.js so an SVG leader line can be drawn
-         from the dot up to the bubble's bottom edge. */
-      cursor: pointer;
-      user-select: text;
-    }
-    /* Inner body carries the tint (MapLibre rewrites outer style on pan/zoom
-       so the --author-hue custom property would get clobbered there; setting
-       it on a MapLibre-untouched inner element is stable). */
-    .atom-bubble-body {
-      position: relative;
-      padding: 8px 10px;
-      background: hsl(var(--author-hue, 210), 18%, 11%);
-      color: #e0f4ff;
-      border-radius: 12px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.4);
-      border: 1px solid transparent;
-      border-left: 2px solid hsl(var(--author-hue, 210), 40%, 45%);
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      font-size: 13px;
-      line-height: 1.35;
-    }
-    .atom-bubble-text {
-      color: #e0f4ff;
-      font-size: 13px;
-      line-height: 1.35;
-      word-wrap: break-word;
-      overflow-wrap: break-word;
-    }
-    .atom-bubble-meta {
-      margin-top: 4px;
-      color: hsl(var(--author-hue, 210), 35%, 68%);
-      font-size: 11px;
-      display: flex;
-      gap: 4px;
-      align-items: center;
-    }
-    .atom-bubble-author { color: hsl(var(--author-hue, 210), 35%, 68%); }
-    .atom-bubble-dot    { color: hsl(var(--author-hue, 210), 35%, 68%); opacity: 0.7; }
-    .atom-bubble-time   { color: hsl(var(--author-hue, 210), 35%, 68%); opacity: 0.85; }
-    .atom-bubble a {
-      color: #4ad7ff;
-      text-decoration: none;
-    }
-    .atom-bubble a:hover { text-decoration: underline; }
-    .atom-bubble b { font-weight: 600; }
-    .atom-bubble i { font-style: italic; }
-    /* Speech-bubble tail removed — leader lines (SVG) now visually connect
-       each bubble to its atom dot, making the pairing explicit at any zoom. */
-    /* SVG overlay for leader lines: sits above the map canvas but below the
-       MapLibre marker DOM (markers are rendered in MapLibre's own container
-       with higher stacking). pointer-events:none so clicks pass through. */
-    #leader-lines {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      pointer-events: none;
-      z-index: 1;
-      overflow: visible;
-    }
-    /* Compact mode (zoom 12-15): tighter and clamped to 2 lines */
-    .atom-bubble--compact {
-      max-width: 160px;
-    }
-    .atom-bubble--compact .atom-bubble-text {
-      display: -webkit-box;
-      -webkit-line-clamp: 2;
-      -webkit-box-orient: vertical;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-    /* Deep-link / selected focus */
-    .atom-bubble--focus .atom-bubble-body {
-      border: 1px solid #ffb84a;
-      border-left: 2px solid #ffb84a;
-    }
-    .atom-bubble--focus {
-      max-width: 260px;
-    }
-    .atom-bubble--focus.atom-bubble--compact {
-      max-width: 180px;
-    }
-    /* Phase 2: count badge for multi-atom punktos (+N) */
-    .atom-bubble-count {
-      position: absolute;
-      top: -6px;
-      right: -6px;
-      padding: 2px 6px;
-      border-radius: 10px;
-      font-size: 10px;
-      font-weight: 600;
-      line-height: 1;
-      background: #ffb84a;
-      color: #1a1a1a;
-      box-shadow: 0 1px 2px rgba(0,0,0,0.3);
-      cursor: pointer;
-      user-select: none;
-      pointer-events: auto;
-    }
-    /* Iteration 1b: altitude badge inside the bubble body for atoms above ground */
-    .atom-bubble-alt {
-      position: absolute;
-      bottom: 4px;
-      right: 6px;
-      padding: 1px 6px;
-      border-radius: 8px;
-      font-size: 10px;
-      font-weight: 600;
-      line-height: 1.2;
-      background: rgba(0, 0, 0, 0.55);
-      color: #e8f4ff;
-      letter-spacing: 0.02em;
-      pointer-events: none;
-      user-select: none;
-    }
-    /* Phase 2: new-atom arrival pulse */
-    @keyframes atom-bubble-pop {
-      0%   { transform: scale(0.3); opacity: 0; }
-      60%  { transform: scale(1.08); opacity: 1; }
-      100% { transform: scale(1); opacity: 1; }
-    }
-    .atom-bubble--new {
-      animation: atom-bubble-pop 0.55s cubic-bezier(0.34, 1.56, 0.64, 1);
-    }
-
-    .settings-separator {
-      height: 1px;
-      background: var(--border);
-      margin: 8px 14px;
-    }
-    .settings-section-title {
-      padding: 8px 14px 4px;
-      font-size: 11px;
-      text-transform: uppercase;
-      letter-spacing: 0.1em;
-      color: var(--text-dim);
-    }
-    .warning {
-      color: #ff9800;
-      font-size: 10px;
-      margin-bottom: 6px;
-      line-height: 1.3;
-    }
-    #key-info {
-      margin-top: 8px;
-    }
-    #key-info button {
+    #mnemonic-words span {
       background: var(--surface2);
-      border: none;
-      color: var(--text);
-      padding: 6px 10px;
-      border-radius: 4px;
-      font-size: 11px;
-      cursor: pointer;
-      margin-right: 8px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 4px 10px;
+      font-family: monospace;
+      font-size: 12px;
+      color: var(--cyan);
     }
-    #key-info button:hover {
-      background: var(--border);
+    #mnemonic-author { font-size: 11px; color: var(--text-dim); margin-bottom: 16px; }
+    #mnemonic-actions { display: flex; gap: 10px; justify-content: flex-end; }
+    #mnemonic-actions button {
+      padding: 8px 16px; border-radius: 6px; font-size: 13px; cursor: pointer;
+      border: 1px solid var(--border);
     }
-    .key-mnemonic {
-      word-break: break-all;
+    #btn-mnemonic-copy { background: var(--surface2); color: var(--text-mid); }
+    #btn-mnemonic-close { background: var(--cyan); color: var(--bg); border-color: var(--cyan); font-weight: 600; }
+
+    /* Key info block */
+    #key-info .key-mnemonic {
+      font-family: monospace;
       font-size: 10px;
+      word-break: break-all;
       color: var(--text-dim);
-      max-width: 200px;
+      max-width: 100%;
     }
 
-    /* Accessibility: visible keyboard focus */
-    button:focus-visible,
-    input:focus-visible,
-    textarea:focus-visible {
+    /* Accessibility */
+    button:focus-visible, input:focus-visible, textarea:focus-visible {
       outline: 2px solid var(--cyan);
       outline-offset: 2px;
     }
-
-    /* Accessibility: respect reduced motion */
     @media (prefers-reduced-motion: reduce) {
-      *, *::before, *::after {
-        animation: none !important;
-        transition: none !important;
-        scroll-behavior: auto !important;
-      }
-    }
-
-    /* ============================================================
-       Two-page shell — Main / 3D
-       ============================================================ */
-
-    /* View switching */
-    body.page-text #map          { display: none !important; }
-    body.page-text #fab-panel    { display: none !important; }
-    body.page-text #fab-add      { display: none !important; }
-    body.page-text #panel        { display: none !important; }
-    body.page-text #toggle-3d    { display: none !important; }
-    body.page-text #onboarding-hint { display: none !important; }
-    body.page-map  #page-text     { display: none !important; }
-
-    /* Main view container */
-    #page-text {
-      position: fixed;
-      inset: 0;
-      top: 56px;
-      bottom: 56px;
-      background: var(--bg);
-      overflow-y: auto;
-      display: flex;
-      flex-direction: column;
-      z-index: 10;
-    }
-
-    /* Main header */
-    #main-header {
-      padding: 22px 18px 14px;
-      border-bottom: 1px solid rgba(255,255,255,0.07);
-      flex-shrink: 0;
-    }
-    #main-header h1 {
-      font-size: 1.5rem;
-      font-weight: 700;
-      color: var(--cyan);
-      margin: 0 0 3px;
-      font-family: system-ui, -apple-system, sans-serif;
-      letter-spacing: -0.02em;
-    }
-    #main-header .main-subtitle {
-      font-size: 0.84rem;
-      color: rgba(255,255,255,0.42);
-      margin: 0;
-      font-family: system-ui, -apple-system, sans-serif;
-    }
-    #main-header .main-atom-count {
-      display: inline-block;
-      font-size: 0.73rem;
-      color: rgba(255,255,255,0.28);
-      margin-top: 5px;
-      font-family: system-ui, -apple-system, sans-serif;
-    }
-
-    /* Feed section */
-    #main-feed {
-      flex: 1;
-      overflow-y: auto;
-      padding: 18px 14px 12px;
-      -webkit-overflow-scrolling: touch;
-    }
-    #main-feed-heading {
-      font-size: 0.68rem;
-      text-transform: uppercase;
-      letter-spacing: 0.12em;
-      color: rgba(255,255,255,0.3);
-      margin: 0 2px 14px;
-      font-family: system-ui, -apple-system, sans-serif;
-    }
-    #main-feed-list {
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-    }
-
-    /* Empty / location states */
-    .main-empty {
-      text-align: center;
-      padding: 52px 28px;
-    }
-    .main-empty h3 {
-      font-size: 1.05rem;
-      font-weight: 600;
-      color: rgba(255,255,255,0.62);
-      margin: 0 0 9px;
-      font-family: system-ui, -apple-system, sans-serif;
-    }
-    .main-empty p {
-      font-size: 0.87rem;
-      color: rgba(255,255,255,0.36);
-      margin: 0 0 22px;
-      line-height: 1.55;
-      font-family: system-ui, -apple-system, sans-serif;
-    }
-    .btn-cta {
-      background: var(--cyan);
-      color: #000;
-      border: none;
-      padding: 11px 28px;
-      border-radius: 24px;
-      font-size: 0.87rem;
-      font-weight: 600;
-      cursor: pointer;
-      font-family: system-ui, -apple-system, sans-serif;
-      transition: opacity 0.14s;
-      -webkit-tap-highlight-color: transparent;
-    }
-    .btn-cta:hover  { opacity: 0.85; }
-    .btn-cta:active { opacity: 0.7; }
-
-    /* Feed cards */
-    .main-card {
-      background: rgba(255,255,255,0.04);
-      border: 1px solid rgba(255,255,255,0.08);
-      border-radius: 14px;
-      padding: 15px 16px 13px;
-      display: flex;
-      flex-direction: column;
-      gap: 7px;
-      -webkit-tap-highlight-color: transparent;
-      transition: background 0.12s;
-    }
-    .main-card:active { background: rgba(255,255,255,0.07); }
-    .main-card-badges {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      flex-wrap: wrap;
-      min-height: 18px;
-    }
-    .main-card-cat {
-      font-size: 0.66rem;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-      color: var(--cyan);
-      background: rgba(0,255,255,0.08);
-      padding: 3px 9px;
-      border-radius: 12px;
-      font-family: system-ui, -apple-system, sans-serif;
-    }
-    .main-card-verified {
-      font-size: 0.66rem;
-      font-weight: 600;
-      color: #66bb6a;
-      background: rgba(102,187,106,0.1);
-      padding: 3px 9px;
-      border-radius: 12px;
-      font-family: system-ui, -apple-system, sans-serif;
-    }
-    .main-card-title {
-      font-size: 0.94rem;
-      font-weight: 600;
-      color: rgba(255,255,255,0.9);
-      margin: 0;
-      line-height: 1.35;
-      font-family: system-ui, -apple-system, sans-serif;
-    }
-    .main-card-preview {
-      font-size: 0.84rem;
-      color: rgba(255,255,255,0.48);
-      margin: 0;
-      line-height: 1.5;
-      font-family: system-ui, -apple-system, sans-serif;
-      display: -webkit-box;
-      -webkit-line-clamp: 2;
-      -webkit-box-orient: vertical;
-      overflow: hidden;
-    }
-    .main-card-meta {
-      display: flex;
-      gap: 10px;
-      flex-wrap: wrap;
-      font-size: 0.72rem;
-      color: rgba(255,255,255,0.3);
-      font-family: system-ui, -apple-system, sans-serif;
-      margin-top: 1px;
-    }
-    .main-card-actions {
-      display: flex;
-      justify-content: flex-end;
-      margin-top: 3px;
-    }
-    .main-card-show3d {
-      background: none;
-      border: 1px solid rgba(255,255,255,0.16);
-      color: rgba(255,255,255,0.55);
-      padding: 5px 15px;
-      border-radius: 18px;
-      font-size: 0.77rem;
-      font-family: system-ui, -apple-system, sans-serif;
-      cursor: pointer;
-      transition: all 0.14s;
-      -webkit-tap-highlight-color: transparent;
-    }
-    .main-card-show3d:hover,
-    .main-card-show3d:active {
-      background: rgba(0,255,255,0.07);
-      border-color: rgba(0,255,255,0.4);
-      color: var(--cyan);
-    }
-
-    /* Bottom navigation — Text(35%) | Map(35%) | +(15%) | ⚙(15%) */
-    #bottom-nav {
-      position: fixed;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      height: 56px;
-      background: rgba(10,10,10,0.97);
-      border-top: 1px solid rgba(255,255,255,0.08);
-      display: flex;
-      align-items: stretch;
-      z-index: 1000;
-      backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
-      padding-bottom: var(--safe-b);
-    }
-    .nav-btn {
-      background: none;
-      border: none;
-      color: rgba(255,255,255,0.38);
-      font-size: 0.9rem;
-      font-weight: 500;
-      height: 56px;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      letter-spacing: 0.06em;
-      text-transform: uppercase;
-      transition: color 0.15s, background 0.15s;
-      font-family: system-ui, -apple-system, sans-serif;
-      -webkit-tap-highlight-color: transparent;
-    }
-    .nav-view   { flex: 35 35 35%; }
-    .nav-add    { flex: 15 15 15%; font-size: 1.5rem; font-weight: 300; }
-    .nav-settings-btn { flex: 15 15 15%; font-size: 1.1rem; }
-    .nav-btn.active {
-      color: var(--cyan);
-      font-weight: 700;
-      background: rgba(0,255,255,0.06);
-    }
-    .nav-add:hover, .nav-settings-btn:hover { color: var(--cyan); }
-    .nav-add:active, .nav-settings-btn:active { transform: scale(0.91); }
-
-    /* Adjust 3D-view elements for bottom nav */
-    body.page-map #map         { bottom: 56px !important; }
-    body.page-map #panel       { bottom: 56px; }
-    body.page-map #fab-panel   { bottom: calc(56px + 72px); }
-    body.page-map #fab-add     { bottom: calc(56px + 16px); }
-    body.page-map #onboarding-hint { bottom: calc(56px + 24px); }
-
-    /* ============================================================
-       Four-page shell additions: Network + Me pages, 4-item nav
-       ============================================================ */
-
-    /* Hide all pages except the active one */
-    /* Hide Network/Me pages when not active */
-
-    /* Shared page container layout */
-
-    /* Page header (shared) */
-    .page-header {
-      padding: 22px 18px 14px;
-      border-bottom: 1px solid rgba(255,255,255,0.07);
-      flex-shrink: 0;
-    }
-    .page-header h1 {
-      font-size: 1.4rem;
-      font-weight: 700;
-      color: var(--cyan);
-      margin: 0 0 3px;
-      font-family: system-ui, -apple-system, sans-serif;
-      letter-spacing: -0.02em;
-    }
-    .page-subtitle {
-      font-size: 0.82rem;
-      color: rgba(255,255,255,0.4);
-      margin: 0;
-      font-family: system-ui, -apple-system, sans-serif;
-    }
-
-    /* Page scrollable content */
-    .page-content {
-      flex: 1;
-      overflow-y: auto;
-      padding: 18px 16px 12px;
-    }
-
-    /* Info sections */
-    .info-section {
-      margin-bottom: 28px;
-    }
-    .info-section-danger .section-heading {
-      color: rgba(255,80,80,0.8);
-    }
-    .section-heading {
-      font-size: 0.68rem;
-      text-transform: uppercase;
-      letter-spacing: 0.12em;
-      color: rgba(255,255,255,0.3);
-      margin: 0 0 10px;
-      font-family: system-ui, -apple-system, sans-serif;
-    }
-    .info-row {
-      display: flex;
-      align-items: flex-start;
-      gap: 12px;
-      padding: 9px 0;
-      border-bottom: 1px solid rgba(255,255,255,0.05);
-    }
-    .info-row:last-child { border-bottom: none; }
-    .info-label {
-      font-size: 0.82rem;
-      color: rgba(255,255,255,0.38);
-      font-family: system-ui, -apple-system, sans-serif;
-      flex-shrink: 0;
-      width: 96px;
-    }
-    .info-value {
-      font-size: 0.82rem;
-      color: rgba(255,255,255,0.8);
-      font-family: system-ui, -apple-system, sans-serif;
-      word-break: break-all;
-      flex: 1;
-    }
-    .info-value.mono {
-      font-family: monospace;
-      font-size: 0.75rem;
-      color: rgba(255,255,255,0.65);
-    }
-    .info-empty {
-      font-size: 0.84rem;
-      color: rgba(255,255,255,0.32);
-      font-family: system-ui, -apple-system, sans-serif;
-      padding: 12px 0;
-      line-height: 1.5;
-    }
-    .info-hint {
-      font-size: 0.8rem;
-      color: rgba(255,255,255,0.32);
-      font-family: system-ui, -apple-system, sans-serif;
-      margin: 0 0 12px;
-      line-height: 1.5;
-    }
-
-    /* Me page: action buttons */
-    .me-actions {
-      display: flex;
-      flex-direction: column;
-      gap: 2px;
-    }
-    .me-actions .settings-item {
-      border-radius: 10px;
-      margin: 0;
-    }
-
-    /* Danger button */
-    .btn-danger {
-      background: rgba(255,60,60,0.12);
-      color: rgba(255,100,100,0.9);
-      border: 1px solid rgba(255,60,60,0.25);
-      padding: 10px 18px;
-      border-radius: 10px;
-      font-size: 0.84rem;
-      font-family: system-ui, -apple-system, sans-serif;
-      cursor: pointer;
-      transition: background 0.14s;
-      -webkit-tap-highlight-color: transparent;
-    }
-    .btn-danger:hover  { background: rgba(255,60,60,0.2); }
-    .btn-danger:active { background: rgba(255,60,60,0.28); }
-
-    /* 4-item nav: tighter per item */
-    #bottom-nav .nav-btn {
-      font-size: 0.75rem;
-    }
-    #bottom-nav .nav-btn .nav-btn-icon {
-      font-size: 1rem;
-    }
-    #bottom-nav .nav-btn .nav-btn-label {
-      font-size: 0.62rem;
+      *, *::before, *::after { animation: none !important; transition: none !important; }
     }
   </style>
 </head>
-<body>
 
-  <!-- Top bar -->
+<body class="page-text">
+
+  <!-- ── Top bar ──────────────────────────────────────────── -->
   <header id="topbar" role="banner">
-    <div class="title-group">
-      <div class="title">Punkto</div>
-      <div class="tagline">What's around you</div>
-    </div>
+    <div class="brand">Punkto</div>
     <div id="atom-count"><span id="count-num">0</span> nearby</div>
     <div id="sync-indicator" title="sync status"></div>
-    <button id="btn-settings" title="Settings" aria-label="Settings">⚙</button>
   </header>
 
-  <!-- Settings panel — Network status + Identity/Keys + Reset -->
-  <div id="settings-menu" role="dialog" aria-label="Settings" aria-hidden="true">
+  <!-- ── Settings backdrop ────────────────────────────────── -->
+  <div id="settings-backdrop"></div>
 
+  <!-- ── Settings panel (slide-up) ────────────────────────── -->
+  <div id="settings-menu" role="dialog" aria-label="Settings">
+    <div class="settings-handle"></div>
+
+    <!-- Network -->
     <div class="settings-section-title">Network</div>
-    <div class="settings-info" id="settings-network-info">
-      <div><span class="k">Node</span> <span class="v mono" id="net-node">—</span></div>
-      <div><span class="k">Peers</span> <span class="v" id="net-peers">—</span></div>
-      <div><span class="k">Cached atoms</span> <span class="v" id="net-cached">0</span></div>
-      <div><span class="k">Sync</span> <span class="v" id="net-sync">—</span></div>
+    <div class="settings-info">
+      <div><span class="k">Node</span>         <span class="v mono" id="settings-node">—</span></div>
+      <div><span class="k">Peers</span>        <span class="v" id="settings-peers">—</span></div>
+      <div><span class="k">Cached atoms</span> <span class="v" id="settings-count">0</span></div>
+      <div><span class="k">Sync</span>         <span class="v" id="net-sync">—</span></div>
     </div>
 
     <div class="settings-separator"></div>
+
+    <!-- Identity -->
     <div class="settings-section-title">Identity</div>
     <div class="settings-info" id="settings-identity-info">
       <div id="me-identity-loaded" style="display:none;">
-        <div><span class="k">Author ID</span> <span class="v mono" id="me-author-id">—</span></div>
-        <div><span class="k">Public key</span> <span class="v mono" id="me-pubkey">—</span></div>
+        <span class="k">Author ID</span> <span class="v mono" id="me-author-id">—</span>
+      </div>
+      <div id="me-identity-loaded-pubkey" style="display:none;">
+        <span class="k">Public key</span> <span class="v mono" id="me-pubkey">—</span>
       </div>
       <div id="me-identity-empty" class="dim">No key loaded.</div>
     </div>
-    <button class="settings-item" id="btn-generate-key" type="button">Generate New Key</button>
-    <button class="settings-item" id="btn-import-key" type="button">Import Key from JSON</button>
-    <button class="settings-item" id="btn-save-key-local" type="button">Save to LocalStorage</button>
-    <button class="settings-item" id="btn-load-key-local" type="button">Load from LocalStorage</button>
-    <!-- Hidden key-info for key-management.js compatibility -->
+
+    <!-- Key info (shown after generate/import) -->
     <div id="key-info" class="settings-info" style="display:none;">
-      <div><span class="k">Author ID:</span> <span class="v" id="key-author-id">—</span></div>
-      <div><span class="k">Pubkey:</span>    <span class="v" id="key-pubkey">—</span></div>
-      <div><span class="k">Mnemonic:</span>  <span class="v key-mnemonic" id="key-mnemonic">—</span></div>
-      <div style="margin-top:8px;">
-        <button id="btn-print-mnemonic">Print Mnemonic</button>
-        <button id="btn-export-key">Export Key JSON</button>
+      <div><span class="k">Author ID</span> <span class="v mono" id="key-author-id">—</span></div>
+      <div><span class="k">Pubkey</span>    <span class="v mono" id="key-pubkey">—</span></div>
+      <div><span class="k">Mnemonic</span>  <span class="v key-mnemonic" id="key-mnemonic">—</span></div>
+      <div style="margin-top:6px;display:flex;gap:8px;flex-wrap:wrap">
+        <button id="btn-print-mnemonic" class="btn btn-secondary" style="font-size:11px">Print Mnemonic</button>
+        <button id="btn-export-key" class="btn btn-secondary" style="font-size:11px">Export JSON</button>
       </div>
     </div>
 
+    <!-- Key management actions -->
+    <div class="settings-key-actions">
+      <button id="btn-generate-key">Generate new key</button>
+      <button id="btn-import-key">Import key</button>
+      <button id="btn-save-key">Save key</button>
+      <button id="btn-load-key">Load key</button>
+    </div>
+
     <div class="settings-separator"></div>
+
+    <!-- App -->
     <div class="settings-section-title">App</div>
     <div class="settings-info">
-      <div><span class="k">Version</span> <span class="v">v0.4</span></div>
+      <div><span class="k">Version</span> <span class="v">v0.5</span></div>
     </div>
     <button class="settings-item danger" id="settings-reset" role="menuitem">Reset local cache…</button>
-
   </div>
 
-  <!-- 3D toggle -->
-  <button id="toggle-3d" title="Switch to 3D view" aria-label="Switch map between 2D and 3D">2D</button>
-
-
-
-  <!-- Map container -->
-
-  <!-- ============================================================
-       Main View — Text / Feed page (default landing)
-       ============================================================ -->
-  <div id="page-text">
-    <div id="main-header">
-      <h1>Punkto</h1>
-      <p class="main-subtitle">What&#39;s around you</p>
-      <span class="main-atom-count" id="main-atom-count"></span>
-    </div>
+  <!-- ── Text / Feed page ─────────────────────────────────── -->
+  <div id="page-text" role="main" aria-label="Text feed">
     <div id="main-feed">
       <p id="main-feed-heading">Text view</p>
+      <span id="main-atom-count"></span>
       <div id="main-feed-list"></div>
+
       <!-- Empty: no atoms yet -->
       <div id="main-empty-notes" class="main-empty" style="display:none;">
         <h3>No text here yet</h3>
         <p>Be the first to leave something at this place.</p>
         <button class="btn-cta" id="main-empty-leave-btn">Leave note here</button>
       </div>
+
       <!-- Empty: location not available -->
       <div id="main-empty-location" class="main-empty" style="display:none;">
         <h3>Location needed</h3>
-        <p>Punkto uses your location to show notes around you.</p>
+        <p>Punkto uses your location to show nearby text.</p>
         <button class="btn-cta" id="main-location-btn">Enable location</button>
       </div>
     </div>
   </div>
 
+  <!-- ── Map container ────────────────────────────────────── -->
   <main id="map" role="main" aria-label="Punkto map">
     <div id="crosshair"><span id="crosshair-readout"></span></div>
   </main>
 
-  <!-- Floating buttons -->
+  <!-- Map overlay controls (hidden on text page by CSS) -->
+  <button id="toggle-3d" title="Switch to 3D view" aria-label="Switch map between 2D and 3D">2D</button>
   <button id="fab-panel" title="Nearby text" aria-label="Show nearby text">☰</button>
-  <button id="fab-add" title="Leave note here" aria-label="Leave note here">+</button>
 
-  <!-- First-visit onboarding hint (hidden by default; shown by app.js when appropriate) -->
+  <!-- fab-add: kept for app.js compatibility, always hidden -->
+  <button id="fab-add" aria-hidden="true" tabindex="-1"></button>
+
+  <!-- ── Onboarding hint ──────────────────────────────────── -->
   <div id="onboarding-hint" aria-hidden="true">
     <div class="hint-text">Tap <span class="hint-plus">+</span> to drop an atom at the map center</div>
-    <div class="hint-arrow"></div>
   </div>
 
-  <!-- Bottom panel -->
-  <div id="panel">
+  <!-- ── Nearby panel ─────────────────────────────────────── -->
+  <div id="panel" role="complementary" aria-label="Nearby atoms">
     <div id="panel-header">
       <div class="label">Nearby text</div>
-      <button id="panel-close" aria-label="Close recent atoms panel">✕</button>
+      <button id="panel-close" aria-label="Close nearby panel">✕</button>
     </div>
     <div id="atom-list">
       <div id="atom-list-empty">No atoms yet.</div>
     </div>
   </div>
 
-  <!-- Add atom modal -->
+  <!-- ── Add atom modal ───────────────────────────────────── -->
   <div id="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="modal-title">
     <div id="modal">
       <h2 id="modal-title">Place punkti</h2>
@@ -1484,7 +896,7 @@
           </div>
           <div id="modal-floor-stepper">
             <span>Floor</span>
-            <button class="btn btn-secondary" id="modal-floor-minus" type="button">-</button>
+            <button class="btn btn-secondary" id="modal-floor-minus" type="button">−</button>
             <input id="modal-floor-value" type="number" step="1" value="0" />
             <button class="btn btn-secondary" id="modal-floor-plus" type="button">+</button>
           </div>
@@ -1506,31 +918,18 @@
     </div>
   </div>
 
-  <!-- App (ES module) -->
-  <script src="/key-management.js"></script>
-<script type="module" src="/app.js"></script>
+  <!-- ── App module ───────────────────────────────────────── -->
+  <script type="module" src="/app.js"></script>
 
-  <!-- Service worker registration -->
-  <script>
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/sw.js')
-          .then(r => console.log('[SW] registered', r.scope))
-          .catch(e => console.warn('[SW] registration failed', e));
-      });
-    }
-  </script>
-
-
-  <!-- Bottom navigation — Text / Map toggle + Add + Settings -->
+  <!-- ── Bottom navigation ────────────────────────────────── -->
   <nav id="bottom-nav" role="navigation" aria-label="Main navigation">
-    <button class="nav-btn nav-view" id="nav-text" aria-label="Text feed">Text</button>
+    <button class="nav-btn nav-view active" id="nav-text" aria-label="Text feed">Text</button>
     <button class="nav-btn nav-view" id="nav-map" aria-label="Map view">Map</button>
-    <button class="nav-btn nav-add" id="nav-add" aria-label="Add atom here">+</button>
+    <button class="nav-btn nav-add" id="nav-add" aria-label="Add atom here"></button>
     <button class="nav-btn nav-settings-btn" id="nav-settings" aria-label="Settings">⚙</button>
   </nav>
 
-  <!-- Mnemonic modal (Generate New Key) -->
+  <!-- ── Mnemonic modal ───────────────────────────────────── -->
   <div id="mnemonic-overlay">
     <div id="mnemonic-box">
       <h2>⚠ New Key Generated</h2>
@@ -1543,6 +942,14 @@
       </div>
     </div>
   </div>
+
+  <!-- Settings backdrop close handler -->
+  <script>
+    document.getElementById('settings-backdrop').addEventListener('click', () => {
+      document.getElementById('settings-menu').classList.remove('open');
+      document.getElementById('settings-backdrop').classList.remove('open');
+    });
+  </script>
 
 </body>
 </html>

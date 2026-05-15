@@ -1977,6 +1977,8 @@ async function openSettingsMenu() {
   settingsOpen = true;
   elSettingsMenu.classList.add('open');
   elSettingsMenu.setAttribute('aria-hidden', 'false');
+  const bd = document.getElementById('settings-backdrop');
+  if (bd) bd.classList.add('open');
   // Update visible atom count immediately from the DB-backed UI state
   try {
     const all = await db.atoms.toArray();
@@ -1992,6 +1994,8 @@ function closeSettingsMenu() {
   settingsOpen = false;
   elSettingsMenu.classList.remove('open');
   elSettingsMenu.setAttribute('aria-hidden', 'true');
+  const bd = document.getElementById('settings-backdrop');
+  if (bd) bd.classList.remove('open');
 }
 
 function toggleSettingsMenu() {
@@ -2156,8 +2160,8 @@ function wireEvents() {
 // ---------------------------------------------------------------------------
 
 async function boot() {
-  console.log('PUNKTO APP.JS LOADED v48 HARD MARKER 2026-05-15-7');
-  window.PUNKTO_APP_VERSION = 'v48-hard-marker-2026-05-15-7';
+  console.log('PUNKTO APP.JS LOADED v49 HARD MARKER 2026-05-15-8');
+  window.PUNKTO_APP_VERSION = 'v49-hard-marker-2026-05-15-8';
 
   // Global click capture — diagnostic: logs every click to console
   document.addEventListener('click', (ev) => {
