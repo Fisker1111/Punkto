@@ -12,3 +12,6 @@ build/
 .a0proj/
 *.promptinclude.md
 documents/
+# Node-specific secrets — never commit
+deploy/server1/.env
+deploy/app2/.env

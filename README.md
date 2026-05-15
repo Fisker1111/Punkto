@@ -59,21 +59,30 @@ With identity (full):
 ```
 Punkto/
 ├── pwa/                  ← Reference PWA (vanilla JS, MapLibre, deck.gl)
-│   ├── index.html        ← App shell
-│   ├── app.js            ← Map, sync, atom rendering
+│   ├── Dockerfile        ← Docker image: Caddy serving static files
+│   ├── index.html        ← App shell (four-page UI: Atoms, Space, Network, Me)
+│   ├── app.js            ← App logic, sync, atom rendering, page routing
 │   ├── sw.js             ← Service worker (offline-first)
 │   ├── manifest.json     ← PWA manifest
+│   ├── key-management.js ← Ed25519 identity, BIP39 mnemonic
 │   ├── geohash3d.js      ← 3D geohash encoder/decoder
 │   ├── privacy.html      ← Privacy page
-│   └── reset.html        ← Local-data reset page
+│   └── reset.html        ← Local-data reset / cache bust page
 │
-├── relay/                ← Reference relay node (Python stdlib + requests)
+├── relay/                ← Reference relay node (Python + requests)
+│   ├── Dockerfile        ← Docker image: Python relay service
 │   ├── relay.py          ← Single-file relay server
 │   ├── README.md         ← Operator guide
 │   ├── requirements.txt  ← Just `requests`
 │   ├── test_relay.py     ← Smoke tests
-│   ├── .env.example      ← Configuration template
-│   └── systemd/          ← Production systemd unit
+│   └── .env.example      ← Configuration template
+│
+├── deploy/               ← Docker deployment configs
+│   ├── docker-compose.yml ← Service definitions (web + relay)
+│   ├── .env.example      ← Shared environment template
+│   ├── server1/          ← Caddyfile for primary server
+│   ├── app2/             ← Caddyfile + env for secondary server
+│   └── README.md         ← Deployment guide
 │
 ├── core/                 ← Pure-Python core library + CLI (stdlib only)
 │   ├── punkto.py         ← Address encode/decode
@@ -142,7 +151,7 @@ python3 -m http.server 8080
 
 By default the PWA talks to `https://www.punkto.xyz`. Edit `pwa/app.js` to point at your own relay.
 
-### Run a relay node
+### Run a relay node (local / development)
 
 ```bash
 git clone https://github.com/Fisker1111/Punkto.git
@@ -152,7 +161,32 @@ python3 relay.py
 # Listens on http://127.0.0.1:8000
 ```
 
-See [`relay/README.md`](relay/README.md) for configuration, deployment, and operator notes.
+See [`relay/README.md`](relay/README.md) for configuration and operator notes.
+
+### Deploy a production node (Docker)
+
+Each node runs two containers — Caddy (static PWA + TLS) and the Python relay.
+
+```bash
+# 1. Install Docker
+curl -fsSL https://get.docker.com | sh
+
+# 2. Set up the node
+mkdir -p ~/punkto
+# Copy deploy/docker-compose.yml and the matching Caddyfile to ~/punkto/
+# Create ~/punkto/.env from deploy/.env.example
+
+# 3. Start
+cd ~/punkto && docker compose up -d
+
+# 4. Verify
+curl https://your-domain.example.com/health
+```
+
+Upgrade: `docker compose pull && docker compose up -d`  
+Rollback: edit `.env` → `PUNKTO_VERSION=v0.44` → `docker compose up -d`
+
+See [`deploy/README.md`](deploy/README.md) for the full deployment guide.
 
 ### Mint a Punkto identity
 
@@ -200,7 +234,7 @@ Relays are a public commons. Clients are user-owned. Archives are optional and m
 
 Early public release — **v0.4**, dogfood stage.
 
-- **Live nodes**: two synced reference relays (`app1.punkto.xyz`, `app2.punkto.xyz`) — both on Let's Encrypt, auto-renewing, served via nginx + systemd-managed `punkto-relay.service`
+- **Live nodes**: two synced reference relays (`app1.punkto.xyz`, `app2.punkto.xyz`) — both running Docker (Caddy + Python relay), auto-HTTPS via Let's Encrypt, deployed via `docker compose`
 - **Atoms**: 20+ on the live feed, mostly seed/test content
 - **PWA**: at v27 — 3D altitude input, building-aware floor picker, lollipop leader lines, Open Graph deep links
 - **Relay**: v0.1 — rolling buffer (10 000 atoms or 7 days), `/latest`, peer sync, `/p/<id>` server-rendered cards
