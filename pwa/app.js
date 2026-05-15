@@ -138,19 +138,28 @@ let deepLinkPunkto = null; // captured at boot, consumed after first refreshUI
 // ============================================================
 // Two-page view shell — Main / 3D
 // ============================================================
-let currentView = 'main'; // 'main' | '3d'
+let currentPage = 'atoms'; // 'atoms' | 'space' | 'network' | 'me'
 let _mainFeedAtoms  = [];       // last sorted atom batch for main feed
 let _locationDenied = false;    // true when geolocation denied/unavailable
 
-function showView(view) {
-  currentView = view;
-  document.body.classList.remove('view-main', 'view-3d');
-  document.body.classList.add(view === '3d' ? 'view-3d' : 'view-main');
-  const btnMain = document.getElementById('nav-main');
-  const btn3D   = document.getElementById('nav-3d');
-  if (btnMain) btnMain.classList.toggle('active', view === 'main');
-  if (btn3D)   btn3D.classList.toggle('active',   view === '3d');
-  if (view === 'main') renderMainFeed();
+// ── App shell: four top-level pages ──────────────────────────────────────────
+// Pages: 'atoms' | 'space' | 'network' | 'me'
+// Each page maps to a body class (page-atoms, etc.) and a nav button (nav-atoms, etc.).
+function showPage(page) {
+  currentPage = page;
+  document.body.classList.remove('page-atoms', 'page-space', 'page-network', 'page-me');
+  document.body.classList.add('page-' + page);
+
+  // Sync nav active states
+  ['atoms', 'space', 'network', 'me'].forEach(p => {
+    const btn = document.getElementById('nav-' + p);
+    if (btn) btn.classList.toggle('active', p === page);
+  });
+
+  // Page-specific on-show hooks
+  if (page === 'atoms')   renderMainFeed();
+  if (page === 'network') renderNetworkPage();
+  if (page === 'me')      renderMePage();
 }
 
 function renderMainFeed() {
@@ -278,6 +287,62 @@ function setSyncStatus(state) {
   elSyncDot.className = '';
   if (state) elSyncDot.classList.add(state);
 }
+// ── Network page renderer ─────────────────────────────────────────────────────
+// Shows live node/peer/sync data. Called by showPage('network').
+function renderNetworkPage() {
+  // Reuse data already fetched by refreshSettingsNetworkInfo()
+  const srcNode   = document.getElementById('settings-node');
+  const srcPeers  = document.getElementById('settings-peers');
+  const srcCached = document.getElementById('settings-count');
+
+  const setVal = (id, val) => {
+    const el = document.getElementById(id);
+    if (el && val !== null) el.textContent = val;
+  };
+
+  setVal('net-node',   srcNode   ? srcNode.textContent   : '—');
+  setVal('net-peers',  srcPeers  ? srcPeers.textContent  : '—');
+  setVal('net-cached', srcCached ? srcCached.textContent : '0');
+
+  // Sync status: derive from isSyncing flag if available
+  const syncEl = document.getElementById('net-sync');
+  if (syncEl) {
+    syncEl.textContent = (typeof isSyncing !== 'undefined' && isSyncing) ? 'Syncing…' : 'Idle';
+  }
+
+  // Trigger a fresh network info pull in background
+  if (typeof refreshSettingsNetworkInfo === 'function') {
+    refreshSettingsNetworkInfo().catch(() => {});
+  }
+}
+
+// ── Me page renderer ──────────────────────────────────────────────────────────
+// Shows identity/key state. Called by showPage('me').
+function renderMePage() {
+  // Pull key data from the hidden #key-info block (populated by key-management.js)
+  const authorId  = document.getElementById('key-author-id');
+  const pubkey    = document.getElementById('key-pubkey');
+  const mnemonic  = document.getElementById('key-mnemonic');
+
+  const hasKey = authorId && authorId.textContent && authorId.textContent !== '—';
+
+  const loadedEl = document.getElementById('me-identity-loaded');
+  const emptyEl  = document.getElementById('me-identity-empty');
+  if (loadedEl) loadedEl.style.display = hasKey ? '' : 'none';
+  if (emptyEl)  emptyEl.style.display  = hasKey ? 'none' : '';
+
+  if (hasKey) {
+    const setVal = (id, src) => {
+      const el = document.getElementById(id);
+      if (el && src) el.textContent = src.textContent || '—';
+    };
+    setVal('me-author-id', authorId);
+    setVal('me-pubkey',    pubkey);
+    setVal('me-mnemonic',  mnemonic);
+  }
+}
+
+
 
 function fmtTime(ms) {
   const t = Number(ms);
@@ -381,7 +446,7 @@ function parseDeepLinkPunktoId() {
  */
 async function focusPunkto(id) {
   // Switch to 3D page so the map is visible
-  showView('3d');
+  showPage('space');
   if (!id) return;
   const punkto = `p:${id}`;
   const loc = decodeAtomLocation(punkto);
@@ -1105,7 +1170,7 @@ async function refreshUI(newAtomIds = null) {
   const recent = enriched.slice(0, 50);
   // Expose to main-view feed
   _mainFeedAtoms = recent;
-  if (currentView === 'main') renderMainFeed();
+  if (currentPage === 'atoms') renderMainFeed();
 
   if (recent.length === 0) {
     // Only show the empty placeholder AFTER the first sync has completed.
@@ -2042,7 +2107,7 @@ function wireEvents() {
       _locationDenied = perm.state === 'denied';
       perm.onchange = () => {
         _locationDenied = perm.state === 'denied';
-        if (currentView === 'main') renderMainFeed();
+        if (currentPage === 'atoms') renderMainFeed();
       };
     }).catch(() => {});
   } else if (!navigator.geolocation) {
@@ -2061,11 +2126,20 @@ function wireEvents() {
   });
 
   // Bottom navigation
-  const elNavMain = document.getElementById('nav-main');
-  const elNavAdd  = document.getElementById('nav-add');
-  const elNav3D   = document.getElementById('nav-3d');
-  if (elNavMain) elNavMain.addEventListener('click', () => showView('main'));
-  if (elNav3D)   elNav3D.addEventListener('click',   () => showView('3d'));
+  // Four-page bottom nav wiring
+  ['atoms', 'space', 'network', 'me'].forEach(p => {
+    const btn = document.getElementById('nav-' + p);
+    if (btn) btn.addEventListener('click', () => showPage(p));
+  });
+
+  // Me page: reset button mirrors the settings reset
+  const elMeReset = document.getElementById('me-reset-btn');
+  if (elMeReset) {
+    elMeReset.addEventListener('click', () => {
+      const el = document.getElementById('settings-reset');
+      if (el) el.click();
+    });
+  }
   if (elNavAdd)  elNavAdd.addEventListener('click',  () => {
     dismissOnboarding();
     openModal();
@@ -2095,8 +2169,8 @@ function wireEvents() {
 // ---------------------------------------------------------------------------
 
 async function boot() {
-  console.log('PUNKTO APP.JS LOADED v44 HARD MARKER 2026-05-14-4');
-  window.PUNKTO_APP_VERSION = 'v44-hard-marker-2026-05-14-4';
+  console.log('PUNKTO APP.JS LOADED v45 HARD MARKER 2026-05-15-1');
+  window.PUNKTO_APP_VERSION = 'v45-hard-marker-2026-05-15-1';
 
   // Global click capture — diagnostic: logs every click to console
   document.addEventListener('click', (ev) => {
@@ -2151,7 +2225,7 @@ async function boot() {
 
   wireEvents();
   // Default to main view; go straight to 3D if deep-linking to a specific punkto
-  showView(deepLinkPunkto ? '3d' : 'main');
+  showPage(deepLinkPunkto ? 'space' : 'atoms');
   initMap();
   if (deepLinkPunkto) setPanelOpen(false); // panel managed by 3D view when deep-linking
 }

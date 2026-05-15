@@ -965,16 +965,16 @@
        ============================================================ */
 
     /* View switching */
-    body.view-main #map          { display: none !important; }
-    body.view-main #fab-panel    { display: none !important; }
-    body.view-main #fab-add      { display: none !important; }
-    body.view-main #panel        { display: none !important; }
-    body.view-main #toggle-3d    { display: none !important; }
-    body.view-main #onboarding-hint { display: none !important; }
-    body.view-3d  #main-view     { display: none !important; }
+    body.page-atoms #map          { display: none !important; }
+    body.page-atoms #fab-panel    { display: none !important; }
+    body.page-atoms #fab-add      { display: none !important; }
+    body.page-atoms #panel        { display: none !important; }
+    body.page-atoms #toggle-3d    { display: none !important; }
+    body.page-atoms #onboarding-hint { display: none !important; }
+    body.page-space  #page-atoms     { display: none !important; }
 
     /* Main view container */
-    #main-view {
+    #page-atoms {
       position: fixed;
       inset: 0;
       top: 56px;
@@ -1237,11 +1237,176 @@
     .nav-btn-add:active  { transform: scale(0.91); }
 
     /* Adjust 3D-view elements for bottom nav */
-    body.view-3d #map         { bottom: 56px !important; }
-    body.view-3d #panel       { bottom: 56px; }
-    body.view-3d #fab-panel   { bottom: calc(56px + 72px); }
-    body.view-3d #fab-add     { bottom: calc(56px + 16px); }
-    body.view-3d #onboarding-hint { bottom: calc(56px + 24px); }
+    body.page-space #map         { bottom: 56px !important; }
+    body.page-space #panel       { bottom: 56px; }
+    body.page-space #fab-panel   { bottom: calc(56px + 72px); }
+    body.page-space #fab-add     { bottom: calc(56px + 16px); }
+    body.page-space #onboarding-hint { bottom: calc(56px + 24px); }
+
+    /* ============================================================
+       Four-page shell additions: Network + Me pages, 4-item nav
+       ============================================================ */
+
+    /* Hide all pages except the active one */
+    body.page-network #page-atoms  { display: none !important; }
+    body.page-network #page-space  { display: none !important; /* map */ }
+    body.page-network #fab-panel   { display: none !important; }
+    body.page-network #fab-add     { display: none !important; }
+    body.page-network #panel       { display: none !important; }
+    body.page-network #toggle-3d   { display: none !important; }
+    body.page-network #onboarding-hint { display: none !important; }
+    body.page-me #page-atoms       { display: none !important; }
+    body.page-me #page-space       { display: none !important; /* map */ }
+    body.page-me #fab-panel        { display: none !important; }
+    body.page-me #fab-add          { display: none !important; }
+    body.page-me #panel            { display: none !important; }
+    body.page-me #toggle-3d        { display: none !important; }
+    body.page-me #onboarding-hint  { display: none !important; }
+    /* Hide Network/Me pages when not active */
+    body.page-atoms  #page-network { display: none !important; }
+    body.page-atoms  #page-me      { display: none !important; }
+    body.page-space  #page-network { display: none !important; }
+    body.page-space  #page-me      { display: none !important; }
+    body.page-network #page-me     { display: none !important; }
+    body.page-me #page-network     { display: none !important; }
+
+    /* Shared page container layout */
+    #page-network,
+    #page-me {
+      position: fixed;
+      inset: 0;
+      top: 56px;
+      bottom: 56px;
+      background: var(--bg);
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      z-index: 10;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    /* Page header (shared) */
+    .page-header {
+      padding: 22px 18px 14px;
+      border-bottom: 1px solid rgba(255,255,255,0.07);
+      flex-shrink: 0;
+    }
+    .page-header h1 {
+      font-size: 1.4rem;
+      font-weight: 700;
+      color: var(--cyan);
+      margin: 0 0 3px;
+      font-family: system-ui, -apple-system, sans-serif;
+      letter-spacing: -0.02em;
+    }
+    .page-subtitle {
+      font-size: 0.82rem;
+      color: rgba(255,255,255,0.4);
+      margin: 0;
+      font-family: system-ui, -apple-system, sans-serif;
+    }
+
+    /* Page scrollable content */
+    .page-content {
+      flex: 1;
+      overflow-y: auto;
+      padding: 18px 16px 12px;
+    }
+
+    /* Info sections */
+    .info-section {
+      margin-bottom: 28px;
+    }
+    .info-section-danger .section-heading {
+      color: rgba(255,80,80,0.8);
+    }
+    .section-heading {
+      font-size: 0.68rem;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: rgba(255,255,255,0.3);
+      margin: 0 0 10px;
+      font-family: system-ui, -apple-system, sans-serif;
+    }
+    .info-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 9px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+    }
+    .info-row:last-child { border-bottom: none; }
+    .info-label {
+      font-size: 0.82rem;
+      color: rgba(255,255,255,0.38);
+      font-family: system-ui, -apple-system, sans-serif;
+      flex-shrink: 0;
+      width: 96px;
+    }
+    .info-value {
+      font-size: 0.82rem;
+      color: rgba(255,255,255,0.8);
+      font-family: system-ui, -apple-system, sans-serif;
+      word-break: break-all;
+      flex: 1;
+    }
+    .info-value.mono {
+      font-family: monospace;
+      font-size: 0.75rem;
+      color: rgba(255,255,255,0.65);
+    }
+    .info-empty {
+      font-size: 0.84rem;
+      color: rgba(255,255,255,0.32);
+      font-family: system-ui, -apple-system, sans-serif;
+      padding: 12px 0;
+      line-height: 1.5;
+    }
+    .info-hint {
+      font-size: 0.8rem;
+      color: rgba(255,255,255,0.32);
+      font-family: system-ui, -apple-system, sans-serif;
+      margin: 0 0 12px;
+      line-height: 1.5;
+    }
+
+    /* Me page: action buttons */
+    .me-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    .me-actions .settings-item {
+      border-radius: 10px;
+      margin: 0;
+    }
+
+    /* Danger button */
+    .btn-danger {
+      background: rgba(255,60,60,0.12);
+      color: rgba(255,100,100,0.9);
+      border: 1px solid rgba(255,60,60,0.25);
+      padding: 10px 18px;
+      border-radius: 10px;
+      font-size: 0.84rem;
+      font-family: system-ui, -apple-system, sans-serif;
+      cursor: pointer;
+      transition: background 0.14s;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .btn-danger:hover  { background: rgba(255,60,60,0.2); }
+    .btn-danger:active { background: rgba(255,60,60,0.28); }
+
+    /* 4-item nav: tighter per item */
+    #bottom-nav .nav-btn {
+      font-size: 0.75rem;
+    }
+    #bottom-nav .nav-btn .nav-btn-icon {
+      font-size: 1rem;
+    }
+    #bottom-nav .nav-btn .nav-btn-label {
+      font-size: 0.62rem;
+    }
   </style>
 </head>
 <body>
@@ -1257,43 +1422,127 @@
     <button id="btn-settings" title="Settings" aria-label="Settings">⚙</button>
   </header>
 
-  <!-- Settings popover menu -->
+  <!-- Settings popover — minimal, cache reset only.
+       Key management → Me page | Network status → Network page -->
   <div id="settings-menu" role="menu" aria-hidden="true">
     <div class="settings-info">
-      <div><span class="k">node:</span>    <span class="v" id="settings-node">—</span></div>
-      <div><span class="k">peers:</span>   <span class="v" id="settings-peers">—</span></div>
-      <div><span class="k">cached:</span>  <span class="v" id="settings-count">0</span> atoms</div>
       <div><span class="k">version:</span> <span class="v">v0.4</span></div>
     </div>
-    
-      <div class="settings-separator"></div>
-      <div class="settings-section-title">Identity & Keys</div>
-      <button class="settings-item" id="btn-generate-key" type="button">Generate New Key</button>
-      <button class="settings-item" id="btn-import-key" type="button">Import Key from JSON</button>
-      <button class="settings-item" id="btn-save-key-local" type="button">Save to LocalStorage</button>
-      <button class="settings-item" id="btn-load-key-local" type="button">Load from LocalStorage</button>
-      <div id="key-info" class="settings-info" style="display:none;">
-        <div class="warning">⚠️ Write down or print your 12-word mnemonic immediately. Never store it digitally.</div>
-        <div><span class="k">Author ID:</span> <span class="v" id="key-author-id">—</span></div>
-        <div><span class="k">Pubkey:</span> <span class="v" id="key-pubkey">—</span></div>
-        <div><span class="k">Mnemonic:</span> <span class="v key-mnemonic" id="key-mnemonic">—</span></div>
-        <div style="margin-top:8px;">
-          <button id="btn-print-mnemonic">Print Mnemonic</button>
-          <button id="btn-export-key">Export Key JSON</button>
-        </div>
-      </div>
     <button class="settings-item danger" id="settings-reset" role="menuitem">Reset local cache…</button>
   </div>
 
   <!-- 3D toggle -->
   <button id="toggle-3d" title="Switch to 3D view" aria-label="Switch map between 2D and 3D">2D</button>
 
+
+  <!-- ============================================================
+       Network page — node, peers, sync status
+       ============================================================ -->
+  <div id="page-network">
+    <div class="page-header">
+      <h1>Network</h1>
+      <p class="page-subtitle">Nodes &amp; sync status</p>
+    </div>
+    <div class="page-content">
+
+      <section class="info-section">
+        <h2 class="section-heading">Node</h2>
+        <div class="info-row">
+          <span class="info-label">Address</span>
+          <span class="info-value mono" id="net-node">—</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Peers</span>
+          <span class="info-value" id="net-peers">—</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Cached atoms</span>
+          <span class="info-value" id="net-cached">0</span>
+        </div>
+      </section>
+
+      <section class="info-section">
+        <h2 class="section-heading">Sync</h2>
+        <div class="info-row">
+          <span class="info-label">Status</span>
+          <span class="info-value" id="net-sync">—</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Version</span>
+          <span class="info-value">v0.4</span>
+        </div>
+      </section>
+
+    </div>
+  </div>
+
+
+  <!-- ============================================================
+       Me page — identity, keys, crypto state
+       ============================================================ -->
+  <div id="page-me">
+    <div class="page-header">
+      <h1>Me</h1>
+      <p class="page-subtitle">Identity &amp; keys</p>
+    </div>
+    <div class="page-content">
+
+      <section class="info-section">
+        <h2 class="section-heading">Identity</h2>
+        <div id="me-identity-loaded" style="display:none;">
+          <div class="info-row">
+            <span class="info-label">Author ID</span>
+            <span class="info-value mono" id="me-author-id">—</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Public key</span>
+            <span class="info-value mono" id="me-pubkey">—</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Mnemonic</span>
+            <span class="info-value mono key-mnemonic" id="me-mnemonic">—</span>
+          </div>
+        </div>
+        <div id="me-identity-empty" class="info-empty">
+          No key loaded. Generate or import one below.
+        </div>
+      </section>
+
+      <section class="info-section">
+        <h2 class="section-heading">Keys</h2>
+        <div class="me-actions">
+          <button class="settings-item" id="btn-generate-key" type="button">Generate New Key</button>
+          <button class="settings-item" id="btn-import-key" type="button">Import Key from JSON</button>
+          <button class="settings-item" id="btn-save-key-local" type="button">Save to LocalStorage</button>
+          <button class="settings-item" id="btn-load-key-local" type="button">Load from LocalStorage</button>
+        </div>
+        <!-- Hidden key-info for existing key-management.js compatibility -->
+        <div id="key-info" class="settings-info" style="display:none;">
+          <div><span class="k">Author ID:</span> <span class="v" id="key-author-id">—</span></div>
+          <div><span class="k">Pubkey:</span>    <span class="v" id="key-pubkey">—</span></div>
+          <div><span class="k">Mnemonic:</span>  <span class="v key-mnemonic" id="key-mnemonic">—</span></div>
+          <div style="margin-top:8px;">
+            <button id="btn-print-mnemonic">Print Mnemonic</button>
+            <button id="btn-export-key">Export Key JSON</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="info-section info-section-danger">
+        <h2 class="section-heading">Data</h2>
+        <p class="info-hint">Clears locally cached atoms and resets the app. Your key is not deleted.</p>
+        <button class="btn btn-danger" id="me-reset-btn">Reset local cache…</button>
+      </section>
+
+    </div>
+  </div>
+
   <!-- Map container -->
 
   <!-- ============================================================
        Main View — Text / Feed page (default landing)
        ============================================================ -->
-  <div id="main-view">
+  <div id="page-atoms">
     <div id="main-header">
       <h1>Punkto</h1>
       <p class="main-subtitle">What&#39;s around you</p>
@@ -1402,18 +1651,23 @@
   </script>
 
 
-  <!-- Bottom navigation -->
+  <!-- Bottom navigation — four top-level pages -->
   <nav id="bottom-nav" role="navigation" aria-label="Main navigation">
-    <button class="nav-btn" id="nav-main" aria-label="Notes feed">
+    <button class="nav-btn" id="nav-atoms" aria-label="Atoms feed">
       <span class="nav-btn-icon">&#9776;</span>
-      <span class="nav-btn-label">Notes</span>
+      <span class="nav-btn-label">Atoms</span>
     </button>
-    <div class="nav-add-wrap">
-      <button class="nav-btn-add" id="nav-add" aria-label="Leave note here" title="Leave note here">+</button>
-    </div>
-    <button class="nav-btn" id="nav-3d" aria-label="3D map">
+    <button class="nav-btn" id="nav-space" aria-label="3D space map">
       <span class="nav-btn-icon">&#9711;</span>
-      <span class="nav-btn-label">Map</span>
+      <span class="nav-btn-label">Space</span>
+    </button>
+    <button class="nav-btn" id="nav-network" aria-label="Network status">
+      <span class="nav-btn-icon">&#8762;</span>
+      <span class="nav-btn-label">Network</span>
+    </button>
+    <button class="nav-btn" id="nav-me" aria-label="Identity and keys">
+      <span class="nav-btn-icon">&#9673;</span>
+      <span class="nav-btn-label">Me</span>
     </button>
   </nav>
 
