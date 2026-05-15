@@ -218,7 +218,7 @@ function renderMainFeed() {
 ' : '') +
       '  <div class="main-card-actions">
 ' +
-      '    <button class="main-card-show3d" data-action="show-in-3d" data-id="' + escHtml(atomId) + '">Show in 3D →</button>
+      '    <button class="main-card-show3d" data-action="show-in-3d" data-id="' + escHtml(atomId) + '">Show on map →</button>
 ' +
       '  </div>
 ' +
@@ -1177,7 +1177,7 @@ async function refreshUI(newAtomIds = null) {
     // During cold boot (cache empty + sync in progress) we keep it hidden so
     // users see a clean list instead of a flash of "No atoms yet".
     if (initialSyncDone) {
-      elAtomEmpty.innerHTML = '<strong>No notes here yet</strong><br/>Be the first to leave something at this place.<br/><button id="empty-leave-note" class="btn btn-secondary" style="margin-top:8px">Leave note here</button>';
+      elAtomEmpty.innerHTML = '<strong>No text here yet</strong><br/>Be the first to leave something at this place.<br/><button id="empty-leave-note" class="btn btn-secondary" style="margin-top:8px">Leave note here</button>';
       requestAnimationFrame(() => { const b = document.getElementById('empty-leave-note'); if (b) b.onclick = openModal; });
       elAtomEmpty.style.display = 'block';
     } else {
@@ -1210,7 +1210,7 @@ async function refreshUI(newAtomIds = null) {
           <div class="atom-text"><strong>${title}</strong></div>
           <div class="atom-text">${preview}</div>
           <div class="atom-meta">${meta}</div>
-          <div class="atom-actions"><button class="btn btn-secondary show-in-3d-btn" type="button">Show in 3D</button></div>
+          <div class="atom-actions"><button class="btn btn-secondary show-in-3d-btn" type="button">Show on map</button></div>
         </div>
       `;
       const showBtn = el.querySelector('.show-in-3d-btn');
@@ -2144,7 +2144,7 @@ function wireEvents() {
     dismissOnboarding();
     openModal();
   });
-  // "Show in 3D" clicks delegated on main-feed-list
+  // "Show on map" clicks delegated on main-feed-list
   const elMainFeedList = document.getElementById('main-feed-list');
   if (elMainFeedList) {
     elMainFeedList.addEventListener('click', e => {
@@ -2169,8 +2169,8 @@ function wireEvents() {
 // ---------------------------------------------------------------------------
 
 async function boot() {
-  console.log('PUNKTO APP.JS LOADED v45 HARD MARKER 2026-05-15-1');
-  window.PUNKTO_APP_VERSION = 'v45-hard-marker-2026-05-15-1';
+  console.log('PUNKTO APP.JS LOADED v46 HARD MARKER 2026-05-15-5');
+  window.PUNKTO_APP_VERSION = 'v46-hard-marker-2026-05-15-5';
 
   // Global click capture — diagnostic: logs every click to console
   document.addEventListener('click', (ev) => {
