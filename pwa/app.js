@@ -194,33 +194,21 @@ function renderMainFeed() {
     const meta     = [dist, altLabel, time].filter(Boolean).join(' · ');
     const atomId   = String(atom.punkto || '').replace(/^p:/, '');
 
-    return '<div class="main-card" data-atom-id="' + escHtml(atomId) + '">
-' +
-      '  <div class="main-card-badges">
-' +
-      (cat      ? '    <span class="main-card-cat">'      + escHtml(cat) + '</span>
-' : '') +
-      (verified ? '    <span class="main-card-verified">✓ Verified</span>
-' : '') +
-      '  </div>
-' +
-      '  <h3 class="main-card-title">' + title + '</h3>
-' +
+    return '<div class="main-card" data-atom-id="' + escHtml(atomId) + '">\n' +
+      '  <div class="main-card-badges">\n' +
+      (cat      ? '    <span class="main-card-cat">'      + escHtml(cat) + '</span>\n' : '') +
+      (verified ? '    <span class="main-card-verified">✓ Verified</span>\n' : '') +
+      '  </div>\n' +
+      '  <h3 class="main-card-title">' + title + '</h3>\n' +
       (preview && escHtml(preview) !== title
-        ? '  <p class="main-card-preview">' + escHtml(preview) + '</p>
-'
+        ? '  <p class="main-card-preview">' + escHtml(preview) + '</p>\n'
         : '') +
-      (meta ? '  <div class="main-card-meta"><span>' + escHtml(meta) + '</span></div>
-' : '') +
-      '  <div class="main-card-actions">
-' +
-      '    <button class="main-card-show3d" data-action="show-in-3d" data-id="' + escHtml(atomId) + '">Show on map →</button>
-' +
-      '  </div>
-' +
+      (meta ? '  <div class="main-card-meta"><span>' + escHtml(meta) + '</span></div>\n' : '') +
+      '  <div class="main-card-actions">\n' +
+      '    <button class="main-card-show3d" data-action="show-in-3d" data-id="' + escHtml(atomId) + '">Show on map →</button>\n' +
+      '  </div>\n' +
       '</div>';
-  }).join('
-');
+  }).join('\n');
 }
 
 
@@ -1256,7 +1244,8 @@ function fmtRelativeTime(t) {
  *   *italic* → <i>italic</i>
  *   [text](https://url) → safe anchor (rejects javascript:, data:, etc.)
  *   bare https?://… → auto-linked
- *   \n → <br>
+ *   
+ → <br>
  * Emoji render natively via system font — no special handling.
  *
  * Security: everything is HTML-escaped FIRST, then markdown is applied to
@@ -2167,8 +2156,8 @@ function wireEvents() {
 // ---------------------------------------------------------------------------
 
 async function boot() {
-  console.log('PUNKTO APP.JS LOADED v46 HARD MARKER 2026-05-15-5');
-  window.PUNKTO_APP_VERSION = 'v47-hard-marker-2026-05-15-6';
+  console.log('PUNKTO APP.JS LOADED v48 HARD MARKER 2026-05-15-7');
+  window.PUNKTO_APP_VERSION = 'v48-hard-marker-2026-05-15-7';
 
   // Global click capture — diagnostic: logs every click to console
   document.addEventListener('click', (ev) => {
@@ -2230,220 +2219,98 @@ async function boot() {
 
 boot();
 
-// --- Key Management Handlers (added by assistant) ---
-let currentIdentity = null; // Module-scoped identity storage
 
-function setupKeyManagement() {
-  const settingsMenu = document.getElementById('settings-menu');
-  if (!settingsMenu) {
-    console.error('[Punkto] Settings menu not found');
-    return;
-  }
+// --- Key Management ---
+let currentIdentity = null;
 
-  // Use document-level capture phase to bypass any overlay (deck.gl canvas etc) eating clicks
-  document.addEventListener('click', async (e) => {
-    const btn = e.target.closest('.settings-item');
-    if (!btn) return;
-    console.log('[KEY HANDLER] fired, btn.id=', btn.id);
-
-    const id = btn.id;
-
-    // Generate New Key
-    if (id === 'btn-generate-key') {
-      e.preventDefault();
-      try {
-        if (typeof window.generateIdentity !== 'function') {
-          alert('Key generation module not loaded. Check console for errors.');
-          return;
-        }
-        console.log('[identity] generateIdentity type:', typeof window.generateIdentity);
-        console.log('[identity] showMnemonicModal type:', typeof showMnemonicModal);
-        const identity = await window.generateIdentity();
-        console.log('[identity] generated:', identity);
-        currentIdentity = identity;
-        displayKeyInfo(identity);
-        console.log('[identity] calling showMnemonicModal...');
-        showMnemonicModal(identity);
-        console.log('[identity] showMnemonicModal done');
-      } catch (err) {
-        console.error('[Punkto] Generate key failed:', err);
-        console.error('[Punkto] Generate key failed (UI):', err.message);
-        alert('Generate key failed: ' + err.message);
-      }
-      return;
-    }
-
-    // Import Key
-    if (id === 'btn-import-key') {
-      // ... existing import logic ...
-    }
-
-    // Save to LocalStorage
-    if (id === 'btn-save-key') {
-      // ... existing save logic ...
-    }
-
-    // Load from LocalStorage
-    if (id === 'btn-load-key') {
-      // ... existing load logic ...
-    }
-
-    // Print Mnemonic
-    if (id === 'btn-print-mnemonic') {
-      // ... existing print logic ...
-    }
-
-    // Export Key JSON
-    if (id === 'btn-export-key') {
-      // ... existing export logic ...
-    }
-  }, true); // capture phase — fires before stopPropagation
-
-
-// Helper to display key info in settings
 function displayKeyInfo(identity) {
   const keyInfo = document.getElementById('key-info');
   const authorIdEl = document.getElementById('key-author-id');
   const pubkeyEl = document.getElementById('key-pubkey');
   const mnemonicEl = document.getElementById('key-mnemonic');
-
-  if (!identity) {
-    keyInfo.style.display = 'none';
-    return;
-  }
-
+  if (!keyInfo) return;
+  if (!identity) { keyInfo.style.display = 'none'; return; }
   keyInfo.style.display = 'block';
-  authorIdEl.textContent = identity.authorId;
-  pubkeyEl.textContent = identity.pubkey.slice(0, 20) + '...';
-  mnemonicEl.textContent = identity.mnemonic.join(' ');
+  if (authorIdEl) authorIdEl.textContent = identity.authorId;
+  if (pubkeyEl)   pubkeyEl.textContent = identity.pubkey.slice(0, 20) + '...';
+  if (mnemonicEl) mnemonicEl.textContent = identity.mnemonic.join(' ');
 }
 
-// Import key from JSON file
-document.getElementById('btn-import-key').addEventListener('click', () => {
-  const input = document.createElement('input');
-  input.type = 'file';
-  input.accept = '.json';
-  input.onchange = async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    const text = await file.text();
-    try {
-      const identity = importKeyFromJson(text);
-      currentIdentity = identity;
-      displayKeyInfo(identity);
-      alert('Key imported successfully!');
-    } catch (err) {
-      console.error('[Punkto] Failed to import key:', err);
-      alert('Error importing key: ' + err.message);
+function setupKeyManagement() {
+  // Capture-phase delegation — fires before any overlay stopPropagation
+  document.addEventListener('click', async (e) => {
+    const btn = e.target.closest('.settings-item');
+    if (!btn) return;
+    const id = btn.id;
+
+    if (id === 'btn-generate-key') {
+      e.preventDefault();
+      try {
+        if (typeof window.generateIdentity !== 'function') {
+          console.error('[identity] generateIdentity not loaded');
+          return;
+        }
+        const identity = await window.generateIdentity();
+        currentIdentity = identity;
+        displayKeyInfo(identity);
+        showMnemonicModal(identity);
+      } catch (err) {
+        console.error('[identity] generate failed:', err);
+      }
+      return;
     }
-  };
-  input.click();
-});
 
-// Save to localStorage
-document.getElementById('btn-save-key-local').addEventListener('click', () => {
-  if (!currentIdentity) {
-    alert('Generate or import a key first!');
-    return;
-  }
-  if (!confirm('Warning: localStorage is not secure. Only save temporarily. Continue?')) {
-    return;
-  }
-  localStorage.setItem('punkto-identity', JSON.stringify(currentIdentity));
-  alert('Key saved to localStorage!');
-});
-
-// Load from localStorage
-document.getElementById('btn-load-key-local').addEventListener('click', () => {
-  const saved = localStorage.getItem('punkto-identity');
-  if (!saved) {
-    alert('No key found in localStorage!');
-    return;
-  }
-  try {
-    const identity = JSON.parse(saved);
-    currentIdentity = identity;
-    displayKeyInfo(identity);
-    alert('Key loaded from localStorage!');
-  } catch (err) {
-    console.error('[Punkto] Failed to load key:', err);
-    alert('Error loading key: ' + err.message);
-  }
-});
-
-// Print mnemonic (opens print-friendly window)
-document.getElementById('btn-print-mnemonic').addEventListener('click', () => {
-  if (!currentIdentity) {
-    alert('Generate or import a key first!');
-    return;
-  }
-  const mnemonicHtml = currentIdentity.mnemonic.map((w, i) => '<span class="word">' + (i+1) + '. ' + w + '</span>').join(' ');
-  const printContent = '<!DOCTYPE html><html><head><title>Punkto Key Mnemonic</title><style>body{font-family:monospace;padding:20px;}h1{color:#00e5ff;}.warning{color:#ff9800;margin-bottom:20px;}.mnemonic{font-size:18px;line-height:1.5;}.word{margin-right:10px;display:inline-block;}</style></head><body><h1>Punkto Identity — KEEP SAFE</h1><div class="warning">⚠️ Write these words on paper immediately. Never store digitally.</div><div class="mnemonic">' + mnemonicHtml + '</div><div style="margin-top:20px;"><div>Author ID: ' + currentIdentity.authorId + '</div><div>Pubkey: ' + currentIdentity.pubkey + '</div></div></body></html>';
-  const printWindow = window.open('', '_blank');
-  printWindow.document.write(printContent);
-  printWindow.document.close();
-  printWindow.print();
-});
-
-// Export key as JSON file
-document.getElementById('btn-export-key').addEventListener('click', () => {
-  if (!currentIdentity) {
-    alert('Generate or import a key first!');
-    return;
-  }
-  const jsonStr = exportKeyJson(currentIdentity);
-  const blob = new Blob([jsonStr], { type: 'application/json' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = 'punkto-key.json';
-  a.click();
-  URL.revokeObjectURL(url);
-});
-
-// --- End Key Management Handlers ---
-
-}
-
-// Service Worker auto-update check (added to fix stale cache issues)
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.getRegistrations().then(registrations => {
-      registrations.forEach(reg => {
-        reg.update();
-        reg.addEventListener('updatefound', () => {
-          const newWorker = reg.installing;
-          newWorker.addEventListener('statechange', () => {
-            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-              if (confirm('New Punkto version available! Reload to update?')) {
-                newWorker.postMessage({ type: 'SKIP_WAITING' });
-                window.location.reload();
-              }
-            }
-          });
-        });
-      });
-    });
-  });
-}
-
-// Improved Service Worker auto-update (fixes stale cache issues)
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', async () => {
-    const registrations = await navigator.serviceWorker.getRegistrations();
-    for (const reg of registrations) {
-      reg.update();
-      reg.addEventListener('updatefound', () => {
-        const newWorker = reg.installing;
-        newWorker.addEventListener('statechange', () => {
-          if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-            if (confirm('New Punkto version available! Reload now to update?')) {
-              newWorker.postMessage({ type: 'SKIP_WAITING' });
-              window.location.reload();
-            }
-          }
-        });
-      });
+    if (id === 'btn-import-key') {
+      const input = document.createElement('input');
+      input.type = 'file'; input.accept = '.json';
+      input.onchange = async (ev) => {
+        const file = ev.target.files[0]; if (!file) return;
+        try {
+          const identity = importKeyFromJson(await file.text());
+          currentIdentity = identity; displayKeyInfo(identity);
+        } catch (err) { console.error('[identity] import failed:', err); }
+      };
+      input.click(); return;
     }
-  });
+
+    if (id === 'btn-save-key') {
+      if (!currentIdentity) return;
+      if (!confirm('localStorage is not secure. Save temporarily?')) return;
+      localStorage.setItem('punkto-identity', JSON.stringify(currentIdentity));
+      return;
+    }
+
+    if (id === 'btn-load-key') {
+      const saved = localStorage.getItem('punkto-identity');
+      if (!saved) return;
+      try {
+        const identity = JSON.parse(saved);
+        currentIdentity = identity; displayKeyInfo(identity);
+      } catch (err) { console.error('[identity] load failed:', err); }
+      return;
+    }
+
+    if (id === 'btn-print-mnemonic') {
+      if (!currentIdentity) return;
+      const words = currentIdentity.mnemonic.map((w, i) =>
+        `<span>${i+1}. ${w}</span>`).join(' ');
+      const win = window.open('', '_blank');
+      win.document.write(`<!DOCTYPE html><html><head><title>Punkto Key</title>
+<style>body{font-family:monospace;padding:20px;}</style></head>
+<body><h1>Punkto Identity — KEEP SAFE</h1><p>${words}</p>
+<p>Author: ${currentIdentity.authorId}</p></body></html>`);
+      win.document.close(); win.print();
+      return;
+    }
+
+    if (id === 'btn-export-key') {
+      if (!currentIdentity) return;
+      const blob = new Blob([exportKeyJson(currentIdentity)], { type: 'application/json' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'punkto-key.json'; a.click();
+      return;
+    }
+  }, true);
 }
+
