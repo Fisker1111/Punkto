@@ -2139,10 +2139,6 @@ function wireEvents() {
     renderMePage();
     toggleSettingsMenu();
   });
-  if (elNavAdd)  elNavAdd.addEventListener('click',  () => {
-    dismissOnboarding();
-    openModal();
-  });
   // "Show on map" clicks delegated on main-feed-list
   const elMainFeedList = document.getElementById('main-feed-list');
   if (elMainFeedList) {
@@ -2169,7 +2165,7 @@ function wireEvents() {
 
 async function boot() {
   console.log('PUNKTO APP.JS LOADED v50 HARD MARKER 2026-05-15-9');
-  window.PUNKTO_APP_VERSION = 'v50-hard-marker-2026-05-15-9';
+  window.PUNKTO_APP_VERSION = 'v51-hard-marker-2026-05-15-10';
 
   // Global click capture — diagnostic: logs every click to console
   document.addEventListener('click', (ev) => {
