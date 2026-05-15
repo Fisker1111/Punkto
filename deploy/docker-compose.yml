@@ -1,0 +1,77 @@
+# ── Punkto — Docker Compose ───────────────────────────────────────────────────
+# Two services per node:
+#   web   — Caddy serves the static PWA + proxies relay endpoints
+#   relay — Python relay node (atom store + peer sync)
+#
+# Usage on a fresh node:
+#   1. Copy this file and the node-specific Caddyfile to the server
+#   2. Create a .env file (copy from .env.example and edit)
+#   3. docker compose pull && docker compose up -d
+#
+# Upgrade to a new version:
+#   PUNKTO_VERSION=v0.46 docker compose pull && docker compose up -d
+#
+# Rollback:
+#   Edit .env: PUNKTO_VERSION=v0.44
+#   docker compose up -d
+# ─────────────────────────────────────────────────────────────────────────────
+
+name: punkto
+
+services:
+
+  # ── Web server (Caddy) ──────────────────────────────────────────────────────
+  # Serves static PWA files from /srv and proxies relay API calls to the
+  # relay container. Caddy handles Let's Encrypt TLS automatically.
+  web:
+    image: ghcr.io/fisker1111/punkto-web:${PUNKTO_VERSION:-latest}
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"   # HTTP/3
+    volumes:
+      # Node-specific Caddyfile — contains domain name and reverse_proxy rules
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      # Persistent Caddy data: TLS certificates, OCSP stapling cache
+      - caddy_data:/data
+      # Persistent Caddy config: admin state
+      - caddy_config:/config
+    depends_on:
+      relay:
+        condition: service_healthy
+    networks:
+      - punkto_internal
+
+  # ── Relay node (Python) ─────────────────────────────────────────────────────
+  # Accepts POST /atom, stores atoms in /data/atoms.ndjson, serves feed
+  # endpoints, and syncs with configured peer nodes.
+  relay:
+    image: ghcr.io/fisker1111/punkto-relay:${PUNKTO_VERSION:-latest}
+    restart: unless-stopped
+    volumes:
+      # Atom store — MUST be a named volume so data survives container upgrades
+      - relay_data:/data
+    environment:
+      PUNKTO_HOST: "0.0.0.0"
+      PUNKTO_PORT: "8000"
+      PUNKTO_NODE_NAME: ${PUNKTO_NODE_NAME:-punkto-node}
+      PUNKTO_PEERS: ${PUNKTO_PEERS:-}
+      PUNKTO_BUFFER_ATOMS: ${PUNKTO_BUFFER_ATOMS:-10000}
+      PUNKTO_BUFFER_HOURS: ${PUNKTO_BUFFER_HOURS:-168}
+      PUNKTO_SYNC_INTERVAL: ${PUNKTO_SYNC_INTERVAL:-30}
+      PUNKTO_DATA_DIR: "/data"
+    networks:
+      - punkto_internal
+    # relay is not exposed to the host — only the web service reaches it
+    expose:
+      - "8000"
+
+volumes:
+  caddy_data:    # TLS certificates — survives container rebuilds
+  caddy_config:  # Caddy admin state
+  relay_data:    # Atom store — critical, never delete
+
+networks:
+  punkto_internal:
+    driver: bridge
