@@ -19,6 +19,8 @@ import { upsertAtom, getAllAtomsNewestFirst, getAllAtoms } from './storage/atom-
 import { getStoredNodes, ensureNode } from './storage/node-store.js';
 import { fmtTime, fmtRelativeTime, fmtCoords, fmtDistance, fmtAltitudeLabel, deriveTitle, deriveCategory, escHtml, renderAtomText } from './core/display.js';
 import { isHiddenAtom, isVerifiedAtom } from './core/atoms.js';
+import { createNodeRegistry } from './sync/node-registry.js';
+import { postAtomToNetwork, fetchNodeInfo, fetchNodeCursor, fetchJsonWithTimeout } from './sync/network-client.js';
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -34,75 +36,8 @@ const SEED_NODES = [
   'https://app2.punkto.xyz',
 ];
 
-// Node health tracking (in-memory, resets on reload)
-// url -> { health: 'ok'|'failing'|'unavailable'|'recovering', failures: 0, unavailableSince: 0 }
-const nodeRegistry = new Map();
-let writeIndex = 0; // round-robin write pointer
-
-function initNodeRegistry() {
-  const allNodes = new Set([NODE_URL, ...SEED_NODES]);
-  allNodes.forEach(url => {
-    if (!nodeRegistry.has(url)) {
-      nodeRegistry.set(url, { health: 'ok', failures: 0, unavailableSince: 0 });
-    }
-  });
-}
-
-function getHealthyNodes() {
-  const now = Date.now();
-  return [...nodeRegistry.entries()]
-    .filter(([url, s]) => {
-      if (s.health === 'ok' || s.health === 'failing') return true;
-      if (s.health === 'recovering') return true;
-      if (s.health === 'unavailable' && now - s.unavailableSince > 60_000) {
-        s.health = 'recovering';
-        return true;
-      }
-      return false;
-    })
-    .map(([url]) => url);
-}
-
-function markNodeSuccess(url) {
-  const s = nodeRegistry.get(url);
-  if (s) { s.health = 'ok'; s.failures = 0; s.unavailableSince = 0; }
-}
-
-function markNodeFailure(url) {
-  const s = nodeRegistry.get(url);
-  if (!s) return;
-  s.failures++;
-  if (s.failures >= 5) {
-    s.health = 'unavailable';
-    s.unavailableSince = Date.now();
-  } else if (s.failures >= 2) {
-    s.health = 'failing';
-  }
-}
-
-async function postAtomToNetwork(atomBody) {
-  const candidates = getHealthyNodes();
-  if (candidates.length === 0) throw new Error('No healthy nodes available');
-  for (let i = 0; i < candidates.length; i++) {
-    const url = candidates[(writeIndex + i) % candidates.length];
-    try {
-      const res = await fetch(`${url}/atom`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(atomBody),
-        signal: AbortSignal.timeout(10_000),
-      });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      markNodeSuccess(url);
-      writeIndex = (writeIndex + 1) % candidates.length;
-      return await res.json();
-    } catch (e) {
-      console.warn(`[lb] postAtom failed for ${url}:`, e.message);
-      markNodeFailure(url);
-    }
-  }
-  throw new Error('All nodes failed');
-}
+// Node registry + write round-robin (extracted sync ownership)
+const nodeRegistry = createNodeRegistry({ nodeUrl: NODE_URL, seedNodes: SEED_NODES });
 
 // ---------------------------------------------------------------------------
 // IndexedDB (Dexie)
@@ -355,7 +290,7 @@ async function syncFeed() {
     for (const url of nodeUrls) {
       try {
         const latestUrl = `${url}/latest`;
-        const res = await fetch(latestUrl, { signal: AbortSignal.timeout(15_000) });
+        const res = await fetchJsonWithTimeout(latestUrl, 15_000);
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const data = await res.json();
 
@@ -389,7 +324,7 @@ async function syncFeed() {
 async function discoverPeers() {
   for (const seedUrl of nodeRegistry.keys()) {
     try {
-      const res = await fetch(`${seedUrl}/info`, { signal: AbortSignal.timeout(8_000) });
+      const res = await fetchJsonWithTimeout(`${seedUrl}/info`, 8_000);
       if (!res.ok) continue;
       const info = await res.json();
       const peers = Array.isArray(info.peers) ? info.peers : [];
@@ -397,8 +332,8 @@ async function discoverPeers() {
         const url = peerUrl.replace(/\/$/, '');
         if (!url) continue;
         // Add to in-memory registry
-        if (!nodeRegistry.has(url)) {
-          nodeRegistry.set(url, { health: 'ok', failures: 0, unavailableSince: 0 });
+        if (!nodeRegistry.hasNode(url)) {
+          nodeRegistry.registerNode(url);
           console.log('[lb] discovered peer:', url);
         }
         // Register in Dexie for syncFeed
@@ -1455,7 +1390,7 @@ function initMap() {
     await refreshUI();
 
     // Init load balancer registry and seed Dexie nodes table with SEED_NODES
-    initNodeRegistry();
+    nodeRegistry.initNodeRegistry();
     for (const url of SEED_NODES) {
       const seeded = await ensureNode(url, 0);
       if (seeded) console.log('[lb] seeded node:', url);
@@ -1614,39 +1549,6 @@ function showMnemonicModal(identity) {
     });
   };
   closeBtn.onclick = () => overlay.classList.remove('open');
-}
-
-/**
- * unreachably large `since` value — node.py clamps it to file_size and returns
- * `{cursor, atoms: []}`. Zero-payload, cheap, works against any Punkto node.
- * Returns a non-negative integer cursor, or null on error.
- */
-async function fetchNodeCursor(url) {
-  try {
-    const res = await fetch(`${url}/feed?cursor=9999999999`, {
-      signal: AbortSignal.timeout(6_000),
-    });
-    if (!res.ok) return null;
-    const json = await res.json();
-    return typeof json.cursor === 'number' ? json.cursor : null;
-  } catch {
-    return null;
-  }
-}
-
-/**
- * Fetch /info for a node. Returns null on error, or the parsed JSON on success.
- */
-async function fetchNodeInfo(url) {
-  try {
-    const res = await fetch(`${url}/info`, {
-      signal: AbortSignal.timeout(6_000),
-    });
-    if (!res.ok) return null;
-    return await res.json();
-  } catch {
-    return null;
-  }
 }
 
 /**
@@ -1861,8 +1763,8 @@ function wireEvents() {
 // ---------------------------------------------------------------------------
 
 async function boot() {
-  console.log('PUNKTO APP.JS LOADED v56 HARD MARKER 2026-05-16-2');
-  window.PUNKTO_APP_VERSION = 'v56-hard-marker-2026-05-16-2';
+  console.log('PUNKTO APP.JS LOADED v57 HARD MARKER 2026-05-16-3');
+  window.PUNKTO_APP_VERSION = 'v57-hard-marker-2026-05-16-3';
 
   console.log('[punkto] booting...');
 
