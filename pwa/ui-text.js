@@ -44,7 +44,7 @@ export function initTextView({ onShowOnMap, onLeaveNote, helpers } = {}) {
 
   // "Leave note here" CTA in empty state
   document.addEventListener('click', (e) => {
-    if (e.target && e.target.id === 'main-empty-leave-btn') {
+    if (e.target && (e.target.id === 'main-empty-leave-btn' || e.target.id === 'main-intro-leave-btn')) {
       if (_onLeaveNote) _onLeaveNote();
     }
   });
@@ -114,21 +114,25 @@ export function renderTextFeed({ atoms = [], locationDenied = false } = {}) {
   const emptyEl = document.getElementById('main-empty-notes');
   const countEl = document.getElementById('main-atom-count');
   const locEl   = document.getElementById('main-empty-location');
+  const introEl = document.getElementById('main-intro-card');
   if (!list) return;
 
   if (!atoms || atoms.length === 0) {
     list.innerHTML = '';
     if (countEl) countEl.textContent = '';
     if (locationDenied || !navigator.geolocation) {
+      if (introEl) introEl.style.display = 'none';
       if (emptyEl) emptyEl.style.display = 'none';
       if (locEl)   locEl.style.display   = '';
     } else {
+      if (introEl) introEl.style.display = '';
       if (emptyEl) emptyEl.style.display = '';
       if (locEl)   locEl.style.display   = 'none';
     }
     return;
   }
 
+  if (introEl) introEl.style.display = 'none';
   if (locEl)   locEl.style.display   = 'none';
   if (emptyEl) emptyEl.style.display = 'none';
   if (countEl) countEl.textContent  = atoms.length + ' nearby';

@@ -1936,10 +1936,7 @@ async function refreshSettingsNetworkInfo() {
 
 async function openSettingsMenu() {
   settingsOpen = true;
-  elSettingsMenu.classList.add('open');
-  elSettingsMenu.setAttribute('aria-hidden', 'false');
-  const bd = document.getElementById('settings-backdrop');
-  if (bd) bd.classList.add('open');
+  shellOpenSettings();
   // Update visible atom count immediately from the DB-backed UI state
   try {
     const all = await db.atoms.toArray();
@@ -1953,10 +1950,7 @@ async function openSettingsMenu() {
 
 function closeSettingsMenu() {
   settingsOpen = false;
-  elSettingsMenu.classList.remove('open');
-  elSettingsMenu.setAttribute('aria-hidden', 'true');
-  const bd = document.getElementById('settings-backdrop');
-  if (bd) bd.classList.remove('open');
+  shellCloseSettings();
 }
 
 function toggleSettingsMenu() {
@@ -2084,7 +2078,7 @@ function wireEvents() {
 // ---------------------------------------------------------------------------
 
 async function boot() {
-  console.log('PUNKTO APP.JS LOADED v52 HARD MARKER 2026-05-16-1');
+  console.log('PUNKTO APP.JS LOADED v53 HARD MARKER 2026-05-16-2');
   window.PUNKTO_APP_VERSION = 'v53-hard-marker-2026-05-16-2';
 
   // Global click capture — diagnostic: logs every click to console
@@ -2273,4 +2267,3 @@ function setupKeyManagement() {
     }
   }, true);
 }
-

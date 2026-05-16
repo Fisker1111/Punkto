@@ -314,6 +314,53 @@
       padding: 0 20px 16px;
       display: block;
     }
+    #main-feed-subtitle {
+      font-size: 13px;
+      color: var(--text-mid);
+      padding: 0 20px 12px;
+      line-height: 1.5;
+    }
+    .main-category-chips {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      padding: 0 20px 14px;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+    }
+    .main-category-chips::-webkit-scrollbar { display: none; }
+    .main-chip {
+      border: 1px solid var(--border2);
+      background: var(--surface2);
+      color: var(--text-dim);
+      font-size: 11px;
+      border-radius: 999px;
+      padding: 6px 12px;
+      white-space: nowrap;
+    }
+    .main-chip.active {
+      color: var(--accent);
+      border-color: var(--accent-dim);
+      background: rgba(0,212,255,0.08);
+    }
+    .main-intro-card {
+      margin: 0 20px 16px;
+      padding: 16px;
+      border: 1px solid var(--border2);
+      border-radius: 12px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0));
+    }
+    .main-intro-card h3 {
+      font-size: 16px;
+      margin: 0 0 8px;
+      color: var(--text);
+    }
+    .main-intro-card p {
+      font-size: 13px;
+      line-height: 1.6;
+      margin: 0 0 12px;
+      color: var(--text-mid);
+    }
 
     /* Feed cards */
     .atom-card {
@@ -514,8 +561,16 @@
       transform: translateY(100%);
       transition: transform 0.28s cubic-bezier(0.4,0,0.2,1);
       padding-bottom: 20px;
+      visibility: hidden;
+      opacity: 0;
+      pointer-events: none;
     }
-    #settings-menu.open { transform: translateY(0); }
+    #settings-menu.open {
+      transform: translateY(0);
+      visibility: visible;
+      opacity: 1;
+      pointer-events: auto;
+    }
 
     .settings-handle {
       width: 40px; height: 4px;
@@ -806,7 +861,7 @@
   <div id="settings-backdrop"></div>
 
   <!-- ── Settings panel ───────────────────────────────────── -->
-  <div id="settings-menu" role="dialog" aria-label="Settings">
+  <div id="settings-menu" role="dialog" aria-label="Settings" aria-hidden="true">
     <div class="settings-handle"></div>
 
     <!-- Network -->
@@ -874,10 +929,23 @@
     <div id="main-feed">
       <p id="main-feed-heading">Nearby</p>
       <span id="main-atom-count"></span>
+      <p id="main-feed-subtitle">Read what’s nearby, or leave something here.</p>
+      <div class="main-category-chips" aria-label="Categories">
+        <button class="main-chip active" type="button">All</button>
+        <button class="main-chip" type="button">Tips</button>
+        <button class="main-chip" type="button">Warnings</button>
+        <button class="main-chip" type="button">Questions</button>
+        <button class="main-chip" type="button">Memories</button>
+      </div>
+      <div id="main-intro-card" class="main-intro-card">
+        <h3>This place is quiet</h3>
+        <p>Punkto lets people leave small notes at real places.</p>
+        <button class="btn-cta" id="main-intro-leave-btn">Leave note here</button>
+      </div>
       <div id="main-feed-list"></div>
 
       <div id="main-empty-notes" class="main-empty" style="display:none;">
-        <h3>No text here yet</h3>
+        <h3>Nothing here yet</h3>
         <p>Be the first to leave something at this place.</p>
         <button class="btn-cta" id="main-empty-leave-btn">Leave note here</button>
       </div>
