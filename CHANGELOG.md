@@ -6,6 +6,46 @@ This project follows a loose semantic-versioning convention: `vMAJOR.MINOR` for 
 
 ---
 
+## [v0.5] — 2026-05-16 — UI shell refactor + Docker stabilisation
+
+Major structural refactor of the PWA. UI ownership moved out of `app.js` into dedicated modules. Service worker removed. Caching fixed for all assets. Two-view shell (Text / Map) becomes the canonical UI.
+
+### Added
+- **`pwa/ui-shell.js`** — owns page switching (Text ↔ Map), bottom nav wiring, settings panel open/close, body state classes, `setCounts()`; exports `initShell`, `showPage`, `openSettings`, `closeSettings`
+- **`pwa/ui-text.js`** — owns text feed rendering, card markup, empty states, location-denied state, Show-on-map and Leave-note callbacks; exports `initTextView`, `renderTextFeed`, `clearTextFeed`
+- **`pwa/ui-map.js`** — lazy map init wrapper, map resize on show, `focusOnMap` delegate; exports `initMapView`, `showMapView`, `focusOnMap`
+- **`pwa/logo-192.png`** and **`pwa/logo-512.png`** — teal circle PWA icons (were 404)
+- **Settings button active state** — `#nav-settings` gains `active` class while settings panel is open
+
+### Changed
+- **Bottom nav** — consolidated to exactly 4 buttons: **Text (35%) | Map (35%) | + (15%) | ⚙ (15%)**; Network and Me moved inside ⚙ settings panel
+- **Service worker** — `sw.js` now immediately unregisters all service workers; app runs as a plain web app (no offline cache, no cache-bust pain)
+- **Lazy map init** — map is only initialised on the first time the user switches to Map view; fixes black map when `#map` container is hidden at boot
+- **Caddyfile (both nodes)** — `@app` matcher broadened from `path /app.js /index.html /reset.html` to `not path /lib/* && path *.html *.js`; all JS modules now get `no-cache, no-store, must-revalidate` + `Pragma` + `Expires` headers
+- **`app.js`** — imports ui-shell, ui-text, ui-map; no longer contains inline nav wiring or card HTML generation; −106 / +59 lines vs v46
+- **Deployment workflow** — after each GitHub Actions image build, both nodes must be updated with `docker compose pull && docker compose up -d --force-recreate` (not just `caddy reload`)
+
+### Fixed
+- `ReferenceError: elNavAdd is not defined` — stale duplicate variable removed from `wireEvents`
+- App.js line 1221 mangled (43 877-char single line) — 1 219 literal `\n` occurrences restored as real newlines; regex patterns protected
+- Duplicate event listeners on key-management buttons removed
+- `setupKeyManagement()` now called unconditionally from `wireEvents()` on boot (was only called after atom click)
+- Settings panel was leaking through at very small viewport heights due to missing bottom offset — fixed in CSS
+- Stale Docker image issue — force-recreate now always pulls fresh image from registry
+
+### Versions (app.js hard marker)
+| Marker | Change |
+|---|---|
+| `v47-hard-marker-2026-05-15-6` | 4-button nav, SW removed, Network+Me into settings |
+| `v48-hard-marker-2026-05-15-7` | Fixed mangled app.js line, duplicate listeners, `elNavAdd` crash |
+| `v49-hard-marker-2026-05-15-8` | Redesigned UI shell attempt |
+| `v50-hard-marker-2026-05-15-9` | Lazy map init fix — map no longer black on first load |
+| `v51-hard-marker-2026-05-16-0` | Logo 404 fix, `elNavAdd` crash fix |
+| `v52-hard-marker-2026-05-16-1` | Modular refactor — ui-shell.js, ui-text.js, ui-map.js extracted |
+| `v53-hard-marker-2026-05-16-2` | Settings button highlights when panel is open |
+
+---
+
 ## [v0.4+] — 2026-05-15 — Post-launch UX + Docker infrastructure
 
 Iterative improvements applied after the v0.4 public launch. PWA is now at v46.

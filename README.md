@@ -7,10 +7,10 @@ Punkto is a minimal system for addressing points in 3D space and attaching small
 Every atom is a board
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![Repo release](https://img.shields.io/badge/release-v0.4-blue.svg)](https://github.com/Fisker1111/Punkto/releases/tag/v0.4)
+[![Repo release](https://img.shields.io/badge/release-v0.5-blue.svg)](https://github.com/Fisker1111/Punkto/releases/tag/v0.5)
 [![Live](https://img.shields.io/badge/live-punkto.xyz-green.svg)](https://www.punkto.xyz)
 
-> Status: **v0.x public draft**. The `v0.4` release tag refers to the *repository*, not a single protocol version — individual specs evolve independently. See the per-spec versions in [Status](#status) and [Documentation](#documentation).
+> Status: **v0.x public draft**. The `v0.5` tag covers the current UI shell refactor + Docker stabilisation. Individual specs evolve independently. See the per-spec versions in [Status](#status) and [Documentation](#documentation).
 
 ## Live
 
@@ -58,11 +58,14 @@ With identity (full):
 
 ```
 Punkto/
-├── pwa/                  ← Reference PWA (vanilla JS, MapLibre, deck.gl)
+├── pwa/                  ← Reference web app (vanilla JS, MapLibre, deck.gl)
 │   ├── Dockerfile        ← Docker image: Caddy serving static files
-│   ├── index.html        ← App shell (four-page UI: Text, Map, Network, Me)
-│   ├── app.js            ← App logic, sync, atom rendering, page routing
-│   ├── sw.js             ← Service worker (offline-first)
+│   ├── index.html        ← App shell (two-view UI: Text / Map + ⚙ settings)
+│   ├── app.js            ← App lifecycle, sync, IndexedDB, atom creation, network
+│   ├── ui-shell.js       ← Page switching, bottom nav, settings panel
+│   ├── ui-text.js        ← Text feed rendering, cards, empty states
+│   ├── ui-map.js         ← Map view wrapper, lazy init, resize
+│   ├── sw.js             ← Service worker unregister (SW disabled — plain web app)
 │   ├── manifest.json     ← PWA manifest
 │   ├── key-management.js ← Ed25519 identity, BIP39 mnemonic
 │   ├── geohash3d.js      ← 3D geohash encoder/decoder
@@ -232,11 +235,11 @@ Relays are a public commons. Clients are user-owned. Archives are optional and m
 
 ## Status
 
-Early public release — **v0.4**, dogfood stage.
+Active development — **v0.5**, dogfood stage.
 
 - **Live nodes**: two synced reference relays (`app1.punkto.xyz`, `app2.punkto.xyz`) — both running Docker (Caddy + Python relay), auto-HTTPS via Let's Encrypt, deployed via `docker compose`
 - **Atoms**: 20+ on the live feed, mostly seed/test content
-- **PWA**: at v46 — four-page UI shell (Text / Map / Network / Me), Docker-deployed, in-browser key generation, 3D altitude input, building-aware floor picker, lollipop leader lines, Open Graph deep links
+- **PWA**: at v53 — minimal two-view shell (Text / Map), 4-button bottom nav (Text | Map | + | ⚙), modular UI (ui-shell.js / ui-text.js / ui-map.js), Docker-deployed, no service worker, in-browser key generation, 3D altitude input, Open Graph deep links
 - **Relay**: v0.1 — rolling buffer (10 000 atoms or 7 days), `/latest`, peer sync, `/p/<id>` server-rendered cards
 - **Identity**: v0.1 — `tools/punkto-keygen-v0.1.py` and `tools/punkto-key.py` produce byte-identical results across implementations
 - **AI-discoverable**: `robots.txt`, `llms.txt`, `openapi.json`, `sitemap.xml`, server-rendered `/p/<id>` with OpenGraph + JSON-LD
