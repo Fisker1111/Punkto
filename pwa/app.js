@@ -3,7 +3,6 @@
  * Depends on: MapLibre GL JS, deck.gl 8.9.x UMD (window.deck), Dexie.js
  */
 
-import { encode, decode } from './geohash3d.js';
 import {
   initShell,
   showPage as shellShowPage,
@@ -14,6 +13,9 @@ import {
 } from './ui-shell.js';
 import { initTextView, renderTextFeed } from './ui-text.js';
 import { initMapView, showMapView } from './ui-map.js';
+import { decodeAtomLocation, encodeCurrentLocation, encodeLocation, haversineMeters, FLOOR_HEIGHT_M } from './core/location.js';
+import { fmtTime, fmtRelativeTime, fmtCoords, fmtDistance, fmtAltitudeLabel, deriveTitle, deriveCategory, escHtml, renderAtomText } from './core/display.js';
+import { isHiddenAtom, isVerifiedAtom } from './core/atoms.js';
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -28,16 +30,6 @@ const SEED_NODES = [
   'https://app1.punkto.xyz',
   'https://app2.punkto.xyz',
 ];
-
-// Atoms whose author handle (case-insensitive) matches any of these are hidden
-// from the UI (map dots + panel list + counters). The atoms remain in Dexie and
-// on disk — the log is append-only — we just filter at render time.
-const HIDDEN_AUTHOR_HANDLES = new Set([
-  'test',
-  'sync-test',
-  'cors-test',
-  'browser-test',
-]);
 
 // Node health tracking (in-memory, resets on reload)
 // url -> { health: 'ok'|'failing'|'unavailable'|'recovering', failures: 0, unavailableSince: 0 }
@@ -286,89 +278,14 @@ function renderMePage() {
 
 
 
-function fmtTime(ms) {
-  const t = Number(ms);
-  if (!t) return '?';
-  const d = new Date(t);
-  const now = Date.now();
-  const diff = now - t;
-  if (diff < 60_000)   return 'just now';
-  if (diff < 3_600_000) return `${Math.floor(diff / 60_000)}m ago`;
-  if (diff < 86_400_000) return `${Math.floor(diff / 3_600_000)}h ago`;
-  return d.toLocaleDateString();
-}
-
-function fmtCoords(lat, lon, alt) {
-  const latStr = lat.toFixed(5);
-  const lonStr = lon.toFixed(5);
-  const altStr = alt != null ? ` · ${Math.round(alt)}m` : '';
-  return `${latStr}, ${lonStr}${altStr}`;
-}
-
-function haversineMeters(lat1, lon1, lat2, lon2) {
-  const R = 6371000;
-  const toRad = d => (d * Math.PI) / 180;
-  const dLat = toRad(lat2 - lat1);
-  const dLon = toRad(lon2 - lon1);
-  const a = Math.sin(dLat / 2) ** 2 +
-    Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) ** 2;
-  return 2 * R * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-}
-
-function fmtDistance(meters) {
-  if (!Number.isFinite(meters)) return '';
-  if (meters < 1000) return `${Math.round(meters)} m away`;
-  return `${(meters / 1000).toFixed(1)} km away`;
-}
-
-function deriveTitle(atom) {
-  const raw = String(atom?.x || '').trim();
-  if (!raw) return 'Untitled note';
-  const firstLine = raw.split(/\r?\n/).find(Boolean) || raw;
-  return firstLine.length > 40 ? `${firstLine.slice(0, 40)}…` : firstLine;
-}
-
-function fmtAltitudeLabel(alt) {
-  if (!Number.isFinite(alt) || Math.abs(alt) < 1) return '';
-  const floor = Math.round(alt / 3);
-  if (floor >= 2) return `Floor ${floor}`;
-  return `+${Math.round(alt)} m`;
-}
-
-function deriveCategory(atom) {
-  const c = String(atom?.category || atom?.kind || '').trim();
-  return c || 'Note';
-}
-
-function isVerifiedAtom(atom) {
-  return Boolean(atom?.sig && atom?.pubkey);
-}
-
 /**
  * Extract the spatial part of a canonical punkto and decode to coords.
  * e.g. 'p:u4pruydqqvj3-9xk3' → decode('u4pruydqqvj3')
  */
-function decodeAtomLocation(punktoStr) {
-  try {
-    // Strip 'p:' prefix, split on '-', take first segment = spatial hash
-    const spatial = punktoStr.replace(/^p:/, '').split('-')[0];
-    if (spatial.length < 1) return null;
-    return decode(spatial);
-  } catch {
-    return null;
-  }
-}
-
 /**
  * Return true if an atom (DB record or feed entry) should be hidden from the UI
  * because its author handle is a known test/system handle. Case-insensitive.
  */
-function isHiddenAtom(atom) {
-  const f = typeof atom?.f === 'string' ? atom.f.trim().toLowerCase() : '';
-  if (!f) return false;
-  return HIDDEN_AUTHOR_HANDLES.has(f);
-}
-
 // ---------------------------------------------------------------------------
 // Deep-link: /p/<id> → open and focus a punkto
 // ---------------------------------------------------------------------------
@@ -434,20 +351,6 @@ async function focusPunkto(id) {
 // ---------------------------------------------------------------------------
 // Encode current map center into canonical punkto string
 // ---------------------------------------------------------------------------
-
-function encodeCurrentLocation(mapInst, altMeters = 0) {
-  const center = mapInst.getCenter();
-  const lat = center.lat;
-  const lon = center.lng;
-  return encodeLocation(lat, lon, altMeters);
-}
-
-function encodeLocation(lat, lon, altMeters = 0) {
-  // Guard against non-numeric input; fall back to ground level.
-  const alt = Number.isFinite(altMeters) ? altMeters : 0;
-  const hash = encode(lat, lon, alt, 12);
-  return `p:${hash}`;
-}
 
 // ---------------------------------------------------------------------------
 // IndexedDB helpers
@@ -1171,30 +1074,10 @@ async function refreshUI(newAtomIds = null) {
   await renderAtoms(newAtomIds);
 }
 
-function escHtml(str) {
-  return String(str)
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;');
-}
-
 /**
  * Relative time formatter for bubble meta line.
  * tSec is accepted as ms (we already store Date.now() in atom.t).
  */
-function fmtRelativeTime(t) {
-  const ms = Number(t);
-  if (!ms) return '?';
-  const diff = Date.now() - ms;
-  if (diff < 60_000)       return 'just now';
-  if (diff < 3_600_000)    return `${Math.floor(diff / 60_000)}m ago`;
-  if (diff < 86_400_000)   return `${Math.floor(diff / 3_600_000)}h ago`;
-  if (diff < 604_800_000)  return `${Math.floor(diff / 86_400_000)}d ago`;
-  if (diff < 2_419_200_000)return `${Math.floor(diff / 604_800_000)}w ago`;
-  return fmtTime(ms);
-}
-
 /**
  * Markdown-lite renderer for atom text. Returns HTML string safe for innerHTML.
  * Supported:
@@ -1212,33 +1095,6 @@ function fmtRelativeTime(t) {
  * (which requires the url to start with http:// or https://) and remains
  * rendered as literal text.
  */
-function renderAtomText(raw) {
-  if (!raw) return '';
-  // 1. HTML-escape everything first.
-  let s = escHtml(raw);
-
-  // 2. Bold BEFORE italic so ** isn't eaten by the italic regex.
-  s = s.replace(/\*\*([^*]+)\*\*/g, '<b>$1</b>');
-  // Italic (single-star, non-greedy). After escHtml the user's * is still *.
-  s = s.replace(/\*([^*]+)\*/g, '<i>$1</i>');
-
-  // 3. Markdown links [text](http(s)://…) BEFORE bare-URL auto-link so we
-  //    don't double-wrap. Note escHtml turns ] into ] untouched and ) into ).
-  s = s.replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g, (_m, label, url) => {
-    return `<a href="${url}" target="_blank" rel="noopener noreferrer nofollow">${label}</a>`;
-  });
-
-  // 4. Bare URL auto-linker. Only http(s). Keep preceding whitespace or start.
-  s = s.replace(/(^|[\s>])((?:https?:\/\/)[^\s<]+)/g, (_m, pre, url) => {
-    return `${pre}<a href="${url}" target="_blank" rel="noopener noreferrer nofollow">${url}</a>`;
-  });
-
-  // 5. Newlines → <br>
-  s = s.replace(/\n/g, '<br>');
-
-  return s;
-}
-
 // ---------------------------------------------------------------------------
 // Panel toggle
 // ---------------------------------------------------------------------------
@@ -1261,7 +1117,6 @@ function setPanelOpen(open) {
 // Altitude input state for the modal.
 // mode: 'floor' when a building is detected at map center, 'meter' otherwise.
 // In floor mode the slider value IS the floor number; in meter mode it IS metres.
-const FLOOR_HEIGHT_M = 3; // default floor height (configurable later)
 let modalAltitudeState = {
   mode: 'meter',   // 'floor' | 'meter'
   building: null,  // { name, height, maxFloor } | null
@@ -2060,8 +1915,8 @@ function wireEvents() {
 // ---------------------------------------------------------------------------
 
 async function boot() {
-  console.log('PUNKTO APP.JS LOADED v55 HARD MARKER 2026-05-16-1');
-  window.PUNKTO_APP_VERSION = 'v55-hard-marker-2026-05-16-1';
+  console.log('PUNKTO APP.JS LOADED v56 HARD MARKER 2026-05-16-2');
+  window.PUNKTO_APP_VERSION = 'v56-hard-marker-2026-05-16-2';
 
   console.log('[punkto] booting...');
 
