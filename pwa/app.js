@@ -9,7 +9,6 @@ import {
   showPage as shellShowPage,
   openSettings as shellOpenSettings,
   closeSettings as shellCloseSettings,
-  toggleSettings as shellToggleSettings,
   isSettingsOpen as shellIsSettingsOpen,
   setCounts as shellSetCounts,
 } from './ui-shell.js';
@@ -215,8 +214,6 @@ const elModalFloorPlus         = document.getElementById('modal-floor-plus');
 const elModalFloorValue        = document.getElementById('modal-floor-value');
 const elModalManualAltitude    = document.getElementById('modal-manual-altitude-value');
 const elToggle3D    = document.getElementById('toggle-3d');
-const elBtnSettings = document.getElementById('btn-settings');
-const elSettingsMenu = document.getElementById('settings-menu');
 const elSettingsReset = document.getElementById('settings-reset');
 const elSettingsNode = document.getElementById('settings-node');
 const elSettingsPeers = document.getElementById('settings-peers');
@@ -1788,8 +1785,6 @@ function showOnboarding() {
 // Settings menu
 // ---------------------------------------------------------------------------
 
-let settingsOpen = false;
-
 function hostOf(url) {
   try { return new URL(url).host; } catch { return url; }
 }
@@ -1935,7 +1930,6 @@ async function refreshSettingsNetworkInfo() {
 }
 
 async function openSettingsMenu() {
-  settingsOpen = true;
   shellOpenSettings();
   // Update visible atom count immediately from the DB-backed UI state
   try {
@@ -1949,12 +1943,11 @@ async function openSettingsMenu() {
 }
 
 function closeSettingsMenu() {
-  settingsOpen = false;
   shellCloseSettings();
 }
 
 function toggleSettingsMenu() {
-  if (settingsOpen) closeSettingsMenu();
+  if (shellIsSettingsOpen()) closeSettingsMenu();
   else openSettingsMenu();
 }
 
@@ -1966,17 +1959,7 @@ function wireEvents() {
   // 3D toggle
   elToggle3D.addEventListener('click', toggle3D);
 
-  // Settings menu
-  if (elBtnSettings) {
-    elBtnSettings.addEventListener('click', e => {
-      e.stopPropagation();
-      toggleSettingsMenu();
-    });
-  }
-  if (elSettingsMenu) {
-    // Prevent clicks inside the menu from closing it
-    elSettingsMenu.addEventListener('click', e => e.stopPropagation());
-  }
+  // Settings reset action (open/close wiring is owned by ui-shell.js)
   if (elSettingsReset) {
     elSettingsReset.addEventListener('click', () => {
       closeSettingsMenu();
@@ -1985,7 +1968,7 @@ function wireEvents() {
   }
   // Close settings on outside click
   document.addEventListener('click', () => {
-    if (settingsOpen) closeSettingsMenu();
+    if (shellIsSettingsOpen()) closeSettingsMenu();
   });
 
   // Add atom
@@ -2041,7 +2024,6 @@ function wireEvents() {
     if (e.key === 'Escape') {
       closeModal();
       setPanelOpen(false);
-      if (settingsOpen) closeSettingsMenu();
     }
   });
 
@@ -2078,19 +2060,9 @@ function wireEvents() {
 // ---------------------------------------------------------------------------
 
 async function boot() {
-  console.log('PUNKTO APP.JS LOADED v53 HARD MARKER 2026-05-16-2');
-  window.PUNKTO_APP_VERSION = 'v53-hard-marker-2026-05-16-2';
+  console.log('PUNKTO APP.JS LOADED v55 HARD MARKER 2026-05-16-1');
+  window.PUNKTO_APP_VERSION = 'v55-hard-marker-2026-05-16-1';
 
-  // Global click capture — diagnostic: logs every click to console
-  document.addEventListener('click', (ev) => {
-    console.log('[CLICK CAPTURE]', {
-      tag: ev.target?.tagName,
-      id: ev.target?.id,
-      cls: ev.target?.className,
-      text: (ev.target?.innerText || ev.target?.textContent || '').trim().slice(0, 40),
-      closestSettingsItem: ev.target?.closest?.('.settings-item')?.id,
-    });
-  }, true);
   console.log('[punkto] booting...');
 
   // Verify deck.gl UMD is available
@@ -2146,11 +2118,7 @@ async function boot() {
     onOpenSettings: () => {
       renderNetworkPage();
       renderMePage();
-      shellToggleSettings();
-      if (shellIsSettingsOpen()) {
-        // refresh dynamic settings data when opening
-        openSettingsMenu().catch(() => {});
-      }
+      toggleSettingsMenu();
     },
   });
   initTextView({
