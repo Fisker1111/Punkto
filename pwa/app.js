@@ -16,11 +16,12 @@ import { initMapView, showMapView } from './ui-map.js';
 import { decodeAtomLocation, encodeCurrentLocation, encodeLocation, haversineMeters, FLOOR_HEIGHT_M } from './core/location.js';
 import { db } from './storage/db.js';
 import { upsertAtom, getAllAtomsNewestFirst, getAllAtoms } from './storage/atom-store.js';
-import { getStoredNodes, ensureNode } from './storage/node-store.js';
+import { ensureNode } from './storage/node-store.js';
 import { fmtTime, fmtRelativeTime, fmtCoords, fmtDistance, fmtAltitudeLabel, deriveTitle, deriveCategory, escHtml, renderAtomText } from './core/display.js';
 import { isHiddenAtom, isVerifiedAtom } from './core/atoms.js';
 import { createNodeRegistry } from './sync/node-registry.js';
-import { postAtomToNetwork, fetchNodeInfo, fetchNodeCursor, fetchJsonWithTimeout } from './sync/network-client.js';
+import { postAtomToNetwork, fetchNodeInfo, fetchNodeCursor } from './sync/network-client.js';
+import { createSyncEngine } from './sync/sync-engine.js';
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -38,6 +39,7 @@ const SEED_NODES = [
 
 // Node registry + write round-robin (extracted sync ownership)
 const nodeRegistry = createNodeRegistry({ nodeUrl: NODE_URL, seedNodes: SEED_NODES });
+let syncEngine = null;
 
 // ---------------------------------------------------------------------------
 // IndexedDB (Dexie)
@@ -49,8 +51,6 @@ const nodeRegistry = createNodeRegistry({ nodeUrl: NODE_URL, seedNodes: SEED_NOD
 
 let map = null;
 let deckOverlay = null;
-let syncTimer = null;
-let isSyncing = false;
 let is3D = true;
 let initialSyncDone = false;
 let deepLinkPunkto = null; // captured at boot, consumed after first refreshUI
@@ -158,7 +158,7 @@ function renderNetworkPage() {
   // Sync status: derive from isSyncing flag if available
   const syncEl = document.getElementById('net-sync');
   if (syncEl) {
-    syncEl.textContent = (typeof isSyncing !== 'undefined' && isSyncing) ? 'Syncing…' : 'Idle';
+    syncEl.textContent = (syncEngine && syncEngine.isSyncing()) ? 'Syncing…' : 'Idle';
   }
 
   // Trigger a fresh network info pull in background
@@ -272,78 +272,6 @@ async function focusPunkto(id) {
 // ---------------------------------------------------------------------------
 // Sync
 // ---------------------------------------------------------------------------
-
-async function syncFeed() {
-  if (isSyncing) return;
-  isSyncing = true;
-  setSyncStatus('syncing');
-
-  let anyError = false;
-  const newAtomIds = new Set();
-
-  try {
-    // Get all known nodes from Dexie; always include DEFAULT NODE_URL
-    const storedNodes = await getStoredNodes();
-    const nodeUrls = new Set(storedNodes.map(n => n.url));
-    nodeUrls.add(NODE_URL);
-
-    for (const url of nodeUrls) {
-      try {
-        const latestUrl = `${url}/latest`;
-        const res = await fetchJsonWithTimeout(latestUrl, 15_000);
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        const data = await res.json();
-
-        if (Array.isArray(data.atoms) && data.atoms.length > 0) {
-          for (const atom of data.atoms) {
-            if (atom.punkto && atom.t) {
-              const r = await upsertAtom(atom);
-              if (r && r.inserted && !isHiddenAtom(atom)) {
-                newAtomIds.add(r.id);
-              }
-            }
-          }
-        }
-      } catch (nodeErr) {
-        console.warn(`[sync] latest error for ${url}:`, nodeErr);
-        anyError = true;
-      }
-    }
-
-    setSyncStatus(anyError ? 'error' : 'ok');
-    await refreshUI(newAtomIds);
-  } catch (err) {
-    console.warn('[sync] unexpected error:', err);
-    setSyncStatus('error');
-  } finally {
-    isSyncing = false;
-  }
-}
-
-// Discover peers from /info on all known nodes and register them in the nodes table
-async function discoverPeers() {
-  for (const seedUrl of nodeRegistry.keys()) {
-    try {
-      const res = await fetchJsonWithTimeout(`${seedUrl}/info`, 8_000);
-      if (!res.ok) continue;
-      const info = await res.json();
-      const peers = Array.isArray(info.peers) ? info.peers : [];
-      for (const peerUrl of peers) {
-        const url = peerUrl.replace(/\/$/, '');
-        if (!url) continue;
-        // Add to in-memory registry
-        if (!nodeRegistry.hasNode(url)) {
-          nodeRegistry.registerNode(url);
-          console.log('[lb] discovered peer:', url);
-        }
-        // Register in Dexie for syncFeed
-        await ensureNode(url, 0);
-      }
-    } catch (err) {
-      console.warn(`[lb] peer discovery error for ${seedUrl}:`, err.message);
-    }
-  }
-}
 
 // ---------------------------------------------------------------------------
 // deck.gl rendering
@@ -1345,6 +1273,21 @@ function initMap() {
   });
   map.addControl(deckOverlay);
 
+  syncEngine = createSyncEngine({
+    nodeUrl: NODE_URL,
+    seedNodes: SEED_NODES,
+    syncIntervalMs: SYNC_INTERVAL_MS,
+    nodeRegistry,
+    isHiddenAtom,
+    callbacks: {
+      onSyncStart: () => setSyncStatus('syncing'),
+      onSyncDone: ({ anyError }) => setSyncStatus(anyError ? 'error' : 'ok'),
+      onSyncError: () => setSyncStatus('error'),
+      onAtomsChanged: (newAtomIds) => refreshUI(newAtomIds),
+      onPeersChanged: () => refreshSettingsNetworkInfo().catch(() => {}),
+    },
+  });
+
   map.on('load', async () => {
     console.log('[map] loaded');
 
@@ -1397,8 +1340,8 @@ function initMap() {
     }
 
     // Discover peers from all known nodes, then start sync
-    await discoverPeers();
-    await syncFeed();
+    await syncEngine.discoverPeers();
+    await syncEngine.syncFeed();
     initialSyncDone = true;
     await refreshUI();
 
@@ -1410,7 +1353,7 @@ function initMap() {
     // Show first-visit onboarding hint (skipped for deep-link visitors and repeat users)
     showOnboarding();
 
-    syncTimer = setInterval(syncFeed, SYNC_INTERVAL_MS);
+    syncEngine.start();
   });
 }
 
@@ -1763,8 +1706,8 @@ function wireEvents() {
 // ---------------------------------------------------------------------------
 
 async function boot() {
-  console.log('PUNKTO APP.JS LOADED v57 HARD MARKER 2026-05-16-3');
-  window.PUNKTO_APP_VERSION = 'v57-hard-marker-2026-05-16-3';
+  console.log('PUNKTO APP.JS LOADED v58 HARD MARKER 2026-05-16-4');
+  window.PUNKTO_APP_VERSION = 'v58-hard-marker-2026-05-16-4';
 
   console.log('[punkto] booting...');
 
