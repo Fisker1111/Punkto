@@ -95,22 +95,26 @@ export function openSettings() {
   _settingsOpen = true;
   const menu = document.getElementById('settings-menu');
   const bd   = document.getElementById('settings-backdrop');
+  const btn  = document.getElementById('nav-settings');
   if (menu) {
     menu.classList.add('open');
     menu.setAttribute('aria-hidden', 'false');
   }
-  if (bd) bd.classList.add('open');
+  if (bd)  bd.classList.add('open');
+  if (btn) btn.classList.add('active');
 }
 
 export function closeSettings() {
   _settingsOpen = false;
   const menu = document.getElementById('settings-menu');
   const bd   = document.getElementById('settings-backdrop');
+  const btn  = document.getElementById('nav-settings');
   if (menu) {
     menu.classList.remove('open');
     menu.setAttribute('aria-hidden', 'true');
   }
-  if (bd) bd.classList.remove('open');
+  if (bd)  bd.classList.remove('open');
+  if (btn) btn.classList.remove('active');
 }
 
 export function toggleSettings() {
