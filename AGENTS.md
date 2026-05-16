@@ -30,7 +30,7 @@ Approximate nav weighting:
 |---|---|
 | **ChatGPT** | Product direction, architecture specs, PR specs, review text |
 | **Codex** | Code implementation, tests, commits, PRs |
-| **AZ (Agent Zero)** | Deploy, Docker, Caddy, live-node verification, logs, OPS, security |
+| **AZ (Agent Zero)** | Deploy, Docker, Caddy, live-node verification, logs, OPS, security — **not product scope** |
 | **Human** | Final decisions, direction overrides, manual testing |
 
 ---
