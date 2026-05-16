@@ -48,6 +48,10 @@ Approximate nav weighting:
 - Keep Text and Map as two views of the same atoms.
 - Keep Settings as the place for identity/network/debug/admin.
 - Always report files changed, tests run, and manual verification.
+- **Do not silently expand scope.**
+  - If a task is implementation, do not redesign.
+  - If a task is deployment, do not refactor app code.
+  - If a task is review, do not apply unrelated fixes.
 
 ---
 
