@@ -21,6 +21,7 @@ Current architecture:
 - **Sync/network layer**
   - `pwa/sync/node-registry.js`
   - `pwa/sync/network-client.js`
+  - `pwa/sync/sync-engine.js`
 - **App coordinator**
   - `pwa/app.js`
 - **Protocol/identity pieces**
@@ -160,6 +161,15 @@ Owns network I/O primitives:
 - fetch node info
 
 Boundary rule: sync modules should not mutate DOM directly; they return data/errors for coordinator decisions.
+
+### `pwa/sync/sync-engine.js`
+Owns sync orchestration behavior:
+- periodic sync timer lifecycle (`start` / `stop`)
+- feed sync loop across known nodes (`syncFeed`)
+- peer discovery loop from `/info` (`discoverPeers`)
+- coordination across `network-client`, `node-registry`, and storage helpers
+- callback notifications back to `app.js` for UI refresh and status updates
+
 
 ---
 
