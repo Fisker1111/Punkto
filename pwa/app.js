@@ -14,6 +14,9 @@ import {
 import { initTextView, renderTextFeed } from './ui-text.js';
 import { initMapView, showMapView } from './ui-map.js';
 import { decodeAtomLocation, encodeCurrentLocation, encodeLocation, haversineMeters, FLOOR_HEIGHT_M } from './core/location.js';
+import { db } from './storage/db.js';
+import { upsertAtom, getAllAtomsNewestFirst, getAllAtoms } from './storage/atom-store.js';
+import { getStoredNodes, ensureNode } from './storage/node-store.js';
 import { fmtTime, fmtRelativeTime, fmtCoords, fmtDistance, fmtAltitudeLabel, deriveTitle, deriveCategory, escHtml, renderAtomText } from './core/display.js';
 import { isHiddenAtom, isVerifiedAtom } from './core/atoms.js';
 
@@ -102,29 +105,8 @@ async function postAtomToNetwork(atomBody) {
 }
 
 // ---------------------------------------------------------------------------
-// Dexie (IndexedDB)
+// IndexedDB (Dexie)
 // ---------------------------------------------------------------------------
-
-const db = new Dexie('punkto');
-db.version(1).stores({
-  atoms: '++id, punkto, t, lat, lon, alt',
-  meta:  'key',
-});
-// v2: clear stale atoms from old feed (forces re-sync from server)
-db.version(2).stores({
-  atoms: '++id, punkto, t, lat, lon, alt',
-  meta:  'key',
-}).upgrade(tx => tx.table('atoms').clear());
-db.version(3).stores({
-  atoms: '++id, punkto, t, lat, lon, alt',
-  meta:  'key',
-}).upgrade(tx => tx.table('atoms').clear());
-// v4: add nodes table for per-node sync cursors and peer discovery
-db.version(4).stores({
-  atoms: '++id, punkto, t, lat, lon, alt',
-  meta:  'key',
-  nodes: 'url',
-});
 
 // ---------------------------------------------------------------------------
 // State
@@ -353,36 +335,6 @@ async function focusPunkto(id) {
 // ---------------------------------------------------------------------------
 
 // ---------------------------------------------------------------------------
-// IndexedDB helpers
-// ---------------------------------------------------------------------------
-
-
-async function upsertAtom(atom) {
-  // Decode location from punkto field
-  const loc = decodeAtomLocation(atom.punkto);
-  const record = {
-    punkto: atom.punkto,
-    t:      atom.t,
-    x:      atom.x || '',
-    f:      atom.f || '',
-    lat:    loc ? loc.lat : 0,
-    lon:    loc ? loc.lon : 0,
-    alt:    loc ? loc.alt : 0,
-  };
-  // Upsert by punkto+t (natural key)
-  const existing = await db.atoms
-    .where('punkto').equals(atom.punkto)
-    .and(a => a.t === atom.t)
-    .first();
-  if (!existing) {
-    // Return the newly assigned auto-increment id so syncFeed can flag fresh arrivals.
-    const newId = await db.atoms.add(record);
-    return { inserted: true, id: newId };
-  }
-  return { inserted: false, id: existing.id };
-}
-
-// ---------------------------------------------------------------------------
 // Sync
 // ---------------------------------------------------------------------------
 
@@ -396,7 +348,7 @@ async function syncFeed() {
 
   try {
     // Get all known nodes from Dexie; always include DEFAULT NODE_URL
-    const storedNodes = await db.nodes.toArray();
+    const storedNodes = await getStoredNodes();
     const nodeUrls = new Set(storedNodes.map(n => n.url));
     nodeUrls.add(NODE_URL);
 
@@ -450,10 +402,7 @@ async function discoverPeers() {
           console.log('[lb] discovered peer:', url);
         }
         // Register in Dexie for syncFeed
-        const existing = await db.nodes.get(url);
-        if (!existing) {
-          await db.nodes.put({ url, cursor: 0 });
-        }
+        await ensureNode(url, 0);
       }
     } catch (err) {
       console.warn(`[lb] peer discovery error for ${seedUrl}:`, err.message);
@@ -575,7 +524,7 @@ async function renderAtoms(newAtomIds = null) {
   if (!deckOverlay) return;
 
   // Filter out hidden system/test atoms so they never appear on the map either.
-  const atoms = (await db.atoms.orderBy('t').reverse().toArray())
+  const atoms = (await getAllAtomsNewestFirst())
     .filter(a => !isHiddenAtom(a));
 
   // Phase 2: per-punkto aggregation for count badges and multi-atom popups.
@@ -991,7 +940,7 @@ function drawLeaderLines() {
 async function refreshUI(newAtomIds = null) {
   // Compute the visible-atom count (after filtering hidden system/test handles).
   // The full DB count is not exposed in the UI — users see only the clean subset.
-  const allAtoms = await db.atoms.orderBy('t').reverse().toArray();
+  const allAtoms = await getAllAtomsNewestFirst();
   const visibleAtoms = allAtoms.filter(a => !isHiddenAtom(a));
   const total = visibleAtoms.length;
   elCountNum.textContent = total;
@@ -1508,11 +1457,8 @@ function initMap() {
     // Init load balancer registry and seed Dexie nodes table with SEED_NODES
     initNodeRegistry();
     for (const url of SEED_NODES) {
-      const existing = await db.nodes.get(url);
-      if (!existing) {
-        await db.nodes.put({ url, cursor: 0 });
-        console.log('[lb] seeded node:', url);
-      }
+      const seeded = await ensureNode(url, 0);
+      if (seeded) console.log('[lb] seeded node:', url);
     }
 
     // Discover peers from all known nodes, then start sync
@@ -1788,7 +1734,7 @@ async function openSettingsMenu() {
   shellOpenSettings();
   // Update visible atom count immediately from the DB-backed UI state
   try {
-    const all = await db.atoms.toArray();
+    const all = await getAllAtoms();
     updateSettingsCount(all.filter(a => !isHiddenAtom(a)).length);
   } catch {
     updateSettingsCount(0);
@@ -1945,7 +1891,7 @@ async function boot() {
   // "No atoms yet. Syncing…" placeholder when IndexedDB already has atoms.
   try {
     // Count only visible atoms so the number matches what actually renders.
-    const cachedAll = await db.atoms.toArray();
+    const cachedAll = await getAllAtoms();
     const cachedCount = cachedAll.filter(a => !isHiddenAtom(a)).length;
     elCountNum.textContent = cachedCount;
     if (elSettingsCount) elSettingsCount.textContent = String(cachedCount);
