@@ -28,8 +28,13 @@ app2.punkto.xyz {
     header @sw Pragma "no-cache"
     header @sw Expires "0"
 
-    @app path /app.js /index.html /reset.html
+    @app {
+        not path /lib/*
+        path *.html *.js
+    }
     header @app Cache-Control "no-cache, no-store, must-revalidate"
+    header @app Pragma "no-cache"
+    header @app Expires "0"
 
     @static_libs path /lib/*
     header @static_libs Cache-Control "public, max-age=86400, immutable"

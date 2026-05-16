@@ -32,9 +32,14 @@
     header @sw Pragma "no-cache"
     header @sw Expires "0"
 
-    # App shell — never cache
-    @app path /app.js /index.html /reset.html
+    # App shell — never cache (all root-level JS + HTML)
+    @app {
+        not path /lib/*
+        path *.html *.js
+    }
     header @app Cache-Control "no-cache, no-store, must-revalidate"
+    header @app Pragma "no-cache"
+    header @app Expires "0"
 
     # Static libs — long cache
     @static_libs path /lib/*
