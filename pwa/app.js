@@ -1206,7 +1206,7 @@ async function submitAtom() {
     if (author) localStorage.setItem('punkto-author', author);
 
     // Post via protocol-native round-robin load balancer
-    const json = await postAtomToNetwork(atom);
+    const json = await postAtomToNetwork(atom, nodeRegistry);
 
     // Also save locally immediately
     await upsertAtom(atom);
