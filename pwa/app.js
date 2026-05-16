@@ -4,6 +4,17 @@
  */
 
 import { encode, decode } from './geohash3d.js';
+import {
+  initShell,
+  showPage as shellShowPage,
+  openSettings as shellOpenSettings,
+  closeSettings as shellCloseSettings,
+  toggleSettings as shellToggleSettings,
+  isSettingsOpen as shellIsSettingsOpen,
+  setCounts as shellSetCounts,
+} from './ui-shell.js';
+import { initTextView, renderTextFeed } from './ui-text.js';
+import { initMapView, showMapView } from './ui-map.js';
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -143,80 +154,22 @@ let _mainFeedAtoms  = [];       // last sorted atom batch for main feed
 let _locationDenied = false;    // true when geolocation denied/unavailable
 
 // ── App shell: two views (Text / Map) ─────────────────────────────────────────
-// showPage — toggle between 'text' feed and 'map' view.
+// showPage — thin wrapper. Body/nav state + page lifecycle live in ui-shell.js.
+// Page-specific handlers (text feed render, map init/resize) are registered
+// via initShell({ onShowText, onShowMap }) in boot().
 function showPage(page) {
   currentPage = page;
-  document.body.classList.remove('page-text', 'page-map');
-  document.body.classList.add('page-' + page);
-
-  // Sync nav active states for view toggles
-  ['text', 'map'].forEach(p => {
-    const btn = document.getElementById('nav-' + p);
-    if (btn) btn.classList.toggle('active', p === page);
-  });
-
-  if (page === 'text') renderMainFeed();
-  if (page === 'map') {
-    if (!map) {
-      // First time showing map — initialize now that container is visible
-      initMap();
-    } else {
-      requestAnimationFrame(() => { if (map) map.resize(); });
-    }
-  }
+  shellShowPage(page);
 }
 
+// renderMainFeed — thin wrapper that delegates to ui-text.js renderTextFeed.
+// Atom sorting/filtering is handled upstream in refreshUI()/syncFeed(), which
+// populates module-level _mainFeedAtoms before calling this.
 function renderMainFeed() {
-  const list     = document.getElementById('main-feed-list');
-  const emptyEl  = document.getElementById('main-empty-notes');
-  const countEl  = document.getElementById('main-atom-count');
-  if (!list) return;
-
-  const atoms = _mainFeedAtoms;
-  const locEl = document.getElementById('main-empty-location');
-  if (atoms.length === 0) {
-    list.innerHTML = '';
-    if (countEl) countEl.textContent = '';
-    if (_locationDenied || !navigator.geolocation) {
-      if (emptyEl)  emptyEl.style.display  = 'none';
-      if (locEl)    locEl.style.display    = '';
-    } else {
-      if (emptyEl)  emptyEl.style.display  = '';
-      if (locEl)    locEl.style.display    = 'none';
-    }
-    return;
-  }
-  if (locEl)    locEl.style.display    = 'none';
-  if (emptyEl)  emptyEl.style.display = 'none';
-  if (countEl)  countEl.textContent   = atoms.length + ' nearby';
-
-  list.innerHTML = atoms.map(atom => {
-    const title    = escHtml(deriveTitle(atom));
-    const cat      = deriveCategory(atom);
-    const verified = isVerifiedAtom(atom);
-    const raw      = String(atom.x || '').trim();
-    const preview  = raw.length > 120 ? raw.slice(0, 120) + '…' : raw;
-    const altLabel = Number.isFinite(Number(atom.alt)) ? fmtAltitudeLabel(Number(atom.alt)) : '';
-    const dist     = Number.isFinite(atom.distance) ? fmtDistance(atom.distance) : '';
-    const time     = atom.t ? fmtTime(atom.t) : '';
-    const meta     = [dist, altLabel, time].filter(Boolean).join(' · ');
-    const atomId   = String(atom.punkto || '').replace(/^p:/, '');
-
-    return '<div class="main-card" data-atom-id="' + escHtml(atomId) + '">\n' +
-      '  <div class="main-card-badges">\n' +
-      (cat      ? '    <span class="main-card-cat">'      + escHtml(cat) + '</span>\n' : '') +
-      (verified ? '    <span class="main-card-verified">✓ Verified</span>\n' : '') +
-      '  </div>\n' +
-      '  <h3 class="main-card-title">' + title + '</h3>\n' +
-      (preview && escHtml(preview) !== title
-        ? '  <p class="main-card-preview">' + escHtml(preview) + '</p>\n'
-        : '') +
-      (meta ? '  <div class="main-card-meta"><span>' + escHtml(meta) + '</span></div>\n' : '') +
-      '  <div class="main-card-actions">\n' +
-      '    <button class="main-card-show3d" data-action="show-in-3d" data-id="' + escHtml(atomId) + '">Show on map →</button>\n' +
-      '  </div>\n' +
-      '</div>';
-  }).join('\n');
+  renderTextFeed({
+    atoms: _mainFeedAtoms,
+    locationDenied: _locationDenied,
+  });
 }
 
 
@@ -2122,41 +2075,8 @@ function wireEvents() {
     }
   });
 
-  // Bottom navigation — Text / Map toggle, + add, ⚙ settings
-  const elNavText     = document.getElementById('nav-text');
-  const elNavMap      = document.getElementById('nav-map');
-  const elNavAddBtn   = document.getElementById('nav-add');
-  const elNavSettings = document.getElementById('nav-settings');
-  if (elNavText)     elNavText.addEventListener('click', () => showPage('text'));
-  if (elNavMap)      elNavMap.addEventListener('click',  () => showPage('map'));
-  if (elNavAddBtn)   elNavAddBtn.addEventListener('click', () => {
-    dismissOnboarding();
-    openModal();
-  });
-  if (elNavSettings) elNavSettings.addEventListener('click', e => {
-    e.stopPropagation();
-    renderNetworkPage();
-    renderMePage();
-    toggleSettingsMenu();
-  });
-  // "Show on map" clicks delegated on main-feed-list
-  const elMainFeedList = document.getElementById('main-feed-list');
-  if (elMainFeedList) {
-    elMainFeedList.addEventListener('click', e => {
-      const btn = e.target.closest('[data-action="show-in-3d"]');
-      if (!btn) return;
-      e.stopPropagation();
-      const id = btn.dataset.id || '';
-      if (id) focusPunkto(id);
-    });
-  }
-  // "Leave note here" in main empty state
-  document.addEventListener('click', e => {
-    if (e.target && e.target.id === 'main-empty-leave-btn') {
-      dismissOnboarding();
-      openModal();
-    }
-  });
+  // Bottom navigation, feed-card delegation, and "Leave note here" CTA are
+  // wired by the ui-shell.js and ui-text.js modules, registered in boot().
   setupKeyManagement(); // registered here, not from atom handler
 }
 // ---------------------------------------------------------------------------
@@ -2164,8 +2084,8 @@ function wireEvents() {
 // ---------------------------------------------------------------------------
 
 async function boot() {
-  console.log('PUNKTO APP.JS LOADED v50 HARD MARKER 2026-05-15-9');
-  window.PUNKTO_APP_VERSION = 'v51-hard-marker-2026-05-15-10';
+  console.log('PUNKTO APP.JS LOADED v52 HARD MARKER 2026-05-16-1');
+  window.PUNKTO_APP_VERSION = 'v52-hard-marker-2026-05-16-1';
 
   // Global click capture — diagnostic: logs every click to console
   document.addEventListener('click', (ev) => {
@@ -2219,6 +2139,39 @@ async function boot() {
   }
 
   wireEvents();
+
+  // Wire UI modules (shell / text / map). Callbacks delegate back to app.js
+  // so app.js still owns data and lifecycle; modules own DOM/markup/state.
+  initShell({
+    onShowText: () => renderMainFeed(),
+    onShowMap: () => {
+      if (!map) initMap();
+      else requestAnimationFrame(() => { if (map) map.resize(); });
+    },
+    onAdd: () => { dismissOnboarding(); openModal(); },
+    onOpenSettings: () => {
+      renderNetworkPage();
+      renderMePage();
+      shellToggleSettings();
+      if (shellIsSettingsOpen()) {
+        // refresh dynamic settings data when opening
+        openSettingsMenu().catch(() => {});
+      }
+    },
+  });
+  initTextView({
+    onShowOnMap: (id) => focusPunkto(id),
+    onLeaveNote: () => { dismissOnboarding(); openModal(); },
+    helpers: {
+      escHtml, deriveTitle, deriveCategory, isVerifiedAtom,
+      fmtAltitudeLabel, fmtDistance, fmtTime,
+    },
+  });
+  initMapView({
+    getMap: () => map,
+    initMap: () => initMap(),
+  });
+
   // Default to main view; go straight to 3D if deep-linking to a specific punkto
   showPage(deepLinkPunkto ? 'map' : 'text');
   if (deepLinkPunkto) setPanelOpen(false); // panel managed by 3D view when deep-linking
