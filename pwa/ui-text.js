@@ -46,7 +46,7 @@ export function initTextView({ onShowOnMap, onLeaveNote, helpers } = {}) {
 
   // "Leave note here" CTA in empty state
   document.addEventListener('click', (e) => {
-    if (e.target && (e.target.id === 'main-empty-leave-btn' || e.target.id === 'main-intro-leave-btn')) {
+    if (e.target && e.target.id === 'main-empty-leave-btn') {
       if (_onLeaveNote) _onLeaveNote();
     }
   });
@@ -117,7 +117,6 @@ export function renderTextFeed({ atoms = [], locationDenied = false } = {}) {
   const countEl = document.getElementById('main-atom-count');
   const statusCountEl = document.getElementById('main-status-count');
   const locEl   = document.getElementById('main-empty-location');
-  const introEl = document.getElementById('main-intro-card');
   if (!list) return;
 
   if (!atoms || atoms.length === 0) {
@@ -125,18 +124,15 @@ export function renderTextFeed({ atoms = [], locationDenied = false } = {}) {
     if (countEl) countEl.textContent = '';
     if (statusCountEl) statusCountEl.textContent = '0 nearby';
     if (locationDenied || !navigator.geolocation) {
-      if (introEl) introEl.style.display = 'none';
       if (emptyEl) emptyEl.style.display = 'none';
       if (locEl)   locEl.style.display   = '';
     } else {
-      if (introEl) introEl.style.display = '';
       if (emptyEl) emptyEl.style.display = '';
       if (locEl)   locEl.style.display   = 'none';
     }
     return;
   }
 
-  if (introEl) introEl.style.display = 'none';
   if (locEl)   locEl.style.display   = 'none';
   if (emptyEl) emptyEl.style.display = 'none';
   if (countEl) countEl.textContent  = atoms.length + ' nearby';
@@ -157,8 +153,8 @@ export function renderTextFeed({ atoms = [], locationDenied = false } = {}) {
     return '<div class="main-card" data-atom-id="' + _escHtml(atomId) + '">\n' +
       '  <div class="main-card-badges">\n' +
       '    <span class="main-card-icon">⌁</span>\n' +
+      '    <span class="main-card-type">Punkti</span>\n' +
       (cat      ? '    <span class="main-card-cat">'      + _escHtml(cat) + '</span>\n' : '') +
-      (verified ? '    <span class="main-card-verified">✓ Verified</span>\n' : '') +
       '  </div>\n' +
       '  <h3 class="main-card-title">' + title + '</h3>\n' +
       (preview && _escHtml(preview) !== title

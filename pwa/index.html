@@ -150,7 +150,7 @@
     .nav-btn:active { opacity: 0.6; }
     .nav-view { flex: 35; }
     .nav-add  { flex: 15; }
-    .nav-settings-btn { flex: 15; font-size: 18px; }
+    .nav-settings-btn { flex: 15; font-size: 13px; letter-spacing: 0.02em; }
 
     .nav-view.active { color: var(--accent); }
     .nav-view.active::before {
@@ -301,9 +301,9 @@
       z-index: 10;
     }
 
-    #main-feed { padding: 16px 18px 32px; max-width: 940px; margin: 0 auto; }
-    .main-page-header { margin-bottom: 10px; }
-    .main-page-status { display:inline-flex; align-items:center; gap:10px; padding:7px 12px; border-radius:999px; border:1px solid rgba(255,255,255,0.08); background:rgba(255,255,255,0.02); margin-bottom:12px; }
+    #main-feed { padding: 20px 18px 34px; max-width: 820px; margin: 0 auto; }
+    .main-page-header { margin-bottom: 14px; }
+    .main-page-status { display:inline-flex; align-items:center; gap:10px; padding:8px 14px; border-radius:999px; border:1px solid rgba(120,150,190,0.28); background:rgba(23,33,50,0.62); margin-bottom:12px; backdrop-filter: blur(10px); }
     #main-brand { font-size:14px; font-weight:700; }
     #main-status-count { font-size:12px; color: var(--text-mid); }
     #main-sync-indicator { width:8px; height:8px; border-radius:50%; background: var(--text-dim);}
@@ -313,7 +313,7 @@
     #main-sync-indicator.lagging{ background: var(--warning); box-shadow: 0 0 0 2px rgba(255,179,0,.25); }
 
     #main-feed-heading {
-      font-size: 10px;
+      font-size: 11px;
       font-weight: 700;
       letter-spacing: 0.14em;
       text-transform: uppercase;
@@ -327,7 +327,7 @@
       display: block;
     }
     #main-feed-subtitle {
-      font-size: 13px;
+      font-size: 14px;
       color: var(--text-mid);
       padding: 0 0 12px;
       line-height: 1.5;
@@ -342,12 +342,12 @@
     }
     .main-category-chips::-webkit-scrollbar { display: none; }
     .main-chip {
-      border: 1px solid var(--border2);
-      background: var(--surface2);
-      color: var(--text-dim);
+      border: 1px solid rgba(120,150,190,0.24);
+      background: rgba(27,37,54,0.72);
+      color: var(--text-mid);
       font-size: 11px;
       border-radius: 999px;
-      padding: 6px 12px;
+      padding: 7px 13px;
       white-space: nowrap;
     }
     .main-chip.active {
@@ -377,22 +377,22 @@
     /* Feed cards */
     #main-feed-list { display:flex; flex-direction:column; gap:12px; }
     .main-card {
-      padding: 14px 14px 12px;
-      border: 1px solid rgba(255,255,255,0.08);
-      border-radius: 14px;
-      background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.015));
+      padding: 16px 16px 14px;
+      border: 1px solid rgba(122,156,196,0.24);
+      border-radius: 16px;
+      background: linear-gradient(180deg, rgba(31,43,64,0.94), rgba(23,34,53,0.94));
       display:flex;
       flex-direction:column;
       gap:10px;
     }
     .main-card-badges { display:flex; align-items:center; gap:6px; flex-wrap:wrap; }
     .main-card-icon { width:28px; height:28px; border-radius:50%; background: rgba(0,212,255,0.08); border:1px solid rgba(0,212,255,0.35); display:inline-flex; align-items:center; justify-content:center; color: var(--accent); font-size:13px; font-weight:700; }
-    .main-card-cat, .main-card-verified { font-size:10px; font-weight:600; letter-spacing:0.06em; text-transform:uppercase; padding:4px 8px; border-radius:999px; background: rgba(255,255,255,0.05); color: var(--text-mid); }
-    .main-card-verified { color: var(--accent); background: rgba(0,212,255,0.1); }
+    .main-card-type, .main-card-cat { font-size:10px; font-weight:600; letter-spacing:0.06em; text-transform:uppercase; padding:4px 8px; border-radius:999px; background: rgba(255,255,255,0.05); color: var(--text-mid); }
+    .main-card-type { color: var(--accent); background: rgba(0,212,255,0.12); }
     .main-card-title { font-size:16px; font-weight:500; color:var(--text); line-height:1.35; }
     .main-card-preview { font-size:13px; line-height:1.5; color:var(--text-mid); }
     .main-card-meta { font-size:12px; color:var(--text-dim); }
-    .main-card-show3d { border:1px solid rgba(0,212,255,0.35); background: rgba(0,212,255,0.08); color: var(--accent); font-size:12px; border-radius:999px; padding:7px 12px; cursor:pointer; }
+    .main-card-show3d { appearance:none; border:1px solid rgba(0,212,255,0.35); background: rgba(0,212,255,0.11); color: var(--accent); font-size:12px; font-weight:600; border-radius:999px; padding:7px 12px; cursor:pointer; }
 
     /* Category pill */
     .atom-pill {
@@ -922,11 +922,6 @@
         <button class="main-chip" type="button">Questions</button>
         <button class="main-chip" type="button">Memories</button>
       </div>
-      <div id="main-intro-card" class="main-intro-card">
-        <h3>This place is quiet</h3>
-        <p>Punkto lets people leave small notes at real places.</p>
-        <button class="btn-cta" id="main-intro-leave-btn">Leave note here</button>
-      </div>
       <div id="main-feed-list"></div>
 
       <div id="main-empty-notes" class="main-empty" style="display:none;">
@@ -957,25 +952,25 @@
 
   <!-- ── Onboarding hint ──────────────────────────────────── -->
   <div id="onboarding-hint" aria-hidden="true">
-    <div class="hint-text">Tap <span class="hint-plus">+</span> to drop an atom at the map center</div>
+    <div class="hint-text">Tap <span class="hint-plus">+</span> to write a Punkti here</div>
   </div>
 
   <!-- ── Nearby panel ─────────────────────────────────────── -->
-  <div id="panel" role="complementary" aria-label="Nearby atoms">
+  <div id="panel" role="complementary" aria-label="Nearby Punkti">
     <div id="panel-header">
       <div class="label">Nearby text</div>
       <button id="panel-close" aria-label="Close nearby panel">✕</button>
     </div>
     <div id="atom-list">
       <div id="panel-list"></div>
-      <div id="atom-list-empty">No atoms yet.</div>
+      <div id="atom-list-empty">No Punkti yet.</div>
     </div>
   </div>
 
-  <!-- ── Add atom modal ───────────────────────────────────── -->
+  <!-- ── Write Punkti modal ───────────────────────────────────── -->
   <div id="modal-overlay" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="modal-title">
     <div id="modal" class="modal-box">
-      <h2 id="modal-title">Place punkti</h2>
+      <h2 id="modal-title">Write Punkti</h2>
       <div id="modal-location">…</div>
       <div id="modal-notice">
         <span class="icon">⚠</span>Public and permanent — this cannot be deleted.
@@ -1004,7 +999,7 @@
           </div>
         </div>
       </div>
-      <textarea id="modal-text" placeholder="What's here? (optional)"></textarea>
+      <textarea id="modal-text" placeholder="Write a note for this place (optional)"></textarea>
       <div id="modal-author-row">
         <input id="modal-author" type="text" placeholder="your name / handle (optional)" />
       </div>
@@ -1050,7 +1045,7 @@
   <nav id="bottom-nav" role="navigation" aria-label="Main navigation">
     <button class="nav-btn nav-view active" id="nav-text" aria-label="Text feed">Text</button>
     <button class="nav-btn nav-view" id="nav-map" aria-label="Map view">Map</button>
-    <button class="nav-btn nav-add" id="nav-add" aria-label="Add atom here"></button>
+    <button class="nav-btn nav-add" id="nav-add" aria-label="Write Punkti"></button>
     <button class="nav-btn nav-settings-btn" id="nav-settings" aria-label="Settings">Settings</button>
   </nav>
 
