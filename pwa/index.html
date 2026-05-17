@@ -27,9 +27,9 @@
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
-      --bg:        #0a0a0f;
-      --surface:   #13131a;
-      --surface2:  #1a1a24;
+      --bg:        #0f1118;
+      --surface:   #171a24;
+      --surface2:  #1f2430;
       --surface3:  #22222e;
       --border:    #1e1e2a;
       --border2:   #2a2a3a;
@@ -42,7 +42,7 @@
       --danger:    #ff5566;
       --success:   #00e676;
       --warning:   #ffb300;
-      --topbar-h:  56px;
+      --topbar-h:  0px;
       --nav-h:     60px;
       --panel-h:   280px;
       --safe-b:    env(safe-area-inset-bottom, 0px);
@@ -66,17 +66,20 @@
     /* ── Top bar ────────────────────────────────────────────── */
     #topbar {
       position: fixed;
-      top: 0; left: 0; right: 0;
-      height: var(--topbar-h);
-      background: rgba(19,19,26,0.85);
+      top: 10px; left: 50%;
+      transform: translateX(-50%);
+      height: 34px;
+      background: rgba(23,26,36,0.74);
       backdrop-filter: blur(12px);
       -webkit-backdrop-filter: blur(12px);
-      border-bottom: 1px solid var(--border);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 999px;
       display: flex;
       align-items: center;
-      padding: 0 18px;
+      padding: 0 12px;
       gap: 12px;
       z-index: 200;
+      pointer-events: none;
     }
     #topbar .brand {
       font-size: 18px;
@@ -298,7 +301,16 @@
       z-index: 10;
     }
 
-    #main-feed { padding: 0 0 32px; }
+    #main-feed { padding: 16px 18px 32px; max-width: 940px; margin: 0 auto; }
+    .main-page-header { margin-bottom: 10px; }
+    .main-page-status { display:inline-flex; align-items:center; gap:10px; padding:7px 12px; border-radius:999px; border:1px solid rgba(255,255,255,0.08); background:rgba(255,255,255,0.02); margin-bottom:12px; }
+    #main-brand { font-size:14px; font-weight:700; }
+    #main-status-count { font-size:12px; color: var(--text-mid); }
+    #main-sync-indicator { width:8px; height:8px; border-radius:50%; background: var(--text-dim);}
+    #main-sync-indicator.ok{ background: var(--success); box-shadow: 0 0 6px rgba(0,230,118,0.4); }
+    #main-sync-indicator.syncing{ background: var(--warning); animation: pulse 1s infinite; }
+    #main-sync-indicator.error{ background: var(--danger); }
+    #main-sync-indicator.lagging{ background: var(--warning); box-shadow: 0 0 0 2px rgba(255,179,0,.25); }
 
     #main-feed-heading {
       font-size: 10px;
@@ -306,25 +318,25 @@
       letter-spacing: 0.14em;
       text-transform: uppercase;
       color: var(--text-dim);
-      padding: 24px 20px 6px;
+      padding: 0 0 6px;
     }
     #main-atom-count {
       font-size: 11px;
       color: var(--text-dim);
-      padding: 0 20px 16px;
+      padding: 0 0 16px;
       display: block;
     }
     #main-feed-subtitle {
       font-size: 13px;
       color: var(--text-mid);
-      padding: 0 20px 12px;
+      padding: 0 0 12px;
       line-height: 1.5;
     }
     .main-category-chips {
       display: flex;
       gap: 8px;
       overflow-x: auto;
-      padding: 0 20px 14px;
+      padding: 0 0 14px;
       -webkit-overflow-scrolling: touch;
       scrollbar-width: none;
     }
@@ -344,7 +356,7 @@
       background: rgba(0,212,255,0.08);
     }
     .main-intro-card {
-      margin: 0 20px 16px;
+      margin: 0 0 16px;
       padding: 16px;
       border: 1px solid var(--border2);
       border-radius: 12px;
@@ -363,58 +375,24 @@
     }
 
     /* Feed cards */
-    .atom-card {
-      padding: 16px 20px;
-      border-bottom: 1px solid var(--border);
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      cursor: pointer;
-      transition: background 0.12s;
-    }
-    .atom-card:active { background: var(--surface); }
-    .atom-card-header {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      flex-wrap: wrap;
-    }
-    .atom-card-title {
-      font-size: 15px;
-      font-weight: 500;
-      color: var(--text);
-      line-height: 1.4;
-      flex: 1;
-      min-width: 0;
-    }
-    .atom-card-meta {
-      font-size: 11px;
-      color: var(--text-dim);
-      display: flex;
-      gap: 12px;
-      flex-wrap: wrap;
-    }
-    .atom-card-meta .dist { color: var(--accent); font-weight: 600; }
-    .atom-card-actions {
-      display: flex;
-      gap: 8px;
-      margin-top: 4px;
-    }
-    .atom-card-actions button {
-      background: var(--surface2);
-      border: 1px solid var(--border2);
-      color: var(--text-mid);
-      font-size: 11px;
-      padding: 5px 12px;
+    #main-feed-list { display:flex; flex-direction:column; gap:12px; }
+    .main-card {
+      padding: 14px 14px 12px;
+      border: 1px solid rgba(255,255,255,0.08);
       border-radius: 14px;
-      cursor: pointer;
-      font-family: inherit;
-      transition: all 0.15s;
+      background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.015));
+      display:flex;
+      flex-direction:column;
+      gap:10px;
     }
-    .atom-card-actions button:hover {
-      color: var(--accent);
-      border-color: var(--accent-dim);
-    }
+    .main-card-badges { display:flex; align-items:center; gap:6px; flex-wrap:wrap; }
+    .main-card-icon { width:28px; height:28px; border-radius:50%; background: rgba(0,212,255,0.08); border:1px solid rgba(0,212,255,0.35); display:inline-flex; align-items:center; justify-content:center; color: var(--accent); font-size:13px; font-weight:700; }
+    .main-card-cat, .main-card-verified { font-size:10px; font-weight:600; letter-spacing:0.06em; text-transform:uppercase; padding:4px 8px; border-radius:999px; background: rgba(255,255,255,0.05); color: var(--text-mid); }
+    .main-card-verified { color: var(--accent); background: rgba(0,212,255,0.1); }
+    .main-card-title { font-size:16px; font-weight:500; color:var(--text); line-height:1.35; }
+    .main-card-preview { font-size:13px; line-height:1.5; color:var(--text-mid); }
+    .main-card-meta { font-size:12px; color:var(--text-dim); }
+    .main-card-show3d { border:1px solid rgba(0,212,255,0.35); background: rgba(0,212,255,0.08); color: var(--accent); font-size:12px; border-radius:999px; padding:7px 12px; cursor:pointer; }
 
     /* Category pill */
     .atom-pill {
@@ -927,6 +905,13 @@
   <!-- ── Text / Feed page ─────────────────────────────────── -->
   <div id="page-text" role="main" aria-label="Text feed">
     <div id="main-feed">
+      <div class="main-page-header">
+        <div class="main-page-status">
+          <span id="main-brand">Punkto</span>
+          <span id="main-status-count">0 nearby</span>
+          <span id="main-sync-indicator" title="sync status"></span>
+        </div>
+      </div>
       <p id="main-feed-heading">Nearby</p>
       <span id="main-atom-count"></span>
       <p id="main-feed-subtitle">Read what’s nearby, or leave something here.</p>
@@ -945,8 +930,8 @@
       <div id="main-feed-list"></div>
 
       <div id="main-empty-notes" class="main-empty" style="display:none;">
-        <h3>Nothing here yet</h3>
-        <p>Be the first to leave something at this place.</p>
+        <h3>This place is quiet</h3>
+        <p>Punkto lets people leave small notes at real places.</p>
         <button class="btn-cta" id="main-empty-leave-btn">Leave note here</button>
       </div>
 
@@ -1066,7 +1051,7 @@
     <button class="nav-btn nav-view active" id="nav-text" aria-label="Text feed">Text</button>
     <button class="nav-btn nav-view" id="nav-map" aria-label="Map view">Map</button>
     <button class="nav-btn nav-add" id="nav-add" aria-label="Add atom here"></button>
-    <button class="nav-btn nav-settings-btn" id="nav-settings" aria-label="Settings">⚙</button>
+    <button class="nav-btn nav-settings-btn" id="nav-settings" aria-label="Settings">Settings</button>
   </nav>
 
   <!-- ── App module ───────────────────────────────────────── -->
