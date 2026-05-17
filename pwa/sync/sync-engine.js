@@ -1,6 +1,8 @@
 import { getStoredNodes, ensureNode } from '../storage/node-store.js';
 import { upsertAtom } from '../storage/atom-store.js';
 import { fetchJsonWithTimeout } from './network-client.js';
+import { normalizeAtomPayload } from '../protocol/atom-normalize.js';
+import { isValidAtom } from '../protocol/atom-validate.js';
 
 export function createSyncEngine({
   nodeUrl,
@@ -40,9 +42,10 @@ export function createSyncEngine({
 
           if (Array.isArray(data.atoms) && data.atoms.length > 0) {
             for (const atom of data.atoms) {
-              if (atom.punkto && atom.t) {
-                const r = await upsertAtom(atom);
-                if (r && r.inserted && !isHiddenAtom(atom)) {
+              const normalizedAtom = normalizeAtomPayload(atom);
+              if (isValidAtom(normalizedAtom)) {
+                const r = await upsertAtom(normalizedAtom);
+                if (r && r.inserted && !isHiddenAtom(normalizedAtom)) {
                   newAtomIds.add(r.id);
                 }
               }
