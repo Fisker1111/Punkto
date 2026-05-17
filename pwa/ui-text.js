@@ -184,11 +184,15 @@ export function renderTextFeed({ atoms = [], locationDenied = false } = {}) {
         ? '  <p class="main-card-preview">' + _escHtml(preview) + '</p>\n'
         : '') +
       (meta ? '  <div class="main-card-meta"><span>' + _escHtml(meta) + '</span></div>\n' : '') +
-      '  <div class="main-card-meta"><span>' + _escHtml(author) + ' · ' + _escHtml(trust) + '</span></div>\n' +
-      '  <div class="main-card-meta"><span>0 replies</span></div>\n' +
-      '  <div class="main-card-actions">\n' +
+      '  <div class="main-card-footer">\n' +
+      '    <div class="main-card-meta-group">\n' +
+      '      <div class="main-card-meta"><span>' + _escHtml(author) + ' · ' + _escHtml(trust) + '</span></div>\n' +
+      '      <div class="main-card-meta"><span>0 replies</span></div>\n' +
+      '    </div>\n' +
+      '    <div class="main-card-actions">\n' +
       '    <button class="main-card-show3d" data-action="show-in-3d" data-id="' + _escHtml(atomId) + '">Show on map →</button>\n' +
       '    <button class="main-card-reply" data-action="reply-placeholder" data-id="' + _escHtml(atomId) + '">Reply</button>\n' +
+      '    </div>\n' +
       '  </div>\n' +
       '</div>';
   }).join('\n');
