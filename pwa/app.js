@@ -1427,8 +1427,8 @@ function wireEvents() {
 // ---------------------------------------------------------------------------
 
 async function boot() {
-  console.log('PUNKTO APP.JS LOADED v64 HARD MARKER 2026-05-17-3');
-  window.PUNKTO_APP_VERSION = 'v64-hard-marker-2026-05-17-3';
+  console.log('PUNKTO APP.JS LOADED v65 HARD MARKER 2026-05-17-1');
+  window.PUNKTO_APP_VERSION = 'v65-hard-marker-2026-05-17-1';
 
   console.log('[punkto] booting...');
 
@@ -1514,20 +1514,57 @@ boot();
 
 // --- Key Management ---
 let currentIdentity = null;
+const AUTHOR_STORAGE_KEYS = ['punkto-name', 'punkto-author'];
+
+function getStoredAuthorName() {
+  for (const key of AUTHOR_STORAGE_KEYS) {
+    const value = localStorage.getItem(key);
+    if (value && value.trim()) return value.trim();
+  }
+  return '';
+}
+
+function setStoredAuthorName(name) {
+  const cleaned = (name || '').trim();
+  localStorage.setItem('punkto-name', cleaned);
+  localStorage.setItem('punkto-author', cleaned);
+}
+
+function shortFingerprint(pubkey) {
+  if (!pubkey) return '—';
+  if (pubkey.length <= 16) return pubkey;
+  return `${pubkey.slice(0, 8)}…${pubkey.slice(-8)}`;
+}
 
 function displayKeyInfo(identity) {
+  const name = getStoredAuthorName();
   if (!identity) {
-    renderSettingsView({ identity: { status: 'No key loaded.' } });
+    renderSettingsView({
+      identity: {
+        name,
+        status: 'No key on this device',
+        helper: 'Punktis you write will be unsigned.',
+        canSave: false,
+        canLoad: !!localStorage.getItem('punkto-identity'),
+      },
+    });
     return;
   }
   renderSettingsView({
     identity: {
-      status: 'Key loaded.',
+      name,
+      status: 'Key loaded on this device',
+      helper: 'New Punktis can be signed.',
       authorId: identity.authorId,
       pubkey: identity.pubkey ? identity.pubkey.slice(0, 20) + '...' : '—',
+      shortPubkey: shortFingerprint(identity.pubkey),
       mnemonic: Array.isArray(identity.mnemonic) ? identity.mnemonic.join(' ') : '—',
+      canSave: true,
+      canLoad: !!localStorage.getItem('punkto-identity'),
     },
   });
+  const meShort = document.getElementById('me-author-short');
+  if (meShort) meShort.textContent = shortFingerprint(identity.pubkey);
 }
 
 function setupKeyManagement() {
@@ -1566,6 +1603,7 @@ function setupKeyManagement() {
       if (!currentIdentity) return;
       if (!confirm('localStorage is not secure. Save temporarily?')) return;
       localStorage.setItem('punkto-identity', JSON.stringify(currentIdentity));
+      displayKeyInfo(currentIdentity);
     },
     onLoadKey: () => {
       const saved = localStorage.getItem('punkto-identity');
@@ -1574,6 +1612,10 @@ function setupKeyManagement() {
         const identity = JSON.parse(saved);
         currentIdentity = identity; displayKeyInfo(identity);
       } catch (err) { console.error('[identity] load failed:', err); }
+    },
+    onNameChanged: (name) => {
+      setStoredAuthorName(name);
+      displayKeyInfo(currentIdentity);
     },
     onPrintMnemonic: () => {
       if (!currentIdentity) return;
@@ -1594,4 +1636,5 @@ function setupKeyManagement() {
       a.download = 'punkto-key.json'; a.click();
     },
   });
+  displayKeyInfo(currentIdentity);
 }
