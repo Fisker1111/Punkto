@@ -116,14 +116,13 @@ function _fmtTime(t) {
 
 function _authorLabel(atom) {
   const author = String(atom?.author || atom?.f || '').trim();
-  return author ? `by ${author}` : 'anonymous';
+  return author ? `by ${author}` : 'by anonymous';
 }
 
-function _trustLabels(atom) {
+function _trustLabel(atom) {
   const hasSig = Boolean(atom?.sig);
-  const signedLabel = hasSig ? 'signed' : 'unsigned';
-  const keyLabel = _isVerified(atom) ? 'verified key' : 'unknown key';
-  return { signedLabel, keyLabel };
+  if (!hasSig) return 'unsigned';
+  return _isVerified(atom) ? 'verified' : 'signed';
 }
 
 /**
@@ -164,7 +163,6 @@ export function renderTextFeed({ atoms = [], locationDenied = false } = {}) {
   list.innerHTML = atoms.map((atom) => {
     const title    = _escHtml(_deriveTitle(atom));
     const cat      = _deriveCategory(atom);
-    const verified = _isVerified(atom);
     const raw      = String(atom.x || '').trim();
     const preview  = raw.length > 120 ? raw.slice(0, 120) + '…' : raw;
     const altLabel = Number.isFinite(Number(atom.alt)) ? _fmtAltLabel(Number(atom.alt)) : '';
@@ -173,7 +171,7 @@ export function renderTextFeed({ atoms = [], locationDenied = false } = {}) {
     const meta     = [dist, altLabel, time].filter(Boolean).join(' · ');
     const atomId   = stripPunktoPrefix(atom.punkto);
     const author   = _authorLabel(atom);
-    const trust    = _trustLabels(atom);
+    const trust    = _trustLabel(atom);
 
     return '<div class="main-card" data-atom-id="' + _escHtml(atomId) + '">\n' +
       '  <div class="main-card-badges">\n' +
@@ -186,7 +184,7 @@ export function renderTextFeed({ atoms = [], locationDenied = false } = {}) {
         ? '  <p class="main-card-preview">' + _escHtml(preview) + '</p>\n'
         : '') +
       (meta ? '  <div class="main-card-meta"><span>' + _escHtml(meta) + '</span></div>\n' : '') +
-      '  <div class="main-card-meta"><span>' + _escHtml(author) + ' · ' + _escHtml(trust.signedLabel) + ' · ' + _escHtml(trust.keyLabel) + '</span></div>\n' +
+      '  <div class="main-card-meta"><span>' + _escHtml(author) + ' · ' + _escHtml(trust) + '</span></div>\n' +
       '  <div class="main-card-meta"><span>0 replies</span></div>\n' +
       '  <div class="main-card-actions">\n' +
       '    <button class="main-card-show3d" data-action="show-in-3d" data-id="' + _escHtml(atomId) + '">Show on map →</button>\n' +
