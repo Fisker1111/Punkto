@@ -322,7 +322,7 @@ function hashAuthorHue(author) {
 /**
  * Phase 2: build and show a MapLibre popup for one or more atoms at a
  * given lngLat. If `atomOrAtoms` is an array with length > 1, renders a
- * 'N atoms at this Punkto' heading followed by a list. Otherwise renders
+ * 'N Punkti at this place' heading followed by a list. Otherwise renders
  * the single-atom popup (same markup the ScatterplotLayer produced).
  */
 function openAtomPopup(atomOrAtoms, lngLat) {
@@ -346,7 +346,7 @@ function openAtomPopup(atomOrAtoms, lngLat) {
   } else {
     // Multi-atom: sort newest first, show all
     const sorted = atoms.slice().sort((a, b) => (b.t || 0) - (a.t || 0));
-    const head = `<div class="popup-meta" style="font-weight:600;">${sorted.length} atoms at this Punkto</div>`;
+    const head = `<div class="popup-meta" style="font-weight:600;">${sorted.length} Punkti at this place</div>`;
     const items = sorted.map(a => {
       const text = a.text || a.x || '';
       const timeStr = fmtTime(a.t);
@@ -613,7 +613,7 @@ function updateBubbleElement(el, atom, count = 1, group = null) {
   el._punktoGroup = group || [atom];
 
   const badgeHtml = count > 1
-    ? `<span class="atom-bubble-count" title="${count} atoms at this Punkto">+${count - 1}</span>`
+    ? `<span class="atom-bubble-count" title="${count} Punkti at this place">+${count - 1}</span>`
     : '';
 
   // Iteration 1b: altitude badge for atoms above ground.
@@ -1427,8 +1427,8 @@ function wireEvents() {
 // ---------------------------------------------------------------------------
 
 async function boot() {
-  console.log('PUNKTO APP.JS LOADED v62 HARD MARKER 2026-05-17-1');
-  window.PUNKTO_APP_VERSION = 'v62-hard-marker-2026-05-17-1';
+  console.log('PUNKTO APP.JS LOADED v63 HARD MARKER 2026-05-17-2');
+  window.PUNKTO_APP_VERSION = 'v63-hard-marker-2026-05-17-2';
 
   console.log('[punkto] booting...');
 
