@@ -11,6 +11,8 @@
  * and each atom may include a `distance` field (meters).
  */
 
+import { stripPunktoPrefix } from './protocol/punkto-id.js';
+
 let _onShowOnMap = null;
 let _onLeaveNote = null;
 let _helpers     = null;
@@ -147,7 +149,7 @@ export function renderTextFeed({ atoms = [], locationDenied = false } = {}) {
     const dist     = Number.isFinite(atom.distance) ? _fmtDistance(atom.distance) : '';
     const time     = atom.t ? _fmtTime(atom.t) : '';
     const meta     = [dist, altLabel, time].filter(Boolean).join(' · ');
-    const atomId   = String(atom.punkto || '').replace(/^p:/, '');
+    const atomId   = stripPunktoPrefix(atom.punkto);
 
     return '<div class="main-card" data-atom-id="' + _escHtml(atomId) + '">\n' +
       '  <div class="main-card-badges">\n' +

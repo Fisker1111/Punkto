@@ -21,6 +21,7 @@ import { upsertAtom, getAllAtomsNewestFirst, getAllAtoms } from './storage/atom-
 import { ensureNode } from './storage/node-store.js';
 import { fmtTime, fmtRelativeTime, fmtCoords, fmtDistance, fmtAltitudeLabel, deriveTitle, deriveCategory, escHtml, renderAtomText } from './core/display.js';
 import { isHiddenAtom, isVerifiedAtom } from './core/atoms.js';
+import { ensurePunktoPrefix, parseDeepLinkPunktoId as parseDeepLinkPunktoIdFromPath } from './protocol/punkto-id.js';
 import { createNodeRegistry } from './sync/node-registry.js';
 import { postAtomToNetwork, fetchNodeInfo, fetchNodeCursor } from './sync/network-client.js';
 import { createSyncEngine } from './sync/sync-engine.js';
@@ -196,8 +197,7 @@ function renderMePage() {
  * Returns the full punkto id (without 'p:' prefix) or null.
  */
 function parseDeepLinkPunktoId() {
-  const m = /^\/p\/([0-9a-z]{12}(?:-[a-zA-Z0-9]+)?)\/?$/.exec(location.pathname || '');
-  return m ? m[1] : null;
+  return parseDeepLinkPunktoIdFromPath(location.pathname || '');
 }
 
 /**
@@ -208,7 +208,7 @@ async function focusPunkto(id) {
   // Switch to 3D page so the map is visible
   showPage('map');
   if (!id) return;
-  const punkto = `p:${id}`;
+  const punkto = ensurePunktoPrefix(id);
   const loc = decodeAtomLocation(punkto);
   if (!loc || !map) return;
 
@@ -1422,8 +1422,8 @@ function wireEvents() {
 // ---------------------------------------------------------------------------
 
 async function boot() {
-  console.log('PUNKTO APP.JS LOADED v60 HARD MARKER 2026-05-17-1');
-  window.PUNKTO_APP_VERSION = 'v60-hard-marker-2026-05-17-1';
+  console.log('PUNKTO APP.JS LOADED v61 HARD MARKER 2026-05-17-2');
+  window.PUNKTO_APP_VERSION = 'v61-hard-marker-2026-05-17-2';
 
   console.log('[punkto] booting...');
 

@@ -1,21 +1,23 @@
 import { db } from './db.js';
 import { decodeAtomLocation } from '../core/location.js';
+import { normalizeAtomPayload } from '../protocol/atom-normalize.js';
 
 export async function upsertAtom(atom) {
-  const loc = decodeAtomLocation(atom.punkto);
+  const normalized = normalizeAtomPayload(atom);
+  const loc = decodeAtomLocation(normalized.punkto);
   const record = {
-    punkto: atom.punkto,
-    t: atom.t,
-    x: atom.x || '',
-    f: atom.f || '',
+    punkto: normalized.punkto,
+    t: normalized.t,
+    x: normalized.x || '',
+    f: normalized.f || '',
     lat: loc ? loc.lat : 0,
     lon: loc ? loc.lon : 0,
     alt: loc ? loc.alt : 0,
   };
 
   const existing = await db.atoms
-    .where('punkto').equals(atom.punkto)
-    .and(a => a.t === atom.t)
+    .where('punkto').equals(normalized.punkto)
+    .and(a => a.t === normalized.t)
     .first();
 
   if (!existing) {
