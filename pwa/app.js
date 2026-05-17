@@ -14,6 +14,7 @@ import {
 import { initTextView, renderTextFeed } from './ui-text.js';
 import { initMapView, showMapView } from './ui-map.js';
 import { initCreateModal, openCreateModal, closeCreateModal, setCreateError, setCreateSubmitting, updateCreateCenter, isCreateModalOpen } from './ui-create.js';
+import { initSettingsView, renderSettingsView } from './ui-settings.js';
 import { decodeAtomLocation, encodeCurrentLocation, encodeLocation, haversineMeters, FLOOR_HEIGHT_M } from './core/location.js';
 import { db } from './storage/db.js';
 import { upsertAtom, getAllAtomsNewestFirst, getAllAtoms } from './storage/atom-store.js';
@@ -107,7 +108,6 @@ const elAtomEmpty   = document.getElementById('atom-list-empty');
 const elMapEl       = document.getElementById('map');
 const elModalLocation = document.getElementById('modal-location');
 const elToggle3D    = document.getElementById('toggle-3d');
-const elSettingsReset = document.getElementById('settings-reset');
 const elSettingsNode = document.getElementById('settings-node');
 const elSettingsPeers = document.getElementById('settings-peers');
 const elSettingsCount = document.getElementById('settings-count');
@@ -1255,9 +1255,8 @@ function showMnemonicModal(identity) {
  * call from the UI-render path.
  */
 function updateSettingsCount(count) {
-  if (elSettingsCount && typeof count === 'number') {
-    elSettingsCount.textContent = String(count);
-  }
+  if (typeof count !== 'number') return;
+  renderSettingsView({ network: { atomCount: count }, syncStatus: count });
 }
 
 /**
@@ -1271,8 +1270,12 @@ async function refreshSettingsNetworkInfo() {
 
   // Render the node row immediately with a "…" cursor placeholder so the menu
   // feels responsive while fetches are in flight.
-  elSettingsNode.innerHTML = `${escHtml(hostOf(NODE_URL))} <span class="dim">(cursor …)</span>`;
-  if (elSettingsPeers) elSettingsPeers.innerHTML = '<span class="dim">checking…</span>';
+  renderSettingsView({
+    network: {
+      nodeHtml: `${escHtml(hostOf(NODE_URL))} <span class="dim">(cursor …)</span>`,
+      peersHtml: '<span class="dim">checking…</span>',
+    },
+  });
 
   // 1. Get local /info → peer URLs (fall back to SEED_NODES if absent).
   const localInfo = await fetchNodeInfo(NODE_URL);
@@ -1300,13 +1303,12 @@ async function refreshSettingsNetworkInfo() {
   const warnIcon = lag > 0 ? ' <span class="lag-warn" title="This node is behind peers">⚠</span>' : '';
   const localCursorStr = typeof localCursor === 'number'
     ? `cursor ${localCursor}` : 'unreachable';
-  elSettingsNode.innerHTML =
-    `${escHtml(hostOf(NODE_URL))} <span class="dim">(${localCursorStr})</span>${warnIcon}`;
+  const nodeHtml = `${escHtml(hostOf(NODE_URL))} <span class="dim">(${localCursorStr})</span>${warnIcon}`;
 
   // 5. Render peers list
   if (elSettingsPeers) {
     if (peerUrls.length === 0) {
-      elSettingsPeers.innerHTML = '<span class="dim">none</span>';
+      renderSettingsView({ network: { peersHtml: '<span class="dim">none</span>' } });
     } else {
       const rows = peerUrls.map((url, i) => {
         const c = peerCursors[i];
@@ -1319,9 +1321,10 @@ async function refreshSettingsNetworkInfo() {
         else if (diff < 0) diffStr = ` <span class="dim">↑${-diff} ahead</span>`;
         return `${escHtml(hostOf(url))} <span class="dim">(cursor ${c}${diffStr ? '' : ''})</span>${diffStr}`;
       });
-      elSettingsPeers.innerHTML = rows.join('<br>');
+      renderSettingsView({ network: { peersHtml: rows.join('<br>') } });
     }
   }
+  renderSettingsView({ network: { nodeHtml } });
 
   // 6. Topbar indicator: amber dot when behind, regardless of sync state
   if (elSyncDot) {
@@ -1367,13 +1370,6 @@ function wireEvents() {
   // 3D toggle
   elToggle3D.addEventListener('click', toggle3D);
 
-  // Settings reset action (open/close wiring is owned by ui-shell.js)
-  if (elSettingsReset) {
-    elSettingsReset.addEventListener('click', () => {
-      closeSettingsMenu();
-      resetCache();
-    });
-  }
   // Close settings on outside click
   document.addEventListener('click', () => {
     if (shellIsSettingsOpen()) closeSettingsMenu();
@@ -1426,8 +1422,8 @@ function wireEvents() {
 // ---------------------------------------------------------------------------
 
 async function boot() {
-  console.log('PUNKTO APP.JS LOADED v58 HARD MARKER 2026-05-16-4');
-  window.PUNKTO_APP_VERSION = 'v59-hard-marker-2026-05-16-5';
+  console.log('PUNKTO APP.JS LOADED v60 HARD MARKER 2026-05-17-1');
+  window.PUNKTO_APP_VERSION = 'v60-hard-marker-2026-05-17-1';
 
   console.log('[punkto] booting...');
 
@@ -1471,6 +1467,7 @@ async function boot() {
   }
 
   wireEvents();
+  renderSettingsView({ version: window.PUNKTO_APP_VERSION });
 
   // Wire UI modules (shell / text / map). Callbacks delegate back to app.js
   // so app.js still owns data and lifecycle; modules own DOM/markup/state.
@@ -1512,27 +1509,27 @@ boot();
 let currentIdentity = null;
 
 function displayKeyInfo(identity) {
-  const keyInfo = document.getElementById('key-info');
-  const authorIdEl = document.getElementById('key-author-id');
-  const pubkeyEl = document.getElementById('key-pubkey');
-  const mnemonicEl = document.getElementById('key-mnemonic');
-  if (!keyInfo) return;
-  if (!identity) { keyInfo.style.display = 'none'; return; }
-  keyInfo.style.display = 'block';
-  if (authorIdEl) authorIdEl.textContent = identity.authorId;
-  if (pubkeyEl)   pubkeyEl.textContent = identity.pubkey.slice(0, 20) + '...';
-  if (mnemonicEl) mnemonicEl.textContent = identity.mnemonic.join(' ');
+  if (!identity) {
+    renderSettingsView({ identity: { status: 'No key loaded.' } });
+    return;
+  }
+  renderSettingsView({
+    identity: {
+      status: 'Key loaded.',
+      authorId: identity.authorId,
+      pubkey: identity.pubkey ? identity.pubkey.slice(0, 20) + '...' : '—',
+      mnemonic: Array.isArray(identity.mnemonic) ? identity.mnemonic.join(' ') : '—',
+    },
+  });
 }
 
 function setupKeyManagement() {
-  // Capture-phase delegation — fires before any overlay stopPropagation
-  document.addEventListener('click', async (e) => {
-    const btn = e.target.closest('.settings-item');
-    if (!btn) return;
-    const id = btn.id;
-
-    if (id === 'btn-generate-key') {
-      e.preventDefault();
+  initSettingsView({
+    onResetCache: () => {
+      closeSettingsMenu();
+      resetCache();
+    },
+    onGenerateKey: async () => {
       try {
         if (typeof window.generateIdentity !== 'function') {
           console.error('[identity] generateIdentity not loaded');
@@ -1545,10 +1542,8 @@ function setupKeyManagement() {
       } catch (err) {
         console.error('[identity] generate failed:', err);
       }
-      return;
-    }
-
-    if (id === 'btn-import-key') {
+    },
+    onImportKey: () => {
       const input = document.createElement('input');
       input.type = 'file'; input.accept = '.json';
       input.onchange = async (ev) => {
@@ -1558,27 +1553,22 @@ function setupKeyManagement() {
           currentIdentity = identity; displayKeyInfo(identity);
         } catch (err) { console.error('[identity] import failed:', err); }
       };
-      input.click(); return;
-    }
-
-    if (id === 'btn-save-key') {
+      input.click();
+    },
+    onSaveKey: () => {
       if (!currentIdentity) return;
       if (!confirm('localStorage is not secure. Save temporarily?')) return;
       localStorage.setItem('punkto-identity', JSON.stringify(currentIdentity));
-      return;
-    }
-
-    if (id === 'btn-load-key') {
+    },
+    onLoadKey: () => {
       const saved = localStorage.getItem('punkto-identity');
       if (!saved) return;
       try {
         const identity = JSON.parse(saved);
         currentIdentity = identity; displayKeyInfo(identity);
       } catch (err) { console.error('[identity] load failed:', err); }
-      return;
-    }
-
-    if (id === 'btn-print-mnemonic') {
+    },
+    onPrintMnemonic: () => {
       if (!currentIdentity) return;
       const words = currentIdentity.mnemonic.map((w, i) =>
         `<span>${i+1}. ${w}</span>`).join(' ');
@@ -1588,16 +1578,13 @@ function setupKeyManagement() {
 <body><h1>Punkto Identity — KEEP SAFE</h1><p>${words}</p>
 <p>Author: ${currentIdentity.authorId}</p></body></html>`);
       win.document.close(); win.print();
-      return;
-    }
-
-    if (id === 'btn-export-key') {
+    },
+    onExportKey: () => {
       if (!currentIdentity) return;
       const blob = new Blob([exportKeyJson(currentIdentity)], { type: 'application/json' });
       const a = document.createElement('a');
       a.href = URL.createObjectURL(blob);
       a.download = 'punkto-key.json'; a.click();
-      return;
-    }
-  }, true);
+    },
+  });
 }
