@@ -17,6 +17,10 @@ let _onShowOnMap = null;
 let _onLeaveNote = null;
 let _helpers     = null;
 
+function _showReplyComingSoon() {
+  window.alert('Replies are coming soon — this Punkti will become a board.');
+}
+
 /**
  * Initialise listeners on the static elements (#main-feed-list,
  * #main-empty-leave-btn, #main-location-btn).
@@ -36,6 +40,13 @@ export function initTextView({ onShowOnMap, onLeaveNote, helpers } = {}) {
   const list = document.getElementById('main-feed-list');
   if (list) {
     list.addEventListener('click', (e) => {
+      const replyBtn = e.target.closest('[data-action="reply-placeholder"]');
+      if (replyBtn) {
+        e.stopPropagation();
+        _showReplyComingSoon();
+        return;
+      }
+
       const btn = e.target.closest('[data-action="show-in-3d"]');
       if (!btn) return;
       e.stopPropagation();
@@ -103,6 +114,18 @@ function _fmtTime(t) {
   return new Date(ms).toLocaleDateString();
 }
 
+function _authorLabel(atom) {
+  const author = String(atom?.author || atom?.f || '').trim();
+  return author ? `by ${author}` : 'anonymous';
+}
+
+function _trustLabels(atom) {
+  const hasSig = Boolean(atom?.sig);
+  const signedLabel = hasSig ? 'signed' : 'unsigned';
+  const keyLabel = _isVerified(atom) ? 'verified key' : 'unknown key';
+  return { signedLabel, keyLabel };
+}
+
 /**
  * Render the main text feed.
  * Mirrors the legacy renderMainFeed() output for visual continuity.
@@ -149,6 +172,8 @@ export function renderTextFeed({ atoms = [], locationDenied = false } = {}) {
     const time     = atom.t ? _fmtTime(atom.t) : '';
     const meta     = [dist, altLabel, time].filter(Boolean).join(' · ');
     const atomId   = stripPunktoPrefix(atom.punkto);
+    const author   = _authorLabel(atom);
+    const trust    = _trustLabels(atom);
 
     return '<div class="main-card" data-atom-id="' + _escHtml(atomId) + '">\n' +
       '  <div class="main-card-badges">\n' +
@@ -161,8 +186,11 @@ export function renderTextFeed({ atoms = [], locationDenied = false } = {}) {
         ? '  <p class="main-card-preview">' + _escHtml(preview) + '</p>\n'
         : '') +
       (meta ? '  <div class="main-card-meta"><span>' + _escHtml(meta) + '</span></div>\n' : '') +
+      '  <div class="main-card-meta"><span>' + _escHtml(author) + ' · ' + _escHtml(trust.signedLabel) + ' · ' + _escHtml(trust.keyLabel) + '</span></div>\n' +
+      '  <div class="main-card-meta"><span>0 replies</span></div>\n' +
       '  <div class="main-card-actions">\n' +
       '    <button class="main-card-show3d" data-action="show-in-3d" data-id="' + _escHtml(atomId) + '">Show on map →</button>\n' +
+      '    <button class="main-card-reply" data-action="reply-placeholder" data-id="' + _escHtml(atomId) + '">Reply</button>\n' +
       '  </div>\n' +
       '</div>';
   }).join('\n');
