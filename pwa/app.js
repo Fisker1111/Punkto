@@ -1497,8 +1497,9 @@ async function boot() {
     initMap: () => initMap(),
   });
 
-  // Default to main view; go straight to 3D if deep-linking to a specific punkto
-  showPage(deepLinkPunkto ? 'map' : 'text');
+  // Default normal boot to Text view. Only deep-link visitors should start on Map.
+  showPage('text');
+  if (deepLinkPunkto) showPage('map');
   if (deepLinkPunkto) setPanelOpen(false); // panel managed by 3D view when deep-linking
 }
 
