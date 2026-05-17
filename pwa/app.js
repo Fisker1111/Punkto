@@ -100,6 +100,8 @@ let hasBootFit = false;
 
 const elCountNum    = document.getElementById('count-num');
 const elSyncDot     = document.getElementById('sync-indicator');
+const elMainSyncDot = document.getElementById('main-sync-indicator');
+const elMainStatusCount = document.getElementById('main-status-count');
 const elPanel       = document.getElementById('panel');
 const elFabAdd      = document.getElementById('fab-add');
 const elFabPanel    = document.getElementById('fab-panel');
@@ -121,7 +123,9 @@ const elCrosshairReadout = document.getElementById('crosshair-readout');
 
 function setSyncStatus(state) {
   elSyncDot.className = '';
+  if (elMainSyncDot) elMainSyncDot.className = '';
   if (state) elSyncDot.classList.add(state);
+  if (state && elMainSyncDot) elMainSyncDot.classList.add(state);
 }
 // ── Network page renderer ─────────────────────────────────────────────────────
 // Shows live node/peer/sync data. Called by showPage('network').
@@ -791,6 +795,7 @@ async function refreshUI(newAtomIds = null) {
   const visibleAtoms = allAtoms.filter(a => !isHiddenAtom(a));
   const total = visibleAtoms.length;
   elCountNum.textContent = total;
+  if (elMainStatusCount) elMainStatusCount.textContent = `${total} nearby`;
   // Keep settings info (if menu is open) in sync
   if (elSettingsCount) elSettingsCount.textContent = String(total);
 
@@ -1422,8 +1427,8 @@ function wireEvents() {
 // ---------------------------------------------------------------------------
 
 async function boot() {
-  console.log('PUNKTO APP.JS LOADED v61 HARD MARKER 2026-05-17-2');
-  window.PUNKTO_APP_VERSION = 'v61-hard-marker-2026-05-17-2';
+  console.log('PUNKTO APP.JS LOADED v62 HARD MARKER 2026-05-17-1');
+  window.PUNKTO_APP_VERSION = 'v62-hard-marker-2026-05-17-1';
 
   console.log('[punkto] booting...');
 
@@ -1455,6 +1460,7 @@ async function boot() {
     const cachedAll = await getAllAtoms();
     const cachedCount = cachedAll.filter(a => !isHiddenAtom(a)).length;
     elCountNum.textContent = cachedCount;
+    if (elMainStatusCount) elMainStatusCount.textContent = `${cachedCount} nearby`;
     if (elSettingsCount) elSettingsCount.textContent = String(cachedCount);
     if (cachedCount > 0) {
       elAtomEmpty.style.display = 'none';

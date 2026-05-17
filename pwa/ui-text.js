@@ -115,6 +115,7 @@ export function renderTextFeed({ atoms = [], locationDenied = false } = {}) {
   const list    = document.getElementById('main-feed-list');
   const emptyEl = document.getElementById('main-empty-notes');
   const countEl = document.getElementById('main-atom-count');
+  const statusCountEl = document.getElementById('main-status-count');
   const locEl   = document.getElementById('main-empty-location');
   const introEl = document.getElementById('main-intro-card');
   if (!list) return;
@@ -122,6 +123,7 @@ export function renderTextFeed({ atoms = [], locationDenied = false } = {}) {
   if (!atoms || atoms.length === 0) {
     list.innerHTML = '';
     if (countEl) countEl.textContent = '';
+    if (statusCountEl) statusCountEl.textContent = '0 nearby';
     if (locationDenied || !navigator.geolocation) {
       if (introEl) introEl.style.display = 'none';
       if (emptyEl) emptyEl.style.display = 'none';
@@ -138,6 +140,7 @@ export function renderTextFeed({ atoms = [], locationDenied = false } = {}) {
   if (locEl)   locEl.style.display   = 'none';
   if (emptyEl) emptyEl.style.display = 'none';
   if (countEl) countEl.textContent  = atoms.length + ' nearby';
+  if (statusCountEl) statusCountEl.textContent = atoms.length + ' nearby';
 
   list.innerHTML = atoms.map((atom) => {
     const title    = _escHtml(_deriveTitle(atom));
@@ -153,6 +156,7 @@ export function renderTextFeed({ atoms = [], locationDenied = false } = {}) {
 
     return '<div class="main-card" data-atom-id="' + _escHtml(atomId) + '">\n' +
       '  <div class="main-card-badges">\n' +
+      '    <span class="main-card-icon">⌁</span>\n' +
       (cat      ? '    <span class="main-card-cat">'      + _escHtml(cat) + '</span>\n' : '') +
       (verified ? '    <span class="main-card-verified">✓ Verified</span>\n' : '') +
       '  </div>\n' +
