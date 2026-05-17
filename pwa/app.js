@@ -13,6 +13,7 @@ import {
 } from './ui-shell.js';
 import { initTextView, renderTextFeed } from './ui-text.js';
 import { initMapView, showMapView } from './ui-map.js';
+import { initCreateModal, openCreateModal, closeCreateModal, setCreateError, setCreateSubmitting, updateCreateCenter, isCreateModalOpen } from './ui-create.js';
 import { decodeAtomLocation, encodeCurrentLocation, encodeLocation, haversineMeters, FLOOR_HEIGHT_M } from './core/location.js';
 import { db } from './storage/db.js';
 import { upsertAtom, getAllAtomsNewestFirst, getAllAtoms } from './storage/atom-store.js';
@@ -104,24 +105,7 @@ const elPanelClose  = document.getElementById('panel-close');
 const elAtomList    = document.getElementById('atom-list');
 const elAtomEmpty   = document.getElementById('atom-list-empty');
 const elMapEl       = document.getElementById('map');
-const elModalOverlay = document.getElementById('modal-overlay');
 const elModalLocation = document.getElementById('modal-location');
-const elModalText   = document.getElementById('modal-text');
-const elModalAuthor = document.getElementById('modal-author');
-const elModalSubmit = document.getElementById('modal-submit');
-const elModalCancel = document.getElementById('modal-cancel');
-const elModalError  = document.getElementById('modal-error');
-const elModalAltitudeSlider    = document.getElementById('modal-altitude-slider');
-const elModalAltitudePrimary   = document.getElementById('modal-altitude-primary');
-const elModalAltitudeSecondary = document.getElementById('modal-altitude-secondary');
-const elModalAltitudeHint      = document.getElementById('modal-altitude-hint');
-const elModalGroundBtn         = document.getElementById('modal-ground-btn');
-const elModalRoofBtn           = document.getElementById('modal-roof-btn');
-const elModalDeviceAltBtn      = document.getElementById('modal-device-alt-btn');
-const elModalFloorMinus        = document.getElementById('modal-floor-minus');
-const elModalFloorPlus         = document.getElementById('modal-floor-plus');
-const elModalFloorValue        = document.getElementById('modal-floor-value');
-const elModalManualAltitude    = document.getElementById('modal-manual-altitude-value');
 const elToggle3D    = document.getElementById('toggle-3d');
 const elSettingsReset = document.getElementById('settings-reset');
 const elSettingsNode = document.getElementById('settings-node');
@@ -926,77 +910,8 @@ function setPanelOpen(open) {
 // Modal
 // ---------------------------------------------------------------------------
 
-// Altitude input state for the modal.
-// mode: 'floor' when a building is detected at map center, 'meter' otherwise.
-// In floor mode the slider value IS the floor number; in meter mode it IS metres.
-let modalAltitudeState = {
-  mode: 'meter',   // 'floor' | 'meter'
-  building: null,  // { name, height, maxFloor } | null
-};
 let placementDraft = null;
 
-/**
- * Detect whether the map center is over a building feature.
- * Returns { building: {name, height, maxFloor} | null }.
- */
-function detectBuildingAtCenter() {
-  if (!map) return { building: null };
-  try {
-    const center = map.getCenter();
-    const screenPt = map.project(center);
-    const layers = (map.getStyle().layers || [])
-      .filter(l => l.type === 'fill-extrusion'
-                || (l.id && l.id.toLowerCase().includes('building')))
-      .map(l => l.id);
-    if (layers.length === 0) return { building: null };
-    // Box query with ~30px tolerance so users don't need pixel-perfect centering.
-    // If the crosshair is near a building (e.g. between towers or on a narrow gap),
-    // we still detect the nearby building and offer a floor picker.
-    const R = 30;
-    const box = [
-      [screenPt.x - R, screenPt.y - R],
-      [screenPt.x + R, screenPt.y + R],
-    ];
-    const features = map.queryRenderedFeatures(box, { layers });
-    if (!features || features.length === 0) return { building: null };
-    // Among candidates, pick the one with the greatest height (most relevant for
-    // a floor picker). Fall back through render_height, height, building:levels.
-    const heightOf = (props) => {
-      let h = Number(props.render_height);
-      if (!Number.isFinite(h) || h <= 0) h = Number(props.height);
-      if (!Number.isFinite(h) || h <= 0) {
-        const levels = Number(props['building:levels']);
-        if (Number.isFinite(levels) && levels > 0) h = levels * FLOOR_HEIGHT_M;
-      }
-      return Number.isFinite(h) && h > 0 ? h : 0;
-    };
-    let best = null;
-    let bestHeight = 0;
-    for (const f of features) {
-      const h = heightOf(f.properties || {});
-      if (h > bestHeight) {
-        best = f;
-        bestHeight = h;
-      }
-    }
-    if (!best || bestHeight < FLOOR_HEIGHT_M) {
-      return { building: null };
-    }
-    const props = best.properties || {};
-    const name = (props.name && String(props.name).trim()) || null;
-    const maxFloor = Math.max(1, Math.floor(bestHeight / FLOOR_HEIGHT_M));
-    return { building: { name, height: bestHeight, maxFloor } };
-  } catch (e) {
-    console.warn('[modal] detectBuildingAtCenter failed:', e);
-    return { building: null };
-  }
-}
-
-/**
- * Update the live crosshair readout (the small "scope" label below the
- * crosshair). Shows the detected building's name, floors, and height, or
- * nothing if no building is beneath the crosshair.
- */
 function updateCrosshairReadout() {
   if (!elCrosshairReadout) return;
   const { building } = detectBuildingAtCenter();
@@ -1012,223 +927,65 @@ function updateCrosshairReadout() {
   elCrosshairReadout.textContent = parts.join(' · ');
 }
 
-/**
- * Read the altitude (in metres) currently selected in the modal.
- * Returns 0 if the slider or state is in any unexpected form.
- */
-function getModalAltitudeMeters() {
-  if (!elModalAltitudeSlider) return 0;
-  const raw = Number(elModalAltitudeSlider.value);
-  if (!Number.isFinite(raw) || raw < 0) return 0;
-  if (modalAltitudeState.mode === 'floor') {
-    return raw * FLOOR_HEIGHT_M;
-  }
-  return raw;
-}
-
-/**
- * Re-render the primary/secondary/hint labels from the current slider value
- * and the current mode. Safe to call on every 'input' event.
- */
-function updateAltitudeLabels() {
-  if (!elModalAltitudeSlider) return;
-  const val = Number(elModalAltitudeSlider.value) || 0;
-  if (modalAltitudeState.mode === 'floor') {
-    const floor = Math.round(val);
-    const meters = floor * FLOOR_HEIGHT_M;
-    elModalAltitudePrimary.innerHTML = floor === 0
-      ? 'Ground <span class="alt-cyan">(Floor 0)</span>'
-      : `Floor <span class="alt-cyan">${floor}</span>`;
-    elModalAltitudeSecondary.textContent = `+${meters} m above ground`;
-    const b = modalAltitudeState.building;
-    const name = (b && b.name) ? b.name : 'Building';
-    const maxFloor = (b && b.maxFloor) ? b.maxFloor : 1;
-    elModalAltitudeHint.textContent =
-      `Detected: ${name} · ${maxFloor} floor${maxFloor === 1 ? '' : 's'}`;
-  } else {
-    const meters = Math.round(val);
-    const est = Math.round(meters / FLOOR_HEIGHT_M);
-    elModalAltitudePrimary.innerHTML = meters === 0
-      ? 'Ground level'
-      : `<span class="alt-cyan">+${meters} m</span> above ground`;
-    elModalAltitudeSecondary.textContent = meters === 0
-      ? '~Floor 0'
-      : `~Floor ${est}`;
-    elModalAltitudeHint.textContent = meters === 0
-      ? ''
-      : '(estimated, no building detected)';
-  }
-  // Keep the location display in sync with chosen altitude.
-  if (placementDraft) {
-    placementDraft.altitude_m = getModalAltitudeMeters();
-    if (modalAltitudeState.mode === 'floor') {
-      placementDraft.floor_hint = Math.round(Number(elModalAltitudeSlider.value) || 0);
-    } else {
-      placementDraft.floor_hint = Math.round(placementDraft.altitude_m / FLOOR_HEIGHT_M);
-    }
-  }
-  refreshModalLocationDisplay();
-  renderPlacementPreview();
-}
-
-/**
- * Recompute and display the modal location using the current altitude.
- */
-function refreshModalLocationDisplay() {
-  if (!map || !elModalLocation) return;
-  const alt = getModalAltitudeMeters();
-  const center = placementDraft ? { lat: placementDraft.lat, lng: placementDraft.lon } : map.getCenter();
-  const punkto = encodeLocation(center.lat, center.lng, alt);
-  const loc = decodeAtomLocation(punkto);
-  let suffix = '';
-  if (alt > 0) {
-    if (modalAltitudeState.mode === 'floor') {
-      const floor = Math.round(Number(elModalAltitudeSlider.value) || 0);
-      suffix = `  ·  Floor ${floor} (+${floor * FLOOR_HEIGHT_M}m)`;
-    } else {
-      suffix = `  ·  +${Math.round(alt)}m`;
-    }
-  }
-  if (loc) {
-    elModalLocation.textContent =
-      `${punkto}  ·  ${fmtCoords(loc.lat, loc.lon, loc.alt)}${suffix}`;
-  } else {
-    elModalLocation.textContent = punkto + suffix;
-  }
-}
-
-/**
- * Configure the altitude slider UI for the current map context.
- * Resets the slider to 0 (ground / floor 0) — friction-free default.
- */
-function setupAltitudeInput() {
-  if (!elModalAltitudeSlider) return;
-  const { building } = detectBuildingAtCenter();
-  if (building) {
-    modalAltitudeState = { mode: 'floor', building };
-    elModalAltitudeSlider.min = '0';
-    elModalAltitudeSlider.max = String(building.maxFloor);
-    elModalAltitudeSlider.step = '1';
-    elModalAltitudeSlider.value = '0';
-  } else {
-    modalAltitudeState = { mode: 'meter', building: null };
-    elModalAltitudeSlider.min = '0';
-    elModalAltitudeSlider.max = '100';
-    elModalAltitudeSlider.step = '1';
-    elModalAltitudeSlider.value = '0';
-  }
-  updateAltitudeLabels();
-  if (elModalRoofBtn) elModalRoofBtn.disabled = !building;
-  if (elModalDeviceAltBtn) elModalDeviceAltBtn.disabled = true;
-}
-
-function openModal() {
-  elModalError.textContent = '';
-  elModalText.value = '';
-  // Keep author value between sessions (restore from localStorage)
-  elModalAuthor.value = localStorage.getItem('punkto-author') || '';
-
-  // Configure altitude input (building-aware) and render labels/location.
-  setupAltitudeInput();
-  const center = map ? map.getCenter() : { lat: 0, lng: 0 };
-  placementDraft = {
-    lat: center.lat,
-    lon: center.lng,
-    altitude_m: 0,
-    floor_hint: 0,
-    placement_mode: 'ground',
-  };
-  requestDeviceAltitude();
-
-  elModalOverlay.classList.add('open');
-  setTimeout(() => elModalText.focus(), 80);
-}
-
-function closeModal() {
-  elModalOverlay.classList.remove('open');
-  // Reset altitude state so next open is friction-free at ground level.
-  if (elModalAltitudeSlider) elModalAltitudeSlider.value = '0';
-  placementDraft = null;
-  renderPlacementPreview();
-}
-
-function renderPlacementPreview() {
-  renderAtoms();
-}
-
-function setAltitudeMeters(meters, mode = 'manual') {
-  const v = Math.max(0, Math.round(Number(meters) || 0));
-  if (modalAltitudeState.mode === 'floor') {
-    const floor = Math.round(v / FLOOR_HEIGHT_M);
-    elModalAltitudeSlider.value = String(floor);
-    if (elModalFloorValue) elModalFloorValue.value = String(floor);
-  } else {
-    elModalAltitudeSlider.value = String(v);
-  }
-  if (elModalManualAltitude) elModalManualAltitude.value = String(v);
-  if (placementDraft) placementDraft.placement_mode = mode;
-  updateAltitudeLabels();
-}
-
-function requestDeviceAltitude() {
-  if (!navigator.geolocation || !elModalDeviceAltBtn) return;
-  navigator.geolocation.getCurrentPosition((pos) => {
-    const alt = pos?.coords?.altitude;
-    if (alt == null || !Number.isFinite(alt)) {
-      elModalDeviceAltBtn.style.display = 'none';
-      return;
-    }
-    elModalDeviceAltBtn.style.display = '';
-    elModalDeviceAltBtn.disabled = false;
-    elModalDeviceAltBtn.dataset.altitude = String(Math.round(alt));
-  }, () => {
-    elModalDeviceAltBtn.style.display = 'none';
-  }, { enableHighAccuracy: true, timeout: 5000 });
-}
-
-async function submitAtom() {
-  const text   = elModalText.value.trim();
-  const author = elModalAuthor.value.trim();
-  const altMeters = getModalAltitudeMeters();
-  const center = placementDraft ? { lat: placementDraft.lat, lng: placementDraft.lon } : map.getCenter();
-  const punkto = encodeLocation(center.lat, center.lng, altMeters);
-  const t      = Date.now();
-
-  const atom = { punkto, t };
-  if (text)   atom.x = text;
-  if (author) atom.f = author;
-
-  elModalSubmit.disabled = true;
-  elModalError.textContent = '';
-
+function detectBuildingAtCenter() {
+  if (!map) return { building: null };
   try {
-    // Save author preference
+    const center = map.getCenter();
+    const screenPt = map.project(center);
+    const layers = (map.getStyle().layers || []).filter(l => l.type === 'fill-extrusion' || (l.id && l.id.toLowerCase().includes('building'))).map(l => l.id);
+    if (layers.length === 0) return { building: null };
+    const R = 30;
+    const box = [[screenPt.x - R, screenPt.y - R],[screenPt.x + R, screenPt.y + R]];
+    const features = map.queryRenderedFeatures(box, { layers });
+    if (!features || features.length === 0) return { building: null };
+    const heightOf = (props) => { let h = Number(props.render_height); if (!Number.isFinite(h) || h <= 0) h = Number(props.height); if (!Number.isFinite(h) || h <= 0) { const levels = Number(props['building:levels']); if (Number.isFinite(levels) && levels > 0) h = levels * FLOOR_HEIGHT_M; } return Number.isFinite(h) && h > 0 ? h : 0; };
+    let best = null; let bestHeight = 0;
+    for (const f of features) { const h = heightOf(f.properties || {}); if (h > bestHeight) { best = f; bestHeight = h; } }
+    if (!best || bestHeight < FLOOR_HEIGHT_M) return { building: null };
+    const props = best.properties || {};
+    const name = (props.name && String(props.name).trim()) || null;
+    const maxFloor = Math.max(1, Math.floor(bestHeight / FLOOR_HEIGHT_M));
+    return { building: { name, height: bestHeight, maxFloor } };
+  } catch (e) {
+    console.warn('[modal] detectBuildingAtCenter failed:', e);
+    return { building: null };
+  }
+}
+
+async function submitAtomFromModal({ text, author, draft }) {
+  const center = draft ? { lat: draft.lat, lng: draft.lon } : map.getCenter();
+  const altMeters = draft?.altitude_m || 0;
+  const punkto = encodeLocation(center.lat, center.lng, altMeters);
+  const t = Date.now();
+  const atom = { punkto, t };
+  if (text) atom.x = text;
+  if (author) atom.f = author;
+  setCreateSubmitting(true);
+  setCreateError('');
+  try {
     if (author) localStorage.setItem('punkto-author', author);
-
-    // Post via protocol-native round-robin load balancer
-    const json = await postAtomToNetwork(atom, nodeRegistry);
-
-    // Also save locally immediately
+    await postAtomToNetwork(atom, nodeRegistry);
     await upsertAtom(atom);
-    // Update cursor if returned
-    if (typeof json.cursor === 'number') {
-    }
-
-    closeModal();
+    closeCreateModal();
     await refreshUI();
     setSyncStatus('ok');
-
-    // Fly to the new atom
     const loc = decodeAtomLocation(punkto);
-    if (loc && map) {
-      map.flyTo({ center: [loc.lon, loc.lat], zoom: Math.max(map.getZoom(), 14) });
-    }
+    if (loc && map) map.flyTo({ center: [loc.lon, loc.lat], zoom: Math.max(map.getZoom(), 14) });
   } catch (err) {
     console.error('[addAtom]', err);
-    elModalError.textContent = `Error: ${err.message}`;
+    setCreateError(`Error: ${err.message}`);
   } finally {
-    elModalSubmit.disabled = false;
+    setCreateSubmitting(false);
   }
+}
+
+function updateCreateLocationDisplay(draft) {
+  if (!elModalLocation || !draft) return;
+  const punkto = encodeLocation(draft.lat, draft.lon, draft.altitude_m || 0);
+  const loc = decodeAtomLocation(punkto);
+  elModalLocation.textContent = loc
+    ? `${punkto}  ·  ${fmtCoords(loc.lat, loc.lon, loc.alt)}`
+    : punkto;
 }
 
 // ---------------------------------------------------------------------------
@@ -1300,14 +1057,13 @@ function initMap() {
     ensureLeaderOverlay();
     map.on('render', drawLeaderLines);
     map.on('click', (e) => {
-      if (!elModalOverlay.classList.contains('open')) {
-        openModal();
+      if (!isCreateModalOpen()) {
+        openCreateModal();
       }
       if (placementDraft) {
         placementDraft.lat = e.lngLat.lat;
         placementDraft.lon = e.lngLat.lng;
-        refreshModalLocationDisplay();
-        renderPlacementPreview();
+        updateCreateCenter(e.lngLat.lat, e.lngLat.lng);
       }
     });
 
@@ -1598,6 +1354,12 @@ function toggleSettingsMenu() {
 }
 
 function wireEvents() {
+  initCreateModal({
+    getInitialContext: () => ({ center: map ? map.getCenter() : { lat: 0, lng: 0 }, building: detectBuildingAtCenter().building }),
+    onPreviewChanged: (draft) => { placementDraft = draft; updateCreateLocationDisplay(draft); renderAtoms(); },
+    onSubmitCreate: submitAtomFromModal,
+    onClosed: () => { placementDraft = null; renderAtoms(); },
+  });
   // Panel toggle
   elFabPanel.addEventListener('click', () => setPanelOpen(!panelOpen));
   elPanelClose.addEventListener('click', () => setPanelOpen(false));
@@ -1620,55 +1382,13 @@ function wireEvents() {
   // Add atom
   elFabAdd.addEventListener('click', () => {
     dismissOnboarding();
-    openModal();
-  });
-  elModalCancel.addEventListener('click', closeModal);
-  elModalOverlay.addEventListener('click', e => {
-    if (e.target === elModalOverlay) closeModal();
-  });
-  elModalSubmit.addEventListener('click', submitAtom);
-  elModalText.addEventListener('keydown', e => {
-    if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) submitAtom();
-  });
-
-  // Live-update altitude labels and location as the slider moves.
-  if (elModalAltitudeSlider) {
-    elModalAltitudeSlider.addEventListener('input', updateAltitudeLabels);
-    elModalAltitudeSlider.addEventListener('change', updateAltitudeLabels);
-  }
-  if (elModalGroundBtn) elModalGroundBtn.addEventListener('click', () => setAltitudeMeters(0, 'ground'));
-  if (elModalRoofBtn) elModalRoofBtn.addEventListener('click', () => {
-    const b = modalAltitudeState.building;
-    if (!b) return;
-    setAltitudeMeters(b.height, 'roof');
-  });
-  if (elModalFloorMinus) elModalFloorMinus.addEventListener('click', () => {
-    const v = Math.max(0, (Number(elModalFloorValue?.value) || 0) - 1);
-    if (elModalFloorValue) elModalFloorValue.value = String(v);
-    setAltitudeMeters(v * FLOOR_HEIGHT_M, 'manual');
-  });
-  if (elModalFloorPlus) elModalFloorPlus.addEventListener('click', () => {
-    const v = (Number(elModalFloorValue?.value) || 0) + 1;
-    if (elModalFloorValue) elModalFloorValue.value = String(v);
-    setAltitudeMeters(v * FLOOR_HEIGHT_M, 'manual');
-  });
-  if (elModalFloorValue) elModalFloorValue.addEventListener('input', () => {
-    const v = Math.max(0, Number(elModalFloorValue.value) || 0);
-    setAltitudeMeters(v * FLOOR_HEIGHT_M, 'manual');
-  });
-  if (elModalManualAltitude) elModalManualAltitude.addEventListener('input', () => {
-    setAltitudeMeters(Number(elModalManualAltitude.value) || 0, 'manual');
-  });
-  if (elModalDeviceAltBtn) elModalDeviceAltBtn.addEventListener('click', () => {
-    const alt = Number(elModalDeviceAltBtn.dataset.altitude);
-    if (!Number.isFinite(alt)) return;
-    setAltitudeMeters(alt, 'device');
+    openCreateModal();
   });
 
   // Handle keyboard escape
   document.addEventListener('keydown', e => {
     if (e.key === 'Escape') {
-      closeModal();
+      closeCreateModal();
       setPanelOpen(false);
     }
   });
@@ -1760,7 +1480,7 @@ async function boot() {
       if (!map) initMap();
       else requestAnimationFrame(() => { if (map) map.resize(); });
     },
-    onAdd: () => { dismissOnboarding(); openModal(); },
+    onAdd: () => { dismissOnboarding(); openCreateModal(); },
     onOpenSettings: () => {
       renderNetworkPage();
       renderMePage();
@@ -1769,7 +1489,7 @@ async function boot() {
   });
   initTextView({
     onShowOnMap: (id) => focusPunkto(id),
-    onLeaveNote: () => { dismissOnboarding(); openModal(); },
+    onLeaveNote: () => { dismissOnboarding(); openCreateModal(); },
     helpers: {
       escHtml, deriveTitle, deriveCategory, isVerifiedAtom,
       fmtAltitudeLabel, fmtDistance, fmtTime,
