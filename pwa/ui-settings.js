@@ -115,7 +115,7 @@ export function renderSettingsView({ network = {}, identity = {}, version = null
     refs.nameInput.value = String(identity.name || '');
   }
   if (refs.keyStatus && identity.status !== undefined) refs.keyStatus.textContent = toText(identity.status, 'No key on this device');
-  if (refs.keyHelper && identity.helper !== undefined) refs.keyHelper.textContent = toText(identity.helper, 'Punktis you write will be unsigned.');
+  if (refs.keyHelper && identity.helper !== undefined) refs.keyHelper.textContent = toText(identity.helper, 'Punktis you write are unsigned.');
   if (refs.writingAsRow) refs.writingAsRow.style.display = identity.name ? 'block' : 'none';
   if (refs.writingAs && identity.name !== undefined) refs.writingAs.textContent = toText(identity.name);
   if (refs.saveKeyButton && identity.canSave !== undefined) refs.saveKeyButton.disabled = !identity.canSave;

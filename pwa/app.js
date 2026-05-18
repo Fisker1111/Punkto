@@ -60,7 +60,7 @@ let deepLinkPunkto = null; // captured at boot, consumed after first refreshUI
 // ============================================================
 // Two-view shell — Text / Map
 // ============================================================
-let currentPage = 'text'; // 'text' | 'map'
+let currentPage = 'map'; // 'text' | 'map'
 let _mainFeedAtoms  = [];       // last sorted atom batch for main feed
 let _locationDenied = false;    // true when geolocation denied/unavailable
 
@@ -1427,8 +1427,8 @@ function wireEvents() {
 // ---------------------------------------------------------------------------
 
 async function boot() {
-  console.log('PUNKTO APP.JS LOADED v65 HARD MARKER 2026-05-17-1');
-  window.PUNKTO_APP_VERSION = 'v65-hard-marker-2026-05-17-1';
+  console.log('PUNKTO APP.JS LOADED v66 HARD MARKER 2026-05-18-1');
+  window.PUNKTO_APP_VERSION = 'v66-hard-marker-2026-05-18-1';
 
   console.log('[punkto] booting...');
 
@@ -1503,8 +1503,8 @@ async function boot() {
     initMap: () => initMap(),
   });
 
-  // Default normal boot to Text view. Only deep-link visitors should start on Map.
-  showPage('text');
+  // Default normal boot to Map view so location context is immediate.
+  showPage('map');
   if (deepLinkPunkto) showPage('map');
   if (deepLinkPunkto) setPanelOpen(false); // panel managed by 3D view when deep-linking
 }
@@ -1543,7 +1543,7 @@ function displayKeyInfo(identity) {
       identity: {
         name,
         status: 'No key on this device',
-        helper: 'Punktis you write will be unsigned.',
+        helper: 'Punktis you write are unsigned.',
         canSave: false,
         canLoad: !!localStorage.getItem('punkto-identity'),
       },
