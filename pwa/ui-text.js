@@ -17,8 +17,17 @@ let _onShowOnMap = null;
 let _onLeaveNote = null;
 let _helpers     = null;
 
+let _replyToastTimer = null;
+
 function _showReplyComingSoon() {
-  window.alert('Replies are coming soon — this Punkti will become a board.');
+  const toast = document.getElementById('reply-soon-toast');
+  if (!toast) return;
+  toast.style.display = 'flex';
+  if (_replyToastTimer) clearTimeout(_replyToastTimer);
+  _replyToastTimer = setTimeout(() => {
+    toast.style.display = 'none';
+    _replyToastTimer = null;
+  }, 2400);
 }
 
 /**
@@ -55,9 +64,14 @@ export function initTextView({ onShowOnMap, onLeaveNote, helpers } = {}) {
     });
   }
 
-  // "Leave note here" CTA in empty state
+  // Text empty-state CTAs
   document.addEventListener('click', (e) => {
-    if (e.target && e.target.id === 'main-empty-leave-btn') {
+    if (!e.target) return;
+    if (e.target.id === 'main-empty-open-map-btn') {
+      if (_onShowOnMap) _onShowOnMap('');
+      return;
+    }
+    if (e.target.id === 'main-empty-leave-btn') {
       if (_onLeaveNote) _onLeaveNote();
     }
   });

@@ -414,6 +414,24 @@
       color: var(--text-mid);
     }
     .main-card-reply:hover { color: var(--text); border-color: rgba(138,167,204,0.52); }
+    .reply-toast {
+      position: fixed;
+      left: 50%;
+      transform: translateX(-50%);
+      bottom: calc(var(--nav-h) + var(--safe-b) + 14px);
+      z-index: 260;
+      width: min(92vw, 380px);
+      background: rgba(23,26,36,0.96);
+      border: 1px solid rgba(255,255,255,0.14);
+      border-radius: 12px;
+      padding: 10px 12px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.35);
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .reply-toast strong { font-size: 13px; color: var(--text); }
+    .reply-toast span { font-size: 12px; color: var(--text-mid); line-height: 1.35; }
 
     /* Category pill */
     .atom-pill {
@@ -954,8 +972,12 @@
 
       <div id="main-empty-notes" class="main-empty" style="display:none;">
         <h3>This place is quiet</h3>
-        <p>Punkto lets people leave small notes at real places.</p>
-        <button class="btn-cta" id="main-empty-leave-btn">Leave note here</button>
+        <p>No Punktis nearby yet.</p>
+        <p>Open Map or write the first Punkti here.</p>
+        <div class="main-empty-actions">
+          <button class="btn-cta" id="main-empty-open-map-btn">Open Map</button>
+          <button class="btn-cta" id="main-empty-leave-btn">Write Punkti</button>
+        </div>
       </div>
 
       <div id="main-empty-location" class="main-empty" style="display:none;">
@@ -980,7 +1002,7 @@
 
   <!-- ── Onboarding hint ──────────────────────────────────── -->
   <div id="onboarding-hint" aria-hidden="true">
-    <div class="hint-text">Tap <span class="hint-plus">+</span> to write a Punkti here</div>
+    <div class="hint-text">Move the map, choose a place, then tap <span class="hint-plus">+</span> to write a Punkti here.</div>
   </div>
 
   <!-- ── Nearby panel ─────────────────────────────────────── -->
@@ -1069,10 +1091,15 @@
     </div>
   </div>
 
+  <div id="reply-soon-toast" class="reply-toast" role="status" aria-live="polite" style="display:none;">
+    <strong>Replies are coming soon</strong>
+    <span>Every Punkti will become a small board with signed replies.</span>
+  </div>
+
   <!-- ── Bottom navigation ────────────────────────────────── -->
   <nav id="bottom-nav" role="navigation" aria-label="Main navigation">
-    <button class="nav-btn nav-view active" id="nav-text" aria-label="Text feed">Text</button>
-    <button class="nav-btn nav-view" id="nav-map" aria-label="Map view">Map</button>
+    <button class="nav-btn nav-view" id="nav-text" aria-label="Text feed">Text</button>
+    <button class="nav-btn nav-view active" id="nav-map" aria-label="Map view">Map</button>
     <button class="nav-btn nav-add" id="nav-add" aria-label="Write Punkti"></button>
     <button class="nav-btn nav-settings-btn" id="nav-settings" aria-label="Settings">Settings</button>
   </nav>
