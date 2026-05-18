@@ -17,7 +17,7 @@ let _onShowMap    = null;
 let _onAdd        = null;
 let _onOpenSettings = null;
 
-let _currentPage  = 'text';
+let _currentPage  = 'map';
 let _settingsOpen = false;
 
 /**
