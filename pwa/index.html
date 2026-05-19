@@ -231,8 +231,13 @@
       #map.panel-open { bottom: var(--panel-h); }
       #leader-lines { bottom: 0; }
       #page-text { bottom: 0; }
-      #toggle-3d { bottom: 16px; }
-      #fab-panel { bottom: 16px; }
+      #toggle-3d { right: 20px; bottom: 20px; }
+      #fab-panel { right: 20px; bottom: 74px; }
+      #onboarding-hint {
+        right: 20px;
+        bottom: 130px;
+        max-width: 270px;
+      }
       #panel { bottom: 0; }
       #settings-menu { bottom: 0; }
       #settings-backdrop { bottom: 0; }
@@ -345,14 +350,6 @@
     #fab-panel:hover { color: var(--accent); border-color: var(--accent-dim); }
     #fab-panel.panel-open { color: var(--accent); border-color: var(--accent-dim); }
 
-    @media (min-width: 900px) {
-      /* Keep desktop left edge dedicated to the app side-rail nav. */
-      #fab-panel {
-        left: auto;
-        right: 16px;
-        bottom: 66px;
-      }
-    }
 
     /* fab-add: hidden — + is in bottom nav */
     #fab-add { display: none !important; }
@@ -565,6 +562,11 @@
       transition: transform 0.28s cubic-bezier(0.4,0,0.2,1);
     }
     #panel.open { transform: translateY(0); }
+
+    @media (min-width: 900px) {
+      #panel { transform: translateY(100%); }
+      #panel.open { transform: translateY(0); }
+    }
 
     #panel-header {
       display: flex;
