@@ -896,16 +896,16 @@
     <div class="settings-handle"></div>
 
     <!-- Network -->
-    <div class="settings-section-title">Network</div>
-    <div class="settings-info">
-      <div><span class="k">Current node</span>  <span class="v mono" id="settings-network-current-node">unknown</span></div>
-      <div><span class="k">Sync status</span>   <span class="v" id="settings-network-sync-status">unknown</span></div>
-      <div><span class="k">Last sync</span>     <span class="v" id="settings-network-last-sync">not synced yet</span></div>
-      <div><span class="k">Cached Punktis</span> <span class="v" id="settings-network-cached-count">0</span></div>
-      <div><span class="k">Known peers</span>   <span class="v" id="settings-network-peer-count">no peers discovered yet</span></div>
+    <div class="settings-section-title" id="settings-network-section-title" data-testid="settings-network-section-title">Network</div>
+    <div class="settings-info" id="settings-network-section" data-testid="settings-network-section">
+      <div data-testid="settings-network-row-current-node"><span class="k" id="settings-network-label-current-node" data-testid="settings-network-label-current-node">Current node</span>  <span class="v mono" id="settings-network-current-node" data-testid="settings-network-current-node">unknown</span></div>
+      <div data-testid="settings-network-row-sync-status"><span class="k" id="settings-network-label-sync-status" data-testid="settings-network-label-sync-status">Sync status</span>   <span class="v" id="settings-network-sync-status" data-testid="settings-network-sync-status">checking…</span></div>
+      <div data-testid="settings-network-row-last-sync"><span class="k" id="settings-network-label-last-sync" data-testid="settings-network-label-last-sync">Last sync</span>     <span class="v" id="settings-network-last-sync" data-testid="settings-network-last-sync">not synced yet</span></div>
+      <div data-testid="settings-network-row-cached-punktis"><span class="k" id="settings-network-label-cached-punktis" data-testid="settings-network-label-cached-punktis">Cached Punktis</span> <span class="v" id="settings-network-cached-count" data-testid="settings-network-cached-count">unknown</span></div>
+      <div data-testid="settings-network-row-known-peers"><span class="k" id="settings-network-label-known-peers" data-testid="settings-network-label-known-peers">Known peers</span>   <span class="v" id="settings-network-peer-count" data-testid="settings-network-peer-count">no peers discovered yet</span></div>
       <div>
-        <span class="k">Known nodes</span>
-        <div class="settings-network-known-nodes mono" id="settings-network-known-nodes">no known nodes yet</div>
+        <span class="k" id="settings-network-label-known-nodes" data-testid="settings-network-label-known-nodes">Known nodes</span>
+        <div class="settings-network-known-nodes mono" id="settings-network-known-nodes" data-testid="settings-network-known-nodes">no known nodes yet</div>
       </div>
       <div style="display:none"><span class="k">Cached atoms</span> <span class="v" id="settings-atom-count">0</span></div>
       <div style="display:none"><span class="k">Node</span>  <span class="v" id="settings-node">—</span></div>

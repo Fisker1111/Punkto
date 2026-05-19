@@ -1274,9 +1274,8 @@ function healthToNetworkStatus(health) {
 function buildKnownNodesHtml(localCursor, peerUrls, peerCursors) {
   const snapshot = typeof nodeRegistry.getNodeSnapshot === 'function' ? nodeRegistry.getNodeSnapshot() : [];
   const cursorByUrl = new Map([[NODE_URL, localCursor], ...peerUrls.map((url, i) => [url, peerCursors[i]])]);
-  const urls = snapshot.length
-    ? snapshot.map((entry) => entry.url).filter(Boolean)
-    : [NODE_URL, ...SEED_NODES];
+  const snapshotUrls = snapshot.map((entry) => entry.url).filter(Boolean);
+  const urls = [...snapshotUrls, NODE_URL, ...SEED_NODES];
   const uniqueUrls = [...new Set(urls.map((url) => String(url).replace(/\/$/, '')).filter(Boolean))];
   if (!uniqueUrls.length) return 'no known nodes yet';
   return uniqueUrls.map((url) => {
@@ -1454,8 +1453,8 @@ function wireEvents() {
 // ---------------------------------------------------------------------------
 
 async function boot() {
-  console.log('PUNKTO APP.JS LOADED v66 HARD MARKER 2026-05-18-1');
-  window.PUNKTO_APP_VERSION = 'v68-hard-marker-2026-05-19-2';
+  console.log('PUNKTO APP.JS LOADED v67 HARD MARKER 2026-05-19-3');
+  window.PUNKTO_APP_VERSION = 'v69-hard-marker-2026-05-19-3';
 
   console.log('[punkto] booting...');
 
