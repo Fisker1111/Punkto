@@ -968,7 +968,7 @@ async function submitAtomFromModal({ text, author, draft }) {
   setCreateSubmitting(true);
   setCreateError('');
   try {
-    if (author) localStorage.setItem('punkto-author', author);
+    if (author) setStoredAuthorName(author);
     await postAtomToNetwork(atom, nodeRegistry);
     await upsertAtom(atom);
     closeCreateModal();
@@ -1428,7 +1428,7 @@ function wireEvents() {
 
 async function boot() {
   console.log('PUNKTO APP.JS LOADED v66 HARD MARKER 2026-05-18-1');
-  window.PUNKTO_APP_VERSION = 'v66-hard-marker-2026-05-18-1';
+  window.PUNKTO_APP_VERSION = 'v67-hard-marker-2026-05-19-1';
 
   console.log('[punkto] booting...');
 

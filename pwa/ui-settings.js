@@ -122,11 +122,11 @@ export function renderSettingsView({ network = {}, identity = {}, version = null
   if (refs.loadKeyButton && identity.canLoad !== undefined) refs.loadKeyButton.disabled = !identity.canLoad;
 
   if (refs.keyInfo) {
-    const hasIdentity = !!identity.authorId;
+    const hasIdentity = !!identity.authorId || !!identity.shortPubkey;
     refs.keyInfo.style.display = hasIdentity ? 'block' : 'none';
     if (hasIdentity) {
       if (refs.keyAuthorId && identity.authorId !== undefined) refs.keyAuthorId.textContent = toText(identity.authorId);
-      if (refs.keyPubkey && identity.pubkey !== undefined) refs.keyPubkey.textContent = toText(identity.pubkey);
+      if (refs.keyPubkey && identity.shortPubkey !== undefined) refs.keyPubkey.textContent = toText(identity.shortPubkey);
       if (refs.keyMnemonic && identity.mnemonic !== undefined) refs.keyMnemonic.textContent = toText(identity.mnemonic);
     }
   }
