@@ -117,17 +117,25 @@ export function initSettingsView({
 }
 
 export function renderSettingsView({ network = {}, identity = {}, version = null, syncStatus = null } = {}) {
+  const networkView = {
+    currentNode: network.currentNode,
+    syncStatus: network.syncStatus,
+    lastSync: network.lastSync,
+    cachedCount: network.cachedCount ?? network.atomCount,
+    peerCount: network.peerCount,
+    knownNodesHtml: network.knownNodesHtml,
+  };
   if (refs.atomCount && network.atomCount !== undefined) refs.atomCount.textContent = toText(network.atomCount, '0');
   if (refs.node && network.nodeHtml !== undefined) refs.node.innerHTML = network.nodeHtml;
   if (refs.peers && network.peersHtml !== undefined) refs.peers.innerHTML = network.peersHtml;
   if (refs.sync && syncStatus !== undefined && syncStatus !== null) refs.sync.textContent = toText(syncStatus, '0');
   if (refs.version && version !== undefined && version !== null) refs.version.textContent = String(version);
-  if (refs.networkCurrentNode && network.currentNode !== undefined) refs.networkCurrentNode.textContent = toText(network.currentNode, 'unknown');
-  if (refs.networkSyncStatus && network.syncStatus !== undefined) refs.networkSyncStatus.textContent = toText(network.syncStatus, 'unknown');
-  if (refs.networkLastSync && network.lastSync !== undefined) refs.networkLastSync.textContent = toText(network.lastSync, 'not synced yet');
-  if (refs.networkCachedCount && network.cachedCount !== undefined) refs.networkCachedCount.textContent = toText(network.cachedCount, '0');
-  if (refs.networkPeerCount && network.peerCount !== undefined) refs.networkPeerCount.textContent = toText(network.peerCount, 'no peers discovered yet');
-  if (refs.networkKnownNodes && network.knownNodesHtml !== undefined) refs.networkKnownNodes.innerHTML = network.knownNodesHtml;
+  if (refs.networkCurrentNode) refs.networkCurrentNode.textContent = toText(networkView.currentNode, 'unknown');
+  if (refs.networkSyncStatus) refs.networkSyncStatus.textContent = toText(networkView.syncStatus, 'checking…');
+  if (refs.networkLastSync) refs.networkLastSync.textContent = toText(networkView.lastSync, 'not synced yet');
+  if (refs.networkCachedCount) refs.networkCachedCount.textContent = toText(networkView.cachedCount, 'unknown');
+  if (refs.networkPeerCount) refs.networkPeerCount.textContent = toText(networkView.peerCount, 'no peers discovered yet');
+  if (refs.networkKnownNodes) refs.networkKnownNodes.innerHTML = toText(networkView.knownNodesHtml, 'no known nodes yet');
 
   if (refs.nameInput && identity.name !== undefined && refs.nameInput.value !== String(identity.name || '')) {
     refs.nameInput.value = String(identity.name || '');
