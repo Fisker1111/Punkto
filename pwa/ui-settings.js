@@ -25,6 +25,12 @@ const refs = {
   peers: null,
   sync: null,
   version: null,
+  networkCurrentNode: null,
+  networkSyncStatus: null,
+  networkLastSync: null,
+  networkCachedCount: null,
+  networkPeerCount: null,
+  networkKnownNodes: null,
   keyStatus: null,
   keyInfo: null,
   keyAuthorId: null,
@@ -71,6 +77,12 @@ export function initSettingsView({
   refs.peers = byId('settings-peers');
   refs.sync = byId('settings-count');
   refs.version = byId('app-version');
+  refs.networkCurrentNode = byId('settings-network-current-node');
+  refs.networkSyncStatus = byId('settings-network-sync-status');
+  refs.networkLastSync = byId('settings-network-last-sync');
+  refs.networkCachedCount = byId('settings-network-cached-count');
+  refs.networkPeerCount = byId('settings-network-peer-count');
+  refs.networkKnownNodes = byId('settings-network-known-nodes');
   refs.keyStatus = byId('me-key-status');
   refs.keyInfo = byId('key-info');
   refs.keyAuthorId = byId('key-author-id');
@@ -110,6 +122,12 @@ export function renderSettingsView({ network = {}, identity = {}, version = null
   if (refs.peers && network.peersHtml !== undefined) refs.peers.innerHTML = network.peersHtml;
   if (refs.sync && syncStatus !== undefined && syncStatus !== null) refs.sync.textContent = toText(syncStatus, '0');
   if (refs.version && version !== undefined && version !== null) refs.version.textContent = String(version);
+  if (refs.networkCurrentNode && network.currentNode !== undefined) refs.networkCurrentNode.textContent = toText(network.currentNode, 'unknown');
+  if (refs.networkSyncStatus && network.syncStatus !== undefined) refs.networkSyncStatus.textContent = toText(network.syncStatus, 'unknown');
+  if (refs.networkLastSync && network.lastSync !== undefined) refs.networkLastSync.textContent = toText(network.lastSync, 'not synced yet');
+  if (refs.networkCachedCount && network.cachedCount !== undefined) refs.networkCachedCount.textContent = toText(network.cachedCount, '0');
+  if (refs.networkPeerCount && network.peerCount !== undefined) refs.networkPeerCount.textContent = toText(network.peerCount, 'no peers discovered yet');
+  if (refs.networkKnownNodes && network.knownNodesHtml !== undefined) refs.networkKnownNodes.innerHTML = network.knownNodesHtml;
 
   if (refs.nameInput && identity.name !== undefined && refs.nameInput.value !== String(identity.name || '')) {
     refs.nameInput.value = String(identity.name || '');

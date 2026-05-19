@@ -62,5 +62,11 @@ export function createNodeRegistry({ nodeUrl, seedNodes }) {
     hasNode: (url) => nodeRegistry.has(url),
     registerNode: (url) => nodeRegistry.set(url, { health: 'ok', failures: 0, unavailableSince: 0 }),
     keys: () => nodeRegistry.keys(),
+    getNodeSnapshot: () => [...nodeRegistry.entries()].map(([url, state]) => ({
+      url,
+      health: state.health,
+      failures: state.failures,
+      unavailableSince: state.unavailableSince,
+    })),
   };
 }
