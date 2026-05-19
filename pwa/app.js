@@ -1277,7 +1277,7 @@ function buildKnownNodesHtml(localCursor, peerUrls, peerCursors) {
   const snapshotUrls = snapshot.map((entry) => entry.url).filter(Boolean);
   const urls = [...snapshotUrls, NODE_URL, ...SEED_NODES];
   const uniqueUrls = [...new Set(urls.map((url) => String(url).replace(/\/$/, '')).filter(Boolean))];
-  if (!uniqueUrls.length) return 'no known nodes yet';
+  if (!uniqueUrls.length) return '<span class="dim">no known nodes yet</span>';
   return uniqueUrls.map((url) => {
     const nodeEntry = snapshot.find((entry) => entry.url === url);
     const health = nodeEntry?.health;
@@ -1286,8 +1286,13 @@ function buildKnownNodesHtml(localCursor, peerUrls, peerCursors) {
     const cursor = cursorByUrl.get(url);
     const cursorText = typeof cursor === 'number' ? `cursor ${cursor}` : 'cursor unknown';
     const lastSeen = unavailableSince ? fmtRelativeTime(unavailableSince) : 'unknown';
-    return `${escHtml(url)} <span class="dim">(${status} · ${cursorText} · last seen ${escHtml(lastSeen)})</span>`;
-  }).join('<br>');
+    return [
+      '<div class="settings-network-node-card">',
+      `<div class="settings-network-node-url mono">${escHtml(url)}</div>`,
+      `<div class="settings-network-node-meta">status: ${escHtml(status)} · ${escHtml(cursorText)} · last seen: ${escHtml(lastSeen)}</div>`,
+      '</div>',
+    ].join('');
+  }).join('');
 }
 async function refreshSettingsNetworkInfo() {
   if (!elSettingsNode) return;
@@ -1453,8 +1458,8 @@ function wireEvents() {
 // ---------------------------------------------------------------------------
 
 async function boot() {
-  console.log('PUNKTO APP.JS LOADED v67 HARD MARKER 2026-05-19-3');
-  window.PUNKTO_APP_VERSION = 'v69-hard-marker-2026-05-19-3';
+  console.log('PUNKTO APP.JS LOADED v70 HARD MARKER 2026-05-19-1');
+  window.PUNKTO_APP_VERSION = 'v70-hard-marker-2026-05-19-1';
 
   console.log('[punkto] booting...');
 
