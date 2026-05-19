@@ -345,6 +345,15 @@
     #fab-panel:hover { color: var(--accent); border-color: var(--accent-dim); }
     #fab-panel.panel-open { color: var(--accent); border-color: var(--accent-dim); }
 
+    @media (min-width: 900px) {
+      /* Keep desktop left edge dedicated to the app side-rail nav. */
+      #fab-panel {
+        left: auto;
+        right: 16px;
+        bottom: 66px;
+      }
+    }
+
     /* fab-add: hidden — + is in bottom nav */
     #fab-add { display: none !important; }
 
