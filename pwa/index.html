@@ -118,7 +118,7 @@
     #sync-indicator.lagging { background: var(--warning); box-shadow: 0 0 0 2px rgba(255,179,0,.25); }
     @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
 
-    /* ── Bottom navigation ──────────────────────────────────── */
+    /* ── Shared navigation buttons ──────────────────────────── */
     #bottom-nav {
       position: fixed;
       bottom: 0; left: 0; right: 0;
@@ -132,6 +132,7 @@
       align-items: stretch;
       z-index: 200;
     }
+    #side-rail-nav { display: none; }
     .nav-btn {
       background: none;
       border: none;
@@ -181,6 +182,62 @@
     }
     .nav-add:active::after { transform: scale(0.92); }
     .nav-settings-btn:hover, .nav-settings-btn:focus-visible { color: var(--text); }
+
+    /* ── Desktop/tablet floating side rail ─────────────────── */
+    #side-rail-nav {
+      position: fixed;
+      left: 20px;
+      top: 50%;
+      transform: translateY(-50%);
+      z-index: 210;
+      background: rgba(13,13,18,0.78);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 20px;
+      padding: 10px;
+      gap: 8px;
+      width: 84px;
+      display: none;
+      flex-direction: column;
+      align-items: stretch;
+      box-shadow: 0 10px 28px rgba(0,0,0,0.35);
+    }
+    .rail-btn {
+      min-height: 44px;
+      border-radius: 12px;
+      font-size: 12px;
+      letter-spacing: 0.02em;
+    }
+    .rail-btn.nav-view.active {
+      background: rgba(0,212,255,0.12);
+      color: var(--accent);
+    }
+    .rail-btn.nav-view.active::before { display: none; }
+    .rail-btn.nav-add::after { width: 38px; height: 38px; }
+    .rail-btn.nav-settings-btn {
+      font-size: 11px;
+      color: var(--text-mid);
+    }
+    .rail-btn.nav-settings-btn.active {
+      color: var(--text);
+      background: rgba(255,255,255,0.08);
+    }
+
+    @media (min-width: 900px) {
+      #bottom-nav { display: none; }
+      #side-rail-nav { display: flex; }
+      #map { bottom: 0; }
+      #map.panel-open { bottom: var(--panel-h); }
+      #leader-lines { bottom: 0; }
+      #page-text { bottom: 0; }
+      #toggle-3d { bottom: 16px; }
+      #fab-panel { bottom: 16px; }
+      #panel { bottom: 0; }
+      #settings-menu { bottom: 0; }
+      #settings-backdrop { bottom: 0; }
+      .reply-toast { bottom: 14px; }
+    }
 
     /* ── View switching ─────────────────────────────────────── */
     body.page-text #map,
@@ -1179,10 +1236,17 @@
 
   <!-- ── Bottom navigation ────────────────────────────────── -->
   <nav id="bottom-nav" role="navigation" aria-label="Main navigation">
-    <button class="nav-btn nav-view" id="nav-text" aria-label="Text feed">Text</button>
-    <button class="nav-btn nav-view active" id="nav-map" aria-label="Map view">Map</button>
-    <button class="nav-btn nav-add" id="nav-add" aria-label="Write Punkti"></button>
-    <button class="nav-btn nav-settings-btn" id="nav-settings" aria-label="Settings">Settings</button>
+    <button class="nav-btn nav-view" id="nav-text" data-nav-action="text" data-nav-page="text" aria-label="Text feed">Text</button>
+    <button class="nav-btn nav-view active" id="nav-map" data-nav-action="map" data-nav-page="map" aria-label="Map view">Map</button>
+    <button class="nav-btn nav-add" id="nav-add" data-nav-action="add" aria-label="Write Punkti"></button>
+    <button class="nav-btn nav-settings-btn" id="nav-settings" data-nav-action="settings" aria-label="Settings">Settings</button>
+  </nav>
+
+  <nav id="side-rail-nav" role="navigation" aria-label="Main navigation desktop">
+    <button class="nav-btn nav-view rail-btn" id="nav-rail-text" data-nav-action="text" data-nav-page="text" aria-label="Text feed">Text</button>
+    <button class="nav-btn nav-view rail-btn active" id="nav-rail-map" data-nav-action="map" data-nav-page="map" aria-label="Map view">Map</button>
+    <button class="nav-btn nav-add rail-btn" id="nav-rail-add" data-nav-action="add" aria-label="Write Punkti"></button>
+    <button class="nav-btn nav-settings-btn rail-btn" id="nav-rail-settings" data-nav-action="settings" aria-label="Settings">Settings</button>
   </nav>
 
   <!-- ── App module ───────────────────────────────────────── -->

@@ -3,7 +3,7 @@
  *
  * Owns:
  *  - showPage(page) view toggle ('text' | 'map')
- *  - bottom nav wiring (nav-text, nav-map, nav-add, nav-settings)
+ *  - shared nav wiring (bottom dock + desktop rail)
  *  - settings panel open/close/toggle
  *  - body class management (page-text, page-map)
  *  - active state on nav buttons
@@ -30,23 +30,36 @@ export function initShell({ onShowText, onShowMap, onAdd, onOpenSettings } = {})
   _onAdd          = typeof onAdd          === 'function' ? onAdd          : null;
   _onOpenSettings = typeof onOpenSettings === 'function' ? onOpenSettings : null;
 
-  const elNavText     = document.getElementById('nav-text');
-  const elNavMap      = document.getElementById('nav-map');
-  const elNavAdd      = document.getElementById('nav-add');
-  const elNavSettings = document.getElementById('nav-settings');
+  const navButtons = Array.from(document.querySelectorAll('[data-nav-action]'));
+  navButtons.forEach((btn) => {
+    const action = btn.getAttribute('data-nav-action');
+    if (action === 'text') {
+      btn.addEventListener('click', () => showPage('text'));
+      return;
+    }
+    if (action === 'map') {
+      btn.addEventListener('click', () => showPage('map'));
+      return;
+    }
+    if (action === 'add') {
+      btn.addEventListener('click', () => {
+        if (_onAdd) _onAdd();
+      });
+      return;
+    }
+    if (action === 'settings') {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (_onOpenSettings) _onOpenSettings();
+        else toggleSettings();
+      });
+    }
+  });
 
-  if (elNavText) elNavText.addEventListener('click', () => showPage('text'));
-  if (elNavMap)  elNavMap.addEventListener('click',  () => showPage('map'));
-  if (elNavAdd) {
+  const elNavAdd = document.getElementById('nav-add');
+  if (elNavAdd && !elNavAdd.hasAttribute('data-nav-action')) {
     elNavAdd.addEventListener('click', () => {
       if (_onAdd) _onAdd();
-    });
-  }
-  if (elNavSettings) {
-    elNavSettings.addEventListener('click', (e) => {
-      e.stopPropagation();
-      if (_onOpenSettings) _onOpenSettings();
-      else toggleSettings();
     });
   }
 
@@ -76,9 +89,8 @@ export function showPage(page) {
   document.body.classList.remove('page-text', 'page-map');
   document.body.classList.add('page-' + page);
 
-  ['text', 'map'].forEach((p) => {
-    const btn = document.getElementById('nav-' + p);
-    if (btn) btn.classList.toggle('active', p === page);
+  document.querySelectorAll('[data-nav-page]').forEach((btn) => {
+    btn.classList.toggle('active', btn.getAttribute('data-nav-page') === page);
   });
 
   if (page === 'text' && _onShowText) _onShowText();
@@ -95,26 +107,26 @@ export function openSettings() {
   _settingsOpen = true;
   const menu = document.getElementById('settings-menu');
   const bd   = document.getElementById('settings-backdrop');
-  const btn  = document.getElementById('nav-settings');
+  const buttons = document.querySelectorAll('[data-nav-action="settings"]');
   if (menu) {
     menu.classList.add('open');
     menu.setAttribute('aria-hidden', 'false');
   }
   if (bd)  bd.classList.add('open');
-  if (btn) btn.classList.add('active');
+  buttons.forEach((btn) => btn.classList.add('active'));
 }
 
 export function closeSettings() {
   _settingsOpen = false;
   const menu = document.getElementById('settings-menu');
   const bd   = document.getElementById('settings-backdrop');
-  const btn  = document.getElementById('nav-settings');
+  const buttons = document.querySelectorAll('[data-nav-action="settings"]');
   if (menu) {
     menu.classList.remove('open');
     menu.setAttribute('aria-hidden', 'true');
   }
   if (bd)  bd.classList.remove('open');
-  if (btn) btn.classList.remove('active');
+  buttons.forEach((btn) => btn.classList.remove('active'));
 }
 
 export function toggleSettings() {
