@@ -43,6 +43,7 @@ const SEED_NODES = [
 // Node registry + write round-robin (extracted sync ownership)
 const nodeRegistry = createNodeRegistry({ nodeUrl: NODE_URL, seedNodes: SEED_NODES });
 let syncEngine = null;
+let lastSyncAtMs = null;
 
 // ---------------------------------------------------------------------------
 // IndexedDB (Dexie)
@@ -130,27 +131,15 @@ function setSyncStatus(state) {
 // ── Network page renderer ─────────────────────────────────────────────────────
 // Shows live node/peer/sync data. Called by showPage('network').
 function renderNetworkPage() {
-  // Reuse data already fetched by refreshSettingsNetworkInfo()
-  const srcNode   = document.getElementById('settings-node');
-  const srcPeers  = document.getElementById('settings-peers');
-  const srcCached = document.getElementById('settings-count');
+  const syncText = (syncEngine && syncEngine.isSyncing()) ? 'syncing' : 'idle';
+  renderSettingsView({
+    network: {
+      currentNode: NODE_URL,
+      syncStatus: syncText,
+      lastSync: lastSyncAtMs ? fmtTime(lastSyncAtMs) : 'not synced yet',
+    },
+  });
 
-  const setVal = (id, val) => {
-    const el = document.getElementById(id);
-    if (el && val !== null) el.textContent = val;
-  };
-
-  setVal('net-node',   srcNode   ? srcNode.textContent   : '—');
-  setVal('net-peers',  srcPeers  ? srcPeers.textContent  : '—');
-  setVal('net-cached', srcCached ? srcCached.textContent : '0');
-
-  // Sync status: derive from isSyncing flag if available
-  const syncEl = document.getElementById('net-sync');
-  if (syncEl) {
-    syncEl.textContent = (syncEngine && syncEngine.isSyncing()) ? 'Syncing…' : 'Idle';
-  }
-
-  // Trigger a fresh network info pull in background
   if (typeof refreshSettingsNetworkInfo === 'function') {
     refreshSettingsNetworkInfo().catch(() => {});
   }
@@ -1043,7 +1032,10 @@ function initMap() {
     isHiddenAtom,
     callbacks: {
       onSyncStart: () => setSyncStatus('syncing'),
-      onSyncDone: ({ anyError }) => setSyncStatus(anyError ? 'error' : 'ok'),
+      onSyncDone: ({ anyError }) => {
+        setSyncStatus(anyError ? 'error' : 'ok');
+        if (!anyError) lastSyncAtMs = Date.now();
+      },
       onSyncError: () => setSyncStatus('error'),
       onAtomsChanged: (newAtomIds) => refreshUI(newAtomIds),
       onPeersChanged: () => refreshSettingsNetworkInfo().catch(() => {}),
@@ -1261,7 +1253,7 @@ function showMnemonicModal(identity) {
  */
 function updateSettingsCount(count) {
   if (typeof count !== 'number') return;
-  renderSettingsView({ network: { atomCount: count }, syncStatus: count });
+  renderSettingsView({ network: { atomCount: count, cachedCount: count }, syncStatus: count });
 }
 
 /**
@@ -1270,6 +1262,27 @@ function updateSettingsCount(count) {
  * to reflect lag status. Gracefully degrades when peers are unreachable or
  * when /info doesn't advertise a peer list.
  */
+
+function healthToNetworkStatus(health) {
+  if (health === 'ok') return 'online';
+  if (health === 'failing') return 'failing';
+  if (health === 'recovering') return 'sleeping';
+  if (health === 'unavailable') return 'stale';
+  return 'unknown';
+}
+
+function buildKnownNodesHtml(localCursor, peerUrls, peerCursors) {
+  const snapshot = typeof nodeRegistry.getNodeSnapshot === 'function' ? nodeRegistry.getNodeSnapshot() : [];
+  const cursorByUrl = new Map([[NODE_URL, localCursor], ...peerUrls.map((url, i) => [url, peerCursors[i]])]);
+  if (!snapshot.length) return 'no peers discovered yet';
+  return snapshot.map(({ url, health, unavailableSince }) => {
+    const status = healthToNetworkStatus(health);
+    const cursor = cursorByUrl.get(url);
+    const cursorText = typeof cursor === 'number' ? `cursor ${cursor}` : 'cursor unknown';
+    const lastSeen = unavailableSince ? fmtRelativeTime(unavailableSince) : 'unknown';
+    return `${escHtml(url)} <span class="dim">(${status} · ${cursorText} · last seen ${escHtml(lastSeen)})</span>`;
+  }).join('<br>');
+}
 async function refreshSettingsNetworkInfo() {
   if (!elSettingsNode) return;
 
@@ -1279,6 +1292,11 @@ async function refreshSettingsNetworkInfo() {
     network: {
       nodeHtml: `${escHtml(hostOf(NODE_URL))} <span class="dim">(cursor …)</span>`,
       peersHtml: '<span class="dim">checking…</span>',
+      currentNode: NODE_URL,
+      syncStatus: (syncEngine && syncEngine.isSyncing()) ? 'syncing' : 'idle',
+      lastSync: lastSyncAtMs ? fmtTime(lastSyncAtMs) : 'not synced yet',
+      peerCount: 'checking…',
+      knownNodesHtml: '<span class="dim">checking…</span>',
     },
   });
 
@@ -1329,7 +1347,9 @@ async function refreshSettingsNetworkInfo() {
       renderSettingsView({ network: { peersHtml: rows.join('<br>') } });
     }
   }
-  renderSettingsView({ network: { nodeHtml } });
+  const knownPeersCount = peerUrls.length ? String(peerUrls.length) : 'no peers discovered yet';
+  const knownNodesHtml = buildKnownNodesHtml(localCursor, peerUrls, peerCursors);
+  renderSettingsView({ network: { nodeHtml, currentNode: NODE_URL, peerCount: knownPeersCount, knownNodesHtml, syncStatus: (syncEngine && syncEngine.isSyncing()) ? 'syncing' : 'idle', lastSync: lastSyncAtMs ? fmtTime(lastSyncAtMs) : 'not synced yet' } });
 
   // 6. Topbar indicator: amber dot when behind, regardless of sync state
   if (elSyncDot) {
@@ -1428,7 +1448,7 @@ function wireEvents() {
 
 async function boot() {
   console.log('PUNKTO APP.JS LOADED v66 HARD MARKER 2026-05-18-1');
-  window.PUNKTO_APP_VERSION = 'v67-hard-marker-2026-05-19-1';
+  window.PUNKTO_APP_VERSION = 'v68-hard-marker-2026-05-19-1';
 
   console.log('[punkto] booting...');
 
