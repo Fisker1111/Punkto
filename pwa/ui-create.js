@@ -112,7 +112,7 @@ export function openCreateModal() {
   const context = callbacks?.getInitialContext?.() || {};
   elModalError.textContent = '';
   elModalText.value = '';
-  elModalAuthor.value = localStorage.getItem('punkto-author') || '';
+  elModalAuthor.value = localStorage.getItem('punkto-name') || localStorage.getItem('punkto-author') || '';
   const building = context.building || null;
   modalAltitudeState = building ? { mode: 'floor', building } : { mode: 'meter', building: null };
   elModalAltitudeSlider.min = '0';
@@ -135,7 +135,12 @@ export function closeCreateModal() {
 }
 
 export function readCreateFormState() {
-  return { text: elModalText.value.trim(), author: elModalAuthor.value.trim(), draft: draft ? { ...draft } : null };
+  const author = elModalAuthor.value.trim();
+  if (author) {
+    localStorage.setItem('punkto-name', author);
+    localStorage.setItem('punkto-author', author);
+  }
+  return { text: elModalText.value.trim(), author, draft: draft ? { ...draft } : null };
 }
 
 export function setCreateError(message) { elModalError.textContent = message || ''; }
