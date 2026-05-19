@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <meta name="theme-color" content="#0a0a0f" />
+  <meta name="theme-color" content="#eaf3ff" />
   <meta name="description" content="Punkto — address What's around you" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <title>Punkto</title>
@@ -27,18 +27,18 @@
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
-      --bg:        #0f1118;
-      --surface:   #171a24;
-      --surface2:  #1f2430;
-      --surface3:  #22222e;
-      --border:    #1e1e2a;
-      --border2:   #2a2a3a;
-      --text:      #e8e8f0;
-      --text-mid:  #a8a8b8;
-      --text-dim:  #6b6b80;
-      --accent:    #00d4ff;
-      --accent-dim:#0098b8;
-      --accent-glow: rgba(0,212,255,0.18);
+      --bg:        #eaf2fb;
+      --surface:   rgba(255,255,255,0.92);
+      --surface2:  rgba(255,255,255,0.88);
+      --surface3:  #f4f8ff;
+      --border:    rgba(35,70,112,0.14);
+      --border2:   rgba(35,70,112,0.22);
+      --text:      #1f2e45;
+      --text-mid:  #4e6485;
+      --text-dim:  #6a7f9f;
+      --accent:    #0b9dff;
+      --accent-dim:#2b7fc2;
+      --accent-glow: rgba(11,157,255,0.20);
       --danger:    #ff5566;
       --success:   #00e676;
       --warning:   #ffb300;
@@ -51,7 +51,7 @@
     html, body {
       width: 100%; height: 100%;
       overflow: hidden;
-      background: var(--bg);
+      background: linear-gradient(180deg,#edf4ff 0%,#e3eefb 100%);
       color: var(--text);
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
       font-size: 14px;
@@ -69,10 +69,10 @@
       top: 10px; left: 50%;
       transform: translateX(-50%);
       height: 34px;
-      background: rgba(23,26,36,0.74);
+      background: rgba(255,255,255,0.9);
       backdrop-filter: blur(12px);
       -webkit-backdrop-filter: blur(12px);
-      border: 1px solid rgba(255,255,255,0.08);
+      border: 1px solid rgba(35,70,112,0.12);
       border-radius: 999px;
       display: flex;
       align-items: center;
@@ -94,7 +94,7 @@
     #topbar .brand::before {
       content: '';
       width: 8px; height: 8px;
-      background: var(--accent);
+      background: linear-gradient(90deg, #0ca8ff 0%, #3bb9ff 100%);
       border-radius: 50%;
       box-shadow: 0 0 10px var(--accent-glow);
     }
@@ -121,13 +121,16 @@
     /* ── Shared navigation buttons ──────────────────────────── */
     #bottom-nav {
       position: fixed;
-      bottom: 0; left: 0; right: 0;
-      height: calc(var(--nav-h) + var(--safe-b));
-      padding-bottom: var(--safe-b);
-      background: rgba(13,13,18,0.92);
+      left: 12px; right: 12px;
+      bottom: calc(10px + var(--safe-b));
+      height: var(--nav-h);
+      padding-bottom: 0;
+      background: rgba(255,255,255,0.9);
       backdrop-filter: blur(16px);
       -webkit-backdrop-filter: blur(16px);
-      border-top: 1px solid var(--border);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      box-shadow: 0 12px 30px rgba(26,58,97,0.16);
       display: flex;
       align-items: stretch;
       z-index: 200;
@@ -155,11 +158,12 @@
 
     .nav-view.active { color: var(--accent); }
     .nav-view.active::before {
+      top: auto; bottom: 6px;
       content: '';
       position: absolute;
-      top: 0; left: 30%; right: 30%;
+      left: 24%; right: 24%;
       height: 2px;
-      background: var(--accent);
+      background: linear-gradient(90deg, #0ca8ff 0%, #3bb9ff 100%);
       border-radius: 0 0 2px 2px;
       box-shadow: 0 0 8px var(--accent-glow);
     }
@@ -169,14 +173,14 @@
     .nav-add::after {
       content: '+';
       width: 42px; height: 42px;
-      background: var(--accent);
+      background: linear-gradient(90deg, #0ca8ff 0%, #3bb9ff 100%);
       border-radius: 50%;
       display: flex;
       align-items: center;
       justify-content: center;
       font-size: 24px;
       font-weight: 300;
-      color: var(--bg);
+      color: #ffffff;
       box-shadow: 0 4px 16px var(--accent-glow);
       transition: transform 0.12s;
     }
@@ -190,10 +194,10 @@
       top: 50%;
       transform: translateY(-50%);
       z-index: 210;
-      background: rgba(13,13,18,0.78);
+      background: rgba(255,255,255,0.88);
       backdrop-filter: blur(16px);
       -webkit-backdrop-filter: blur(16px);
-      border: 1px solid rgba(255,255,255,0.12);
+      border: 1px solid rgba(35,70,112,0.14);
       border-radius: 20px;
       padding: 10px;
       gap: 8px;
@@ -201,7 +205,7 @@
       display: none;
       flex-direction: column;
       align-items: stretch;
-      box-shadow: 0 10px 28px rgba(0,0,0,0.35);
+      box-shadow: 0 18px 40px rgba(25,64,106,0.2);
     }
     .rail-btn {
       min-height: 44px;
@@ -210,10 +214,11 @@
       letter-spacing: 0.02em;
     }
     .rail-btn.nav-view.active {
-      background: rgba(0,212,255,0.12);
+      background: rgba(11,157,255,0.14);
       color: var(--accent);
     }
-    .rail-btn.nav-view.active::before { display: none; }
+    .rail-btn.nav-view.active::before {
+      top: auto; bottom: 6px; display: none; }
     .rail-btn.nav-add::after { width: 38px; height: 38px; }
     .rail-btn.nav-settings-btn {
       font-size: 11px;
@@ -224,22 +229,28 @@
       background: rgba(255,255,255,0.08);
     }
 
-    @media (min-width: 900px) {
+    @media (min-width: 980px) and (hover: hover) and (pointer: fine) {
       #bottom-nav { display: none; }
       #side-rail-nav { display: flex; }
       #map { bottom: 0; }
       #map.panel-open { bottom: var(--panel-h); }
       #leader-lines { bottom: 0; }
-      #page-text { bottom: 0; }
-      #toggle-3d { right: 20px; bottom: 20px; }
-      #fab-panel { right: 20px; bottom: 74px; }
+      #page-text {
+      background: linear-gradient(180deg,#f4f8ff 0%,#edf4ff 100%); bottom: 0; }
+      #toggle-3d {
+      box-shadow: 0 12px 30px rgba(25,64,106,0.15); right: 20px; bottom: 20px; }
+      #fab-panel {
+      box-shadow: 0 12px 30px rgba(25,64,106,0.15); right: 20px; bottom: 74px; }
       #onboarding-hint {
+      box-shadow: 0 12px 32px rgba(25,64,106,0.14);
         right: 20px;
         bottom: 130px;
         max-width: 270px;
       }
-      #panel { bottom: 0; }
-      #settings-menu { bottom: 0; }
+      #panel {
+      box-shadow: 0 -14px 40px rgba(25,64,106,0.16); bottom: 0; }
+      #settings-menu {
+      background: rgba(245,250,255,0.92); bottom: 0; }
       #settings-backdrop { bottom: 0; }
       .reply-toast { bottom: 14px; }
     }
@@ -310,11 +321,12 @@
 
     /* ── Map overlay controls ───────────────────────────────── */
     #toggle-3d {
+      box-shadow: 0 12px 30px rgba(25,64,106,0.15);
       position: fixed;
       right: 16px;
       bottom: calc(var(--nav-h) + var(--safe-b) + 16px);
       z-index: 50;
-      background: rgba(26,26,36,0.9);
+      background: rgba(255,255,255,0.9);
       backdrop-filter: blur(8px);
       border: 1px solid var(--border2);
       color: var(--text-mid);
@@ -330,12 +342,13 @@
     #toggle-3d:hover { color: var(--accent); border-color: var(--accent-dim); }
 
     #fab-panel {
+      box-shadow: 0 12px 30px rgba(25,64,106,0.15);
       position: fixed;
       left: 16px;
       bottom: calc(var(--nav-h) + var(--safe-b) + 16px);
       z-index: 50;
       width: 42px; height: 42px;
-      background: rgba(26,26,36,0.9);
+      background: rgba(255,255,255,0.9);
       backdrop-filter: blur(8px);
       border: 1px solid var(--border2);
       border-radius: 50%;
@@ -356,16 +369,16 @@
 
     /* ── Text / Feed page ───────────────────────────────────── */
     #page-text {
+      background: linear-gradient(180deg,#f4f8ff 0%,#edf4ff 100%);
       position: fixed;
       top: 0;
       left: 0; right: 0;
       bottom: calc(var(--nav-h) + var(--safe-b));
       overflow-y: auto;
-      background: var(--bg);
       z-index: 10;
     }
 
-    #main-feed { padding: 20px 18px 34px; max-width: 820px; margin: 0 auto; }
+    #main-feed { padding: 24px 18px 34px; max-width: 880px; margin: 0 auto; }
     .main-page-header { margin-bottom: 10px; }
     .main-page-status { display:inline-flex; align-items:center; gap:10px; padding:8px 14px; border-radius:999px; border:1px solid rgba(120,150,190,0.28); background:rgba(23,33,50,0.62); margin-bottom:6px; backdrop-filter: blur(10px); }
     #main-brand { font-size:14px; font-weight:700; }
@@ -533,8 +546,8 @@
       color: var(--text-dim);
     }
     .btn-cta {
-      background: var(--accent);
-      color: var(--bg);
+      background: linear-gradient(90deg, #0ca8ff 0%, #3bb9ff 100%);
+      color: #ffffff;
       border: none;
       padding: 11px 26px;
       border-radius: 24px;
@@ -549,6 +562,7 @@
 
     /* ── Nearby panel (slides up, map view) ─────────────────── */
     #panel {
+      box-shadow: 0 -14px 40px rgba(25,64,106,0.16);
       position: fixed;
       left: 0; right: 0;
       bottom: calc(var(--nav-h) + var(--safe-b));
@@ -563,8 +577,9 @@
     }
     #panel.open { transform: translateY(0); }
 
-    @media (min-width: 900px) {
-      #panel { transform: translateY(100%); }
+    @media (min-width: 980px) and (hover: hover) and (pointer: fine) {
+      #panel {
+      box-shadow: 0 -14px 40px rgba(25,64,106,0.16); transform: translateY(100%); }
       #panel.open { transform: translateY(0); }
     }
 
@@ -606,7 +621,7 @@
     .atom-dot {
       width: 6px; height: 6px;
       border-radius: 50%;
-      background: var(--accent);
+      background: linear-gradient(90deg, #0ca8ff 0%, #3bb9ff 100%);
       margin-top: 6px;
     }
     .atom-body .atom-text { color: var(--text); font-size: 13px; line-height: 1.4; word-break: break-word; }
@@ -617,6 +632,7 @@
 
     /* ── Onboarding hint ────────────────────────────────────── */
     #onboarding-hint {
+      box-shadow: 0 12px 32px rgba(25,64,106,0.14);
       position: fixed;
       bottom: calc(var(--nav-h) + var(--safe-b) + 72px);
       right: 16px;
@@ -638,7 +654,7 @@
       position: fixed;
       left: 0; right: 0; bottom: calc(var(--nav-h) + var(--safe-b));
       max-height: 78vh;
-      background: var(--surface);
+      background: rgba(245,250,255,0.92);
       border-top: 1px solid var(--border2);
       border-radius: 18px 18px 0 0;
       z-index: 300;
@@ -935,8 +951,8 @@
     .btn:active { transform: scale(0.97); }
     .btn-secondary { background: var(--surface3); color: var(--text-mid); }
     .btn-primary {
-      background: var(--accent);
-      color: var(--bg);
+      background: linear-gradient(90deg, #0ca8ff 0%, #3bb9ff 100%);
+      color: #ffffff;
       border-color: var(--accent);
       font-weight: 600;
     }
@@ -1151,7 +1167,7 @@
 
   <!-- ── Onboarding hint ──────────────────────────────────── -->
   <div id="onboarding-hint" aria-hidden="true">
-    <div class="hint-text">Move the map, choose a place, then tap <span class="hint-plus">+</span> to write a Punkti here.</div>
+    <div class="hint-text">Move the map, choose a place, then tap <span class="hint-plus">+</span> to write a Punkti.</div>
   </div>
 
   <!-- ── Nearby panel ─────────────────────────────────────── -->
