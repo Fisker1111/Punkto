@@ -240,11 +240,11 @@
       #toggle-3d {
       box-shadow: 0 12px 30px rgba(25,64,106,0.15); right: 20px; bottom: 20px; }
       #fab-panel {
-      box-shadow: 0 12px 30px rgba(25,64,106,0.15); right: 20px; bottom: 74px; }
+      box-shadow: 0 12px 30px rgba(25,64,106,0.15); left: auto; right: 20px; bottom: 74px; }
       #onboarding-hint {
       box-shadow: 0 12px 32px rgba(25,64,106,0.14);
         right: 20px;
-        bottom: 130px;
+        bottom: 140px;
         max-width: 270px;
       }
       #panel {
@@ -579,8 +579,9 @@
 
     @media (min-width: 980px) and (hover: hover) and (pointer: fine) {
       #panel {
-      box-shadow: 0 -14px 40px rgba(25,64,106,0.16); transform: translateY(100%); }
+      box-shadow: 0 -14px 40px rgba(25,64,106,0.16); transform: translateY(100%); display: none; }
       #panel.open { transform: translateY(0); }
+      #panel.open { display: flex; }
     }
 
     #panel-header {
