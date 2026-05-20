@@ -1073,10 +1073,10 @@ function initMap() {
         'source-layer': 'building',
         minzoom: 12,
         paint: {
-          'fill-extrusion-color': '#1a1a2e',
+          'fill-extrusion-color': '#8f9fb7',
           'fill-extrusion-height': ['coalesce', ['get', 'render_height'], ['get', 'height'], 5],
           'fill-extrusion-base': ['coalesce', ['get', 'render_min_height'], 0],
-          'fill-extrusion-opacity': 0.9,
+          'fill-extrusion-opacity': 0.58,
         },
       });
     } catch (e) {
@@ -1458,8 +1458,8 @@ function wireEvents() {
 // ---------------------------------------------------------------------------
 
 async function boot() {
-  console.log('PUNKTO APP.JS LOADED v75 HARD MARKER 2026-05-20-1');
-  window.PUNKTO_APP_VERSION = 'v75-hard-marker-2026-05-20-1';
+  console.log('PUNKTO APP.JS LOADED v76 HARD MARKER 2026-05-20-1');
+  window.PUNKTO_APP_VERSION = 'v76-hard-marker-2026-05-20-1';
 
   console.log('[punkto] booting...');
 
