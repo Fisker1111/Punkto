@@ -1458,8 +1458,8 @@ function wireEvents() {
 // ---------------------------------------------------------------------------
 
 async function boot() {
-  console.log('PUNKTO APP.JS LOADED v76 HARD MARKER 2026-05-20-1');
-  window.PUNKTO_APP_VERSION = 'v76-hard-marker-2026-05-20-1';
+  console.log('PUNKTO APP.JS LOADED v77 HARD MARKER 2026-05-20-2');
+  window.PUNKTO_APP_VERSION = 'v77-hard-marker-2026-05-20-2';
 
   console.log('[punkto] booting...');
 
