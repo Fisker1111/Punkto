@@ -1,0 +1,80 @@
+# Punkto node example configuration
+# Safe placeholders only. Do not place real secrets in example files.
+
+node:
+  # Human-readable node name shown in node info/admin surfaces.
+  name: "Example Punkto Node"
+  # Public base URL where this node is reachable.
+  public_url: "https://node.example.org"
+  # Node profile: flow | archive | community | private | registry | official
+  type: "flow"
+  # Operator contact handle/email (public metadata).
+  operator_contact: "ops@example.org"
+  # Short human description of this node's purpose.
+  description: "Community-operated Punkto flow node for local city coverage."
+
+admin:
+  # Enables Node Admin service endpoints/UI (future behavior).
+  enabled: false
+  # Local bind target for admin service. Keep local/private by default.
+  bind: "127.0.0.1:9090"
+  # Must remain false unless operator intentionally publishes admin surface.
+  public_admin_enabled: false
+  # Planned auth mode: none | token | oidc (future runtime support).
+  auth_mode: "token"
+  # Path to token file (placeholder path; no token value stored here).
+  admin_token_file: "/config/admin-token.txt"
+
+serving_policy:
+  # Serve recent Punktis in normal feed/API.
+  serve_recent: true
+  # Number of recent days considered hot/served by default.
+  recent_days: 7
+  # Always serve genesis Punkti class.
+  serve_genesis: true
+  # Always serve explicitly pinned Punktis.
+  serve_pinned: true
+  # If true, only serve verified/signed records (future behavior).
+  serve_verified_only: false
+  # Temporary early-phase compatibility for unsigned records.
+  allow_unsigned: true
+  # Keep colder records in archive class.
+  archive_enabled: true
+  # Move old records into archive class after this age.
+  archive_after_days: 30
+  # Soft storage budget for policy decisions.
+  max_storage_mb: 10240
+  # Optional locality label for operator policy/reporting.
+  region: "example-region-1"
+
+bootstrap:
+  # Initial seed nodes used for first sync/bootstrap.
+  seed_nodes:
+    - "https://seed1.example.org"
+    - "https://seed2.example.org"
+  # Allow learning peers via network discovery.
+  peer_discovery_enabled: true
+  # Allow operator/user-added peers in local config/admin.
+  allow_user_added_peers: true
+  # Never connect/sync with blocked node URLs or fingerprints.
+  blocked_nodes: []
+
+moderation:
+  # Author identifiers blocked from serving on this node (node-local policy).
+  blocked_authors: []
+  # Explicit Punkti/atom IDs blocked from serving.
+  blocked_punktis: []
+  # Keywords flagged/blocked by local moderation policy.
+  blocked_keywords: []
+  # If true, require manual review workflow for selected classes.
+  manual_review: false
+
+retention:
+  # Age after which records become stale (node-local serving class).
+  stale_after_days: 14
+  # Optional hard delete window; null means no automatic delete.
+  delete_after_days: null
+  # Keep pinned records indefinitely.
+  keep_pinned_forever: true
+  # Keep genesis records indefinitely.
+  keep_genesis_forever: true
