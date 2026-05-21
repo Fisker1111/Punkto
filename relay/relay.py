@@ -19,6 +19,7 @@ from __future__ import annotations
 import hashlib
 import json
 import os
+import secrets
 import re
 import socket
 import sys
@@ -77,6 +78,8 @@ _T_MIN = 1_577_836_800_000  # 2020-01-01T00:00:00Z
 
 DEFAULT_NODE_CONFIG_PATH = "/config/punkto-node.yml"
 NODE_CONFIG_PATH = os.environ.get("PUNKTO_NODE_CONFIG", DEFAULT_NODE_CONFIG_PATH)
+DEFAULT_NODE_KEY_PATH = "/data/node-key.json"
+NODE_KEY_PATH = os.environ.get("PUNKTO_NODE_KEY", DEFAULT_NODE_KEY_PATH)
 
 DEFAULT_NODE_CONFIG: Dict[str, Any] = {
     "node": {
@@ -214,6 +217,10 @@ def load_node_config(path: str) -> Tuple[Dict[str, Any], bool, str]:
 NODE_CONFIG: Dict[str, Any] = {}
 NODE_CONFIG_LOADED = False
 NODE_CONFIG_PATH_USED = NODE_CONFIG_PATH
+NODE_IDENTITY: Dict[str, Any] = {}
+NODE_IDENTITY_LOADED = False
+NODE_IDENTITY_PATH_USED = NODE_KEY_PATH
+NODE_IDENTITY_CREATED_NOW = False
 
 
 def _node_info_payload(buffer: "Buffer") -> Dict[str, Any]:
@@ -245,6 +252,10 @@ def _node_info_payload(buffer: "Buffer") -> Dict[str, Any]:
             "buffer_size": buffer.size(),
             "buffer_oldest_t": buffer.oldest_t(),
         },
+        "node_fingerprint": NODE_IDENTITY.get("fingerprint", ""),
+        "node_key_alg": NODE_IDENTITY.get("key_alg", ""),
+        "node_identity_loaded": NODE_IDENTITY_LOADED,
+        "node_identity_created_at": NODE_IDENTITY.get("created_at"),
     }
     if operator_contact:
         info["node"]["operator_contact"] = operator_contact
@@ -265,6 +276,82 @@ def log(msg: str) -> None:
 
 
 NODE_CONFIG, NODE_CONFIG_LOADED, NODE_CONFIG_PATH_USED = load_node_config(NODE_CONFIG_PATH)
+
+
+def _iso_utc_now() -> str:
+    return time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+
+
+def _node_fingerprint(public_key: str) -> str:
+    digest = hashlib.sha256(public_key.encode("utf-8")).hexdigest()
+    return f"node:{digest[:12]}"
+
+
+def _new_node_identity() -> Dict[str, Any]:
+    # Relay currently has no Ed25519 dependency. Keep a stable local-only
+    # identity secret with deterministic public identity + fingerprint.
+    private_key = secrets.token_hex(32)
+    public_key = hashlib.sha256(private_key.encode("utf-8")).hexdigest()
+    return {
+        "version": 1,
+        "key_alg": "sha256-secret-v1",
+        "created_at": _iso_utc_now(),
+        "public_key": public_key,
+        "private_key": private_key,
+        "fingerprint": _node_fingerprint(public_key),
+    }
+
+
+def _validate_node_identity(data: Any, path: str) -> Dict[str, Any]:
+    if not isinstance(data, dict):
+        raise ValueError(f"node identity file {path} must contain a JSON object")
+    required = ["version", "key_alg", "created_at", "public_key", "private_key", "fingerprint"]
+    for key in required:
+        if key not in data:
+            raise ValueError(f"node identity file {path} missing required field {key!r}")
+    if int(data["version"]) != 1:
+        raise ValueError(f"node identity file {path} has unsupported version {data['version']!r}")
+    if not isinstance(data["public_key"], str) or not data["public_key"]:
+        raise ValueError(f"node identity file {path} has invalid public_key")
+    if not isinstance(data["private_key"], str) or not data["private_key"]:
+        raise ValueError(f"node identity file {path} has invalid private_key")
+    expected_public = hashlib.sha256(data["private_key"].encode("utf-8")).hexdigest()
+    if data["public_key"] != expected_public:
+        raise ValueError(f"node identity file {path} failed integrity validation")
+    expected_fingerprint = _node_fingerprint(data["public_key"])
+    if data["fingerprint"] != expected_fingerprint:
+        raise ValueError(f"node identity file {path} has mismatched fingerprint")
+    return data
+
+
+def load_or_create_node_identity(path: str) -> Tuple[Dict[str, Any], bool, str, bool]:
+    key_path = path or DEFAULT_NODE_KEY_PATH
+    key_dir = os.path.dirname(key_path) or "."
+    os.makedirs(key_dir, exist_ok=True)
+    if os.path.exists(key_path):
+        try:
+            with open(key_path, "r", encoding="utf-8") as f:
+                parsed = json.load(f)
+            identity = _validate_node_identity(parsed, key_path)
+            log(f"Loaded existing node identity node_fingerprint={identity['fingerprint']} path={key_path}")
+            return identity, True, key_path, False
+        except Exception as exc:
+            log(f"ERROR: invalid node identity file at {key_path}: {exc}")
+            raise SystemExit(1) from exc
+
+    identity = _new_node_identity()
+    try:
+        with open(key_path, "x", encoding="utf-8") as f:
+            json.dump(identity, f, indent=2, ensure_ascii=False)
+            f.write("\n")
+    except Exception as exc:
+        log(f"ERROR: cannot persist node identity to {key_path}: {exc}")
+        raise SystemExit(1) from exc
+    log(f"Created new node identity node_fingerprint={identity['fingerprint']} path={key_path}")
+    return identity, True, key_path, True
+
+
+NODE_IDENTITY, NODE_IDENTITY_LOADED, NODE_IDENTITY_PATH_USED, NODE_IDENTITY_CREATED_NOW = load_or_create_node_identity(NODE_KEY_PATH)
 
 
 # ---------------------------------------------------------------------------

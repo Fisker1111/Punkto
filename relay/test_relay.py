@@ -108,6 +108,47 @@ def test_info() -> None:
     assert isinstance(body["buffer_size"], int)
 
 
+def test_node_info_identity_fields() -> None:
+    r = requests.get(f"{BASE_URL}/node/info", timeout=5)
+    assert r.status_code == 200, r.text
+    body = r.json()
+    assert isinstance(body.get("node_fingerprint"), str)
+    assert body.get("node_fingerprint", "").startswith("node:")
+    assert body.get("node_key_alg") == "sha256-secret-v1"
+    assert body.get("node_identity_loaded") is True
+    assert isinstance(body.get("node_identity_created_at"), str)
+
+
+def test_load_or_create_node_identity_roundtrip() -> None:
+    tmpdir = tempfile.mkdtemp(prefix="punkto-node-identity-")
+    try:
+        key_path = os.path.join(tmpdir, "node-key.json")
+        first, loaded1, used1, created1 = relay.load_or_create_node_identity(key_path)
+        second, loaded2, used2, created2 = relay.load_or_create_node_identity(key_path)
+        assert loaded1 is True and loaded2 is True
+        assert created1 is True and created2 is False
+        assert used1 == key_path and used2 == key_path
+        assert first["fingerprint"] == second["fingerprint"]
+        assert first["public_key"] == second["public_key"]
+    finally:
+        shutil.rmtree(tmpdir, ignore_errors=True)
+
+
+def test_load_or_create_node_identity_invalid_fails() -> None:
+    tmpdir = tempfile.mkdtemp(prefix="punkto-node-identity-invalid-")
+    try:
+        key_path = os.path.join(tmpdir, "node-key.json")
+        with open(key_path, "w", encoding="utf-8") as f:
+            f.write('{"version":1,"key_alg":"sha256-secret-v1","created_at":"x","public_key":"p","private_key":"q","fingerprint":"node:deadbeefcafe"}')
+        try:
+            relay.load_or_create_node_identity(key_path)
+            raise AssertionError("expected SystemExit for invalid identity file")
+        except SystemExit as exc:
+            assert exc.code == 1
+    finally:
+        shutil.rmtree(tmpdir, ignore_errors=True)
+
+
 def test_post_valid_atom() -> None:
     a = _atom(f="alice", x="hello world")
     r = requests.post(f"{BASE_URL}/atom", json=a, timeout=5)
@@ -285,6 +326,9 @@ def test_options_cors() -> None:
 ALL_TESTS = [
     test_health,
     test_info,
+    test_node_info_identity_fields,
+    test_load_or_create_node_identity_roundtrip,
+    test_load_or_create_node_identity_invalid_fails,
     test_post_valid_atom,
     test_post_duplicate_atom,
     test_post_invalid_missing_punkto,

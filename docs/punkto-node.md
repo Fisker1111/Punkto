@@ -86,18 +86,42 @@ Required top-level config sections:
 
 ## Node identity
 
-Future persistent node identity path:
+Persistent node identity path:
 
 - `/data/node-key.json`
+- override with `PUNKTO_NODE_KEY=/path/to/node-key.json`
 
 Boot behavior model:
 
 - First boot:
   - create node key if missing
-  - display/export fingerprint for operator visibility
+  - persist key JSON to `/data/node-key.json`
+  - log `Created new node identity` + public fingerprint
 - Later boot:
-  - load the same key
+  - load the same key from disk
+  - log `Loaded existing node identity` + fingerprint
   - never silently rotate
+- Corrupt/invalid key file:
+  - fail safe with operator-facing error
+  - do not overwrite or delete the existing file automatically
+
+Current relay key file shape:
+
+```json
+{
+  "version": 1,
+  "key_alg": "sha256-secret-v1",
+  "created_at": "2026-05-21T00:00:00Z",
+  "public_key": "...",
+  "private_key": "...",
+  "fingerprint": "node:ab12cd34ef56"
+}
+```
+
+Notes:
+- Relay currently uses a minimal persisted node identity mechanism (`sha256-secret-v1`) for continuity because backend Ed25519 key deps are not yet wired in relay runtime.
+- Fingerprint is deterministic from public key and safe for logs/status.
+- Node identity is relay/node scope only and must not be mixed with PWA user identity keys.
 
 Identity principles:
 
@@ -254,7 +278,12 @@ Principles:
 
 - relay loads `/config/punkto-node.yml` (or `PUNKTO_NODE_CONFIG` override) with safe defaults
 - expose read-only `/node/info` with a public-safe node config summary
-- relay creates/loads `/data/node-key.json` (planned next in Phase 2)
+- relay creates/loads `/data/node-key.json` (or `PUNKTO_NODE_KEY` override) with stable fingerprint continuity
+- `/node/info` includes public node identity fields only:
+  - `node_fingerprint`
+  - `node_key_alg`
+  - `node_identity_loaded`
+  - `node_identity_created_at`
 
 ### Phase 3
 
