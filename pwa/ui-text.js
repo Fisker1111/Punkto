@@ -87,6 +87,56 @@ function _escHtml(s) {
     .replace(/'/g, '&#39;');
 }
 
+
+function _extractHttpLinks(text) {
+  const source = String(text == null ? '' : text);
+  const re = /https?:\/\/[^\s<>"']+/gi;
+  const found = [];
+  const seen = new Set();
+  let match;
+  while ((match = re.exec(source))) {
+    let url = match[0];
+    while (/[),.!?:;]$/.test(url)) {
+      url = url.slice(0, -1);
+    }
+    if (!url || seen.has(url)) continue;
+    seen.add(url);
+    found.push({ url });
+  }
+  return found;
+}
+
+function _safeDomainLabel(rawUrl) {
+  try {
+    const parsed = new URL(rawUrl);
+    return parsed.hostname || rawUrl;
+  } catch {
+    return rawUrl;
+  }
+}
+
+function _shortUrlLabel(rawUrl) {
+  if (rawUrl.length <= 72) return rawUrl;
+  return rawUrl.slice(0, 69) + '…';
+}
+
+function _buildLinkCards(rawText) {
+  const links = _extractHttpLinks(rawText);
+  if (!links.length) return '';
+  return links.map(({ url }) => {
+    const domain = _safeDomainLabel(url);
+    const label = _shortUrlLabel(url);
+    return (
+      '  <div class="main-link-card">\n' +
+      '    <div class="main-link-badge">External link</div>\n' +
+      '    <div class="main-link-domain">' + _escHtml(domain) + '</div>\n' +
+      '    <div class="main-link-url">' + _escHtml(label) + '</div>\n' +
+      '    <a class="main-link-open" href="' + _escHtml(url) + '" target="_blank" rel="noopener noreferrer">Open</a>\n' +
+      '  </div>\n'
+    );
+  }).join('');
+}
+
 function _deriveTitle(a) {
   if (_helpers && typeof _helpers.deriveTitle === 'function') return _helpers.deriveTitle(a);
   const raw = String(a?.x || '').trim();
@@ -179,6 +229,7 @@ export function renderTextFeed({ atoms = [], locationDenied = false } = {}) {
     const cat      = _deriveCategory(atom);
     const raw      = String(atom.x || '').trim();
     const preview  = raw.length > 120 ? raw.slice(0, 120) + '…' : raw;
+    const linkCards = _buildLinkCards(raw);
     const altLabel = Number.isFinite(Number(atom.alt)) ? _fmtAltLabel(Number(atom.alt)) : '';
     const dist     = Number.isFinite(atom.distance) ? _fmtDistance(atom.distance) : '';
     const time     = atom.t ? _fmtTime(atom.t) : '';
@@ -197,6 +248,7 @@ export function renderTextFeed({ atoms = [], locationDenied = false } = {}) {
       (preview && _escHtml(preview) !== title
         ? '  <p class="main-card-preview">' + _escHtml(preview) + '</p>\n'
         : '') +
+      (linkCards || '') +
       (meta ? '  <div class="main-card-meta"><span>' + _escHtml(meta) + '</span></div>\n' : '') +
       '  <div class="main-card-footer">\n' +
       '    <div class="main-card-meta-group">\n' +
