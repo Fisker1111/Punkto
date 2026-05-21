@@ -129,6 +129,7 @@ All specs are authoritative source-of-truth Markdown files in this repository:
 | [`punkto.manifest.md`](punkto.manifest.md) | Atom data model and storage rules |
 | [`punkto.ui.md`](punkto.ui.md) | UI principles for any Punkto client |
 | [`punkto.ai.md`](punkto.ai.md) | AI agents as Punkto nodes |
+| [`docs/punkto-node.md`](docs/punkto-node.md) | Deployable node model: config, persistence, identity, serving policy |
 
 Also of interest:
 
