@@ -896,7 +896,7 @@ function setPanelOpen(open) {
   elPanel.classList.toggle('open', open);
   elMapEl.classList.toggle('panel-open', open);
   elFabAdd.classList.toggle('panel-open', open);
-  elFabPanel.classList.toggle('panel-open', open);
+  if (elFabPanel) elFabPanel.classList.toggle('panel-open', open);
   if (map) map.resize();
 }
 
@@ -1400,8 +1400,8 @@ function wireEvents() {
     onClosed: () => { placementDraft = null; renderAtoms(); },
   });
   // Panel toggle
-  elFabPanel.addEventListener('click', () => setPanelOpen(!panelOpen));
-  elPanelClose.addEventListener('click', () => setPanelOpen(false));
+  if (elFabPanel) elFabPanel.addEventListener('click', () => setPanelOpen(!panelOpen));
+  if (elPanelClose) elPanelClose.addEventListener('click', () => setPanelOpen(false));
 
   // 3D toggle
   elToggle3D.addEventListener('click', toggle3D);
@@ -1458,8 +1458,8 @@ function wireEvents() {
 // ---------------------------------------------------------------------------
 
 async function boot() {
-  console.log('PUNKTO APP.JS LOADED v77 HARD MARKER 2026-05-20-2');
-  window.PUNKTO_APP_VERSION = 'v78-hard-marker-2026-05-21-1';
+  console.log('PUNKTO APP.JS LOADED v79 HARD MARKER 2026-05-21-1');
+  window.PUNKTO_APP_VERSION = 'v79-hard-marker-2026-05-21-1';
 
   console.log('[punkto] booting...');
 
