@@ -250,11 +250,11 @@ Principles:
 
 - docs and example config
 
-### Phase 2
+### Phase 2 (started)
 
-- relay loads `/config/punkto-node.yml`
-- relay creates/loads `/data/node-key.json`
-- expose read-only `/node/info`
+- relay loads `/config/punkto-node.yml` (or `PUNKTO_NODE_CONFIG` override) with safe defaults
+- expose read-only `/node/info` with a public-safe node config summary
+- relay creates/loads `/data/node-key.json` (planned next in Phase 2)
 
 ### Phase 3
 

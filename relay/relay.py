@@ -24,9 +24,16 @@ import socket
 import sys
 import threading
 import time
+from copy import deepcopy
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from typing import Any, Dict, List, Optional, Tuple
 from urllib.parse import urlparse, parse_qs, unquote
+
+
+try:
+    import yaml
+except ImportError:  # pragma: no cover
+    yaml = None  # type: ignore[assignment]
 
 try:
     import requests
@@ -68,6 +75,181 @@ ATOM_ID_RE = re.compile(r"^[0-9a-f]{64}$")
 # Reasonable timestamp window: 2020-01-01 .. now+1day
 _T_MIN = 1_577_836_800_000  # 2020-01-01T00:00:00Z
 
+DEFAULT_NODE_CONFIG_PATH = "/config/punkto-node.yml"
+NODE_CONFIG_PATH = os.environ.get("PUNKTO_NODE_CONFIG", DEFAULT_NODE_CONFIG_PATH)
+
+DEFAULT_NODE_CONFIG: Dict[str, Any] = {
+    "node": {
+        "name": "Punkto Node",
+        "public_url": "",
+        "type": "flow",
+        "operator_contact": "",
+        "description": "",
+    },
+    "admin": {
+        "enabled": False,
+        "public_admin_enabled": False,
+    },
+    "serving_policy": {
+        "serve_recent": True,
+        "recent_days": 30,
+        "serve_genesis": True,
+        "serve_pinned": True,
+        "serve_verified_only": False,
+        "allow_unsigned": True,
+        "archive_enabled": False,
+    },
+    "bootstrap": {
+        "seed_nodes": list(PEERS),
+        "peer_discovery_enabled": True,
+        "allow_user_added_peers": True,
+        "blocked_nodes": [],
+    },
+    "moderation": {
+        "blocked_authors": [],
+        "blocked_punktis": [],
+        "blocked_keywords": [],
+    },
+    "retention": {
+        "stale_after_days": 30,
+        "delete_after_days": None,
+        "keep_pinned_forever": True,
+        "keep_genesis_forever": True,
+    },
+}
+
+
+def _deep_merge(base: Dict[str, Any], override: Dict[str, Any]) -> Dict[str, Any]:
+    out = deepcopy(base)
+    for k, v in override.items():
+        if isinstance(v, dict) and isinstance(out.get(k), dict):
+            out[k] = _deep_merge(out[k], v)
+        else:
+            out[k] = deepcopy(v)
+    return out
+
+
+def _clean_node_config(candidate: Dict[str, Any]) -> Dict[str, Any]:
+    cfg = _deep_merge(DEFAULT_NODE_CONFIG, candidate)
+
+    if not isinstance(cfg.get("node"), dict):
+        cfg["node"] = deepcopy(DEFAULT_NODE_CONFIG["node"])
+    if not isinstance(cfg.get("admin"), dict):
+        cfg["admin"] = deepcopy(DEFAULT_NODE_CONFIG["admin"])
+    if not isinstance(cfg.get("serving_policy"), dict):
+        cfg["serving_policy"] = deepcopy(DEFAULT_NODE_CONFIG["serving_policy"])
+    if not isinstance(cfg.get("bootstrap"), dict):
+        cfg["bootstrap"] = deepcopy(DEFAULT_NODE_CONFIG["bootstrap"])
+    if not isinstance(cfg.get("moderation"), dict):
+        cfg["moderation"] = deepcopy(DEFAULT_NODE_CONFIG["moderation"])
+    if not isinstance(cfg.get("retention"), dict):
+        cfg["retention"] = deepcopy(DEFAULT_NODE_CONFIG["retention"])
+
+    cfg["node"]["name"] = str(cfg["node"].get("name") or DEFAULT_NODE_CONFIG["node"]["name"])
+    cfg["node"]["public_url"] = str(cfg["node"].get("public_url") or "")
+    cfg["node"]["type"] = str(cfg["node"].get("type") or DEFAULT_NODE_CONFIG["node"]["type"])
+    cfg["node"]["operator_contact"] = str(cfg["node"].get("operator_contact") or "")
+    cfg["node"]["description"] = str(cfg["node"].get("description") or "")
+
+    for section, keys in {
+        "admin": ["enabled", "public_admin_enabled"],
+        "serving_policy": ["serve_recent", "serve_genesis", "serve_pinned", "serve_verified_only", "allow_unsigned", "archive_enabled"],
+        "bootstrap": ["peer_discovery_enabled", "allow_user_added_peers"],
+        "retention": ["keep_pinned_forever", "keep_genesis_forever"],
+    }.items():
+        for key in keys:
+            cfg[section][key] = bool(cfg[section].get(key))
+
+    for section, key, dflt in [
+        ("serving_policy", "recent_days", DEFAULT_NODE_CONFIG["serving_policy"]["recent_days"]),
+        ("retention", "stale_after_days", DEFAULT_NODE_CONFIG["retention"]["stale_after_days"]),
+    ]:
+        try:
+            v = int(cfg[section].get(key, dflt))
+            cfg[section][key] = v if v > 0 else dflt
+        except (TypeError, ValueError):
+            cfg[section][key] = dflt
+
+    delete_after = cfg["retention"].get("delete_after_days")
+    if delete_after is None or delete_after == "":
+        cfg["retention"]["delete_after_days"] = None
+    else:
+        try:
+            cfg["retention"]["delete_after_days"] = max(1, int(delete_after))
+        except (TypeError, ValueError):
+            cfg["retention"]["delete_after_days"] = None
+
+    for section, key in [("bootstrap", "seed_nodes"), ("bootstrap", "blocked_nodes"), ("moderation", "blocked_authors"), ("moderation", "blocked_punktis"), ("moderation", "blocked_keywords")]:
+        value = cfg[section].get(key, [])
+        cfg[section][key] = [str(x).strip() for x in value if str(x).strip()] if isinstance(value, list) else []
+
+    return cfg
+
+
+def load_node_config(path: str) -> Tuple[Dict[str, Any], bool, str]:
+    config_path = path or DEFAULT_NODE_CONFIG_PATH
+    if not os.path.exists(config_path):
+        log(f"node config missing at {config_path}; using safe defaults")
+        return _clean_node_config({}), False, config_path
+
+    if yaml is None:
+        log(f"node config present at {config_path} but PyYAML is unavailable; using safe defaults")
+        return _clean_node_config({}), False, config_path
+
+    try:
+        with open(config_path, "r", encoding="utf-8") as f:
+            parsed = yaml.safe_load(f)
+        if parsed is None:
+            parsed = {}
+        if not isinstance(parsed, dict):
+            log(f"node config at {config_path} is not a mapping; using safe defaults")
+            return _clean_node_config({}), False, config_path
+        log(f"node config loaded from {config_path}")
+        return _clean_node_config(parsed), True, config_path
+    except Exception as exc:
+        log(f"node config parse error at {config_path}: {exc}; using safe defaults")
+        return _clean_node_config({}), False, config_path
+
+
+NODE_CONFIG: Dict[str, Any] = {}
+NODE_CONFIG_LOADED = False
+NODE_CONFIG_PATH_USED = NODE_CONFIG_PATH
+
+
+def _node_info_payload(buffer: "Buffer") -> Dict[str, Any]:
+    node = NODE_CONFIG["node"]
+    operator_contact = node.get("operator_contact", "")
+    info = {
+        "node": {
+            "name": node.get("name") or NODE_NAME,
+            "type": node.get("type") or "flow",
+            "public_url": node.get("public_url") or "",
+            "description": node.get("description") or "",
+        },
+        "software": {"name": "punkto-relay", "version": VERSION},
+        "config_loaded": NODE_CONFIG_LOADED,
+        "config_path": os.path.basename(NODE_CONFIG_PATH_USED) if NODE_CONFIG_LOADED else "defaults",
+        "serving_policy": dict(NODE_CONFIG["serving_policy"]),
+        "bootstrap": {
+            "seed_count": len(NODE_CONFIG["bootstrap"].get("seed_nodes", [])),
+            "peer_discovery_enabled": bool(NODE_CONFIG["bootstrap"].get("peer_discovery_enabled")),
+            "allow_user_added_peers": bool(NODE_CONFIG["bootstrap"].get("allow_user_added_peers")),
+            "blocked_nodes_count": len(NODE_CONFIG["bootstrap"].get("blocked_nodes", [])),
+        },
+        "admin": {
+            "enabled": bool(NODE_CONFIG["admin"].get("enabled")),
+            "public_admin_enabled": bool(NODE_CONFIG["admin"].get("public_admin_enabled")),
+        },
+        "runtime": {
+            "node_env_name": NODE_NAME,
+            "buffer_size": buffer.size(),
+            "buffer_oldest_t": buffer.oldest_t(),
+        },
+    }
+    if operator_contact:
+        info["node"]["operator_contact"] = operator_contact
+    return info
+
 
 def _now_ms() -> int:
     return int(time.time() * 1000)
@@ -80,6 +262,9 @@ def _ts() -> str:
 def log(msg: str) -> None:
     sys.stdout.write(f"[RELAY] [{_ts()}] {msg}\n")
     sys.stdout.flush()
+
+
+NODE_CONFIG, NODE_CONFIG_LOADED, NODE_CONFIG_PATH_USED = load_node_config(NODE_CONFIG_PATH)
 
 
 # ---------------------------------------------------------------------------
@@ -540,6 +725,13 @@ class RelayHandler(BaseHTTPRequestHandler):
     def _send_error_json(self, code: int, key: str, msg: str) -> None:
         self._send_json(code, {"error": key, "message": msg})
 
+    def _cors(self) -> Dict[str, str]:
+        return {
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Methods": "GET,POST,OPTIONS",
+            "Access-Control-Allow-Headers": "Content-Type",
+        }
+
     # -- methods -------------------------------------------------------------
 
     def do_OPTIONS(self) -> None:  # noqa: N802
@@ -561,21 +753,22 @@ class RelayHandler(BaseHTTPRequestHandler):
             return
 
         if path == "/info":
-            self._send_json(
-                200,
-                {
-                    "node": NODE_NAME,
-                    "version": VERSION,
-                    "peers": PEERS,
-                    "buffer_size": self.buffer.size(),
-                    "buffer_oldest_t": self.buffer.oldest_t(),
-                    "buffer_atoms_max": BUFFER_ATOMS,
-                    "buffer_hours_max": BUFFER_HOURS,
-                    "latest_limit": LATEST_LIMIT,
-                    "sync_interval": SYNC_INTERVAL,
-                    "capabilities": ["write", "latest", "feed", "sync"],
-                },
-            )
+            self._send_json(200, {
+                "node": NODE_NAME,
+                "version": VERSION,
+                "peers": PEERS,
+                "buffer_size": self.buffer.size(),
+                "buffer_oldest_t": self.buffer.oldest_t(),
+                "buffer_atoms_max": BUFFER_ATOMS,
+                "buffer_hours_max": BUFFER_HOURS,
+                "latest_limit": LATEST_LIMIT,
+                "sync_interval": SYNC_INTERVAL,
+                "capabilities": ["write", "latest", "feed", "sync"],
+            })
+            return
+
+        if path == "/node/info":
+            self._send_json(200, _node_info_payload(self.buffer))
             return
 
         if path == "/latest":
