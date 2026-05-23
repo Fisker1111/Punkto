@@ -151,6 +151,20 @@ function _deriveCategory(a) {
   return c || 'Note';
 }
 
+function _categoryBadge(catRaw) {
+  const raw = String(catRaw || '').trim().toUpperCase();
+  const map = {
+    TALK: { code: 'TEXT', label: 'Talk', cls: 'cat-talk' },
+    TEXT: { code: 'TEXT', label: 'Talk', cls: 'cat-talk' },
+    INFO: { code: 'INFO', label: 'Info', cls: 'cat-info' },
+    WARN: { code: 'WARN', label: 'Warning', cls: 'cat-warn' },
+    EMGC: { code: 'EMGC', label: 'Emergency', cls: 'cat-emgc' },
+    EVNT: { code: 'EVNT', label: 'Event', cls: 'cat-evnt' },
+    LOST: { code: 'LOST', label: 'Lost/Found', cls: 'cat-lost' },
+  };
+  return map[raw] || { code: 'TEXT', label: 'Talk', cls: 'cat-talk' };
+}
+
 function _isVerified(a) {
   if (_helpers && typeof _helpers.isVerifiedAtom === 'function') return _helpers.isVerifiedAtom(a);
   return Boolean(a?.sig && a?.pubkey);
@@ -226,7 +240,7 @@ export function renderTextFeed({ atoms = [], locationDenied = false } = {}) {
 
   list.innerHTML = atoms.map((atom) => {
     const title    = _escHtml(_deriveTitle(atom));
-    const cat      = _deriveCategory(atom);
+    const cat      = _categoryBadge(atom.category || atom.kind || _deriveCategory(atom));
     const raw      = String(atom.x || '').trim();
     const preview  = raw.length > 120 ? raw.slice(0, 120) + '…' : raw;
     const linkCards = _buildLinkCards(raw);
@@ -242,7 +256,7 @@ export function renderTextFeed({ atoms = [], locationDenied = false } = {}) {
       '  <div class="main-card-badges">\n' +
       '    <span class="main-card-icon">⌁</span>\n' +
       '    <span class="main-card-type">Punkti</span>\n' +
-      (cat      ? '    <span class="main-card-cat">'      + _escHtml(cat) + '</span>\n' : '') +
+      '    <span class="main-card-cat ' + _escHtml(cat.cls) + '">' + _escHtml(cat.code) + ' · ' + _escHtml(cat.label) + '</span>\n' +
       '  </div>\n' +
       '  <h3 class="main-card-title">' + title + '</h3>\n' +
       (preview && _escHtml(preview) !== title
@@ -256,10 +270,13 @@ export function renderTextFeed({ atoms = [], locationDenied = false } = {}) {
       '      <div class="main-card-meta"><span>0 replies</span></div>\n' +
       '    </div>\n' +
       '    <div class="main-card-actions">\n' +
-      '    <button class="main-card-show3d" data-action="show-in-3d" data-id="' + _escHtml(atomId) + '">Show on map →</button>\n' +
+      '    <button class="main-card-show3d" data-action="show-in-3d" data-id="' + _escHtml(atomId) + '">Open board on map →</button>\n' +
       '    <button class="main-card-reply" data-action="reply-placeholder" data-id="' + _escHtml(atomId) + '">Reply</button>\n' +
       '    </div>\n' +
       '  </div>\n' +
       '</div>';
   }).join('\n');
 }
+      (cat.code === 'EMGC'
+        ? '  <p class="main-card-disclaimer">Public urgent post — not a replacement for calling emergency services.</p>\n'
+        : '') +

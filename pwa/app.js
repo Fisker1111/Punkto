@@ -42,6 +42,18 @@ const SEED_NODES = [
 
 // Node registry + write round-robin (extracted sync ownership)
 const nodeRegistry = createNodeRegistry({ nodeUrl: NODE_URL, seedNodes: SEED_NODES });
+const CATEGORY_META = {
+  TEXT: { code: 'TEXT', label: 'Talk', cls: 'cat-talk' },
+  INFO: { code: 'INFO', label: 'Info', cls: 'cat-info' },
+  WARN: { code: 'WARN', label: 'Warning', cls: 'cat-warn' },
+  EMGC: { code: 'EMGC', label: 'Emergency', cls: 'cat-emgc' },
+  EVNT: { code: 'EVNT', label: 'Event', cls: 'cat-evnt' },
+  LOST: { code: 'LOST', label: 'Lost/Found', cls: 'cat-lost' },
+};
+function getCategoryMeta(atom) {
+  const key = String(atom?.category || atom?.kind || '').trim().toUpperCase();
+  return CATEGORY_META[key] || CATEGORY_META.TEXT;
+}
 let syncEngine = null;
 let lastSyncAtMs = null;
 
@@ -596,6 +608,7 @@ function updateBubbleElement(el, atom, count = 1, group = null) {
   const textHtml = renderAtomText(atom.x || '');
   const author = escHtml(atom.f || 'anon');
   const timeStr = escHtml(fmtRelativeTime(atom.t));
+  const cat = getCategoryMeta(atom);
 
   // Phase 2: stash group on element so click handler (set once in
   // buildBubbleElement) always sees the freshest atom list.
@@ -618,6 +631,7 @@ function updateBubbleElement(el, atom, count = 1, group = null) {
   el.innerHTML = `
     <div class="atom-bubble-body">
       <div class="atom-bubble-text">${textHtml || '<span style="opacity:0.5">no text</span>'}</div>
+      <div class="atom-bubble-cat ${cat.cls}">${escHtml(cat.code)} · ${escHtml(cat.label)}</div>
       <div class="atom-bubble-meta">
         <span class="atom-bubble-author">${author}</span>
         <span class="atom-bubble-dot">·</span>
@@ -835,17 +849,18 @@ async function refreshUI(newAtomIds = null) {
       const title = escHtml(deriveTitle(a));
       const preview = raw ? escHtml(raw.length > 120 ? `${raw.slice(0, 120)}…` : raw) : '<span class="empty">Untitled note</span>';
       const altitude = fmtAltitudeLabel(Number(a.alt));
-      const category = escHtml(deriveCategory(a));
+      const category = getCategoryMeta(a);
       const verified = isVerifiedAtom(a) ? '<span class="atom-verified">Verified</span>' : '';
       const meta = [fmtDistance(a.distance), altitude, fmtTime(a.t)].filter(Boolean).join(' · ');
       el.innerHTML = `
         <div class="atom-dot"></div>
         <div class="atom-body">
-          <div class="atom-meta"><span class="atom-category">${category}</span>${verified}</div>
+          <div class="atom-meta"><span class="atom-category ${category.cls}">${escHtml(category.code)} · ${escHtml(category.label)}</span>${verified}</div>
           <div class="atom-text"><strong>${title}</strong></div>
           <div class="atom-text">${preview}</div>
+          ${category.code === 'EMGC' ? '<div class="atom-meta">Public urgent post — not a replacement for calling emergency services.</div>' : ''}
           <div class="atom-meta">${meta}</div>
-          <div class="atom-actions"><button class="btn btn-secondary show-in-3d-btn" type="button">Show on map</button></div>
+          <div class="atom-actions"><button class="btn btn-secondary show-in-3d-btn" type="button">Open board on map</button></div>
         </div>
       `;
       const showBtn = el.querySelector('.show-in-3d-btn');
@@ -946,7 +961,7 @@ function detectBuildingAtCenter() {
   }
 }
 
-async function submitAtomFromModal({ text, author, draft }) {
+async function submitAtomFromModal({ text, author, category, draft }) {
   const center = draft ? { lat: draft.lat, lng: draft.lon } : map.getCenter();
   const altMeters = draft?.altitude_m || 0;
   const punkto = encodeLocation(center.lat, center.lng, altMeters);
@@ -954,6 +969,7 @@ async function submitAtomFromModal({ text, author, draft }) {
   const atom = { punkto, t };
   if (text) atom.x = text;
   if (author) atom.f = author;
+  atom.category = String(category || draft?.category || 'TEXT').toUpperCase();
   setCreateSubmitting(true);
   setCreateError('');
   try {
@@ -1458,8 +1474,8 @@ function wireEvents() {
 // ---------------------------------------------------------------------------
 
 async function boot() {
-  console.log('PUNKTO APP.JS LOADED v83 HARD MARKER 2026-05-23-1');
-  window.PUNKTO_APP_VERSION = 'v83-hard-marker-2026-05-23-1';
+  console.log('PUNKTO APP.JS LOADED v84 HARD MARKER 2026-05-23-1');
+  window.PUNKTO_APP_VERSION = 'v84-hard-marker-2026-05-23-1';
 
   console.log('[punkto] booting...');
 

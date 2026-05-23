@@ -465,6 +465,13 @@
     .main-card-icon { width:28px; height:28px; border-radius:50%; background: rgba(0,212,255,0.08); border:1px solid rgba(0,212,255,0.35); display:inline-flex; align-items:center; justify-content:center; color: var(--accent); font-size:13px; font-weight:700; }
     .main-card-type, .main-card-cat { font-size:10px; font-weight:600; letter-spacing:0.06em; text-transform:uppercase; padding:4px 8px; border-radius:999px; background: rgba(255,255,255,0.05); color: var(--text-mid); }
     .main-card-type { color: var(--accent); background: rgba(0,212,255,0.12); }
+    .cat-talk { background: rgba(230,235,242,0.22) !important; color: #dfe7f5 !important; border: 1px solid rgba(187,198,214,0.35); }
+    .cat-info { background: rgba(35,124,255,0.18) !important; color: #b8d5ff !important; border: 1px solid rgba(103,162,255,0.4); }
+    .cat-warn { background: rgba(255,193,7,0.18) !important; color: #ffe6a3 !important; border: 1px solid rgba(255,207,76,0.42); }
+    .cat-emgc { background: rgba(220,53,69,0.2) !important; color: #ffc9cf !important; border: 1px solid rgba(246,118,131,0.45); }
+    .cat-evnt { background: rgba(25,135,84,0.2) !important; color: #b8f2d4 !important; border: 1px solid rgba(81,186,138,0.44); }
+    .cat-lost { background: rgba(253,126,20,0.2) !important; color: #ffd3ad !important; border: 1px solid rgba(255,170,95,0.45); }
+    .main-card-disclaimer { margin: 6px 0 0; font-size: 11px; color: var(--text-dim); }
     .main-card-title { font-size:15px; font-weight:500; color:var(--text); line-height:1.3; }
     .main-card-preview { font-size:13px; line-height:1.45; color:var(--text-mid); }
     .main-card-meta { font-size:12px; color:var(--text-dim); }
@@ -674,6 +681,7 @@
       white-space: nowrap;
       flex-shrink: 0;
     }
+    .atom-bubble-cat { display:inline-flex; align-items:center; font-size:10px; font-weight:700; letter-spacing:.03em; padding:2px 6px; border-radius:999px; }
     .atom-bubble-author { max-width: 60px; overflow: hidden; text-overflow: ellipsis; }
     .atom-bubble-dot { opacity: 0.65; }
     .atom-bubble-count,
@@ -702,7 +710,8 @@
     }
     .atom-bubble--compact .atom-bubble-meta,
     .atom-bubble--compact .atom-bubble-count,
-    .atom-bubble--compact .atom-bubble-alt {
+    .atom-bubble--compact .atom-bubble-alt,
+    .atom-bubble--compact .atom-bubble-cat {
       display: none;
     }
     .atom-bubble--compact .atom-bubble-body { padding: 4px 8px; border-radius: 9px; }
@@ -997,7 +1006,7 @@
     }
     .modal-box textarea:focus { outline: none; border-color: var(--accent-dim); }
 
-    .modal-box input[type="text"], .modal-box input[type="number"] {
+    .modal-box input[type="text"], .modal-box input[type="number"], .modal-box select {
       background: var(--surface2);
       border: 1px solid var(--border2);
       border-radius: 8px;
@@ -1006,9 +1015,10 @@
       font-size: 13px;
       padding: 9px 12px;
     }
-    .modal-box input[type="text"]:focus, .modal-box input[type="number"]:focus {
+    .modal-box input[type="text"]:focus, .modal-box input[type="number"]:focus, .modal-box select:focus {
       outline: none; border-color: var(--accent-dim);
     }
+    #modal-category-row { margin: 10px 0 12px; display: flex; flex-direction: column; gap: 6px; }
     #modal-author-row { margin-bottom: 14px; }
     #modal-author { width: 100%; }
 
@@ -1296,6 +1306,18 @@
       <div id="modal-location">…</div>
       <div id="modal-notice">
         <span class="icon">⚠</span>Public and permanent — this cannot be deleted.
+      </div>
+      <div id="modal-category-row">
+        <label for="modal-category"><strong>Category</strong></label>
+        <select id="modal-category">
+          <option value="TEXT">Talk</option>
+          <option value="INFO">Info</option>
+          <option value="WARN">Warning</option>
+          <option value="EMGC">Emergency</option>
+          <option value="EVNT">Event</option>
+          <option value="LOST">Lost/Found</option>
+        </select>
+        <div id="modal-emergency-hint" style="display:none;font-size:12px;color:var(--text-dim);margin-top:6px;">Public urgent post — not a replacement for calling emergency services.</div>
       </div>
       <div id="modal-altitude">
         <div><strong>Height</strong></div>
