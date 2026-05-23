@@ -630,6 +630,95 @@
     .atom-time { font-size: 11px; color: var(--text-dim); white-space: nowrap; }
     #atom-list-empty { color: var(--text-dim); font-size: 12px; padding: 24px 0; text-align: center; }
 
+    /* ── Map label chips (DOM markers) ─────────────────────── */
+    .atom-bubble {
+      pointer-events: auto;
+      max-width: min(52vw, 250px);
+      will-change: transform, opacity;
+    }
+    .atom-bubble-body {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      max-width: 100%;
+      padding: 5px 9px;
+      border-radius: 10px;
+      border: 1px solid rgba(23, 42, 70, 0.18);
+      background: rgba(255, 255, 255, 0.88);
+      color: #1d2e47;
+      box-shadow: 0 4px 14px rgba(18, 41, 72, 0.16);
+      backdrop-filter: blur(6px) saturate(1.05);
+      -webkit-backdrop-filter: blur(6px) saturate(1.05);
+    }
+    .atom-bubble-text {
+      font-size: 12px;
+      font-weight: 560;
+      line-height: 1.2;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: min(34vw, 150px);
+    }
+    .atom-bubble-meta {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 11px;
+      color: #516785;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    .atom-bubble-author { max-width: 60px; overflow: hidden; text-overflow: ellipsis; }
+    .atom-bubble-dot { opacity: 0.65; }
+    .atom-bubble-count,
+    .atom-bubble-alt {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      height: 18px;
+      border-radius: 999px;
+      font-size: 10px;
+      line-height: 1;
+      font-weight: 650;
+      padding: 0 7px;
+      border: 1px solid rgba(35, 70, 112, 0.22);
+      background: rgba(245, 249, 255, 0.86);
+      color: #2d4569;
+      flex-shrink: 0;
+    }
+    .atom-bubble-count {
+      cursor: pointer;
+      transition: background 0.14s ease, transform 0.14s ease;
+    }
+    .atom-bubble-count:hover {
+      background: rgba(233, 243, 255, 0.98);
+      transform: translateY(-1px);
+    }
+    .atom-bubble--compact .atom-bubble-meta,
+    .atom-bubble--compact .atom-bubble-count,
+    .atom-bubble--compact .atom-bubble-alt {
+      display: none;
+    }
+    .atom-bubble--compact .atom-bubble-body { padding: 4px 8px; border-radius: 9px; }
+    .atom-bubble--compact .atom-bubble-text { font-size: 11px; max-width: min(30vw, 118px); }
+    .atom-bubble--focus .atom-bubble-body {
+      border-color: rgba(108, 75, 255, 0.5);
+      box-shadow: 0 0 0 1px rgba(108, 75, 255, 0.22), 0 8px 18px rgba(18, 41, 72, 0.2);
+    }
+    .atom-bubble--new .atom-bubble-body {
+      animation: bubblePopIn 0.44s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+    @keyframes bubblePopIn {
+      0%   { opacity: 0; transform: translateY(4px) scale(0.96); }
+      100% { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    @media (max-width: 740px) {
+      .atom-bubble { max-width: min(62vw, 220px); }
+      .atom-bubble-text { max-width: min(42vw, 128px); }
+      .atom-bubble--compact .atom-bubble-text { max-width: min(38vw, 108px); }
+    }
+
     /* ── Onboarding hint ────────────────────────────────────── */
     #onboarding-hint {
       box-shadow: 0 12px 32px rgba(25,64,106,0.14);
