@@ -896,7 +896,7 @@ function setPanelOpen(open) {
   elPanel.classList.toggle('open', open);
   elMapEl.classList.toggle('panel-open', open);
   elFabAdd.classList.toggle('panel-open', open);
-  if (elFabPanel) elFabPanel.classList.toggle('panel-open', open);
+  elFabPanel.classList.toggle('panel-open', open);
   if (map) map.resize();
 }
 
@@ -1400,8 +1400,8 @@ function wireEvents() {
     onClosed: () => { placementDraft = null; renderAtoms(); },
   });
   // Panel toggle
-  if (elFabPanel) elFabPanel.addEventListener('click', () => setPanelOpen(!panelOpen));
-  if (elPanelClose) elPanelClose.addEventListener('click', () => setPanelOpen(false));
+  elFabPanel.addEventListener('click', () => setPanelOpen(!panelOpen));
+  elPanelClose.addEventListener('click', () => setPanelOpen(false));
 
   // 3D toggle
   elToggle3D.addEventListener('click', toggle3D);
