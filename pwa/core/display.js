@@ -55,8 +55,20 @@ export function deriveTitle(atom) {
 }
 
 export function deriveCategory(atom) {
-  const c = String(atom?.category || atom?.kind || '').trim();
-  return c || 'Note';
+  const raw = String(atom?.category || atom?.kind || '').trim().toUpperCase();
+  const labels = {
+    TEXT: 'Talk',
+    INFO: 'Info',
+    WARN: 'Warning',
+    EMGC: 'Emergency',
+    EVNT: 'Event',
+    LOST: 'Lost/Found',
+    GENS: 'Genesis',
+    NODE: 'Node',
+    BRTH: 'Origin',
+  };
+  if (labels[raw]) return labels[raw];
+  return raw || 'Talk';
 }
 
 export function escHtml(str) {

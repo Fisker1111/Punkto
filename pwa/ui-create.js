@@ -17,6 +17,8 @@ const elModalFloorMinus = document.getElementById('modal-floor-minus');
 const elModalFloorPlus = document.getElementById('modal-floor-plus');
 const elModalFloorValue = document.getElementById('modal-floor-value');
 const elModalManualAltitude = document.getElementById('modal-manual-altitude-value');
+const elModalCategory = document.getElementById('modal-category');
+const elModalEmergencyHint = document.getElementById('modal-emergency-hint');
 
 let callbacks = null;
 let modalAltitudeState = { mode: 'meter', building: null };
@@ -31,6 +33,7 @@ function altitudeMeters() {
 function emitPreview() {
   if (!draft) return;
   draft.altitude_m = altitudeMeters();
+  draft.category = elModalCategory?.value || 'TEXT';
   draft.floor_hint = modalAltitudeState.mode === 'floor'
     ? Math.round(Number(elModalAltitudeSlider.value) || 0)
     : Math.round(draft.altitude_m / FLOOR_HEIGHT_M);
@@ -106,6 +109,11 @@ export function initCreateModal(opts) {
     const alt = Number(elModalDeviceAltBtn.dataset.altitude);
     if (Number.isFinite(alt)) setAltitudeMeters(alt, 'device');
   });
+  elModalCategory?.addEventListener('change', () => {
+    const isEmergency = elModalCategory.value === 'EMGC';
+    if (elModalEmergencyHint) elModalEmergencyHint.style.display = isEmergency ? '' : 'none';
+    emitPreview();
+  });
 }
 
 export function openCreateModal() {
@@ -121,6 +129,8 @@ export function openCreateModal() {
   elModalAltitudeSlider.value = '0';
   if (elModalRoofBtn) elModalRoofBtn.disabled = !building;
   if (elModalDeviceAltBtn) elModalDeviceAltBtn.disabled = true;
+  if (elModalCategory) elModalCategory.value = 'TEXT';
+  if (elModalEmergencyHint) elModalEmergencyHint.style.display = 'none';
   draft = { lat: context.center?.lat ?? 0, lon: context.center?.lng ?? 0, altitude_m: 0, floor_hint: 0, placement_mode: 'ground' };
   updateAltitudeLabels();
   requestDeviceAltitude();
@@ -140,7 +150,7 @@ export function readCreateFormState() {
     localStorage.setItem('punkto-name', author);
     localStorage.setItem('punkto-author', author);
   }
-  return { text: elModalText.value.trim(), author, draft: draft ? { ...draft } : null };
+  return { text: elModalText.value.trim(), author, category: elModalCategory?.value || 'TEXT', draft: draft ? { ...draft } : null };
 }
 
 export function setCreateError(message) { elModalError.textContent = message || ''; }
