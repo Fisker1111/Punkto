@@ -666,7 +666,7 @@ function updateBubbleVisibility() {
   const z = map.getZoom();
   for (const [, marker] of atomMarkers) {
     const el = marker.getElement();
-    if (z < 8) {
+    if (z < 10) {
       el.style.display = 'none';
     } else {
       el.style.display = '';
@@ -1458,8 +1458,8 @@ function wireEvents() {
 // ---------------------------------------------------------------------------
 
 async function boot() {
-  console.log('PUNKTO APP.JS LOADED v82 HARD MARKER 2026-05-22-1');
-  window.PUNKTO_APP_VERSION = 'v82-hard-marker-2026-05-22-1';
+  console.log('PUNKTO APP.JS LOADED v83 HARD MARKER 2026-05-23-1');
+  window.PUNKTO_APP_VERSION = 'v83-hard-marker-2026-05-23-1';
 
   console.log('[punkto] booting...');
 
