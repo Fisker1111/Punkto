@@ -232,6 +232,8 @@
     @media (min-width: 900px) {
       #bottom-nav { display: none; }
       #side-rail-nav { display: flex; }
+      #map,
+      #page-text { bottom: 0; }
       #map { bottom: 0; }
       #map.panel-open { bottom: 0; }
       #leader-lines { bottom: 0; }
@@ -255,6 +257,21 @@
     }
 
     /* ── View switching ─────────────────────────────────────── */
+    #map,
+    #page-text {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: calc(var(--nav-h) + var(--safe-b));
+      width: 100%;
+      height: auto;
+    }
+
+    body.page-map #map { display: block !important; }
+    body.page-map #page-text { display: none !important; }
+    body.page-text #page-text { display: block !important; }
+
     body.page-text #map,
     body.page-text #crosshair,
     body.page-text #toggle-3d,
@@ -268,10 +285,6 @@
 
     /* ── Map (full screen behind nav+topbar) ────────────────── */
     #map {
-      position: fixed;
-      top: 0;
-      left: 0; right: 0;
-      bottom: calc(var(--nav-h) + var(--safe-b));
       z-index: 10;
     }
     #map.panel-open { bottom: calc(var(--panel-h) + var(--nav-h) + var(--safe-b)); }
@@ -369,10 +382,6 @@
     /* ── Text / Feed page ───────────────────────────────────── */
     #page-text {
       background: linear-gradient(180deg,#f4f8ff 0%,#edf4ff 100%);
-      position: fixed;
-      top: 0;
-      left: 0; right: 0;
-      bottom: calc(var(--nav-h) + var(--safe-b));
       overflow-y: auto;
       z-index: 10;
     }
