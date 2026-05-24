@@ -10,6 +10,7 @@ let _onOpenBoard = null;
 let _helpers = null;
 let _mainFeedAtoms = [];
 let _selectedBoardId = null;
+let _selectedBoardAtom = null;
 
 function _escHtml(s) {
   if (_helpers && typeof _helpers.escHtml === 'function') return _helpers.escHtml(s);
@@ -74,7 +75,7 @@ export function initTextView({ onShowOnMap, onLeaveNote, onOpenBoard, helpers } 
   if (list) {
     list.addEventListener('click', (e) => {
       const backBtn = e.target.closest('[data-action="board-back"]');
-      if (backBtn) { _selectedBoardId = null; renderTextFeed({ atoms: _mainFeedAtoms }); return; }
+      if (backBtn) { _selectedBoardId = null; _selectedBoardAtom = null; renderTextFeed({ atoms: _mainFeedAtoms }); return; }
 
       const openBoardBtn = e.target.closest('[data-action="open-board"]');
       if (openBoardBtn) {
@@ -101,11 +102,12 @@ export function initTextView({ onShowOnMap, onLeaveNote, onOpenBoard, helpers } 
   });
 }
 
-export function openBoardById(id) {
+export function openBoardById(id, opts = {}) {
   if (!id) return;
   _selectedBoardId = stripPunktoPrefix(id);
+  _selectedBoardAtom = opts && opts.atom ? opts.atom : null;
   if (_onOpenBoard) _onOpenBoard(_selectedBoardId);
-  renderTextFeed({ atoms: _mainFeedAtoms });
+  renderTextFeed({ atoms: Array.isArray(opts?.atoms) ? opts.atoms : _mainFeedAtoms });
 }
 
 function renderBoardDetail(atom) {
@@ -157,8 +159,10 @@ export function renderTextFeed({ atoms = [], locationDenied = false } = {}) {
   if (!list) return;
 
   if (_selectedBoardId) {
-    const atom = _mainFeedAtoms.find((a) => stripPunktoPrefix(a.punkto) === _selectedBoardId);
+    const atomFromList = _mainFeedAtoms.find((a) => stripPunktoPrefix(a.punkto) === _selectedBoardId);
+    const atom = atomFromList || _selectedBoardAtom;
     if (atom) {
+      _selectedBoardAtom = atom;
       if (locEl) locEl.style.display = 'none';
       if (emptyEl) emptyEl.style.display = 'none';
       if (countEl) countEl.textContent = _mainFeedAtoms.length + ' nearby';
@@ -167,6 +171,7 @@ export function renderTextFeed({ atoms = [], locationDenied = false } = {}) {
       return;
     }
     _selectedBoardId = null;
+    _selectedBoardAtom = null;
   }
 
   if (!_mainFeedAtoms.length) {
