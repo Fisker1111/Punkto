@@ -11,7 +11,7 @@ import {
   isSettingsOpen as shellIsSettingsOpen,
   setCounts as shellSetCounts,
 } from './ui-shell.js';
-import { initTextView, renderTextFeed } from './ui-text.js';
+import { initTextView, renderTextFeed, openBoardById } from './ui-text.js';
 import { initMapView, showMapView } from './ui-map.js';
 import { initCreateModal, openCreateModal, closeCreateModal, setCreateError, setCreateSubmitting, updateCreateCenter, isCreateModalOpen } from './ui-create.js';
 import { initSettingsView, renderSettingsView } from './ui-settings.js';
@@ -595,7 +595,7 @@ function buildBubbleElement(atom, count = 1, group = null) {
     // re-renders (which may update the group) stay in sync.
     const currentGroup = el._punktoGroup || [atom];
     const payload = currentGroup.length > 1 ? currentGroup : currentGroup[0];
-    openAtomPopup(payload, [loc.lon, loc.lat]);
+    openBoardById(stripPunktoPrefix(atom.punkto));
   });
 
   return el;
@@ -1474,8 +1474,8 @@ function wireEvents() {
 // ---------------------------------------------------------------------------
 
 async function boot() {
-  console.log('PUNKTO APP.JS LOADED v84 HARD MARKER 2026-05-23-1');
-  window.PUNKTO_APP_VERSION = 'v84-hard-marker-2026-05-23-1';
+  console.log('PUNKTO APP.JS LOADED v85 HARD MARKER 2026-05-23-1');
+  window.PUNKTO_APP_VERSION = 'v85-hard-marker-2026-05-23-1';
 
   console.log('[punkto] booting...');
 
@@ -1539,6 +1539,7 @@ async function boot() {
   });
   initTextView({
     onShowOnMap: (id) => focusPunkto(id),
+    onOpenBoard: (id) => { showPage('text'); },
     onLeaveNote: () => { dismissOnboarding(); openCreateModal(); },
     helpers: {
       escHtml, deriveTitle, deriveCategory, isVerifiedAtom,
