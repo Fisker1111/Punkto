@@ -66,6 +66,7 @@ let lastSyncAtMs = null;
 // ---------------------------------------------------------------------------
 
 let map = null;
+let mapInitStarted = false;
 let deckOverlay = null;
 let is3D = true;
 let initialSyncDone = false;
@@ -73,7 +74,7 @@ let deepLinkPunkto = null; // captured at boot, consumed after first refreshUI
 // ============================================================
 // Two-view shell — Text / Map
 // ============================================================
-let currentPage = 'map'; // 'text' | 'map'
+let currentPage = 'text'; // 'text' | 'map'
 let _mainFeedAtoms  = [];       // last sorted atom batch for main feed
 let _locationDenied = false;    // true when geolocation denied/unavailable
 
@@ -595,7 +596,7 @@ function buildBubbleElement(atom, count = 1, group = null) {
     // re-renders (which may update the group) stay in sync.
     const currentGroup = el._punktoGroup || [atom];
     const payload = currentGroup.length > 1 ? currentGroup : currentGroup[0];
-    openBoardById(stripPunktoPrefix(atom.punkto));
+    openBoardById(stripPunktoPrefix(atom.punkto), { atom: currentGroup[0], atoms: _mainFeedAtoms });
   });
 
   return el;
@@ -978,6 +979,7 @@ async function submitAtomFromModal({ text, author, category, draft }) {
     await upsertAtom(atom);
     closeCreateModal();
     await refreshUI();
+    requestAnimationFrame(() => { if (map) map.resize(); });
     setSyncStatus('ok');
     const loc = decodeAtomLocation(punkto);
     if (loc && map) map.flyTo({ center: [loc.lon, loc.lat], zoom: Math.max(map.getZoom(), 14) });
@@ -1003,6 +1005,8 @@ function updateCreateLocationDisplay(draft) {
 // ---------------------------------------------------------------------------
 
 function initMap() {
+  if (map || mapInitStarted) return;
+  mapInitStarted = true;
   const { MapboxOverlay } = window.deck;
 
   map = new maplibregl.Map({
@@ -1100,6 +1104,7 @@ function initMap() {
     }
 
     await refreshUI();
+    requestAnimationFrame(() => { if (map) map.resize(); });
 
     // Init load balancer registry and seed Dexie nodes table with SEED_NODES
     nodeRegistry.initNodeRegistry();
@@ -1113,6 +1118,7 @@ function initMap() {
     await syncEngine.syncFeed();
     initialSyncDone = true;
     await refreshUI();
+    requestAnimationFrame(() => { if (map) map.resize(); });
 
     // If the user opened a /p/<id> deep-link, focus it now that atoms are loaded
     if (deepLinkPunkto) {
@@ -1551,10 +1557,13 @@ async function boot() {
     initMap: () => initMap(),
   });
 
-  // Default normal boot to Map view so location context is immediate.
-  showPage('map');
-  if (deepLinkPunkto) showPage('map');
-  if (deepLinkPunkto) setPanelOpen(false); // panel managed by 3D view when deep-linking
+  // Initialize map on normal boot while keeping Text as the default page state.
+  initMap();
+  showPage('text');
+  if (deepLinkPunkto) {
+    showPage('map');
+    setPanelOpen(false); // panel managed by 3D view when deep-linking
+  }
 }
 
 boot();
