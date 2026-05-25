@@ -43,6 +43,7 @@ Major structural refactor of the PWA. UI ownership moved out of `app.js` into de
 - **Caddyfile (both nodes)** — `@app` matcher broadened from `path /app.js /index.html /reset.html` to `not path /lib/* && path *.html *.js`; all JS modules now get `no-cache, no-store, must-revalidate` + `Pragma` + `Expires` headers
 - **`app.js`** — imports ui-shell, ui-text, ui-map; no longer contains inline nav wiring or card HTML generation; −106 / +59 lines vs v46
 - **Deployment workflow** — after each GitHub Actions image build, both nodes must be updated with `docker compose pull && docker compose up -d --force-recreate` (not just `caddy reload`)
+| `v87-hard-marker-2026-05-25-2` | Deployment pipeline maturation — verify.sh + CI validation + post-deploy workflow |
 
 ### Fixed
 - `ReferenceError: elNavAdd is not defined` — stale duplicate variable removed from `wireEvents`
