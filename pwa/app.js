@@ -21,7 +21,7 @@ import { upsertAtom, getAllAtomsNewestFirst, getAllAtoms } from './storage/atom-
 import { ensureNode } from './storage/node-store.js';
 import { fmtTime, fmtRelativeTime, fmtCoords, fmtDistance, fmtAltitudeLabel, deriveTitle, deriveCategory, escHtml, renderAtomText } from './core/display.js';
 import { isHiddenAtom, isVerifiedAtom } from './core/atoms.js';
-import { ensurePunktoPrefix, parseDeepLinkPunktoId as parseDeepLinkPunktoIdFromPath } from './protocol/punkto-id.js';
+import { ensurePunktoPrefix, stripPunktoPrefix, parseDeepLinkPunktoId as parseDeepLinkPunktoIdFromPath } from './protocol/punkto-id.js';
 import { createNodeRegistry } from './sync/node-registry.js';
 import { postAtomToNetwork, fetchNodeInfo, fetchNodeCursor } from './sync/network-client.js';
 import { createSyncEngine } from './sync/sync-engine.js';
@@ -85,6 +85,27 @@ let _locationDenied = false;    // true when geolocation denied/unavailable
 function showPage(page) {
   currentPage = page;
   shellShowPage(page);
+}
+
+function openBoardForAtom(atom) {
+  if (!atom || !atom.punkto) return;
+  const boardId = stripPunktoPrefix(atom.punkto);
+  if (!boardId) return;
+  showPage('text');
+  openBoardById(boardId, { atom, atoms: _mainFeedAtoms });
+}
+
+function ensureMapInitialized() {
+  console.log('[map] ensure init');
+  if (map) {
+    console.log('[map] init skipped existing');
+    requestAnimationFrame(() => {
+      if (map && typeof map.resize === 'function') map.resize();
+    });
+    return map;
+  }
+  console.log('[map] init start');
+  return initMap();
 }
 
 // renderMainFeed — thin wrapper that delegates to ui-text.js renderTextFeed.
@@ -595,8 +616,8 @@ function buildBubbleElement(atom, count = 1, group = null) {
     // Read the current group from the element's stashed reference so
     // re-renders (which may update the group) stay in sync.
     const currentGroup = el._punktoGroup || [atom];
-    const payload = currentGroup.length > 1 ? currentGroup : currentGroup[0];
-    openBoardById(stripPunktoPrefix(atom.punkto), { atom: currentGroup[0], atoms: _mainFeedAtoms });
+    const selectedAtom = currentGroup[0] || atom;
+    openBoardForAtom(selectedAtom);
   });
 
   return el;
@@ -1005,15 +1026,24 @@ function updateCreateLocationDisplay(draft) {
 // ---------------------------------------------------------------------------
 
 function initMap() {
-  if (map || mapInitStarted) return;
+  if (map) {
+    console.log('[map] init skipped existing');
+    requestAnimationFrame(() => { if (map) map.resize(); });
+    return map;
+  }
+  if (mapInitStarted) {
+    console.log('[map] init skipped existing');
+    return null;
+  }
 
   const container = document.getElementById('map');
   if (!container) {
     console.error('[map] initMap aborted: #map element not found');
     return;
   }
-
   mapInitStarted = true;
+  const rect = elMapEl ? elMapEl.getBoundingClientRect() : null;
+  if (rect) console.log('[map] container size before init', Math.round(rect.width), Math.round(rect.height));
   const { MapboxOverlay } = window.deck;
 
   try {
@@ -1028,7 +1058,7 @@ function initMap() {
     });
 
     map.on('error', e => {
-      console.warn('[map] error:', e.error && e.error.message);
+      console.error('[map] error:', e?.error?.message || e);
     });
   } catch (err) {
     console.error('[map] initMap failed:', err.message, err.stack);
@@ -1144,6 +1174,7 @@ function initMap() {
 
     syncEngine.start();
   });
+  return map;
 }
 
 // ---------------------------------------------------------------------------
@@ -1547,8 +1578,7 @@ async function boot() {
   initShell({
     onShowText: () => renderMainFeed(),
     onShowMap: () => {
-      if (!map) initMap();
-      else requestAnimationFrame(() => { if (map) map.resize(); });
+      ensureMapInitialized();
     },
     onAdd: () => { dismissOnboarding(); openCreateModal(); },
     onOpenSettings: () => {
@@ -1571,11 +1601,9 @@ async function boot() {
     initMap: () => initMap(),
   });
 
-  // Initialize map on normal boot while keeping Text as the default page state.
-  initMap();
-  showPage('text');
+  showPage('map');
+  ensureMapInitialized();
   if (deepLinkPunkto) {
-    showPage('map');
     setPanelOpen(false); // panel managed by 3D view when deep-linking
   }
 }
