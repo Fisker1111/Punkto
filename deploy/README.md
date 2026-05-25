@@ -3,6 +3,19 @@
 This directory contains everything needed to run a Punkto node with Docker.
 Each node runs two containers managed by Docker Compose.
 
+## Related deployment docs
+
+Once a node is running, these documents describe how to ship updates safely:
+
+| Document | Purpose |
+|---|---|
+| [`DEPLOYMENT_RUNBOOK.md`](../DEPLOYMENT_RUNBOOK.md) | Step-by-step deploy procedure for server1 + app2, including rollback |
+| [`DEPLOYMENT_SMOKE_TESTS.md`](../DEPLOYMENT_SMOKE_TESTS.md) | Manual + scripted post-deploy checks with pass/fail criteria |
+| [`DEPLOYMENT_TROUBLESHOOTING.md`](../DEPLOYMENT_TROUBLESHOOTING.md) | Decision tree for common deployment failures |
+| [`verify.sh`](./verify.sh) | Executable smoke-test script for CI/CD and manual post-deploy verification |
+
+**TL;DR:** after every deploy, run `bash deploy/verify.sh <node-host> <expected-hard-marker>`.
+
 ## Structure
 
 ```
@@ -59,8 +72,9 @@ EOF
 # 4. Start
 docker compose up -d
 
-# 5. Verify
-curl https://your-domain.example.com/health
+# 5. Verify (from any internet-connected machine)
+bash deploy/verify.sh your-domain.example.com "v0.46-hard-marker-YYYY-MM-DD-1"
+# See ../DEPLOYMENT_SMOKE_TESTS.md for full pass/fail criteria
 ```
 
 ## Upgrade to a new version

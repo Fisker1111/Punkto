@@ -6,6 +6,25 @@ This project follows a loose semantic-versioning convention: `vMAJOR.MINOR` for 
 
 ---
 
+## [Unreleased]
+
+### Deployment Infrastructure Hardening (Delivery 1.1)
+
+Operational maturation: automated smoke-test verification, comprehensive runbooks, and CI integration for safer deployments.
+
+#### Added
+- **`deploy/verify.sh`** — Executable smoke-test script for post-deploy verification (hard marker, cache headers, PWA icons, relay health/feed)
+- **`DEPLOYMENT_RUNBOOK.md`** — Step-by-step deploy procedure for server1 + app2, including rollback and troubleshooting
+- **`DEPLOYMENT_SMOKE_TESTS.md`** — Manual + scripted post-deploy checks with pass/fail criteria and decision tree
+- **`DEPLOYMENT_TROUBLESHOOTING.md`** — Common deployment failure scenarios and resolution steps
+- **`.github/workflows/deployment-verify.yml`** — `workflow_dispatch` workflow to manually trigger post-deploy smoke tests against a node
+
+#### Changed
+- **`.github/workflows/docker.yml`** — Added `validate` job that checks `deploy/verify.sh` syntax and required deploy docs before building images
+- **`deploy/README.md`** — Cross-references `DEPLOYMENT_*.md` files and `deploy/verify.sh` script; updated deploy instructions to use new smoke-test workflow
+
+---
+
 ## [v0.5] — 2026-05-16 — UI shell refactor + Docker stabilisation
 
 Major structural refactor of the PWA. UI ownership moved out of `app.js` into dedicated modules. Service worker removed. Caching fixed for all assets. Two-view shell (Text / Map) becomes the canonical UI.

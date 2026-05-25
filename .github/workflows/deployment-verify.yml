@@ -1,0 +1,55 @@
+name: Deployment Verification
+
+on:
+  workflow_dispatch:
+    inputs:
+      node_host:
+        description: 'Node hostname to verify (e.g., app1.punkto.xyz, app2.punkto.xyz)'
+        required: true
+        type: string
+      expected_marker:
+        description: 'Expected hard marker in deployed app.js (e.g., v86-hard-marker-2026-05-25-1)'
+        required: true
+        type: string
+
+jobs:
+  verify:
+    name: Post-Deploy Smoke Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Verify deploy/verify.sh exists
+        run: |
+          if [[ ! -f deploy/verify.sh ]]; then
+            echo "::error::deploy/verify.sh not found"
+            exit 1
+          fi
+          echo "✓ deploy/verify.sh present"
+
+      - name: Run smoke tests
+        id: smoke
+        run: |
+          echo "## Verifying ${{ github.event.inputs.node_host }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Expected marker: \`${{ github.event.inputs.expected_marker }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          bash deploy/verify.sh \
+            "${{ github.event.inputs.node_host }}" \
+            "${{ github.event.inputs.expected_marker }}"
+
+      - name: Summary
+        if: always()
+        run: |
+          if [ ${{ steps.smoke.outcome }} = 'success' ]; then
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "✅ **All smoke tests passed**" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "❌ **One or more smoke tests failed**" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "See [DEPLOYMENT_TROUBLESHOOTING.md](../DEPLOYMENT_TROUBLESHOOTING.md) for common fixes." >> $GITHUB_STEP_SUMMARY
+          fi

@@ -28,6 +28,45 @@ env:
   RELAY_IMAGE: ghcr.io/fisker1111/punkto-relay
 
 jobs:
+  # ── Validate deployment artifacts before building images ───────────────────
+  # Ensures verify.sh and deployment docs are syntactically sane so a broken
+  # deploy infra doesn't ride along with a good image push.
+  validate:
+    name: Validate deploy artifacts
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Bash syntax check — deploy/verify.sh
+        run: bash -n deploy/verify.sh
+
+      - name: Verify required deploy docs exist
+        run: |
+          for f in \
+            deploy/README.md \
+            deploy/verify.sh \
+            deploy/docker-compose.yml \
+            DEPLOYMENT_RUNBOOK.md \
+            DEPLOYMENT_SMOKE_TESTS.md \
+            DEPLOYMENT_TROUBLESHOOTING.md; do
+            if [[ ! -f "$f" ]]; then
+              echo "::error file=$f::required deploy doc missing"
+              exit 1
+            fi
+          done
+          echo "All deploy docs present."
+
+      - name: Dry-run verify.sh (usage guard)
+        run: |
+          # Script should fail fast with a usage message when called without args
+          if bash deploy/verify.sh 2>&1 | grep -q "usage:"; then
+            echo "verify.sh reports usage when called incorrectly ✓"
+          else
+            echo "::error::verify.sh did not show usage on missing args"
+            exit 1
+          fi
+
   build-and-push:
     name: Build & Push
     runs-on: ubuntu-latest
