@@ -14,7 +14,7 @@ let _selectedBoardAtom = null;
 
 function _escHtml(s) {
   if (_helpers && typeof _helpers.escHtml === 'function') return _helpers.escHtml(s);
-  return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;`);
+  return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
 }
 function _extractHttpLinks(text) {
   const source = String(text == null ? `` : text);
