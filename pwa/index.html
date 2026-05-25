@@ -1416,6 +1416,54 @@
   </nav>
 
   <!-- ── App module ───────────────────────────────────────── -->
+  <script>
+    /* Early-boot error capture — runs BEFORE app.js (ES6 module) executes.
+       This is the only reliable way to catch top-level module evaluation
+       errors, import mismatches, and runtime errors from imported modules.
+       Results can be read from console via `window.__earlyErrors` or
+       from `?debug=1` query (renders to DOM after 2s). */
+    window.__earlyErrors = [];
+    window.__earlyBoot = Date.now();
+    function capture(type, detail) {
+      try {
+        var e = {
+          type: type,
+          message: detail && detail.message || String(detail),
+          filename: detail && (detail.filename || detail.fileName),
+          lineno: detail && (detail.lineno || detail.lineNumber),
+          colno: detail && (detail.colno || detail.columnNumber),
+          stack: detail && detail.error && detail.error.stack || null,
+          at: Date.now() - window.__earlyBoot
+        };
+        window.__earlyErrors.push(e);
+        console.error('[early-boot]', type, e);
+      } catch (_) {}
+    }
+    window.addEventListener('error', function(ev) {
+      capture('error', {
+        message: ev.message,
+        filename: ev.filename,
+        lineno: ev.lineno,
+        colno: ev.colno,
+        error: ev.error
+      });
+    });
+    window.addEventListener('unhandledrejection', function(ev) {
+      capture('unhandledrejection', {
+        message: String(ev.reason),
+        error: ev.reason
+      });
+    });
+    window.addEventListener('DOMContentLoaded', function() {
+      setTimeout(function() {
+        if (window.__earlyErrors.length > 0) {
+          console.warn('[early-boot] captured', window.__earlyErrors.length, 'errors:', window.__earlyErrors);
+        } else {
+          console.log('[early-boot] no errors captured');
+        }
+      }, 1500);
+    });
+  </script>
   <script type="module" src="/app.js"></script>
 
 </body>
