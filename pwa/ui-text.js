@@ -14,11 +14,11 @@ let _selectedBoardAtom = null;
 
 function _escHtml(s) {
   if (_helpers && typeof _helpers.escHtml === 'function') return _helpers.escHtml(s);
-  return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+  return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;`);
 }
 function _extractHttpLinks(text) {
-  const source = String(text == null ? '' : text);
-  const re = /https?:\/\/[^\s<>"']+/gi;
+  const source = String(text == null ? `` : text);
+  const re = /https?:\/\/[^\s<>"`]+/gi;
   const found = [];
   const seen = new Set();
   let match;
@@ -37,18 +37,18 @@ function _buildLinkCards(rawText) {
   const links = _extractHttpLinks(rawText);
   if (!links.length) return '';
   return links.map(({ url }) =>
-    '  <div class="main-link-card">
-' +
-    '    <div class="main-link-badge">External link</div>
-' +
-    '    <div class="main-link-domain">' + _escHtml(_safeDomainLabel(url)) + '</div>
-' +
-    '    <div class="main-link-url">' + _escHtml(_shortUrlLabel(url)) + '</div>
-' +
-    '    <a class="main-link-open" href="' + _escHtml(url) + '" target="_blank" rel="noopener noreferrer">Open</a>
-' +
-    '  </div>
-'
+    `  <div class="main-link-card">
+` +
+    `    <div class="main-link-badge">External link</div>
+` +
+    '    <div class="main-link-domain">' + _escHtml(_safeDomainLabel(url)) + `</div>
+` +
+    '    <div class="main-link-url">' + _escHtml(_shortUrlLabel(url)) + `</div>
+` +
+    '    <a class="main-link-open" href="' + _escHtml(url) + `" target="_blank" rel="noopener noreferrer">Open</a>
+` +
+    `  </div>
+`
   ).join('');
 }
 function _deriveTitle(a){ return _helpers?.deriveTitle ? _helpers.deriveTitle(a) : 'Untitled note'; }
@@ -121,31 +121,31 @@ function renderBoardDetail(atom) {
   const time = atom.t ? _fmtTime(atom.t) : '';
   const meta = [dist, altLabel, time].filter(Boolean).join(' · ');
   const atomId = stripPunktoPrefix(atom.punkto || _selectedBoardId || '');
-  return '<section class="board-detail">
-' +
-    '  <button class="board-back" data-action="board-back">← Visible atoms</button>
-' +
-    '  <div class="main-card board-root">
-' +
-    '    <div class="main-card-badges"><span class="main-card-type">Board</span><span class="main-card-cat ' + _escHtml(cat.cls) + '">' + _escHtml(cat.code) + ' · ' + _escHtml(cat.label) + '</span></div>
-' +
-    '    <h3 class="main-card-title">' + title + '</h3>
-' +
-    (raw ? '    <p class="main-card-preview board-body">' + _escHtml(raw) + '</p>
-' : '') +
+  return `<section class="board-detail">
+` +
+    `  <button class="board-back" data-action="board-back">← Visible atoms</button>
+` +
+    `  <div class="main-card board-root">
+` +
+    '    <div class="main-card-badges"><span class="main-card-type">Board</span><span class="main-card-cat ' + _escHtml(cat.cls) + '">' + _escHtml(cat.code) + ' · ' + _escHtml(cat.label) + `</span></div>
+` +
+    '    <h3 class="main-card-title">' + title + `</h3>
+` +
+    (raw ? '    <p class="main-card-preview board-body">' + _escHtml(raw) + `</p>
+` : '') +
     (_buildLinkCards(raw) || '') +
-    (meta ? '    <div class="main-card-meta"><span>' + _escHtml(meta) + '</span></div>
-' : '') +
-    '    <div class="main-card-meta"><span>' + _escHtml(author) + ' · ' + _escHtml(trust) + '</span></div>
-' +
-    '    <div class="main-card-actions"><button class="main-card-show3d" data-action="show-in-3d" data-id="' + _escHtml(atomId) + '">Show on map</button></div>
-' +
-    '  </div>
-' +
-    '  <div class="main-card board-replies"><h4>Replies</h4><p>No replies loaded yet.</p></div>
-' +
-    '  <div class="main-card board-compose"><label for="board-reply-placeholder">Public reply</label><textarea id="board-reply-placeholder" placeholder="Write a public reply…" disabled></textarea><p>Replies will be public and may be signed.</p></div>
-' +
+    (meta ? '    <div class="main-card-meta"><span>' + _escHtml(meta) + `</span></div>
+` : '') +
+    '    <div class="main-card-meta"><span>' + _escHtml(author) + ' · ' + _escHtml(trust) + `</span></div>
+` +
+    '    <div class="main-card-actions"><button class="main-card-show3d" data-action="show-in-3d" data-id="' + _escHtml(atomId) + `">Show on map</button></div>
+` +
+    `  </div>
+` +
+    `  <div class="main-card board-replies"><h4>Replies</h4><p>No replies loaded yet.</p></div>
+` +
+    `  <div class="main-card board-compose"><label for="board-reply-placeholder">Public reply</label><textarea id="board-reply-placeholder" placeholder="Write a public reply…" disabled></textarea><p>Replies will be public and may be signed.</p></div>
+` +
     '</section>';
 }
 
@@ -204,19 +204,19 @@ export function renderTextFeed({ atoms = [], locationDenied = false } = {}) {
     const time = atom.t ? _fmtTime(atom.t) : '';
     const meta = [dist, altLabel, time].filter(Boolean).join(' · ');
     const atomId = stripPunktoPrefix(atom.punkto);
-    return '<div class="main-card" data-atom-id="' + _escHtml(atomId) + '">
-' +
-      '<div class="main-card-badges"><span class="main-card-icon">⌁</span><span class="main-card-type">Punkti</span><span class="main-card-cat ' + _escHtml(cat.cls) + '">' + _escHtml(cat.code) + ' · ' + _escHtml(cat.label) + '</span></div>
-' +
-      '<h3 class="main-card-title">' + title + '</h3>
-' +
-      (preview && _escHtml(preview) !== title ? '<p class="main-card-preview">' + _escHtml(preview) + '</p>
-' : '') +
+    return '<div class="main-card" data-atom-id="' + _escHtml(atomId) + `">
+` +
+      '<div class="main-card-badges"><span class="main-card-icon">⌁</span><span class="main-card-type">Punkti</span><span class="main-card-cat ' + _escHtml(cat.cls) + '">' + _escHtml(cat.code) + ' · ' + _escHtml(cat.label) + `</span></div>
+` +
+      '<h3 class="main-card-title">' + title + `</h3>
+` +
+      (preview && _escHtml(preview) !== title ? '<p class="main-card-preview">' + _escHtml(preview) + `</p>
+` : '') +
       (linkCards || '') +
-      (meta ? '<div class="main-card-meta"><span>' + _escHtml(meta) + '</span></div>
-' : '') +
+      (meta ? '<div class="main-card-meta"><span>' + _escHtml(meta) + `</span></div>
+` : '') +
       '<div class="main-card-footer"><div class="main-card-meta-group"><div class="main-card-meta"><span>' + _escHtml(_authorLabel(atom)) + ' · ' + _escHtml(_trustLabel(atom)) + '</span></div><div class="main-card-meta"><span>0 replies</span></div></div>' +
       '<div class="main-card-actions"><button class="main-card-show3d" data-action="open-board" data-id="' + _escHtml(atomId) + '">Open board</button><button class="main-card-reply" data-action="show-in-3d" data-id="' + _escHtml(atomId) + '">Show on map</button></div></div></div>';
-  }).join('
-');
+  }).join(`
+`);
 }
