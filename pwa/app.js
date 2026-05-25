@@ -1006,22 +1006,36 @@ function updateCreateLocationDisplay(draft) {
 
 function initMap() {
   if (map || mapInitStarted) return;
+
+  const container = document.getElementById('map');
+  if (!container) {
+    console.error('[map] initMap aborted: #map element not found');
+    return;
+  }
+
   mapInitStarted = true;
   const { MapboxOverlay } = window.deck;
 
-  map = new maplibregl.Map({
-    container: 'map',
-    style: MAP_STYLE,
-    center: [12.5, 55.7],
-    zoom: 9,
-    pitch: 45,
-    bearing: -10,
-    antialias: true,
-  });
+  try {
+    map = new maplibregl.Map({
+      container: 'map',
+      style: MAP_STYLE,
+      center: [12.5, 55.7],
+      zoom: 9,
+      pitch: 45,
+      bearing: -10,
+      antialias: true,
+    });
 
-  map.on('error', e => {
-    console.warn('[map] error (ignored):', e.error && e.error.message);
-  });
+    map.on('error', e => {
+      console.warn('[map] error:', e.error && e.error.message);
+    });
+  } catch (err) {
+    console.error('[map] initMap failed:', err.message, err.stack);
+    mapInitStarted = false;
+    map = null;
+    return;
+  }
 
   // Add navigation controls
   map.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'bottom-right');
@@ -1480,8 +1494,8 @@ function wireEvents() {
 // ---------------------------------------------------------------------------
 
 async function boot() {
-  console.log('PUNKTO APP.JS LOADED v85 HARD MARKER 2026-05-23-1');
-  window.PUNKTO_APP_VERSION = 'v85-hard-marker-2026-05-23-1';
+  console.log('PUNKTO APP.JS LOADED v86 HARD MARKER 2026-05-25-1');
+  window.PUNKTO_APP_VERSION = 'v86-hard-marker-2026-05-25-1';
 
   console.log('[punkto] booting...');
 
