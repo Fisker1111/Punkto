@@ -44,7 +44,7 @@ for sz in 192 512; do
 done
 
 # 4. Relay /health
-HEALTH=$(curl -sS -o /tmp/health.json -w "%{http_code}" "https://${NODE}/api/health" || true)
+HEALTH=$(curl -sS -o /tmp/health.json -w "%{http_code}" "https://${NODE}/health" || true)
 if [[ "$HEALTH" == "200" ]]; then
   pass "relay /health -> 200 ($(cat /tmp/health.json | head -c 120))"
 else
@@ -52,7 +52,7 @@ else
 fi
 
 # 5. Relay /feed
-FEED=$(curl -sS -o /dev/null -w "%{http_code}" "https://${NODE}/api/feed?limit=1" || true)
+FEED=$(curl -sS -o /dev/null -w "%{http_code}" "https://${NODE}/feed?limit=1" || true)
 if [[ "$FEED" == "200" ]]; then
   pass "relay /feed -> 200"
 else
