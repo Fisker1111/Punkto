@@ -33,12 +33,12 @@ done
 
 # 4. Relay /health green
 echo "--- Relay health ---"
-curl -s "https://${NODE}/api/health" | head -c 200
+curl -s "https://${NODE}/health" | head -c 200
 echo
 
 # 5. Feed endpoint reachable
 echo "--- Relay /feed (first 3 atoms) ---"
-curl -s "https://${NODE}/api/feed?limit=3" | head -c 400
+curl -s "https://${NODE}/feed?limit=3" | head -c 400
 echo
 
 # 6. HTML loads
