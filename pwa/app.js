@@ -607,6 +607,7 @@ function buildBubbleElement(atom, count = 1, group = null) {
   // Phase 2: bubble-body click → open popup. Badge click and anchor
   // clicks are handled separately (stopPropagation / early-return).
   el.addEventListener('click', (ev) => {
+    ev.stopPropagation();
     // Let anchors inside markdown-rendered text behave normally.
     if (ev.target.closest('a')) return;
     // Badge has its own handler attached in updateBubbleElement.
@@ -1525,8 +1526,8 @@ function wireEvents() {
 // ---------------------------------------------------------------------------
 
 async function boot() {
-  console.log('PUNKTO APP.JS LOADED v86 HARD MARKER 2026-05-25-1');
-  window.PUNKTO_APP_VERSION = 'v87-hard-marker-2026-05-25-2';
+  console.log('PUNKTO APP.JS LOADED v88-hard-marker-2026-05-25-2');
+  window.PUNKTO_APP_VERSION = 'v88-hard-marker-2026-05-24-1';
 
   console.log('[punkto] booting...');
 
