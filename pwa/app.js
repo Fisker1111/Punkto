@@ -1737,3 +1737,4 @@ function setupKeyManagement() {
   });
   displayKeyInfo(currentIdentity);
 }
+// Rebuild trigger: 2026-05-25T13:16:00Z
