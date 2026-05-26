@@ -399,7 +399,7 @@
       z-index: 10;
     }
 
-    #main-feed { padding: 24px 18px 34px; max-width: 860px; margin: 0 auto; }
+    #main-feed { padding: 24px 18px 34px; max-width: 880px; margin: 0 auto; }
     .main-page-header { margin-bottom: 10px; }
     .main-page-status { display:inline-flex; align-items:center; gap:10px; padding:8px 14px; border-radius:999px; border:1px solid rgba(156,182,219,0.46); background:rgba(255,255,255,0.88); margin-bottom:6px; backdrop-filter: blur(10px); }
     #main-brand { font-size:14px; font-weight:700; }
@@ -532,7 +532,7 @@
     }
     .reply-toast strong { font-size: 13px; color: var(--text); }
 
-    .board-detail { max-width: 760px; margin: 0 auto; display:flex; flex-direction:column; gap:12px; }
+    .board-detail { max-width: 880px; margin: 0 auto; display:flex; flex-direction:column; gap:14px; }
     .board-back { align-self:flex-start; appearance:none; border:1px solid rgba(120,164,215,0.44); background:rgba(242,248,255,0.94); color:#174b80; font-size:13px; font-weight:700; padding:6px 10px; border-radius:999px; cursor:pointer; }
     .board-root .board-body { white-space: pre-wrap; }
     .board-replies h4 { margin:0 0 6px; font-size:14px; color:var(--text); }
@@ -548,9 +548,20 @@
     .ui-btn { appearance:none; font-family: inherit; cursor:pointer; }
     .ui-tab { border-radius: 999px; }
     .ui-badge { border-radius: 999px; }
-    .ui-board-panel { max-width: 760px; margin: 0 auto; }
+    .ui-board-panel { max-width: 880px; margin: 0 auto; }
     .ui-reply-box textarea:disabled { opacity:0.75; cursor:not-allowed; }
 
+
+    @media (min-width: 900px) {
+      #page-text {
+        padding-left: 24px;
+        padding-right: 24px;
+      }
+      #main-feed {
+        padding-top: 32px;
+        padding-bottom: 40px;
+      }
+    }
     /* Category pill */
     .atom-pill {
       display: inline-block;
