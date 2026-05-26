@@ -150,7 +150,7 @@ function renderBoardDetail(atom) {
     '</section>';
 }
 
-export function renderTextFeed({ atoms = [], locationDenied = false } = {}) {
+export function renderTextFeed({ atoms = [], locationDenied = false, loadingVisibleAtoms = false } = {}) {
   _mainFeedAtoms = Array.isArray(atoms) ? atoms : [];
   const list = document.getElementById('main-feed-list');
   const emptyEl = document.getElementById('main-empty-notes');
@@ -166,8 +166,8 @@ export function renderTextFeed({ atoms = [], locationDenied = false } = {}) {
       _selectedBoardAtom = atom;
       if (locEl) locEl.style.display = 'none';
       if (emptyEl) emptyEl.style.display = 'none';
-      if (countEl) countEl.textContent = _mainFeedAtoms.length + ' public boards in this map view';
-      if (statusCountEl) statusCountEl.textContent = _mainFeedAtoms.length + ' nearby';
+      if (countEl) countEl.textContent = loadingVisibleAtoms ? 'Loading visible atoms…' : (_mainFeedAtoms.length + ' public boards in this map view');
+      if (statusCountEl) statusCountEl.textContent = loadingVisibleAtoms ? 'Loading visible atoms…' : (_mainFeedAtoms.length + ' nearby');
       list.innerHTML = renderBoardDetail(atom);
       return;
     }
@@ -177,8 +177,8 @@ export function renderTextFeed({ atoms = [], locationDenied = false } = {}) {
 
   if (!_mainFeedAtoms.length) {
     list.innerHTML = '';
-    if (countEl) countEl.textContent = '';
-    if (statusCountEl) statusCountEl.textContent = '0 nearby';
+    if (countEl) countEl.textContent = loadingVisibleAtoms ? 'Loading visible atoms…' : '';
+    if (statusCountEl) statusCountEl.textContent = loadingVisibleAtoms ? 'Loading visible atoms…' : '0 nearby';
     if (locationDenied || !navigator.geolocation) {
       if (emptyEl) emptyEl.style.display = 'none';
       if (locEl) locEl.style.display = '';
@@ -191,8 +191,8 @@ export function renderTextFeed({ atoms = [], locationDenied = false } = {}) {
 
   if (locEl) locEl.style.display = 'none';
   if (emptyEl) emptyEl.style.display = 'none';
-  if (countEl) countEl.textContent = _mainFeedAtoms.length + ' public boards in this map view';
-  if (statusCountEl) statusCountEl.textContent = _mainFeedAtoms.length + ' nearby';
+  if (countEl) countEl.textContent = loadingVisibleAtoms ? 'Loading visible atoms…' : (_mainFeedAtoms.length + ' public boards in this map view');
+  if (statusCountEl) statusCountEl.textContent = loadingVisibleAtoms ? 'Loading visible atoms…' : (_mainFeedAtoms.length + ' nearby');
 
   list.innerHTML = _mainFeedAtoms.map((atom) => {
     const title = _escHtml(_deriveTitle(atom));

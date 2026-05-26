@@ -77,6 +77,8 @@ let deepLinkPunkto = null; // captured at boot, consumed after first refreshUI
 let currentPage = 'text'; // 'text' | 'map'
 let _mainFeedAtoms  = [];       // last sorted atom batch for main feed
 let _locationDenied = false;    // true when geolocation denied/unavailable
+let _mapScopedFeedReady = false;
+let _refreshUiTimer = null;
 
 // ── App shell: two views (Text / Map) ─────────────────────────────────────────
 // showPage — thin wrapper. Body/nav state + page lifecycle live in ui-shell.js.
@@ -115,7 +117,16 @@ function renderMainFeed() {
   renderTextFeed({
     atoms: _mainFeedAtoms,
     locationDenied: _locationDenied,
+    loadingVisibleAtoms: !_mapScopedFeedReady,
   });
+}
+
+function queueRefreshUI(newAtomIds = null, delayMs = 120) {
+  if (_refreshUiTimer) clearTimeout(_refreshUiTimer);
+  _refreshUiTimer = setTimeout(() => {
+    _refreshUiTimer = null;
+    refreshUI(newAtomIds).catch((err) => console.warn('[ui] refresh failed:', err));
+  }, delayMs);
 }
 
 
@@ -821,7 +832,6 @@ async function refreshUI(newAtomIds = null) {
   const visibleAtoms = allAtoms.filter(a => !isHiddenAtom(a));
   const total = visibleAtoms.length;
   elCountNum.textContent = total;
-  if (elMainStatusCount) elMainStatusCount.textContent = `${total} nearby`;
   // Keep settings info (if menu is open) in sync
   if (elSettingsCount) elSettingsCount.textContent = String(total);
 
@@ -831,17 +841,32 @@ async function refreshUI(newAtomIds = null) {
     ...a,
     distance: center ? haversineMeters(center.lat, center.lng, a.lat, a.lon) : NaN,
   }));
-  enriched.sort((a, b) => {
-    const ad = Number.isFinite(a.distance);
-    const bd = Number.isFinite(b.distance);
-    if (ad && bd) return a.distance - b.distance || (Number(b.t) - Number(a.t));
-    if (ad) return -1;
-    if (bd) return 1;
-    return Number(b.t) - Number(a.t);
-  });
-  const recent = enriched.slice(0, 50);
+  const mapReadyForScope = Boolean(map && typeof map.getBounds === 'function' && map.isStyleLoaded && map.isStyleLoaded());
+  let recent;
+  if (mapReadyForScope) {
+    const bounds = map.getBounds();
+    recent = enriched
+      .filter((a) => Number.isFinite(a.lat) && Number.isFinite(a.lon) && bounds.contains([a.lon, a.lat]))
+      .sort((a, b) => Number(b.t) - Number(a.t))
+      .slice(0, 50);
+    _mapScopedFeedReady = true;
+  } else {
+    enriched.sort((a, b) => {
+      const ad = Number.isFinite(a.distance);
+      const bd = Number.isFinite(b.distance);
+      if (ad && bd) return a.distance - b.distance || (Number(b.t) - Number(a.t));
+      if (ad) return -1;
+      if (bd) return 1;
+      return Number(b.t) - Number(a.t);
+    });
+    recent = enriched.slice(0, 50);
+    _mapScopedFeedReady = false;
+  }
   // Expose to main-view feed
   _mainFeedAtoms = recent;
+  if (elMainStatusCount) {
+    elMainStatusCount.textContent = _mapScopedFeedReady ? `${recent.length} nearby` : 'Loading visible atoms…';
+  }
   if (currentPage === 'text') renderMainFeed();
 
   if (recent.length === 0) {
@@ -1102,7 +1127,7 @@ function initMap() {
         if (!anyError) lastSyncAtMs = Date.now();
       },
       onSyncError: () => setSyncStatus('error'),
-      onAtomsChanged: (newAtomIds) => refreshUI(newAtomIds),
+      onAtomsChanged: (newAtomIds) => queueRefreshUI(newAtomIds, 50),
       onPeersChanged: () => refreshSettingsNetworkInfo().catch(() => {}),
     },
   });
@@ -1111,8 +1136,18 @@ function initMap() {
     console.log('[map] loaded');
 
     // Update DOM bubble LOD whenever zoom or pan changes.
-    map.on('zoomend', () => { updateBubbleVisibility(); drawLeaderLines(); updateCrosshairReadout(); });
-    map.on('moveend', () => { updateBubbleVisibility(); drawLeaderLines(); updateCrosshairReadout(); });
+    map.on('zoomend', () => {
+      updateBubbleVisibility();
+      drawLeaderLines();
+      updateCrosshairReadout();
+      queueRefreshUI();
+    });
+    map.on('moveend', () => {
+      updateBubbleVisibility();
+      drawLeaderLines();
+      updateCrosshairReadout();
+      queueRefreshUI();
+    });
 
     // Ensure the SVG overlay exists and is redrawn on every map render event
     // so leader lines track pan/zoom/pitch/bearing smoothly.
@@ -1526,8 +1561,8 @@ function wireEvents() {
 // ---------------------------------------------------------------------------
 
 async function boot() {
-  console.log('PUNKTO APP.JS LOADED v91-hard-marker-2026-05-26-1');
-  window.PUNKTO_APP_VERSION = 'v91-hard-marker-2026-05-26-1';
+  console.log('PUNKTO APP.JS LOADED v92-hard-marker-2026-05-26-1');
+  window.PUNKTO_APP_VERSION = 'v92-hard-marker-2026-05-26-1';
 
   console.log('[punkto] booting...');
 
