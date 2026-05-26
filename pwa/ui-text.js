@@ -37,15 +37,15 @@ function _buildLinkCards(rawText) {
   const links = _extractHttpLinks(rawText);
   if (!links.length) return '';
   return links.map(({ url }) =>
-    `  <div class="main-link-card">
+    `  <div class="main-link-card ui-card">
 ` +
-    `    <div class="main-link-badge">External link</div>
+    `    <div class="main-link-badge ui-badge">External link</div>
 ` +
     '    <div class="main-link-domain">' + _escHtml(_safeDomainLabel(url)) + `</div>
 ` +
     '    <div class="main-link-url">' + _escHtml(_shortUrlLabel(url)) + `</div>
 ` +
-    '    <a class="main-link-open" href="' + _escHtml(url) + `" target="_blank" rel="noopener noreferrer">Open</a>
+    '    <a class="main-link-open ui-btn" href="' + _escHtml(url) + `" target="_blank" rel="noopener noreferrer">Open</a>
 ` +
     `  </div>
 `
@@ -121,30 +121,31 @@ function renderBoardDetail(atom) {
   const time = atom.t ? _fmtTime(atom.t) : '';
   const meta = [dist, altLabel, time].filter(Boolean).join(' · ');
   const atomId = stripPunktoPrefix(atom.punkto || _selectedBoardId || '');
-  return `<section class="board-detail">
+  return `<section class="board-detail ui-board-panel">
 ` +
-    `  <button class="board-back" data-action="board-back">← Visible atoms</button>
+    `  <button class="board-back ui-btn" data-action="board-back">← Visible atoms</button>
 ` +
-    `  <div class="main-card board-root">
+    `  <div class="main-card ui-card board-root">
 ` +
-    '    <div class="main-card-badges"><span class="main-card-type">Board</span><span class="main-card-cat ' + _escHtml(cat.cls) + '">' + _escHtml(cat.code) + ' · ' + _escHtml(cat.label) + `</span></div>
+    '    <div class="main-card-badges"><span class="main-card-type ui-badge">Board</span><span class="main-card-cat ui-badge ' + _escHtml(cat.cls) + '">' + _escHtml(cat.code) + ' · ' + _escHtml(cat.label) + `</span></div>
 ` +
     '    <h3 class="main-card-title">' + title + `</h3>
 ` +
     (raw ? '    <p class="main-card-preview board-body">' + _escHtml(raw) + `</p>
 ` : '') +
     (_buildLinkCards(raw) || '') +
-    (meta ? '    <div class="main-card-meta"><span>' + _escHtml(meta) + `</span></div>
-` : '') +
     '    <div class="main-card-meta"><span>' + _escHtml(author) + ' · ' + _escHtml(trust) + `</span></div>
 ` +
-    '    <div class="main-card-actions"><button class="main-card-show3d" data-action="show-in-3d" data-id="' + _escHtml(atomId) + `">Show on map</button></div>
+    (meta ? '    <div class="main-card-meta"><span>' + _escHtml(meta) + `</span></div>
+` : '') +
+    '    <div class="main-card-actions"><button class="main-card-show3d ui-btn" data-action="show-in-3d" data-id="' + _escHtml(atomId) + `">Show on map</button></div>
 ` +
     `  </div>
 ` +
-    `  <div class="main-card board-replies"><h4>Replies</h4><p>No replies loaded yet.</p></div>
+    `  <div class="main-card ui-card board-replies">` +
+    `<h4>Replies</h4><p>No replies loaded yet.</p></div>
 ` +
-    `  <div class="main-card board-compose"><label for="board-reply-placeholder">Public reply</label><textarea id="board-reply-placeholder" placeholder="Write a public reply…" disabled></textarea><p>Replies will be public and may be signed.</p></div>
+    `  <div class="main-card ui-card board-compose ui-reply-box"><label for="board-reply-placeholder">Public reply</label><textarea id="board-reply-placeholder" placeholder="Write a public reply…" disabled></textarea><p>Replies will be public and may be signed.</p></div>
 ` +
     '</section>';
 }
@@ -165,7 +166,7 @@ export function renderTextFeed({ atoms = [], locationDenied = false } = {}) {
       _selectedBoardAtom = atom;
       if (locEl) locEl.style.display = 'none';
       if (emptyEl) emptyEl.style.display = 'none';
-      if (countEl) countEl.textContent = _mainFeedAtoms.length + ' nearby';
+      if (countEl) countEl.textContent = _mainFeedAtoms.length + ' public boards in this map view';
       if (statusCountEl) statusCountEl.textContent = _mainFeedAtoms.length + ' nearby';
       list.innerHTML = renderBoardDetail(atom);
       return;
@@ -190,7 +191,7 @@ export function renderTextFeed({ atoms = [], locationDenied = false } = {}) {
 
   if (locEl) locEl.style.display = 'none';
   if (emptyEl) emptyEl.style.display = 'none';
-  if (countEl) countEl.textContent = _mainFeedAtoms.length + ' nearby';
+  if (countEl) countEl.textContent = _mainFeedAtoms.length + ' public boards in this map view';
   if (statusCountEl) statusCountEl.textContent = _mainFeedAtoms.length + ' nearby';
 
   list.innerHTML = _mainFeedAtoms.map((atom) => {
@@ -198,25 +199,23 @@ export function renderTextFeed({ atoms = [], locationDenied = false } = {}) {
     const cat = _categoryBadge(atom.category || atom.kind || _deriveCategory(atom));
     const raw = String(atom.x || '').trim();
     const preview = raw.length > 120 ? raw.slice(0, 120) + '…' : raw;
-    const linkCards = _buildLinkCards(raw);
     const altLabel = Number.isFinite(Number(atom.alt)) ? _fmtAltLabel(Number(atom.alt)) : '';
     const dist = Number.isFinite(atom.distance) ? _fmtDistance(atom.distance) : '';
     const time = atom.t ? _fmtTime(atom.t) : '';
     const meta = [dist, altLabel, time].filter(Boolean).join(' · ');
     const atomId = stripPunktoPrefix(atom.punkto);
-    return '<div class="main-card" data-atom-id="' + _escHtml(atomId) + `">
+    return '<div class="main-card ui-card" data-atom-id="' + _escHtml(atomId) + `">
 ` +
-      '<div class="main-card-badges"><span class="main-card-icon">⌁</span><span class="main-card-type">Punkti</span><span class="main-card-cat ' + _escHtml(cat.cls) + '">' + _escHtml(cat.code) + ' · ' + _escHtml(cat.label) + `</span></div>
+      '<div class="main-card-badges"><span class="main-card-type ui-badge">Board</span><span class="main-card-cat ui-badge ' + _escHtml(cat.cls) + '">' + _escHtml(cat.code) + ' · ' + _escHtml(cat.label) + `</span></div>
 ` +
       '<h3 class="main-card-title">' + title + `</h3>
 ` +
       (preview && _escHtml(preview) !== title ? '<p class="main-card-preview">' + _escHtml(preview) + `</p>
 ` : '') +
-      (linkCards || '') +
       (meta ? '<div class="main-card-meta"><span>' + _escHtml(meta) + `</span></div>
 ` : '') +
       '<div class="main-card-footer"><div class="main-card-meta-group"><div class="main-card-meta"><span>' + _escHtml(_authorLabel(atom)) + ' · ' + _escHtml(_trustLabel(atom)) + '</span></div><div class="main-card-meta"><span>0 replies</span></div></div>' +
-      '<div class="main-card-actions"><button class="main-card-show3d" data-action="open-board" data-id="' + _escHtml(atomId) + '">Open board</button><button class="main-card-reply" data-action="show-in-3d" data-id="' + _escHtml(atomId) + '">Show on map</button></div></div></div>';
+      '<div class="main-card-actions"><button class="main-card-show3d ui-btn" data-action="open-board" data-id="' + _escHtml(atomId) + '">Open board</button><button class="main-card-reply ui-btn" data-action="show-in-3d" data-id="' + _escHtml(atomId) + '">Show on map</button></div></div></div>';
   }).join(`
 `);
 }

@@ -526,6 +526,14 @@
     .board-compose textarea:disabled { opacity:0.75; cursor:not-allowed; }
     .reply-toast span { font-size: 12px; color: var(--text-mid); line-height: 1.35; }
 
+    /* Phase 2 token-aligned aliases */
+    .ui-card { background: linear-gradient(180deg, rgba(255,255,255,0.97), rgba(247,251,255,0.97)); border: 1px solid rgba(145,173,209,0.42); border-radius: 16px; }
+    .ui-btn { appearance:none; font-family: inherit; cursor:pointer; }
+    .ui-tab { border-radius: 999px; }
+    .ui-badge { border-radius: 999px; }
+    .ui-board-panel { max-width: 760px; margin: 0 auto; }
+    .ui-reply-box textarea:disabled { opacity:0.75; cursor:not-allowed; }
+
     /* Category pill */
     .atom-pill {
       display: inline-block;
@@ -1251,9 +1259,9 @@
           <span id="main-sync-indicator" title="sync status"></span>
         </div>
       </div>
-      <p id="main-feed-heading">Nearby</p>
+      <p id="main-feed-heading">Visible atoms</p>
       <span id="main-atom-count"></span>
-      <p id="main-feed-subtitle">Read what’s nearby, or leave something here.</p>
+      <p id="main-feed-subtitle">Visible here — public boards in this map view.</p>
       <div class="main-category-chips" aria-label="Categories">
         <button class="main-chip active" type="button">All</button>
         <button class="main-chip" type="button">Tips</button>
