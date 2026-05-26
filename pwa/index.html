@@ -31,6 +31,28 @@
       --surface:   rgba(255,255,255,0.92);
       --surface2:  rgba(255,255,255,0.88);
       --surface3:  #f4f8ff;
+      --surface-strong: rgba(255,255,255,0.97);
+      --surface-soft: rgba(247,251,255,0.97);
+      --panel-dark: rgba(18, 32, 52, 0.88);
+      --panel-dark-soft: rgba(13, 25, 40, 0.6);
+      --chip-bg: rgba(234,244,255,0.95);
+      --shadow-soft: 0 8px 22px rgba(33,66,108,0.08);
+      --shadow-float: 0 12px 30px rgba(26,58,97,0.16);
+      --shadow-panel: 0 -14px 40px rgba(25,64,106,0.16);
+      --radius-sm: 8px;
+      --radius-md: 12px;
+      --radius-lg: 16px;
+      --radius-xl: 20px;
+      --radius-pill: 999px;
+      --space-1: 4px;
+      --space-2: 8px;
+      --space-3: 12px;
+      --space-4: 16px;
+      --space-5: 20px;
+      --text-xs: 11px;
+      --text-sm: 12px;
+      --text-md: 13px;
+      --text-lg: 14px;
       --border:    rgba(35,70,112,0.14);
       --border2:   rgba(35,70,112,0.22);
       --text:      #1f2e45;
@@ -129,8 +151,8 @@
       backdrop-filter: blur(16px);
       -webkit-backdrop-filter: blur(16px);
       border: 1px solid var(--border);
-      border-radius: 20px;
-      box-shadow: 0 12px 30px rgba(26,58,97,0.16);
+      border-radius: var(--radius-xl);
+      box-shadow: var(--shadow-float);
       display: flex;
       align-items: stretch;
       z-index: 200;
@@ -209,7 +231,7 @@
     }
     .rail-btn {
       min-height: 44px;
-      border-radius: 12px;
+      border-radius: var(--radius-md);
       font-size: 12px;
       letter-spacing: 0.02em;
     }
@@ -419,7 +441,7 @@
     .main-category-chips::-webkit-scrollbar { display: none; }
     .main-chip {
       border: 1px solid rgba(120,150,190,0.24);
-      background: rgba(27,37,54,0.72);
+      background: var(--chip-bg);
       color: var(--text-mid);
       font-size: 11px;
       border-radius: 999px;
@@ -435,7 +457,7 @@
       margin: 0 0 16px;
       padding: 16px;
       border: 1px solid var(--border2);
-      border-radius: 12px;
+      border-radius: var(--radius-md);
       background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0));
     }
     .main-intro-card h3 {
@@ -455,9 +477,9 @@
     .main-card {
       padding: 12px 13px;
       border: 1px solid rgba(145,173,209,0.42);
-      border-radius: 16px;
-      background: linear-gradient(180deg, rgba(255,255,255,0.97), rgba(247,251,255,0.97));
-      box-shadow: 0 8px 22px rgba(33,66,108,0.08);
+      border-radius: var(--radius-lg);
+      background: linear-gradient(180deg, var(--surface-strong), var(--surface-soft));
+      box-shadow: var(--shadow-soft);
       display:flex;
       flex-direction:column;
       gap:8px;
@@ -479,23 +501,18 @@
     .main-card-footer { margin-top: 2px; display:flex; flex-direction:column; gap:7px; }
     .main-card-meta-group { display:flex; flex-direction:column; gap:3px; }
     .main-card-actions { display:flex; gap:8px; flex-wrap:wrap; }
+    .main-card-show3d, .main-card-reply { font-family: inherit; }
+    .main-card-show3d { }
     .main-card-show3d, .main-card-reply {
       appearance:none;
-      border:1px solid rgba(0,212,255,0.35);
-      background: rgba(0,212,255,0.11);
-      color: var(--accent);
-      font-size:12px;
-      font-weight:600;
-      border-radius:999px;
+      border-radius:var(--radius-pill);
       padding:7px 12px;
       cursor:pointer;
-      font-family: inherit;
+      font-size:12px;
+      font-weight:600;
     }
-    .main-card-reply {
-      border-color: rgba(138,167,204,0.36);
-      background: rgba(118,146,181,0.14);
-      color: var(--text-mid);
-    }
+    .main-card-show3d { border:1px solid rgba(0,212,255,0.35); background: rgba(0,212,255,0.11); color: var(--accent); }
+    .main-card-reply { border:1px solid rgba(138,167,204,0.36); background: rgba(118,146,181,0.14); color: var(--text-mid); }
     .main-card-reply:hover { color: var(--text); border-color: rgba(138,167,204,0.52); }
     .reply-toast {
       position: fixed;
@@ -504,11 +521,11 @@
       bottom: calc(var(--nav-h) + var(--safe-b) + 14px);
       z-index: 260;
       width: min(92vw, 380px);
-      background: rgba(23,26,36,0.96);
-      border: 1px solid rgba(255,255,255,0.14);
-      border-radius: 12px;
+      background: rgba(248,252,255,0.97);
+      border: 1px solid var(--border2);
+      border-radius: var(--radius-md);
       padding: 10px 12px;
-      box-shadow: 0 8px 24px rgba(0,0,0,0.35);
+      box-shadow: var(--shadow-soft);
       display: flex;
       flex-direction: column;
       gap: 4px;
@@ -701,7 +718,7 @@
       align-items: center;
       justify-content: center;
       height: 18px;
-      border-radius: 999px;
+      border-radius: var(--radius-pill);
       font-size: 10px;
       line-height: 1;
       font-weight: 650;
@@ -772,6 +789,17 @@
     @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
 
     /* ── Settings panel (slide up) ──────────────────────────── */
+    /* Reusable component tokens */
+    .ui-card { border: 1px solid rgba(145,173,209,0.42); border-radius: var(--radius-lg); background: linear-gradient(180deg, var(--surface-strong), var(--surface-soft)); box-shadow: var(--shadow-soft); }
+    .ui-btn { appearance:none; border:1px solid var(--border2); border-radius: var(--radius-pill); padding:7px 12px; font-size:var(--text-sm); font-weight:600; font-family:inherit; cursor:pointer; }
+    .ui-btn-primary { border-color: rgba(0,212,255,0.35); background: rgba(0,212,255,0.11); color: var(--accent); }
+    .ui-btn-secondary { border-color: rgba(138,167,204,0.36); background: rgba(118,146,181,0.14); color: var(--text-mid); }
+    .ui-tab { border:1px solid rgba(120,150,190,0.24); border-radius: var(--radius-pill); background: var(--chip-bg); color: var(--text-mid); font-size: var(--text-xs); padding: 7px 13px; }
+    .ui-badge { font-size:10px; font-weight:600; letter-spacing:0.06em; text-transform:uppercase; padding:4px 8px; border-radius: var(--radius-pill); background: var(--chip-bg); color:#355173; }
+    .ui-board-panel { border:1px solid var(--border2); border-radius: var(--radius-md); background: rgba(255,255,255,0.94); padding: var(--space-3); }
+    .ui-reply-box { width:100%; min-height:84px; border-radius:10px; border:1px solid rgba(120,150,190,0.3); background: rgba(255,255,255,0.94); color:#223a57; padding:10px 12px; resize: vertical; font-family: inherit; }
+    .ui-map-chip { display:inline-flex; align-items:center; height:18px; border-radius: var(--radius-pill); font-size:10px; font-weight:650; padding:0 7px; border:1px solid rgba(35,70,112,0.22); background: rgba(245,249,255,0.86); color:#2d4569; }
+
     #settings-menu {
       position: fixed;
       left: 0; right: 0; bottom: calc(var(--nav-h) + var(--safe-b));
@@ -1255,11 +1283,11 @@
       <span id="main-atom-count"></span>
       <p id="main-feed-subtitle">Read what’s nearby, or leave something here.</p>
       <div class="main-category-chips" aria-label="Categories">
-        <button class="main-chip active" type="button">All</button>
-        <button class="main-chip" type="button">Tips</button>
-        <button class="main-chip" type="button">Warnings</button>
-        <button class="main-chip" type="button">Questions</button>
-        <button class="main-chip" type="button">Memories</button>
+        <button class="main-chip ui-tab active" type="button">All</button>
+        <button class="main-chip ui-tab" type="button">Tips</button>
+        <button class="main-chip ui-tab" type="button">Warnings</button>
+        <button class="main-chip ui-tab" type="button">Questions</button>
+        <button class="main-chip ui-tab" type="button">Memories</button>
       </div>
       <div id="main-feed-list"></div>
 
@@ -1268,15 +1296,15 @@
         <p>No Punktis nearby yet.</p>
         <p>Open Map or write the first Punkti here.</p>
         <div class="main-empty-actions">
-          <button class="btn-cta" id="main-empty-open-map-btn">Open Map</button>
-          <button class="btn-cta" id="main-empty-leave-btn">Write Punkti</button>
+          <button class="btn-cta ui-btn ui-btn-primary" id="main-empty-open-map-btn">Open Map</button>
+          <button class="btn-cta ui-btn ui-btn-primary" id="main-empty-leave-btn">Write Punkti</button>
         </div>
       </div>
 
       <div id="main-empty-location" class="main-empty" style="display:none;">
         <h3>Location needed</h3>
         <p>Punkto uses your location to show nearby text.</p>
-        <button class="btn-cta" id="main-location-btn">Enable location</button>
+        <button class="btn-cta ui-btn ui-btn-primary" id="main-location-btn">Enable location</button>
       </div>
     </div>
   </div>
