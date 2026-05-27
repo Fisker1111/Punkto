@@ -865,7 +865,7 @@ async function refreshUI(newAtomIds = null) {
   // Expose to main-view feed
   _mainFeedAtoms = recent;
   if (elMainStatusCount) {
-    elMainStatusCount.textContent = _mapScopedFeedReady ? `${recent.length} nearby` : 'Loading visible atoms…';
+    elMainStatusCount.textContent = _mapScopedFeedReady ? `${recent.length} visible` : 'Loading visible atoms…';
   }
   if (currentPage === 'text') renderMainFeed();
 
@@ -1561,8 +1561,8 @@ function wireEvents() {
 // ---------------------------------------------------------------------------
 
 async function boot() {
-  console.log('PUNKTO APP.JS LOADED v92-hard-marker-2026-05-26-1');
-  window.PUNKTO_APP_VERSION = 'v92-hard-marker-2026-05-26-1';
+  console.log('PUNKTO APP.JS LOADED v93-hard-marker-2026-05-26-1');
+  window.PUNKTO_APP_VERSION = 'v93-hard-marker-2026-05-26-1';
 
   console.log('[punkto] booting...');
 
@@ -1594,7 +1594,7 @@ async function boot() {
     const cachedAll = await getAllAtoms();
     const cachedCount = cachedAll.filter(a => !isHiddenAtom(a)).length;
     elCountNum.textContent = cachedCount;
-    if (elMainStatusCount) elMainStatusCount.textContent = `${cachedCount} nearby`;
+    if (elMainStatusCount) elMainStatusCount.textContent = `${cachedCount} visible`;
     if (elSettingsCount) elSettingsCount.textContent = String(cachedCount);
     if (cachedCount > 0) {
       elAtomEmpty.style.display = 'none';
