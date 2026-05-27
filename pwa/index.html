@@ -1302,12 +1302,9 @@
       <p id="main-feed-heading">Visible atoms</p>
       <span id="main-atom-count"></span>
       <p id="main-feed-subtitle">Visible here — public boards in this map view.</p>
-      <div class="main-category-chips" aria-label="Categories">
-        <button class="main-chip ui-tab active" type="button">All</button>
-        <button class="main-chip ui-tab" type="button">Tips</button>
-        <button class="main-chip ui-tab" type="button">Warnings</button>
-        <button class="main-chip ui-tab" type="button">Questions</button>
-        <button class="main-chip ui-tab" type="button">Memories</button>
+      <div class="main-category-chips" aria-label="Text mode tabs" role="tablist">
+        <button class="main-chip ui-tab active" type="button" data-action="text-tab" data-tab="visible" role="tab" aria-selected="true">Visible</button>
+        <button class="main-chip ui-tab" type="button" data-action="text-tab" data-tab="activity" role="tab" aria-selected="false">Activity</button>
       </div>
       <div id="main-feed-list"></div>
 

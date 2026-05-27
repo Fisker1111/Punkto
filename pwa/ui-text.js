@@ -11,6 +11,8 @@ let _helpers = null;
 let _mainFeedAtoms = [];
 let _selectedBoardId = null;
 let _selectedBoardAtom = null;
+let _activeTab = 'visible';
+let _boardReturnTab = 'visible';
 
 function _escHtml(s) {
   if (_helpers && typeof _helpers.escHtml === 'function') return _helpers.escHtml(s);
@@ -71,11 +73,22 @@ export function initTextView({ onShowOnMap, onLeaveNote, onOpenBoard, helpers } 
   _onOpenBoard = typeof onOpenBoard === 'function' ? onOpenBoard : null;
   _helpers = helpers || null;
 
+  _syncTabUi();
   const list = document.getElementById('main-feed-list');
   if (list) {
     list.addEventListener('click', (e) => {
       const backBtn = e.target.closest('[data-action="board-back"]');
-      if (backBtn) { _selectedBoardId = null; _selectedBoardAtom = null; renderTextFeed({ atoms: _mainFeedAtoms }); return; }
+      if (backBtn) { _selectedBoardId = null; _selectedBoardAtom = null; _activeTab = _boardReturnTab || 'visible'; _syncTabUi(); renderTextFeed({ atoms: _mainFeedAtoms }); return; }
+
+
+      const tabBtn = e.target.closest('[data-action="text-tab"]');
+      if (tabBtn) {
+        const tab = tabBtn.dataset.tab === 'activity' ? 'activity' : 'visible';
+        _activeTab = tab;
+        _syncTabUi();
+        renderTextFeed({ atoms: _mainFeedAtoms });
+        return;
+      }
 
       const openBoardBtn = e.target.closest('[data-action="open-board"]');
       if (openBoardBtn) {
@@ -121,10 +134,32 @@ export function initTextView({ onShowOnMap, onLeaveNote, onOpenBoard, helpers } 
 
 export function openBoardById(id, opts = {}) {
   if (!id) return;
+  _boardReturnTab = _activeTab;
   _selectedBoardId = stripPunktoPrefix(id);
   _selectedBoardAtom = opts && opts.atom ? opts.atom : null;
   if (_onOpenBoard) _onOpenBoard(_selectedBoardId);
   renderTextFeed({ atoms: Array.isArray(opts?.atoms) ? opts.atoms : _mainFeedAtoms });
+}
+
+function _activityTimestamp(atom) {
+  return Number(atom?.updated_at || atom?.updatedAt || atom?.created_at || atom?.createdAt || atom?.t || 0) || 0;
+}
+
+function _atomsForActiveTab(atoms) {
+  const list = Array.isArray(atoms) ? atoms.slice() : [];
+  if (_activeTab === 'activity') {
+    return list.sort((a, b) => _activityTimestamp(b) - _activityTimestamp(a));
+  }
+  return list;
+}
+
+function _syncTabUi() {
+  const buttons = document.querySelectorAll('[data-action="text-tab"]');
+  buttons.forEach((btn) => {
+    const tab = btn.dataset.tab === 'activity' ? 'activity' : 'visible';
+    btn.classList.toggle('active', tab === _activeTab);
+    btn.setAttribute('aria-selected', tab === _activeTab ? 'true' : 'false');
+  });
 }
 
 function renderBoardDetail(atom) {
@@ -147,9 +182,10 @@ function renderBoardDetail(atom) {
   const copyLinkBtn = atomId
     ? '<button class="main-card-reply ui-btn" data-action="copy-board-link" data-id="' + _escHtml(atomId) + '">Copy board link</button>'
     : '';
+  const backLabel = _boardReturnTab === 'activity' ? '← Back to Activity' : '← Back to Visible';
   return `<section class="board-detail ui-board-panel">
 ` +
-    `  <button class="board-back ui-btn" data-action="board-back">← Visible atoms</button>
+    `  <button class="board-back ui-btn" data-action="board-back">${_escHtml(backLabel)}</button>
 ` +
     `  <div class="main-card ui-card board-root">
 ` +
@@ -182,6 +218,7 @@ function renderBoardDetail(atom) {
 
 export function renderTextFeed({ atoms = [], locationDenied = false, loadingVisibleAtoms = false } = {}) {
   _mainFeedAtoms = Array.isArray(atoms) ? atoms : [];
+  _syncTabUi();
   const list = document.getElementById('main-feed-list');
   const emptyEl = document.getElementById('main-empty-notes');
   const countEl = document.getElementById('main-atom-count');
@@ -205,15 +242,30 @@ export function renderTextFeed({ atoms = [], locationDenied = false, loadingVisi
     _selectedBoardAtom = null;
   }
 
-  if (!_mainFeedAtoms.length) {
+  if (!activeAtoms.length) {
     list.innerHTML = '';
     if (countEl) countEl.textContent = loadingVisibleAtoms ? 'Loading visible atoms…' : '';
+    const headingEl = document.getElementById('main-feed-heading');
+    const subtitleEl = document.getElementById('main-feed-subtitle');
+    if (headingEl) headingEl.textContent = _activeTab === 'activity' ? 'Activity' : 'Visible atoms';
+    if (subtitleEl) subtitleEl.textContent = _activeTab === 'activity' ? 'Newest public activity in this map view. Live flow.' : 'Visible here — public boards in this map view.';
     if (statusCountEl) statusCountEl.textContent = loadingVisibleAtoms ? 'Loading visible atoms…' : '0 visible';
     if (locationDenied || !navigator.geolocation) {
       if (emptyEl) emptyEl.style.display = 'none';
       if (locEl) locEl.style.display = '';
     } else {
-      if (emptyEl) emptyEl.style.display = '';
+      if (emptyEl) {
+        emptyEl.style.display = '';
+        const h = emptyEl.querySelector('h3');
+        const p = emptyEl.querySelector('p');
+        if (_activeTab === 'activity') {
+          if (h) h.textContent = 'No activity visible here yet.';
+          if (p) p.textContent = 'Newest public activity in this map view will appear here.';
+        } else {
+          if (h) h.textContent = 'This place is quiet';
+          if (p) p.textContent = 'No Punktis nearby yet.';
+        }
+      }
       if (locEl) locEl.style.display = 'none';
     }
     return;
@@ -221,10 +273,15 @@ export function renderTextFeed({ atoms = [], locationDenied = false, loadingVisi
 
   if (locEl) locEl.style.display = 'none';
   if (emptyEl) emptyEl.style.display = 'none';
-  if (countEl) countEl.textContent = loadingVisibleAtoms ? 'Loading visible atoms…' : (_mainFeedAtoms.length + ' public boards in this map view');
-  if (statusCountEl) statusCountEl.textContent = loadingVisibleAtoms ? 'Loading visible atoms…' : (_mainFeedAtoms.length + ' visible');
+  if (countEl) countEl.textContent = loadingVisibleAtoms ? 'Loading visible atoms…' : (activeAtoms.length + (_activeTab === 'activity' ? ' public activity items in this map view' : ' public boards in this map view'));
+  if (statusCountEl) statusCountEl.textContent = loadingVisibleAtoms ? 'Loading visible atoms…' : (activeAtoms.length + (_activeTab === 'activity' ? ' activity' : ' visible'));
 
-  list.innerHTML = _mainFeedAtoms.map((atom) => {
+  const headingEl = document.getElementById('main-feed-heading');
+  const subtitleEl = document.getElementById('main-feed-subtitle');
+  if (headingEl) headingEl.textContent = _activeTab === 'activity' ? 'Activity' : 'Visible atoms';
+  if (subtitleEl) subtitleEl.textContent = _activeTab === 'activity' ? 'Newest public activity in this map view. Live flow.' : 'Visible here — public boards in this map view.';
+
+  list.innerHTML = activeAtoms.map((atom) => {
     const title = _escHtml(_deriveTitle(atom));
     const cat = _categoryBadge(atom.category || atom.kind || _deriveCategory(atom));
     const raw = String(atom.x || '').trim();
