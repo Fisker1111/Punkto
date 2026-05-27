@@ -146,7 +146,7 @@ export function isSettingsOpen() {
 export function setCounts({ nearby, atomCount } = {}) {
   if (nearby !== undefined && nearby !== null) {
     const el = document.getElementById('main-atom-count');
-    if (el) el.textContent = nearby === 0 ? '' : String(nearby) + ' nearby';
+    if (el) el.textContent = nearby === 0 ? '' : String(nearby) + ' visible';
   }
   if (atomCount !== undefined && atomCount !== null) {
     const el = document.getElementById('settings-atom-count')

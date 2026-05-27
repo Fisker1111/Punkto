@@ -167,7 +167,7 @@ export function renderTextFeed({ atoms = [], locationDenied = false, loadingVisi
       if (locEl) locEl.style.display = 'none';
       if (emptyEl) emptyEl.style.display = 'none';
       if (countEl) countEl.textContent = loadingVisibleAtoms ? 'Loading visible atoms…' : (_mainFeedAtoms.length + ' public boards in this map view');
-      if (statusCountEl) statusCountEl.textContent = loadingVisibleAtoms ? 'Loading visible atoms…' : (_mainFeedAtoms.length + ' nearby');
+      if (statusCountEl) statusCountEl.textContent = loadingVisibleAtoms ? 'Loading visible atoms…' : (_mainFeedAtoms.length + ' visible');
       list.innerHTML = renderBoardDetail(atom);
       return;
     }
@@ -178,7 +178,7 @@ export function renderTextFeed({ atoms = [], locationDenied = false, loadingVisi
   if (!_mainFeedAtoms.length) {
     list.innerHTML = '';
     if (countEl) countEl.textContent = loadingVisibleAtoms ? 'Loading visible atoms…' : '';
-    if (statusCountEl) statusCountEl.textContent = loadingVisibleAtoms ? 'Loading visible atoms…' : '0 nearby';
+    if (statusCountEl) statusCountEl.textContent = loadingVisibleAtoms ? 'Loading visible atoms…' : '0 visible';
     if (locationDenied || !navigator.geolocation) {
       if (emptyEl) emptyEl.style.display = 'none';
       if (locEl) locEl.style.display = '';
@@ -192,7 +192,7 @@ export function renderTextFeed({ atoms = [], locationDenied = false, loadingVisi
   if (locEl) locEl.style.display = 'none';
   if (emptyEl) emptyEl.style.display = 'none';
   if (countEl) countEl.textContent = loadingVisibleAtoms ? 'Loading visible atoms…' : (_mainFeedAtoms.length + ' public boards in this map view');
-  if (statusCountEl) statusCountEl.textContent = loadingVisibleAtoms ? 'Loading visible atoms…' : (_mainFeedAtoms.length + ' nearby');
+  if (statusCountEl) statusCountEl.textContent = loadingVisibleAtoms ? 'Loading visible atoms…' : (_mainFeedAtoms.length + ' visible');
 
   list.innerHTML = _mainFeedAtoms.map((atom) => {
     const title = _escHtml(_deriveTitle(atom));
