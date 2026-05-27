@@ -43,11 +43,11 @@ function _buildLinkCards(rawText) {
 ` +
     `    <div class="main-link-badge ui-badge">External link</div>
 ` +
-    '    <div class="main-link-domain">' + _escHtml(_safeDomainLabel(url)) + `</div>
+    `    <div class="main-link-domain">${_escHtml(_safeDomainLabel(url))}</div>
 ` +
-    '    <div class="main-link-url">' + _escHtml(_shortUrlLabel(url)) + `</div>
+    `    <div class="main-link-url">${_escHtml(_shortUrlLabel(url))}</div>
 ` +
-    '    <a class="main-link-open ui-btn" href="' + _escHtml(url) + `" target="_blank" rel="noopener noreferrer">Open</a>
+    `    <a class="main-link-open ui-btn" href="${_escHtml(url)}" target="_blank" rel="noopener noreferrer">Open</a>
 ` +
     `  </div>
 `
@@ -189,22 +189,22 @@ function renderBoardDetail(atom) {
 ` +
     `  <div class="main-card ui-card board-root">
 ` +
-    '    <div class="main-card-badges"><span class="main-card-cat ui-badge ' + _escHtml(cat.cls) + '">' + _escHtml(cat.code) + ' · ' + _escHtml(cat.label) + '</span><span class="main-card-type ui-badge">Public board</span></div>
-' +
-    '    <p class="main-card-disclaimer">Visible in this map view</p>
-' +
-    '    <h3 class="main-card-title">' + title + `</h3>
+    `    <div class="main-card-badges"><span class="main-card-cat ui-badge ${_escHtml(cat.cls)}">${_escHtml(cat.code)} · ${_escHtml(cat.label)}</span><span class="main-card-type ui-badge">Public board</span></div>
 ` +
-    (raw ? '    <p class="main-card-preview board-body">' + _escHtml(raw) + `</p>
+    `    <p class="main-card-disclaimer">Visible in this map view</p>
+` +
+    `    <h3 class="main-card-title">${title}</h3>
+` +
+    (raw ? `    <p class="main-card-preview board-body">${_escHtml(raw)}</p>
 ` : '') +
     (_buildLinkCards(raw) || '') +
-    '    <div class="board-trust-row">' + _escHtml(trustLine) + '</div>
-' +
-    '    <div class="main-card-meta"><span>' + _escHtml(publicLine) + `</span></div>
+    `    <div class="board-trust-row">${_escHtml(trustLine)}</div>
 ` +
-    (meta ? '    <div class="main-card-meta"><span>' + _escHtml(meta) + `</span></div>
+    `    <div class="main-card-meta"><span>${_escHtml(publicLine)}</span></div>
+` +
+    (meta ? `    <div class="main-card-meta"><span>${_escHtml(meta)}</span></div>
 ` : '') +
-    '    <div class="main-card-actions"><button class="main-card-show3d ui-btn" data-action="show-in-3d" data-id="' + _escHtml(atomId) + '">Show on map</button>' + copyLinkBtn + `</div>
+    `    <div class="main-card-actions"><button class="main-card-show3d ui-btn" data-action="show-in-3d" data-id="${_escHtml(atomId)}">Show on map</button>${copyLinkBtn}</div>
 ` +
     `  </div>
 ` +
@@ -213,7 +213,7 @@ function renderBoardDetail(atom) {
 ` +
     `  <div class="main-card ui-card board-compose ui-reply-box"><label for="board-reply-placeholder">Reply</label><textarea id="board-reply-placeholder" placeholder="Write a public reply…" disabled></textarea><p>Reply posting is coming soon.</p></div>
 ` +
-    '</section>';
+    `</section>`;
 }
 
 export function renderTextFeed({ atoms = [], locationDenied = false, loadingVisibleAtoms = false } = {}) {
