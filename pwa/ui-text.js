@@ -58,7 +58,7 @@ function _fmtAltLabel(alt){ return _helpers?.fmtAltitudeLabel ? _helpers.fmtAlti
 function _fmtDistance(m){ return _helpers?.fmtDistance ? _helpers.fmtDistance(m) : ''; }
 function _fmtTime(t){ return _helpers?.fmtTime ? _helpers.fmtTime(t) : ''; }
 function _authorLabel(atom){ const a=String(atom?.author||atom?.f||'').trim(); return a?`by ${a}`:'by anonymous'; }
-function _trustLabel(atom){ return atom?.sig ? (_isVerified(atom) ? 'verified' : 'signed') : 'unsigned'; }
+function _trustLabel(atom){ return atom?.sig ? (_isVerified(atom) ? 'Verified' : 'Signed') : 'Unsigned'; }
 function _categoryBadge(catRaw){
   const raw=String(catRaw||'').trim().toUpperCase();
   const map={TEXT:{code:'TEXT',label:'Talk',cls:'cat-talk'},TALK:{code:'TEXT',label:'Talk',cls:'cat-talk'},INFO:{code:'INFO',label:'Info',cls:'cat-info'},WARN:{code:'WARN',label:'Warning',cls:'cat-warn'},EMGC:{code:'EMGC',label:'Emergency',cls:'cat-emgc'},EVNT:{code:'EVNT',label:'Event',cls:'cat-evnt'},LOST:{code:'LOST',label:'Lost/Found',cls:'cat-lost'}};
@@ -82,6 +82,23 @@ export function initTextView({ onShowOnMap, onLeaveNote, onOpenBoard, helpers } 
         e.stopPropagation();
         const id = openBoardBtn.dataset.id || '';
         if (id) openBoardById(id);
+        return;
+      }
+
+      const copyBtn = e.target.closest('[data-action="copy-board-link"]');
+      if (copyBtn) {
+        e.stopPropagation();
+        const id = copyBtn.dataset.id || '';
+        if (!id) return;
+        const origin = window.location.origin || '';
+        const link = origin + '/p/' + encodeURIComponent(id);
+        navigator.clipboard?.writeText(link).then(() => {
+          copyBtn.textContent = 'Copied';
+          window.setTimeout(() => { copyBtn.textContent = 'Copy board link'; }, 1400);
+        }).catch(() => {
+          copyBtn.textContent = 'Copy failed';
+          window.setTimeout(() => { copyBtn.textContent = 'Copy board link'; }, 1400);
+        });
         return;
       }
 
@@ -114,38 +131,51 @@ function renderBoardDetail(atom) {
   const cat = _categoryBadge(atom.category || atom.kind || _deriveCategory(atom));
   const raw = String(atom.x || '').trim();
   const title = _escHtml(_deriveTitle(atom));
-  const author = _authorLabel(atom);
+  const author = String(atom?.author || atom?.f || '').trim();
   const trust = _trustLabel(atom);
   const altLabel = Number.isFinite(Number(atom.alt)) ? _fmtAltLabel(Number(atom.alt)) : '';
   const dist = Number.isFinite(atom.distance) ? _fmtDistance(atom.distance) : '';
   const time = atom.t ? _fmtTime(atom.t) : '';
-  const meta = [dist, altLabel, time].filter(Boolean).join(' · ');
+  const floorMeta = altLabel || 'Floor not available';
+  const distanceMeta = dist || 'Distance not available';
+  const timeMeta = time || 'Time unavailable';
+  const meta = [timeMeta, floorMeta, distanceMeta].filter(Boolean).join(' · ');
   const atomId = stripPunktoPrefix(atom.punkto || _selectedBoardId || '');
+  const trustLine = author ? `${trust} by ${author}` : `${trust} public post`;
+  const publicLine = trust === 'Unsigned' ? 'Unsigned public post' : 'Public board';
+  // Future: reply threads may include "Reply to unknown atom" when parent is missing.
+  const copyLinkBtn = atomId
+    ? '<button class="main-card-reply ui-btn" data-action="copy-board-link" data-id="' + _escHtml(atomId) + '">Copy board link</button>'
+    : '';
   return `<section class="board-detail ui-board-panel">
 ` +
     `  <button class="board-back ui-btn" data-action="board-back">← Visible atoms</button>
 ` +
     `  <div class="main-card ui-card board-root">
 ` +
-    '    <div class="main-card-badges"><span class="main-card-type ui-badge">Board</span><span class="main-card-cat ui-badge ' + _escHtml(cat.cls) + '">' + _escHtml(cat.code) + ' · ' + _escHtml(cat.label) + `</span></div>
-` +
+    '    <div class="main-card-badges"><span class="main-card-cat ui-badge ' + _escHtml(cat.cls) + '">' + _escHtml(cat.code) + ' · ' + _escHtml(cat.label) + '</span><span class="main-card-type ui-badge">Public board</span></div>
+' +
+    '    <p class="main-card-disclaimer">Visible in this map view</p>
+' +
     '    <h3 class="main-card-title">' + title + `</h3>
 ` +
     (raw ? '    <p class="main-card-preview board-body">' + _escHtml(raw) + `</p>
 ` : '') +
     (_buildLinkCards(raw) || '') +
-    '    <div class="main-card-meta"><span>' + _escHtml(author) + ' · ' + _escHtml(trust) + `</span></div>
+    '    <div class="board-trust-row">' + _escHtml(trustLine) + '</div>
+' +
+    '    <div class="main-card-meta"><span>' + _escHtml(publicLine) + `</span></div>
 ` +
     (meta ? '    <div class="main-card-meta"><span>' + _escHtml(meta) + `</span></div>
 ` : '') +
-    '    <div class="main-card-actions"><button class="main-card-show3d ui-btn" data-action="show-in-3d" data-id="' + _escHtml(atomId) + `">Show on map</button></div>
+    '    <div class="main-card-actions"><button class="main-card-show3d ui-btn" data-action="show-in-3d" data-id="' + _escHtml(atomId) + '">Show on map</button>' + copyLinkBtn + `</div>
 ` +
     `  </div>
 ` +
     `  <div class="main-card ui-card board-replies">` +
-    `<h4>Replies</h4><p>No replies loaded yet.</p></div>
+    `<h4>Replies</h4><p>No public replies yet.</p><p>Replies will be public and may be signed.</p></div>
 ` +
-    `  <div class="main-card ui-card board-compose ui-reply-box"><label for="board-reply-placeholder">Public reply</label><textarea id="board-reply-placeholder" placeholder="Write a public reply…" disabled></textarea><p>Replies will be public and may be signed.</p></div>
+    `  <div class="main-card ui-card board-compose ui-reply-box"><label for="board-reply-placeholder">Reply</label><textarea id="board-reply-placeholder" placeholder="Write a public reply…" disabled></textarea><p>Reply posting is coming soon.</p></div>
 ` +
     '</section>';
 }
@@ -202,7 +232,10 @@ export function renderTextFeed({ atoms = [], locationDenied = false, loadingVisi
     const altLabel = Number.isFinite(Number(atom.alt)) ? _fmtAltLabel(Number(atom.alt)) : '';
     const dist = Number.isFinite(atom.distance) ? _fmtDistance(atom.distance) : '';
     const time = atom.t ? _fmtTime(atom.t) : '';
-    const meta = [dist, altLabel, time].filter(Boolean).join(' · ');
+    const floorMeta = altLabel || 'Floor not available';
+  const distanceMeta = dist || 'Distance not available';
+  const timeMeta = time || 'Time unavailable';
+  const meta = [timeMeta, floorMeta, distanceMeta].filter(Boolean).join(' · ');
     const atomId = stripPunktoPrefix(atom.punkto);
     return '<div class="main-card ui-card" data-atom-id="' + _escHtml(atomId) + `">
 ` +
