@@ -31,6 +31,83 @@ Mental model:
 - `/data` = node memory
 - `/logs` = diagnostics
 
+
+## Common code, node config, and node data
+
+Punkto is public-good node software. The repository should hold the common
+software and public documentation needed for anyone to run a node, while each
+operator keeps their own node personality, persistence, and secrets outside Git.
+
+Core principle:
+
+- **Code is common and public.**
+- **Config is node-specific.**
+- **Data is node-specific and persistent.**
+- **Secrets are never committed.**
+- **`punkto.xyz` is the reference deployment, not the whole system.**
+- **Anyone should be able to run a Punkto node on their own domain.**
+
+### Git/repository model
+
+These repository paths are common project assets:
+
+| Path | Role | Commit policy |
+|---|---|---|
+| `pwa/` | Common web app served by nodes | Commit shared app code only |
+| `relay/` | Common relay/node code | Commit shared relay behavior only |
+| `deploy/` | Reusable deployment templates and historical/reference deploy helpers | Commit generic templates; do not treat as live truth |
+| `docs/` | Public documentation | Commit operator-facing docs |
+| `docs/examples/punkto-node.example.yml` | Generic example node config | Safe to commit because it uses `example.org` and no secrets |
+
+The code in `pwa/` and `relay/` is common to the network. Operators should not
+need a private fork just to run a different node name, domain, peer set, storage
+path, or serving policy. Those choices belong in node-local config.
+
+### Node-local files
+
+These files belong on each node host, not as production truth in the repository:
+
+| Node-local path | Meaning | Git policy |
+|---|---|---|
+| `/config/punkto-node.yml` | Operator config: the node's personality | Do not commit live production copies |
+| `/data/node-key.json` | Persistent node identity | Never commit |
+| `/data/punkto.db` or equivalent | Local atom data and node state | Never commit |
+| `.env` / `secrets.env` | Local environment overrides and secrets | Never commit |
+
+`/config` is the node's **personality**: public URL, hostnames, operator label,
+roles, seed nodes, storage paths, and serving policy. Changing `/config` changes
+how that node presents itself and participates in the network.
+
+`/data` is the node's **memory**: node identity, local atom database, sync state,
+and durable node-local state. `/data` must survive container rebuilds, image
+upgrades, and restarts. Deleting or replacing `/data/node-key.json` changes node
+identity. Deleting the local database removes that node's local history.
+
+`.env` and `secrets.env` are local operational inputs. They may contain image
+tags, credentials, tokens, or emergency overrides. They are node-local and must
+not be committed.
+
+### Reference deployment names
+
+Use `node1` and `node2` as preferred reference names in public examples and new
+operator docs. The older names `app1` and `app2` may still appear as
+legacy/reference aliases in existing deployment history, DNS, scripts, or live
+ops notes; avoid introducing them as the primary model for new documentation.
+
+### `punkto.xyz` boundary
+
+`punkto.xyz` is the reference deployment for the project. It is not the entire
+system and should not be hard-coded as the only valid Punkto deployment target.
+Production config for `punkto.xyz` is maintained on the nodes by the operator and
+must not be committed as live truth. Public examples in Git should use
+`example.org` or other documentation-safe placeholders.
+
+Deploy templates in this repository are reusable starting points, not an
+authoritative snapshot of what is currently running in production. When docs,
+examples, and live nodes differ, operators should treat live node-local files as
+the production source of truth and the repository as common code plus reusable
+documentation/templates.
+
 ## Persistent directory model
 
 Deployable nodes should use persistent host mounts for:
@@ -75,14 +152,18 @@ Primary config path:
 
 This file controls **node policy and identity metadata**, not protocol validity of Punki/atoms. Protocol truth remains in the atom/Punkti record; serving behavior is a node-local policy choice.
 
-Required top-level config sections:
+Current documentation example top-level sections:
 
-- `node`
-- `admin`
-- `serving_policy`
-- `bootstrap`
-- `moderation`
-- `retention`
+- `core` — DNS domain, hostnames, and public URL
+- `roles` — which node roles are enabled
+- `network` — seed nodes and peer bootstrap inputs
+- `operator` — public operator labels/contact metadata
+- `storage` — persistent data, database, and node-key paths
+- `serving` — node-local serving policy switches
+
+A generic example lives at `docs/examples/punkto-node.example.yml`. It uses
+`example.org`, `node1`, and `node2` intentionally so it is safe to commit and
+safe for operators to copy before editing.
 
 ## Node identity
 

@@ -15,3 +15,8 @@ documents/
 # Node-specific secrets — never commit
 deploy/server1/.env
 deploy/app2/.env
+# Node-local operator config/data/secrets — never commit
+config/
+data/
+secrets.env
+*.secrets.env

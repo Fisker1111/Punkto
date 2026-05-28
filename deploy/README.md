@@ -1,7 +1,30 @@
 # Punkto — Docker Deployment
 
-This directory contains everything needed to run a Punkto node with Docker.
+This directory contains reusable templates for running a Punkto node with Docker.
 Each node runs two containers managed by Docker Compose.
+
+
+## Deployment model
+
+Punkto separates common software from node-local operation:
+
+- `pwa/` and `relay/` are common public code.
+- `deploy/` contains reusable templates and reference helpers; these files are
+  not live production truth.
+- `/config/punkto-node.yml` on each server is the node's personality.
+- `/data` on each server is the node's persistent memory.
+- `.env` and `secrets.env` are local overrides/secrets and must never be
+  committed.
+
+`punkto.xyz` is the reference deployment, not the whole system. The production
+configuration for `punkto.xyz` is maintained on the nodes by the operator. Public
+examples in Git should use documentation-safe placeholders such as
+`example.org`. Prefer `node1` and `node2` for new reference node names; `app1`
+and `app2` may appear as legacy/reference aliases in existing deploy history.
+
+See [`docs/punkto-node.md`](../docs/punkto-node.md) and
+[`docs/examples/punkto-node.example.yml`](../docs/examples/punkto-node.example.yml)
+for the common-code/config/data model and generic example config.
 
 ## Related deployment docs
 
@@ -46,8 +69,11 @@ Each node runs two containers:
 
 | Node | Domains | Location |
 |---|---|---|
-| server1 | `punkto.xyz`, `app1.punkto.xyz`, `www.punkto.xyz` | Primary server |
-| app2 | `app2.punkto.xyz` | Secondary server |
+| node1 | `punkto.xyz`, `www.punkto.xyz` | Reference primary node |
+| node2 | operator-managed secondary hostname | Reference secondary node |
+
+`server1`, `app1`, and `app2` are legacy/reference aliases that may remain in
+existing files or DNS history. Prefer `node1`/`node2` in new docs and examples.
 
 ## First deploy on a new node
 
@@ -120,7 +146,9 @@ docker run --rm -v punkto_relay_data:/data -v $(pwd):/backup \
 
 ## Configuration reference
 
-All config lives in `.env` on the server:
+Runtime environment overrides live in `.env` on the server. The broader node
+configuration model is `/config/punkto-node.yml`; see the generic example in
+`docs/examples/punkto-node.example.yml`.
 
 | Variable | Default | Description |
 |---|---|---|
