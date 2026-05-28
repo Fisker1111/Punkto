@@ -919,6 +919,8 @@
     }
     .settings-info .mono { font-family: 'SF Mono', 'Fira Mono', monospace; font-size: 10px; word-break: break-all; }
     .settings-info .dim  { color: #9eb7d3; font-size: 12px; }
+    .settings-info .v.multiline { white-space: pre-line; line-height: 1.45; }
+    .settings-note { margin: 6px 0 0; font-size: 12px; line-height: 1.45; color: #b9cde2; }
 
     .settings-item {
       display: block;
@@ -1230,6 +1232,29 @@
       <div style="display:none"><span class="k">Peers</span> <span class="v" id="settings-peers">—</span></div>
       <div style="display:none"><span class="k">Sync</span>  <span class="v" id="settings-count">0</span></div>
     </div>
+
+    <div class="settings-separator"></div>
+
+    <!-- Public node status -->
+    <div class="settings-section-title">Node</div>
+    <div class="settings-info" id="settings-node-section" data-testid="settings-node-section">
+      <div><span class="k">Public node status</span><span class="v" id="settings-node-status">checking…</span></div>
+      <div><span class="k">Mode</span><span class="v">Read-only</span></div>
+      <div><span class="k">Name</span><span class="v" id="settings-node-name">—</span></div>
+      <div><span class="k">Public URL</span><span class="v mono" id="settings-node-public-url">—</span></div>
+      <div><span class="k">Domain/hostnames</span><span class="v mono multiline" id="settings-node-domain-hostnames">—</span></div>
+      <div><span class="k">Fingerprint</span><span class="v mono" id="settings-node-fingerprint">—</span></div>
+      <div><span class="k">Version</span><span class="v" id="settings-node-version">—</span></div>
+      <div><span class="k">Config loaded</span><span class="v" id="settings-node-config-loaded">—</span></div>
+      <div><span class="k">Roles</span><span class="v multiline" id="settings-node-roles">—</span></div>
+      <div><span class="k">Serving policy</span><span class="v multiline" id="settings-node-serving">—</span></div>
+      <div><span class="k">Seed nodes</span><span class="v mono multiline" id="settings-node-seed-nodes">—</span></div>
+      <div><span class="k">Known nodes</span><span class="v mono multiline" id="settings-node-known-nodes">—</span></div>
+      <div><span class="k">DB/feed stats</span><span class="v multiline" id="settings-node-stats">—</span></div>
+      <div><span class="k">Relay health</span><span class="v" id="settings-node-health">—</span></div>
+    </div>
+    <p class="settings-note">This page exposes public node information only. Configuration changes are made on the server.</p>
+    <p class="settings-note">Config is edited on the server by the operator.</p>
 
     <div class="settings-separator"></div>
 

@@ -223,43 +223,96 @@ NODE_IDENTITY_PATH_USED = NODE_KEY_PATH
 NODE_IDENTITY_CREATED_NOW = False
 
 
-def _node_info_payload(buffer: "Buffer") -> Dict[str, Any]:
-    node = NODE_CONFIG["node"]
-    operator_contact = node.get("operator_contact", "")
-    info = {
+def _list_strings(value: Any) -> List[str]:
+    if not isinstance(value, list):
+        return []
+    return [str(item).strip() for item in value if str(item).strip()]
+
+
+def _safe_public_config() -> Dict[str, Any]:
+    core = NODE_CONFIG.get("core") if isinstance(NODE_CONFIG.get("core"), dict) else {}
+    node = NODE_CONFIG.get("node") if isinstance(NODE_CONFIG.get("node"), dict) else {}
+    roles = NODE_CONFIG.get("roles") if isinstance(NODE_CONFIG.get("roles"), dict) else {}
+    network = NODE_CONFIG.get("network") if isinstance(NODE_CONFIG.get("network"), dict) else {}
+    serving = NODE_CONFIG.get("serving") if isinstance(NODE_CONFIG.get("serving"), dict) else {}
+    serving_policy = NODE_CONFIG.get("serving_policy") if isinstance(NODE_CONFIG.get("serving_policy"), dict) else {}
+    bootstrap = NODE_CONFIG.get("bootstrap") if isinstance(NODE_CONFIG.get("bootstrap"), dict) else {}
+
+    public_url = str(core.get("public_url") or node.get("public_url") or "")
+    seed_nodes = _list_strings(network.get("seed_nodes")) or _list_strings(bootstrap.get("seed_nodes")) or list(PEERS)
+    known_nodes = _list_strings(network.get("known_nodes"))
+    hostnames = _list_strings(core.get("hostnames")) or _list_strings(node.get("hostnames"))
+
+    return {
+        "node_name": str(core.get("node_name") or core.get("name") or node.get("name") or NODE_NAME),
+        "public_url": public_url,
+        "domain_dns": str(core.get("domain_dns") or core.get("domain") or node.get("domain_dns") or ""),
+        "hostnames": hostnames,
+        "roles": {
+            "web": bool(roles.get("web", True)),
+            "relay": bool(roles.get("relay", True)),
+            "db_sharing": bool(roles.get("db_sharing", True)),
+        },
+        "serving": {
+            "serve_recent": bool(serving.get("serve_recent", serving_policy.get("serve_recent", True))),
+            "serve_pinned": bool(serving.get("serve_pinned", serving_policy.get("serve_pinned", True))),
+            "serve_archive": bool(serving.get("serve_archive", serving.get("archive_enabled", serving_policy.get("archive_enabled", False)))),
+        },
+        "seed_nodes": seed_nodes,
+        "known_nodes": known_nodes,
+    }
+
+
+def _node_info_payload(buffer: "Buffer", sync_state: Optional["SyncState"] = None) -> Dict[str, Any]:
+    public_cfg = _safe_public_config()
+    known_nodes = list(public_cfg["known_nodes"])
+    if sync_state is not None:
+        known_nodes.extend(sync_state.peers())
+    known_nodes = sorted(set(str(url).rstrip("/") for url in known_nodes if str(url).strip()))
+
+    return {
+        "ok": True,
+        "software": {
+            "name": "Punkto",
+            "version": VERSION,
+            "runtime": "relay",
+        },
         "node": {
-            "name": node.get("name") or NODE_NAME,
-            "type": node.get("type") or "flow",
-            "public_url": node.get("public_url") or "",
-            "description": node.get("description") or "",
+            "name": public_cfg["node_name"],
+            "public_url": public_cfg["public_url"],
+            "domain_dns": public_cfg["domain_dns"],
+            "hostnames": public_cfg["hostnames"],
+            "fingerprint": NODE_IDENTITY.get("fingerprint", ""),
+            "key_alg": NODE_IDENTITY.get("key_alg", ""),
+            "identity_loaded": NODE_IDENTITY_LOADED,
+            "identity_created_at": NODE_IDENTITY.get("created_at"),
         },
-        "software": {"name": "punkto-relay", "version": VERSION},
-        "config_loaded": NODE_CONFIG_LOADED,
-        "config_path": os.path.basename(NODE_CONFIG_PATH_USED) if NODE_CONFIG_LOADED else "defaults",
-        "serving_policy": dict(NODE_CONFIG["serving_policy"]),
-        "bootstrap": {
-            "seed_count": len(NODE_CONFIG["bootstrap"].get("seed_nodes", [])),
-            "peer_discovery_enabled": bool(NODE_CONFIG["bootstrap"].get("peer_discovery_enabled")),
-            "allow_user_added_peers": bool(NODE_CONFIG["bootstrap"].get("allow_user_added_peers")),
-            "blocked_nodes_count": len(NODE_CONFIG["bootstrap"].get("blocked_nodes", [])),
+        "roles": public_cfg["roles"],
+        "serving": public_cfg["serving"],
+        "network": {
+            "seed_nodes": public_cfg["seed_nodes"],
+            "known_nodes": known_nodes,
         },
-        "admin": {
-            "enabled": bool(NODE_CONFIG["admin"].get("enabled")),
-            "public_admin_enabled": bool(NODE_CONFIG["admin"].get("public_admin_enabled")),
-        },
-        "runtime": {
-            "node_env_name": NODE_NAME,
+        "stats": {
             "buffer_size": buffer.size(),
-            "buffer_oldest_t": buffer.oldest_t(),
+            "oldest_t": buffer.oldest_t(),
+            "newest_t": buffer.newest_t(),
         },
+        "config": {
+            "loaded": NODE_CONFIG_LOADED,
+            "path": DEFAULT_NODE_CONFIG_PATH if NODE_CONFIG_LOADED else None,
+        },
+        "health": {
+            "status": "ok",
+            "node": NODE_NAME,
+        },
+        # Backwards-compatible public aliases for the earlier /node/info shape.
         "node_fingerprint": NODE_IDENTITY.get("fingerprint", ""),
         "node_key_alg": NODE_IDENTITY.get("key_alg", ""),
         "node_identity_loaded": NODE_IDENTITY_LOADED,
         "node_identity_created_at": NODE_IDENTITY.get("created_at"),
+        "config_loaded": NODE_CONFIG_LOADED,
     }
-    if operator_contact:
-        info["node"]["operator_contact"] = operator_contact
-    return info
 
 
 def _now_ms() -> int:
@@ -487,7 +540,15 @@ class Buffer:
         with self._lock:
             if not self._atoms:
                 return None
-            return min(int(a.get("t", 0)) for a in self._atoms)
+            vals = [a.get("t") for a in self._atoms if isinstance(a.get("t"), int)]
+            return min(vals) if vals else None
+
+    def newest_t(self) -> Optional[int]:
+        with self._lock:
+            if not self._atoms:
+                return None
+            vals = [a.get("t") for a in self._atoms if isinstance(a.get("t"), int)]
+            return max(vals) if vals else None
 
     def has(self, atom_id: str) -> bool:
         with self._lock:
@@ -672,6 +733,10 @@ class SyncState:
         with self._lock:
             return dict(self._state.get(peer, {}))
 
+    def peers(self) -> List[str]:
+        with self._lock:
+            return [str(peer) for peer in self._state.keys() if str(peer).strip()]
+
     def update(self, peer: str, **fields: Any) -> None:
         with self._lock:
             entry = self._state.setdefault(peer, {})
@@ -855,7 +920,7 @@ class RelayHandler(BaseHTTPRequestHandler):
             return
 
         if path == "/node/info":
-            self._send_json(200, _node_info_payload(self.buffer))
+            self._send_json(200, _node_info_payload(self.buffer, self.sync_state))
             return
 
         if path == "/latest":
