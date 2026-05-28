@@ -182,7 +182,7 @@ function renderBoardDetail(atom) {
   const copyLinkBtn = atomId
     ? '<button class="main-card-reply ui-btn" data-action="copy-board-link" data-id="' + _escHtml(atomId) + '">Copy board link</button>'
     : '';
-  const backLabel = _boardReturnTab === 'activity' ? '← Back to Activity' : '← Back to Visible';
+  const backLabel = _boardReturnTab === 'activity' ? '← Back to Activity' : '← Visible here';
   return `<section class="board-detail ui-board-panel">
 ` +
     `  <button class="board-back ui-btn" data-action="board-back">${_escHtml(backLabel)}</button>
@@ -218,6 +218,7 @@ function renderBoardDetail(atom) {
 
 export function renderTextFeed({ atoms = [], locationDenied = false, loadingVisibleAtoms = false } = {}) {
   _mainFeedAtoms = Array.isArray(atoms) ? atoms : [];
+  const activeAtoms = _atomsForActiveTab(_mainFeedAtoms);
   _syncTabUi();
   const list = document.getElementById('main-feed-list');
   const emptyEl = document.getElementById('main-empty-notes');
@@ -233,7 +234,7 @@ export function renderTextFeed({ atoms = [], locationDenied = false, loadingVisi
       _selectedBoardAtom = atom;
       if (locEl) locEl.style.display = 'none';
       if (emptyEl) emptyEl.style.display = 'none';
-      if (countEl) countEl.textContent = loadingVisibleAtoms ? 'Loading visible atoms…' : (_mainFeedAtoms.length + ' public boards in this map view');
+      if (countEl) countEl.textContent = loadingVisibleAtoms ? 'Loading visible atoms…' : (_mainFeedAtoms.length + ' public boards');
       if (statusCountEl) statusCountEl.textContent = loadingVisibleAtoms ? 'Loading visible atoms…' : (_mainFeedAtoms.length + ' visible');
       list.innerHTML = renderBoardDetail(atom);
       return;
@@ -247,8 +248,8 @@ export function renderTextFeed({ atoms = [], locationDenied = false, loadingVisi
     if (countEl) countEl.textContent = loadingVisibleAtoms ? 'Loading visible atoms…' : '';
     const headingEl = document.getElementById('main-feed-heading');
     const subtitleEl = document.getElementById('main-feed-subtitle');
-    if (headingEl) headingEl.textContent = _activeTab === 'activity' ? 'Activity' : 'Visible atoms';
-    if (subtitleEl) subtitleEl.textContent = _activeTab === 'activity' ? 'Newest public activity in this map view. Live flow.' : 'Visible here — public boards in this map view.';
+    if (headingEl) headingEl.textContent = _activeTab === 'activity' ? 'Activity' : 'Visible here';
+    if (subtitleEl) subtitleEl.textContent = _activeTab === 'activity' ? 'Newest public activity in this map view.' : 'Public boards in this map view.';
     if (statusCountEl) statusCountEl.textContent = loadingVisibleAtoms ? 'Loading visible atoms…' : '0 visible';
     if (locationDenied || !navigator.geolocation) {
       if (emptyEl) emptyEl.style.display = 'none';
@@ -262,8 +263,8 @@ export function renderTextFeed({ atoms = [], locationDenied = false, loadingVisi
           if (h) h.textContent = 'No activity visible here yet.';
           if (p) p.textContent = 'Newest public activity in this map view will appear here.';
         } else {
-          if (h) h.textContent = 'This place is quiet';
-          if (p) p.textContent = 'No Punktis nearby yet.';
+          if (h) h.textContent = 'No public boards visible here.';
+          if (p) p.textContent = 'Move the map or tap + to start one.';
         }
       }
       if (locEl) locEl.style.display = 'none';
@@ -273,13 +274,13 @@ export function renderTextFeed({ atoms = [], locationDenied = false, loadingVisi
 
   if (locEl) locEl.style.display = 'none';
   if (emptyEl) emptyEl.style.display = 'none';
-  if (countEl) countEl.textContent = loadingVisibleAtoms ? 'Loading visible atoms…' : (activeAtoms.length + (_activeTab === 'activity' ? ' public activity items in this map view' : ' public boards in this map view'));
+  if (countEl) countEl.textContent = loadingVisibleAtoms ? 'Loading visible atoms…' : (activeAtoms.length + (_activeTab === 'activity' ? ' public activity items' : ' public boards'));
   if (statusCountEl) statusCountEl.textContent = loadingVisibleAtoms ? 'Loading visible atoms…' : (activeAtoms.length + (_activeTab === 'activity' ? ' activity' : ' visible'));
 
   const headingEl = document.getElementById('main-feed-heading');
   const subtitleEl = document.getElementById('main-feed-subtitle');
-  if (headingEl) headingEl.textContent = _activeTab === 'activity' ? 'Activity' : 'Visible atoms';
-  if (subtitleEl) subtitleEl.textContent = _activeTab === 'activity' ? 'Newest public activity in this map view. Live flow.' : 'Visible here — public boards in this map view.';
+  if (headingEl) headingEl.textContent = _activeTab === 'activity' ? 'Activity' : 'Visible here';
+  if (subtitleEl) subtitleEl.textContent = _activeTab === 'activity' ? 'Newest public activity in this map view.' : 'Public boards in this map view.';
 
   list.innerHTML = activeAtoms.map((atom) => {
     const title = _escHtml(_deriveTitle(atom));
