@@ -37,6 +37,37 @@ os.environ["PUNKTO_BUFFER_ATOMS"] = "5"
 os.environ["PUNKTO_BUFFER_HOURS"] = "168"
 os.environ["PUNKTO_LATEST_LIMIT"] = "10"
 os.environ["PUNKTO_SYNC_INTERVAL"] = "3600"  # effectively disabled
+os.environ["PUNKTO_NODE_CONFIG"] = os.path.join(_TMPDIR, "punkto-node.yml")
+os.environ["PUNKTO_NODE_KEY"] = os.path.join(_TMPDIR, "node-key.json")
+os.environ["PUNKTO_TEST_SECRET"] = "relay-test-env-secret-value"
+with open(os.environ["PUNKTO_NODE_CONFIG"], "w", encoding="utf-8") as f:
+    f.write("""core:
+  node_name: Public Test Node
+  public_url: https://relay.test.example
+  domain_dns: relay.test.example
+  hostnames:
+    - relay-test
+    - www
+roles:
+  web: true
+  relay: true
+  db_sharing: false
+network:
+  seed_nodes:
+    - https://seed1.example
+    - https://seed2.example
+  known_nodes:
+    - https://known.example
+operator:
+  private_key: should-never-leak
+  token: hidden-token
+storage:
+  path: /data/private-ish
+serving:
+  serve_recent: true
+  serve_pinned: true
+  serve_archive: false
+""")
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
@@ -108,15 +139,70 @@ def test_info() -> None:
     assert isinstance(body["buffer_size"], int)
 
 
-def test_node_info_identity_fields() -> None:
+def _flatten_json_strings(value: Any) -> list[str]:
+    if isinstance(value, dict):
+        strings: list[str] = []
+        for key, child in value.items():
+            strings.append(str(key))
+            strings.extend(_flatten_json_strings(child))
+        return strings
+    if isinstance(value, list):
+        strings = []
+        for child in value:
+            strings.extend(_flatten_json_strings(child))
+        return strings
+    if value is None:
+        return []
+    return [str(value)]
+
+
+def test_node_info_public_status_shape() -> None:
     r = requests.get(f"{BASE_URL}/node/info", timeout=5)
     assert r.status_code == 200, r.text
     body = r.json()
-    assert isinstance(body.get("node_fingerprint"), str)
-    assert body.get("node_fingerprint", "").startswith("node:")
-    assert body.get("node_key_alg") == "sha256-secret-v1"
-    assert body.get("node_identity_loaded") is True
-    assert isinstance(body.get("node_identity_created_at"), str)
+    assert body["ok"] is True
+    assert body["software"] == {"name": "Punkto", "version": relay.VERSION, "runtime": "relay"}
+    assert body["node"]["name"] == "Public Test Node"
+    assert body["node"]["public_url"] == "https://relay.test.example"
+    assert body["node"]["domain_dns"] == "relay.test.example"
+    assert body["node"]["hostnames"] == ["relay-test", "www"]
+    assert body["node"]["fingerprint"].startswith("node:")
+    assert body["node"]["key_alg"] == "sha256-secret-v1"
+    assert body["node"]["identity_loaded"] is True
+    assert isinstance(body["node"]["identity_created_at"], str)
+    assert body["roles"] == {"web": True, "relay": True, "db_sharing": False}
+    assert body["serving"] == {"serve_recent": True, "serve_pinned": True, "serve_archive": False}
+    assert body["network"]["seed_nodes"] == ["https://seed1.example", "https://seed2.example"]
+    assert "https://known.example" in body["network"]["known_nodes"]
+    assert body["config"] == {"loaded": True, "path": "/config/punkto-node.yml"}
+    assert body["health"]["status"] == "ok"
+
+
+def test_node_info_stats_fields_exist() -> None:
+    r = requests.get(f"{BASE_URL}/node/info", timeout=5)
+    assert r.status_code == 200, r.text
+    stats = r.json()["stats"]
+    assert isinstance(stats["buffer_size"], int)
+    assert "oldest_t" in stats
+    assert "newest_t" in stats
+
+
+def test_node_info_does_not_expose_private_values() -> None:
+    r = requests.get(f"{BASE_URL}/node/info", timeout=5)
+    assert r.status_code == 200, r.text
+    text = r.text
+    flattened = "\n".join(_flatten_json_strings(r.json()))
+    forbidden = [
+        "private_key",
+        "should-never-leak",
+        "hidden-token",
+        "relay-test-env-secret-value",
+        "PUNKTO_TEST_SECRET",
+        "/data/private-ish",
+    ]
+    for needle in forbidden:
+        assert needle not in text
+        assert needle not in flattened
 
 
 def test_load_or_create_node_identity_roundtrip() -> None:
@@ -326,7 +412,9 @@ def test_options_cors() -> None:
 ALL_TESTS = [
     test_health,
     test_info,
-    test_node_info_identity_fields,
+    test_node_info_public_status_shape,
+    test_node_info_stats_fields_exist,
+    test_node_info_does_not_expose_private_values,
     test_load_or_create_node_identity_roundtrip,
     test_load_or_create_node_identity_invalid_fails,
     test_post_valid_atom,

@@ -1366,6 +1366,72 @@ function updateSettingsCount(count) {
  * when /info doesn't advertise a peer list.
  */
 
+
+function yesNo(value) {
+  if (value === true) return 'yes';
+  if (value === false) return 'no';
+  return 'unknown';
+}
+
+function formatBooleanMap(obj) {
+  if (!obj || typeof obj !== 'object') return '—';
+  const rows = Object.entries(obj).map(([key, value]) => `${key}: ${yesNo(value)}`);
+  return rows.length ? rows.join('\n') : '—';
+}
+
+function formatNodeList(list) {
+  return Array.isArray(list) && list.length ? list.join('\n') : 'none';
+}
+
+function formatNodeStats(stats) {
+  if (!stats || typeof stats !== 'object') return '—';
+  const oldest = stats.oldest_t ? fmtTime(stats.oldest_t) : 'none';
+  const newest = stats.newest_t ? fmtTime(stats.newest_t) : 'none';
+  return [`buffer_size: ${stats.buffer_size ?? 0}`, `oldest_t: ${oldest}`, `newest_t: ${newest}`].join('\n');
+}
+
+function nodeStatusViewFromInfo(info) {
+  const node = info?.node || {};
+  const software = info?.software || {};
+  const config = info?.config || {};
+  const domainParts = [];
+  if (node.domain_dns) domainParts.push(node.domain_dns);
+  if (Array.isArray(node.hostnames) && node.hostnames.length) domainParts.push(...node.hostnames);
+  return {
+    status: info?.ok ? 'online' : 'unavailable',
+    name: node.name,
+    publicUrl: node.public_url,
+    domainHostnames: domainParts.length ? domainParts.join('\n') : '—',
+    fingerprint: node.fingerprint,
+    version: [software.name || 'Punkto', software.version || 'unknown', software.runtime ? `(${software.runtime})` : ''].filter(Boolean).join(' '),
+    configLoaded: `${yesNo(config.loaded)}${config.path ? ` (${config.path})` : ''}`,
+    roles: formatBooleanMap(info?.roles),
+    serving: formatBooleanMap(info?.serving),
+    seedNodes: formatNodeList(info?.network?.seed_nodes),
+    knownNodes: formatNodeList(info?.network?.known_nodes),
+    stats: formatNodeStats(info?.stats),
+    health: info?.health?.status || 'unknown',
+  };
+}
+
+async function refreshPublicNodeStatus() {
+  renderSettingsView({ nodeStatus: { status: 'checking…' } });
+  try {
+    const res = await fetch(`${NODE_URL}/node/info`, { signal: AbortSignal.timeout(6000) });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const info = await res.json();
+    renderSettingsView({ nodeStatus: nodeStatusViewFromInfo(info) });
+  } catch (err) {
+    renderSettingsView({
+      nodeStatus: {
+        status: 'unavailable',
+        health: 'unreachable',
+      },
+    });
+    console.warn('[node] public status unavailable:', err);
+  }
+}
+
 function healthToNetworkStatus(health) {
   if (health === 'ok') return 'online';
   if (health === 'failing') return 'failing';
@@ -1482,7 +1548,8 @@ async function openSettingsMenu() {
   } catch {
     updateSettingsCount(0);
   }
-  // Kick off network info refresh (no await — menu is already visible).
+  // Kick off read-only node/network info refreshes (no await — menu is already visible).
+  refreshPublicNodeStatus();
   refreshSettingsNetworkInfo();
 }
 
@@ -1561,8 +1628,8 @@ function wireEvents() {
 // ---------------------------------------------------------------------------
 
 async function boot() {
-  console.log('PUNKTO APP.JS LOADED v97-hard-marker-2026-05-27-1');
-  window.PUNKTO_APP_VERSION = 'v97-hard-marker-2026-05-27-1';
+  console.log('PUNKTO APP.JS LOADED v98-hard-marker-2026-05-28-1');
+  window.PUNKTO_APP_VERSION = 'v98-hard-marker-2026-05-28-1';
 
   console.log('[punkto] booting...');
 
