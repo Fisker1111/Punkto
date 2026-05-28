@@ -1,0 +1,37 @@
+# Generic Punkto node configuration example.
+#
+# This file is safe to commit because it uses example.org, contains no secrets,
+# and describes a reusable shape rather than any live production node. Copy it to
+# /config/punkto-node.yml on your server and edit it for your own domain.
+
+core:
+  domain_dns: example.org
+  hostnames:
+    - node1
+    - www
+  public_url: https://node1.example.org
+
+roles:
+  web: true
+  relay: true
+  db_sharing: true
+
+network:
+  seed_nodes:
+    - https://node1.example.org
+    - https://node2.example.org
+
+operator:
+  node_name: "Example Punkto Node 1"
+  operator_name: "Example Operator"
+  contact: ""
+
+storage:
+  data_path: /data
+  db_path: /data/punkto.db
+  node_key_path: /data/node-key.json
+
+serving:
+  serve_recent: true
+  serve_pinned: true
+  serve_archive: false
