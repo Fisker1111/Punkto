@@ -41,19 +41,36 @@ Deployable nodes should use persistent host mounts for:
 
 ### `/config`
 
-Human-readable node config. Intended to be future Node Admin editable. Contains:
+Human-readable node operator config. Intended to be future Node Admin editable. Contains:
 
 - `/config/punkto-node.yml`
 
+Operators should copy the generic example from
+`docs/examples/punkto-node.example.yml` to `/config/punkto-node.yml` on their
+server, then edit it for their own domain, hostnames, public URL, node name,
+operator contact, storage paths, and seed nodes. The repository example uses
+`example.org` values only; live production configs such as punkto.xyz's private
+node config must stay outside Git.
+
+The operator config is public/non-secret node personality and policy. It may
+include domains, hostnames, public URLs, serving preferences, and bootstrap peer
+URLs. Secrets, credentials, private keys, admin tokens, and production-only
+private config values must stay outside Git.
+
 ### `/data`
 
-Durable node state, including:
+Persistent node state: node identity, database, and local memory. Durable node
+state includes:
 
 - node database
 - node identity key
 - sync state
 - node-local serving metadata
 - pinned/archive/block state
+
+`/data` must survive container restarts and image upgrades. Losing `/data` means
+losing local node memory and may create a new node identity if the node key is
+not restored.
 
 ### `/logs`
 
@@ -67,22 +84,60 @@ Suggested host mounts:
 ./punkto-logs:/logs
 ```
 
+## Reference deployment naming
+
+Punkto.xyz is the first reference deployment, but Punkto is not tied to the
+`punkto.xyz` domain. Public node software should be deployable by any operator
+on any domain.
+
+Preferred reference naming is `node1`, `node2`, and so on, for example
+`node1.example.org` and `node2.example.org`. The older `app1` and `app2` names
+are legacy/reference aliases from the first punkto.xyz deployment and may remain
+in old deploy docs or Caddy files; new examples should prefer `node1`/`node2`.
+
+An operator in Nairobi, Brazil, or any other deployment environment can set
+their own values for `core.domain_dns`, `core.hostnames`, `core.public_url`,
+`operator.node_name`, and `network.seed_nodes` in `/config/punkto-node.yml`.
+
 ## Node config file
 
-Primary config path:
+Primary operator config path:
 
 - `/config/punkto-node.yml`
 
-This file controls **node policy and identity metadata**, not protocol validity of Punki/atoms. Protocol truth remains in the atom/Punkti record; serving behavior is a node-local policy choice.
+Operators should start by copying the checked-in generic example to their host
+mount and editing it there:
 
-Required top-level config sections:
+```bash
+mkdir -p ./punkto-config ./punkto-data ./punkto-logs
+cp docs/examples/punkto-node.example.yml ./punkto-config/punkto-node.yml
+```
 
-- `node`
-- `admin`
-- `serving_policy`
-- `bootstrap`
-- `moderation`
-- `retention`
+This file controls **node policy and identity metadata**, not protocol validity
+of Punki/atoms. Protocol truth remains in the atom/Punkti record; serving
+behavior is a node-local policy choice.
+
+The generic example uses these top-level operator-oriented sections:
+
+- `core` — DNS domain, hostnames, and public URL for the deployment
+- `roles` — whether the deployment serves web, relay, and database-sharing roles
+- `network` — seed node URLs used for bootstrapping/sync policy
+- `operator` — public node/operator display metadata and contact field
+- `storage` — persistent paths such as `/data`, database, and node key path
+- `serving` — high-level serving preferences such as recent, pinned, and archive
+
+Current relay builds may also understand an earlier runtime schema with
+`node`, `admin`, `serving_policy`, `bootstrap`, `moderation`, and `retention`.
+Extra top-level fields from the generic example are tolerated by the current
+loader and should be treated as operator/future-facing fields unless a runtime
+release explicitly wires them into behavior. Missing optional fields must not be
+fatal; safe defaults are used.
+
+`/config/punkto-node.yml` is intended to be public/non-secret. Do not put
+secrets, credentials, admin tokens, private node keys, or real private
+production config in it if that file may be committed or shared. The node key
+lives under `/data/node-key.json` by default and is persistent node state, not a
+Git-tracked example.
 
 ## Node identity
 
