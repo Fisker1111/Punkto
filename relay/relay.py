@@ -245,6 +245,7 @@ def _list_strings(value: Any) -> List[str]:
 def _safe_public_config() -> Dict[str, Any]:
     core = NODE_CONFIG.get("core") if isinstance(NODE_CONFIG.get("core"), dict) else {}
     node = NODE_CONFIG.get("node") if isinstance(NODE_CONFIG.get("node"), dict) else {}
+    operator = NODE_CONFIG.get("operator") if isinstance(NODE_CONFIG.get("operator"), dict) else {}
     roles = NODE_CONFIG.get("roles") if isinstance(NODE_CONFIG.get("roles"), dict) else {}
     network = NODE_CONFIG.get("network") if isinstance(NODE_CONFIG.get("network"), dict) else {}
     serving = NODE_CONFIG.get("serving") if isinstance(NODE_CONFIG.get("serving"), dict) else {}
@@ -257,7 +258,7 @@ def _safe_public_config() -> Dict[str, Any]:
     hostnames = _list_strings(core.get("hostnames")) or _list_strings(node.get("hostnames"))
 
     return {
-        "node_name": str(core.get("node_name") or core.get("name") or node.get("name") or NODE_NAME),
+        "node_name": str(operator.get("node_name") or core.get("node_name") or core.get("name") or node.get("name") or NODE_NAME),
         "public_url": public_url,
         "domain_dns": str(core.get("domain_dns") or core.get("domain") or node.get("domain_dns") or ""),
         "hostnames": hostnames,
