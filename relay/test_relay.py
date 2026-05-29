@@ -287,6 +287,164 @@ def test_post_no_f_no_x_accepted() -> None:
     assert body["status"] == "accepted"
 
 
+def test_old_atom_without_relation_or_parent_is_root_accepted() -> None:
+    a = _atom(t=relay._now_ms() - 1900, punkto="p:u07qjn4k2sus", f="old", x="old root")
+    assert "relation" not in a
+    assert "parent_id" not in a
+    r = requests.post(f"{BASE_URL}/atom", json=a, timeout=5)
+    assert r.status_code == 201, r.text
+    assert relay.atom_relation(a) == "root"
+
+
+def test_root_atom_with_relation_root_no_parent_is_accepted() -> None:
+    a = _atom(t=relay._now_ms() - 1800, punkto="p:u07qjh7k02zy", relation="root", x="explicit root")
+    r = requests.post(f"{BASE_URL}/atom", json=a, timeout=5)
+    assert r.status_code == 201, r.text
+    assert r.json()["status"] == "accepted"
+
+
+def test_reply_with_missing_parent_is_accepted_as_orphan() -> None:
+    missing_parent_id = "1" * 64
+    a = _atom(
+        t=relay._now_ms() - 1700,
+        punkto="p:u07qsvy8txhf",
+        relation="reply",
+        parent_id=missing_parent_id,
+        location_lock=True,
+        location_source="root",
+        x="orphan reply",
+    )
+    r = requests.post(f"{BASE_URL}/atom", json=a, timeout=5)
+    assert r.status_code == 201, r.text
+    assert r.json()["status"] == "accepted"
+
+
+def test_reply_without_parent_rejects_400() -> None:
+    a = _atom(t=relay._now_ms() - 1600, punkto="p:u07qskyuhbmw", relation="reply", x="missing parent")
+    r = requests.post(f"{BASE_URL}/atom", json=a, timeout=5)
+    assert r.status_code == 400, r.text
+    assert r.json()["error"] == "invalid_parent_id"
+
+
+def test_root_with_parent_rejects_400() -> None:
+    a = _atom(
+        t=relay._now_ms() - 1500,
+        punkto="p:u07qskyuhbuu",
+        relation="root",
+        parent_id="2" * 64,
+        x="root cannot parent",
+    )
+    r = requests.post(f"{BASE_URL}/atom", json=a, timeout=5)
+    assert r.status_code == 400, r.text
+    assert r.json()["error"] == "invalid_parent_id"
+
+
+def test_unknown_relation_rejects_400() -> None:
+    a = _atom(
+        t=relay._now_ms() - 1400,
+        punkto="p:u07qskyuhsqu",
+        relation="branch",
+        x="bad relation",
+    )
+    r = requests.post(f"{BASE_URL}/atom", json=a, timeout=5)
+    assert r.status_code == 400, r.text
+    assert r.json()["error"] == "invalid_relation"
+
+
+def test_parent_known_reply_same_punkto_location_is_accepted() -> None:
+    parent = _atom(
+        t=relay._now_ms() - 1300,
+        punkto="p:u07quvubhgbd",
+        relation="root",
+        lat=55.7,
+        lon=12.5,
+        altitude_m=21,
+        floor=7,
+        x="known parent",
+    )
+    parent_post = requests.post(f"{BASE_URL}/atom", json=parent, timeout=5)
+    assert parent_post.status_code == 201, parent_post.text
+    parent_id = parent_post.json()["atom_id"]
+    assert parent_id == relay.compute_atom_id(parent)
+
+    reply = _atom(
+        t=relay._now_ms() - 1200,
+        punkto=parent["punkto"],
+        relation="reply",
+        parent_id=parent_id,
+        location_lock=True,
+        location_source="root",
+        lat=parent["lat"],
+        lon=parent["lon"],
+        altitude_m=parent["altitude_m"],
+        floor=parent["floor"],
+        x="same location reply",
+    )
+    r = requests.post(f"{BASE_URL}/atom", json=reply, timeout=5)
+    assert r.status_code == 201, r.text
+    assert r.json()["status"] == "accepted"
+
+
+def test_parent_known_reply_different_punkto_location_rejects_400() -> None:
+    parent = _atom(
+        t=relay._now_ms() - 1100,
+        punkto="p:u07qskyuhbmy",
+        relation="root",
+        x="known parent diff",
+    )
+    parent_post = requests.post(f"{BASE_URL}/atom", json=parent, timeout=5)
+    assert parent_post.status_code == 201, parent_post.text
+    parent_id = parent_post.json()["atom_id"]
+
+    reply = _atom(
+        t=relay._now_ms() - 1000,
+        punkto="p:u07qsuustfsh",
+        relation="reply",
+        parent_id=parent_id,
+        location_lock=True,
+        location_source="root",
+        x="moved reply",
+    )
+    r = requests.post(f"{BASE_URL}/atom", json=reply, timeout=5)
+    assert r.status_code == 400, r.text
+    assert r.json()["error"] == "reply_location_mismatch"
+
+
+def test_feed_returns_root_reply_metadata_fields() -> None:
+    parent = _atom(
+        t=relay._now_ms() - 900,
+        punkto="p:u07qsuustfsh",
+        relation="root",
+        x="feed metadata root",
+    )
+    parent_post = requests.post(f"{BASE_URL}/atom", json=parent, timeout=5)
+    assert parent_post.status_code in (200, 201), parent_post.text
+    parent_id = parent_post.json()["atom_id"]
+    reply = _atom(
+        t=relay._now_ms() - 800,
+        punkto=parent["punkto"],
+        relation="reply",
+        parent_id=parent_id,
+        root_id=parent_id,
+        location_lock=True,
+        location_source="root",
+        x="feed metadata reply",
+    )
+    reply_post = requests.post(f"{BASE_URL}/atom", json=reply, timeout=5)
+    assert reply_post.status_code == 201, reply_post.text
+
+    feed = requests.get(f"{BASE_URL}/feed", timeout=5)
+    assert feed.status_code == 200, feed.text
+    atoms = feed.json()["atoms"]
+    stored = next((a for a in atoms if a.get("x") == "feed metadata reply"), None)
+    assert stored is not None, atoms
+    assert stored["relation"] == "reply"
+    assert stored["parent_id"] == parent_id
+    assert stored["root_id"] == parent_id
+    assert stored["location_lock"] is True
+    assert stored["location_source"] == "root"
+
+
 def test_latest() -> None:
     r = requests.get(f"{BASE_URL}/latest", timeout=5)
     assert r.status_code == 200, r.text
@@ -423,6 +581,15 @@ ALL_TESTS = [
     test_post_invalid_punkto_format,
     test_post_invalid_timestamp,
     test_post_no_f_no_x_accepted,
+    test_old_atom_without_relation_or_parent_is_root_accepted,
+    test_root_atom_with_relation_root_no_parent_is_accepted,
+    test_reply_with_missing_parent_is_accepted_as_orphan,
+    test_reply_without_parent_rejects_400,
+    test_root_with_parent_rejects_400,
+    test_unknown_relation_rejects_400,
+    test_parent_known_reply_same_punkto_location_is_accepted,
+    test_parent_known_reply_different_punkto_location_rejects_400,
+    test_feed_returns_root_reply_metadata_fields,
     test_latest,
     test_feed_initial,
     test_buffer_rotation,
