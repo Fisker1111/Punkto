@@ -87,6 +87,26 @@ identity. Deleting the local database removes that node's local history.
 tags, credentials, tokens, or emergency overrides. They are node-local and must
 not be committed.
 
+### Public node endpoints
+
+Every node should expose a small set of public read-only status endpoints:
+
+| Path | Audience | Format | Purpose |
+|---|---|---|---|
+| `/status` | Humans/operators/readers | HTML | Human-readable public node status page |
+| `/node/info` | Clients/tools | JSON | Public-safe node status/config/API summary |
+| `/health` | Load balancers/monitors | JSON | Tiny health check |
+
+`/status` is public but read-only. It may explain the node's public URL,
+identity fingerprint, software version, config-loaded state, roles, serving
+policy, peers, feed stats, and health using only the same safe public fields as
+`/node/info`. It must not expose secrets, private keys, `.env` values, local
+tokens, or write controls.
+
+Configuration changes are done by the node operator on the server, normally over
+SSH by editing node-local config and restarting/reloading the service. The web
+can explain the node; SSH controls the node.
+
 ### Reference deployment names
 
 Use `node1` and `node2` as preferred reference names in public examples and new
@@ -370,7 +390,9 @@ Principles:
 ### Phase 2 (started)
 
 - relay loads `/config/punkto-node.yml` (or `PUNKTO_NODE_CONFIG` override) with safe defaults
+- expose read-only `/status` as a human public node status page
 - expose read-only `/node/info` with a public-safe node config summary
+- keep `/health` as a tiny health check
 - relay creates/loads `/data/node-key.json` (or `PUNKTO_NODE_KEY` override) with stable fingerprint continuity
 - `/node/info` includes public node identity fields only:
   - `node_fingerprint`

@@ -205,6 +205,60 @@ def test_node_info_does_not_expose_private_values() -> None:
         assert needle not in flattened
 
 
+def test_status_page_public_html() -> None:
+    r = requests.get(f"{BASE_URL}/status", timeout=5)
+    assert r.status_code == 200, r.text
+    assert r.headers.get("Content-Type", "").startswith("text/html")
+    text = r.text
+    assert "Punkto Node Status" in text
+    assert "public and read-only" in text
+    assert "Public Test Node" in text
+    assert "private_key" not in text
+    forbidden = [
+        "should-never-leak",
+        "hidden-token",
+        "relay-test-env-secret-value",
+        "PUNKTO_TEST_SECRET",
+        "/data/private-ish",
+    ]
+    for needle in forbidden:
+        assert needle not in text
+
+
+def test_status_page_escapes_dynamic_values() -> None:
+    original_config = relay.NODE_CONFIG
+    try:
+        relay.NODE_CONFIG = relay._deep_merge(  # type: ignore[attr-defined]
+            original_config,
+            {
+                "core": {
+                    "node_name": "<script>alert(1)</script>",
+                    "public_url": "https://example.test/?q=<tag>",
+                }
+            },
+        )
+        r = requests.get(f"{BASE_URL}/status", timeout=5)
+        assert r.status_code == 200, r.text
+        assert "<script>alert(1)</script>" not in r.text
+        assert "&lt;script&gt;alert(1)&lt;/script&gt;" in r.text
+        assert "https://example.test/?q=&lt;tag&gt;" in r.text
+    finally:
+        relay.NODE_CONFIG = original_config
+
+
+def test_status_page_config_missing_fallback() -> None:
+    original_loaded = relay.NODE_CONFIG_LOADED
+    try:
+        relay.NODE_CONFIG_LOADED = False
+        r = requests.get(f"{BASE_URL}/status", timeout=5)
+        assert r.status_code == 200, r.text
+        assert "Punkto Node Status" in r.text
+        assert "Config loaded" in r.text
+        assert ">no</td>" in r.text
+    finally:
+        relay.NODE_CONFIG_LOADED = original_loaded
+
+
 def test_load_or_create_node_identity_roundtrip() -> None:
     tmpdir = tempfile.mkdtemp(prefix="punkto-node-identity-")
     try:
@@ -573,6 +627,9 @@ ALL_TESTS = [
     test_node_info_public_status_shape,
     test_node_info_stats_fields_exist,
     test_node_info_does_not_expose_private_values,
+    test_status_page_public_html,
+    test_status_page_escapes_dynamic_values,
+    test_status_page_config_missing_fallback,
     test_load_or_create_node_identity_roundtrip,
     test_load_or_create_node_identity_invalid_fails,
     test_post_valid_atom,

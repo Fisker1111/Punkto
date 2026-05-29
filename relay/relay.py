@@ -51,6 +51,7 @@ except ImportError:  # pragma: no cover
 # ---------------------------------------------------------------------------
 
 VERSION = "v0.1"
+STARTED_AT = time.time()
 
 HOST = os.environ.get("PUNKTO_HOST", "127.0.0.1")
 PORT = int(os.environ.get("PUNKTO_PORT", "8000"))
@@ -592,6 +593,201 @@ def _html_escape(s: Any) -> str:
     )
 
 
+def _html_value(value: Any, empty: str = "unknown") -> str:
+    if value is None:
+        return _html_escape(empty)
+    if isinstance(value, bool):
+        return "yes" if value else "no"
+    text = str(value).strip()
+    return _html_escape(text if text else empty)
+
+
+def _format_utc_ms(value: Any) -> str:
+    if not isinstance(value, int):
+        return "not available"
+    try:
+        return time.strftime("%Y-%m-%d %H:%M:%S UTC", time.gmtime(value / 1000))
+    except (OverflowError, OSError, ValueError):
+        return "not available"
+
+
+def _format_duration(seconds: float) -> str:
+    seconds_i = max(0, int(seconds))
+    days, rem = divmod(seconds_i, 86400)
+    hours, rem = divmod(rem, 3600)
+    minutes, secs = divmod(rem, 60)
+    parts = []
+    if days:
+        parts.append(f"{days}d")
+    if hours or parts:
+        parts.append(f"{hours}h")
+    if minutes or parts:
+        parts.append(f"{minutes}m")
+    parts.append(f"{secs}s")
+    return " ".join(parts)
+
+
+def _status_row(label: str, value: Any, *, mono: bool = False, multiline: bool = False) -> str:
+    classes = []
+    if mono:
+        classes.append("mono")
+    if multiline:
+        classes.append("multiline")
+    class_attr = f' class="{" ".join(classes)}"' if classes else ""
+    return (
+        "<tr>"
+        f"<th scope=\"row\">{_html_escape(label)}</th>"
+        f"<td{class_attr}>{_html_value(value)}</td>"
+        "</tr>"
+    )
+
+
+def _status_bool_rows(values: Any) -> str:
+    if not isinstance(values, dict) or not values:
+        return "unknown"
+    return "\n".join(
+        f"{key}: {'yes' if value is True else 'no' if value is False else 'unknown'}"
+        for key, value in sorted(values.items())
+    )
+
+
+def _status_list(values: Any) -> str:
+    if not isinstance(values, list) or not values:
+        return "none"
+    return "\n".join(str(item) for item in values if str(item).strip()) or "none"
+
+
+def render_status_page(buffer: "Buffer", sync_state: Optional["SyncState"] = None) -> str:
+    """Render the public, read-only human node status page.
+
+    The page intentionally uses the same public-safe data builder as /node/info,
+    then formats that already-filtered payload as static HTML.
+    """
+    info = _node_info_payload(buffer, sync_state)
+    software = info.get("software") if isinstance(info.get("software"), dict) else {}
+    node = info.get("node") if isinstance(info.get("node"), dict) else {}
+    network = info.get("network") if isinstance(info.get("network"), dict) else {}
+    stats = info.get("stats") if isinstance(info.get("stats"), dict) else {}
+    config = info.get("config") if isinstance(info.get("config"), dict) else {}
+    health = info.get("health") if isinstance(info.get("health"), dict) else {}
+
+    health_status = str(health.get("status") or "unknown")
+    badge_label = "healthy" if health_status == "ok" else "degraded"
+    recent_feed_size = len(buffer.latest(LATEST_LIMIT))
+    current_time = time.strftime("%Y-%m-%d %H:%M:%S UTC", time.gmtime())
+    uptime = _format_duration(time.time() - STARTED_AT)
+    title = "Punkto Node Status"
+    description = "Public, read-only status page for a Punkto node."
+
+    html = f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{_html_escape(title)}</title>
+<meta name="description" content="{_html_escape(description)}">
+<style>
+:root {{ color-scheme: dark; --bg:#071019; --panel:#0d1a27; --line:#24415c; --text:#eef7ff; --muted:#a9bed2; --good:#6ee7a8; --warn:#ffd166; }}
+* {{ box-sizing: border-box; }}
+body {{ margin: 0; padding: 32px 16px; font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: var(--bg); color: var(--text); line-height: 1.5; }}
+main {{ max-width: 920px; margin: 0 auto; }}
+header, section {{ background: var(--panel); border: 1px solid var(--line); border-radius: 16px; padding: 20px; margin-bottom: 16px; box-shadow: 0 16px 50px rgba(0,0,0,.24); }}
+h1 {{ margin: 0 0 8px; font-size: clamp(1.8rem, 4vw, 2.6rem); }}
+h2 {{ margin: 0 0 12px; font-size: 1.1rem; }}
+p {{ margin: 8px 0; color: var(--muted); }}
+.badge {{ display: inline-flex; align-items: center; gap: 8px; margin-top: 12px; padding: 6px 10px; border-radius: 999px; border: 1px solid var(--line); color: var(--text); }}
+.badge::before {{ content: ""; width: 10px; height: 10px; border-radius: 50%; background: var(--warn); }}
+.badge.healthy::before {{ background: var(--good); }}
+table {{ width: 100%; border-collapse: collapse; }}
+th, td {{ padding: 9px 0; border-top: 1px solid rgba(255,255,255,.08); vertical-align: top; }}
+tr:first-child th, tr:first-child td {{ border-top: 0; }}
+th {{ width: 34%; padding-right: 18px; text-align: left; color: var(--muted); font-weight: 600; }}
+td {{ color: var(--text); word-break: break-word; }}
+.mono {{ font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace; font-size: .92em; }}
+.multiline {{ white-space: pre-line; }}
+.note {{ border-color: rgba(110,231,168,.35); }}
+a {{ color: #8bd3ff; }}
+</style>
+</head>
+<body>
+<main>
+<header>
+<h1>Punkto Node Status</h1>
+<p>{_html_value(node.get("name"), "Punkto Node")}</p>
+<p class="mono">{_html_value(node.get("public_url"), "public URL not configured")}</p>
+<div class="badge {_html_escape(badge_label)}">{_html_escape(badge_label)}</div>
+</header>
+
+<section>
+<h2>Node identity</h2>
+<table>
+{_status_row("Node name", node.get("name"))}
+{_status_row("Public URL", node.get("public_url"), mono=True)}
+{_status_row("domain_dns", node.get("domain_dns"), mono=True)}
+{_status_row("Hostnames", _status_list(node.get("hostnames")), mono=True, multiline=True)}
+{_status_row("Fingerprint", node.get("fingerprint"), mono=True)}
+{_status_row("Identity loaded", node.get("identity_loaded"))}
+</table>
+</section>
+
+<section>
+<h2>Software</h2>
+<table>
+{_status_row("Punkto / relay version", f'{software.get("name", "Punkto")} {software.get("version", "unknown")}')}
+{_status_row("Runtime", software.get("runtime"))}
+{_status_row("Current time", current_time)}
+{_status_row("Uptime", uptime)}
+</table>
+</section>
+
+<section>
+<h2>Configuration</h2>
+<table>
+{_status_row("Config loaded", config.get("loaded"))}
+{_status_row("Config path", config.get("path") or "not available", mono=True)}
+{_status_row("Roles", _status_bool_rows(info.get("roles")), multiline=True)}
+{_status_row("Serving policy", _status_bool_rows(info.get("serving")), multiline=True)}
+</table>
+</section>
+
+<section>
+<h2>Network</h2>
+<table>
+{_status_row("Seed nodes", _status_list(network.get("seed_nodes")), mono=True, multiline=True)}
+{_status_row("Known nodes / peers", _status_list(network.get("known_nodes")), mono=True, multiline=True)}
+</table>
+</section>
+
+<section>
+<h2>Data / feed stats</h2>
+<table>
+{_status_row("buffer_size", stats.get("buffer_size", "not available"))}
+{_status_row("oldest_t", _format_utc_ms(stats.get("oldest_t")))}
+{_status_row("newest_t", _format_utc_ms(stats.get("newest_t")))}
+{_status_row("Atom count", stats.get("buffer_size", "not available"))}
+{_status_row("Recent feed size", recent_feed_size)}
+</table>
+</section>
+
+<section>
+<h2>Health</h2>
+<table>
+{_status_row("Status", health_status)}
+</table>
+</section>
+
+<section class="note">
+<h2>Safety note</h2>
+<p>This page is public and read-only.</p>
+<p>Configuration is changed by the node operator on the server.</p>
+</section>
+</main>
+</body>
+</html>
+"""
+    return html
+
+
 # ---------------------------------------------------------------------------
 # Buffer — in-memory rolling store backed by atoms.ndjson
 # ---------------------------------------------------------------------------
@@ -1060,6 +1256,10 @@ class RelayHandler(BaseHTTPRequestHandler):
 
         if path == "/node/info":
             self._send_json(200, _node_info_payload(self.buffer, self.sync_state))
+            return
+
+        if path == "/status":
+            self._send_html(200, render_status_page(self.buffer, self.sync_state))
             return
 
         if path == "/latest":
