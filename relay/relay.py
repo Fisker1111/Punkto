@@ -72,6 +72,19 @@ SYNC_STATE_FILE = os.path.join(DATA_DIR, "sync_state.json")
 MAX_BODY_BYTES = 65_536  # 64 KB
 PUNKTO_RE = re.compile(r"^p:[0-9a-z]{12}(-[a-zA-Z0-9]+)?$")
 ATOM_ID_RE = re.compile(r"^[0-9a-f]{64}$")
+RELATION_VALUES = {"root", "reply"}
+ROOT_REPLY_ID_MAX_BYTES = 256
+LOCATION_SOURCE_VALUES = {"root"}
+LOCATION_IDENTITY_FIELDS = (
+    "punkto",
+    "lat",
+    "lon",
+    "altitude_m",
+    "alt",
+    "z",
+    "floor",
+    "level",
+)
 
 # Reasonable timestamp window: 2020-01-01 .. now+1day
 _T_MIN = 1_577_836_800_000  # 2020-01-01T00:00:00Z
@@ -424,6 +437,40 @@ def compute_atom_id(atom: Dict[str, Any]) -> str:
     return hashlib.sha256(canonical_bytes(atom)).hexdigest()
 
 
+def _is_blank(value: Any) -> bool:
+    return value is None or (isinstance(value, str) and value.strip() == "")
+
+
+def _bounded_optional_string(
+    atom: Dict[str, Any], field: str
+) -> Optional[Dict[str, str]]:
+    value = atom.get(field)
+    if value is None:
+        return None
+    if not isinstance(value, str):
+        return {
+            "error": f"invalid_{field}",
+            "message": f"field '{field}' must be a string when present",
+        }
+    if len(value.encode("utf-8")) > ROOT_REPLY_ID_MAX_BYTES:
+        return {
+            "error": f"invalid_{field}",
+            "message": f"field '{field}' must be at most {ROOT_REPLY_ID_MAX_BYTES} bytes",
+        }
+    return None
+
+
+def atom_relation(atom: Dict[str, Any]) -> str:
+    """Return the effective relation implied by relation/parent_id metadata."""
+    parent_id = atom.get("parent_id")
+    if not _is_blank(parent_id):
+        return "reply"
+    relation = atom.get("relation")
+    if relation == "reply":
+        return "reply"
+    return "root"
+
+
 def validate_atom(atom: Any) -> Tuple[bool, Optional[Dict[str, str]]]:
     """Return (ok, error_dict). Required: punkto, t. Other fields are advisory."""
     if not isinstance(atom, dict):
@@ -454,6 +501,80 @@ def validate_atom(atom: Any) -> Tuple[bool, Optional[Dict[str, str]]]:
             "error": "invalid_timestamp",
             "message": (
                 f"field 't' must be between {_T_MIN} and now+1day (got {t})"
+            ),
+        }
+
+    relation = atom.get("relation")
+    if relation is not None:
+        if not isinstance(relation, str) or relation not in RELATION_VALUES:
+            return False, {
+                "error": "invalid_relation",
+                "message": "field 'relation' must be either 'root' or 'reply' when present",
+            }
+
+    for field in ("parent_id", "root_id"):
+        err = _bounded_optional_string(atom, field)
+        if err is not None:
+            return False, err
+
+    parent_id = atom.get("parent_id")
+    has_parent = not _is_blank(parent_id)
+    if relation == "reply" and not has_parent:
+        return False, {
+            "error": "invalid_parent_id",
+            "message": "field 'parent_id' is required when relation is 'reply'",
+        }
+    if relation == "root" and has_parent:
+        return False, {
+            "error": "invalid_parent_id",
+            "message": "field 'parent_id' must be absent, null, or empty when relation is 'root'",
+        }
+
+    location_lock = atom.get("location_lock")
+    if location_lock is not None and not isinstance(location_lock, bool):
+        return False, {
+            "error": "invalid_location_lock",
+            "message": "field 'location_lock' must be a boolean when present",
+        }
+    if (
+        atom_relation(atom) == "reply"
+        and location_lock is not None
+        and location_lock is not True
+    ):
+        return False, {
+            "error": "invalid_location_lock",
+            "message": "field 'location_lock' must be true for replies when present",
+        }
+
+    location_source = atom.get("location_source")
+    if location_source is not None:
+        if (
+            not isinstance(location_source, str)
+            or location_source not in LOCATION_SOURCE_VALUES
+        ):
+            return False, {
+                "error": "invalid_location_source",
+                "message": "field 'location_source' must be 'root' when present",
+            }
+
+    return True, None
+
+
+def validate_reply_location(
+    atom: Dict[str, Any], parent: Dict[str, Any]
+) -> Tuple[bool, Optional[Dict[str, str]]]:
+    """Require a known reply parent/root to share Punkto's exact location identity."""
+    mismatched_fields = []
+    for field in LOCATION_IDENTITY_FIELDS:
+        if field in atom or field in parent:
+            if atom.get(field) != parent.get(field):
+                mismatched_fields.append(field)
+    if mismatched_fields:
+        return False, {
+            "error": "reply_location_mismatch",
+            "message": (
+                "reply location must exactly match the known parent/root location "
+                f"({', '.join(mismatched_fields)})"
             ),
         }
     return True, None
@@ -796,6 +917,23 @@ def _sync_one_peer(buffer: Buffer, sync_state: SyncState, peer: str) -> int:
         ok, _ = validate_atom(atom)
         if not ok:
             continue
+        if atom_relation(atom) == "reply":
+            location_anchors = [
+                anchor
+                for anchor in (
+                    buffer.get_by_id(str(atom.get("parent_id", ""))),
+                    buffer.get_by_id(str(atom.get("root_id", ""))),
+                )
+                if anchor is not None
+            ]
+            location_ok = True
+            for location_anchor in location_anchors:
+                ok, _ = validate_reply_location(atom, location_anchor)
+                if not ok:
+                    location_ok = False
+                    break
+            if not location_ok:
+                continue
         atom_id = compute_atom_id(atom)
         if buffer.has(atom_id):
             continue
@@ -1010,6 +1148,22 @@ class RelayHandler(BaseHTTPRequestHandler):
             status = 422 if err["error"] == "invalid_punkto" else 400
             self._send_json(status, err)
             return
+
+        if atom_relation(atom) == "reply":
+            location_anchors = [
+                anchor
+                for anchor in (
+                    self.buffer.get_by_id(str(atom.get("parent_id", ""))),
+                    self.buffer.get_by_id(str(atom.get("root_id", ""))),
+                )
+                if anchor is not None
+            ]
+            for location_anchor in location_anchors:
+                ok, err = validate_reply_location(atom, location_anchor)
+                if not ok:
+                    assert err is not None
+                    self._send_json(400, err)
+                    return
 
         atom_id, was_new = self.buffer.append(atom)
         if was_new:
