@@ -165,6 +165,18 @@ A generic example lives at `docs/examples/punkto-node.example.yml`. It uses
 `example.org`, `node1`, and `node2` intentionally so it is safe to commit and
 safe for operators to copy before editing.
 
+## Conversation model: ROOT/REPLY atoms
+
+Punkto public conversations are modeled as boards rooted at one exact real-world
+point. A ROOT atom starts a board, and REPLY atoms join the board only by
+explicit parent/root atom ids, not by proximity. Replies must copy the root
+location tuple exactly and must not move the board.
+
+See `docs/protocol-root-reply.md` for the documentation-first protocol model,
+future fields, exact-location rule, orphan reply behavior, and examples. This is
+design documentation only; current relay validation, storage, sync, and PWA UI
+behavior are unchanged.
+
 ## Node identity
 
 Persistent node identity path:
