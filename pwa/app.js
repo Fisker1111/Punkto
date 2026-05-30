@@ -11,7 +11,7 @@ import {
   isSettingsOpen as shellIsSettingsOpen,
   setCounts as shellSetCounts,
 } from './ui-shell.js';
-import { initTextView, renderTextFeed, openBoardById } from './ui-text.js';
+import { initTextView, renderTextFeed, openBoardById, isReplyAtom, isRootAtom, getAtomStableId } from './ui-text.js';
 import { initMapView, showMapView } from './ui-map.js';
 import { initCreateModal, openCreateModal, closeCreateModal, setCreateError, setCreateSubmitting, updateCreateCenter, isCreateModalOpen } from './ui-create.js';
 import { initSettingsView, renderSettingsView } from './ui-settings.js';
@@ -90,12 +90,30 @@ function showPage(page) {
   shellShowPage(page);
 }
 
-function openBoardForAtom(atom) {
+function replyBelongsToRoot(reply, root) {
+  if (!isReplyAtom(reply) || !root) return false;
+  const rootIds = [getAtomStableId(root), root.atom_id, root.id, root.punkto, stripPunktoPrefix(root.punkto || '')]
+    .map((value) => String(value || '').trim())
+    .filter(Boolean);
+  const rootIdSet = new Set(rootIds);
+  return [reply.parent_id, reply.root_id]
+    .map((value) => String(value || '').trim())
+    .filter(Boolean)
+    .some((id) => rootIdSet.has(id) || rootIdSet.has(stripPunktoPrefix(id)));
+}
+
+function findRootForReply(reply, atoms = _mainFeedAtoms) {
+  return (Array.isArray(atoms) ? atoms : []).find((candidate) => isRootAtom(candidate) && replyBelongsToRoot(reply, candidate)) || null;
+}
+
+function openBoardForAtom(atom, atoms = _mainFeedAtoms) {
   if (!atom || !atom.punkto) return;
-  const boardId = stripPunktoPrefix(atom.punkto);
+  const localAtoms = Array.isArray(atoms) && atoms.length ? atoms : _mainFeedAtoms;
+  const boardAtom = isReplyAtom(atom) ? (findRootForReply(atom, localAtoms) || findRootForReply(atom) || atom) : atom;
+  const boardId = getAtomStableId(boardAtom) || stripPunktoPrefix(boardAtom.punkto);
   if (!boardId) return;
   showPage('text');
-  openBoardById(boardId, { atom, atoms: _mainFeedAtoms });
+  openBoardById(boardId, { atom: boardAtom, atoms: _mainFeedAtoms });
 }
 
 function ensureMapInitialized() {
@@ -630,7 +648,7 @@ function buildBubbleElement(atom, count = 1, group = null) {
     // re-renders (which may update the group) stay in sync.
     const currentGroup = el._punktoGroup || [atom];
     const selectedAtom = currentGroup[0] || atom;
-    openBoardForAtom(selectedAtom);
+    openBoardForAtom(selectedAtom, currentGroup);
   });
 
   return el;
@@ -1012,7 +1030,7 @@ function detectBuildingAtCenter() {
 
 
 function selectedBoardStableId(atom) {
-  return String(atom?.atom_id || atom?.id || atom?.root_id || stripPunktoPrefix(atom?.punkto || '') || '').trim();
+  return String(atom?.atom_id || atom?.id || stripPunktoPrefix(atom?.punkto || '') || '').trim();
 }
 
 function copyRootLocationFields(root, reply) {
@@ -1696,8 +1714,8 @@ function wireEvents() {
 // ---------------------------------------------------------------------------
 
 async function boot() {
-  console.log('PUNKTO APP.JS LOADED v99-hard-marker-2026-05-29-1');
-  window.PUNKTO_APP_VERSION = 'v99-hard-marker-2026-05-29-1';
+  console.log('PUNKTO APP.JS LOADED v100-hard-marker-2026-05-29-1');
+  window.PUNKTO_APP_VERSION = 'v100-hard-marker-2026-05-29-1';
 
   console.log('[punkto] booting...');
 
