@@ -225,6 +225,40 @@ def test_status_page_public_html() -> None:
         assert needle not in text
 
 
+def test_status_page_data_flow_links_and_stats() -> None:
+    r = requests.get(f"{BASE_URL}/status", timeout=5)
+    assert r.status_code == 200, r.text
+    text = r.text
+    assert "Data flow" in text
+    assert 'href="/feed"' in text
+    assert 'href="/latest"' in text
+    assert 'href="/node/info"' in text
+    assert 'href="/health"' in text
+    assert "Live stream endpoint" in text
+    assert "not enabled" in text
+    assert "buffer_size" in text
+    assert "Known peer count" in text
+    assert "Seed node count" in text
+    assert "db_sharing role" in text
+    assert "Serving policy" in text
+
+
+def test_status_page_data_flow_safety_boundary() -> None:
+    r = requests.get(f"{BASE_URL}/status", timeout=5)
+    assert r.status_code == 200, r.text
+    text = r.text
+    forbidden = [
+        "private_key",
+        "should-never-leak",
+        "hidden-token",
+        "relay-test-env-secret-value",
+        "PUNKTO_TEST_SECRET",
+        "/data/private-ish",
+    ]
+    for needle in forbidden:
+        assert needle not in text
+
+
 def test_status_page_escapes_dynamic_values() -> None:
     original_config = relay.NODE_CONFIG
     try:
@@ -628,6 +662,8 @@ ALL_TESTS = [
     test_node_info_stats_fields_exist,
     test_node_info_does_not_expose_private_values,
     test_status_page_public_html,
+    test_status_page_data_flow_links_and_stats,
+    test_status_page_data_flow_safety_boundary,
     test_status_page_escapes_dynamic_values,
     test_status_page_config_missing_fallback,
     test_load_or_create_node_identity_roundtrip,
