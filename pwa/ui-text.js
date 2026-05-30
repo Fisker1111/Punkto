@@ -62,21 +62,48 @@ function _isVerified(a){ return _helpers?.isVerifiedAtom ? _helpers.isVerifiedAt
 function _fmtAltLabel(alt){ return _helpers?.fmtAltitudeLabel ? _helpers.fmtAltitudeLabel(alt) : ''; }
 function _fmtDistance(m){ return _helpers?.fmtDistance ? _helpers.fmtDistance(m) : ''; }
 function _fmtTime(t){ return _helpers?.fmtTime ? _helpers.fmtTime(t) : ''; }
-function _atomStableId(atom) {
-  return String(atom?.atom_id || atom?.id || atom?.root_id || stripPunktoPrefix(atom?.punkto || '') || '').trim();
+export function getAtomStableId(atom) {
+  return String(atom?.atom_id || atom?.id || stripPunktoPrefix(atom?.punkto || '') || '').trim();
 }
-function _isReplyAtom(atom) {
-  return String(atom?.relation || '').toLowerCase() === 'reply' || !!atom?.parent_id;
+export function isReplyAtom(atom) {
+  return String(atom?.relation || '').toLowerCase() === 'reply' || Boolean(atom?.parent_id);
 }
-function _rootKey(atom) {
-  return String(atom?.root_id || atom?.parent_id || _atomStableId(atom)).trim();
+export function isRootAtom(atom) {
+  return !isReplyAtom(atom);
+}
+function _atomStableId(atom) { return getAtomStableId(atom); }
+function _isReplyAtom(atom) { return isReplyAtom(atom); }
+function _isRootAtom(atom) { return isRootAtom(atom); }
+function _normalizedAtomIds(atom) {
+  return [atom?.atom_id, atom?.id, atom?.punkto, stripPunktoPrefix(atom?.punkto || '')]
+    .map((value) => String(value || '').trim())
+    .filter(Boolean);
+}
+function _replyParentIds(atom) {
+  return [atom?.parent_id, atom?.root_id]
+    .map((value) => String(value || '').trim())
+    .filter(Boolean);
+}
+function _replyBelongsToRoot(reply, root) {
+  if (!_isReplyAtom(reply) || !root) return false;
+  const rootIds = new Set(_normalizedAtomIds(root));
+  return _replyParentIds(reply).some((id) => rootIds.has(id) || rootIds.has(stripPunktoPrefix(id)));
+}
+function _findRootForReply(reply, atoms) {
+  if (!_isReplyAtom(reply)) return null;
+  const list = Array.isArray(atoms) ? atoms : [];
+  return list.find((atom) => _isRootAtom(atom) && _replyBelongsToRoot(reply, atom)) || null;
 }
 function _boardReplies(root, atoms) {
-  const rootId = _atomStableId(root);
-  if (!rootId) return [];
   return (Array.isArray(atoms) ? atoms : [])
-    .filter((a) => a !== root && _isReplyAtom(a) && (String(a.parent_id || '') === rootId || String(a.root_id || '') === rootId || _rootKey(a) === rootId))
+    .filter((a) => a !== root && _replyBelongsToRoot(a, root))
     .sort((a, b) => _activityTimestamp(a) - _activityTimestamp(b));
+}
+function _replyCount(root, atoms) { return _boardReplies(root, atoms).length; }
+function _shortId(id) {
+  const value = String(id || '').trim();
+  if (!value) return 'unknown';
+  return value.length > 18 ? value.slice(0, 10) + '…' + value.slice(-6) : value;
 }
 function _authorLabel(atom){ const a=String(atom?.author||atom?.f||'').trim(); return a?`by ${a}`:'by anonymous'; }
 function _trustLabel(atom){ return atom?.sig ? (_isVerified(atom) ? 'Verified' : 'Signed') : 'Unsigned'; }
@@ -169,13 +196,28 @@ export function initTextView({ onShowOnMap, onLeaveNote, onOpenBoard, onPostRepl
 
 export function openBoardById(id, opts = {}) {
   if (!id) return;
+  const atoms = Array.isArray(opts?.atoms) ? opts.atoms : _mainFeedAtoms;
+  let targetId = stripPunktoPrefix(id);
+  let targetAtom = opts && opts.atom ? opts.atom : null;
+  if (!targetAtom) {
+    targetAtom = atoms.find((atom) => _normalizedAtomIds(atom).includes(id) || _normalizedAtomIds(atom).includes(targetId)) || null;
+  }
+  if (_isReplyAtom(targetAtom)) {
+    const root = _findRootForReply(targetAtom, atoms);
+    if (root) {
+      targetAtom = root;
+      targetId = _atomStableId(root) || stripPunktoPrefix(root.punkto || '');
+    } else {
+      targetId = _atomStableId(targetAtom) || targetId;
+    }
+  }
   _boardReturnTab = _activeTab;
-  _selectedBoardId = stripPunktoPrefix(id);
-  _selectedBoardAtom = opts && opts.atom ? opts.atom : null;
+  _selectedBoardId = targetId;
+  _selectedBoardAtom = targetAtom;
   _replyStatus = null;
   _replyDraft = '';
   if (_onOpenBoard) _onOpenBoard(_selectedBoardId);
-  renderTextFeed({ atoms: Array.isArray(opts?.atoms) ? opts.atoms : _mainFeedAtoms });
+  renderTextFeed({ atoms });
 }
 
 function _activityTimestamp(atom) {
@@ -230,7 +272,8 @@ function renderReplyList(root, replies) {
     const author = _authorLabel(reply);
     const time = reply.t ? _fmtTime(reply.t) : 'Time unavailable';
     const trust = _trustLabel(reply);
-    return `<article class="board-reply-item">
+    const replyId = _atomStableId(reply);
+    return `<article class="board-reply-item" data-reply-id="${_escHtml(replyId)}">
 ` +
       `  <div class="main-card-badges"><span class="main-card-cat ui-badge ${_escHtml(cat.cls)}">${_escHtml(cat.code)} · ${_escHtml(cat.label)}</span><span class="main-card-type ui-badge">Public reply</span></div>
 ` +
@@ -240,6 +283,40 @@ function renderReplyList(root, replies) {
 ` +
       `</article>`;
   }).join('') + '</div>';
+}
+
+function renderOrphanReplyDetail(reply) {
+  const raw = String(reply?.x || '').trim();
+  const cat = _categoryBadge(reply?.category || reply?.kind || _deriveCategory(reply));
+  const author = _authorLabel(reply);
+  const time = reply?.t ? _fmtTime(reply.t) : 'Time unavailable';
+  const trust = _trustLabel(reply);
+  const parentId = String(reply?.parent_id || reply?.root_id || '').trim();
+  const atomId = stripPunktoPrefix(reply?.punkto || '');
+  const backLabel = _boardReturnTab === 'activity' ? '← Back to Activity' : '← Visible here';
+  return `<section class="board-detail ui-board-panel">
+` +
+    `  <button class="board-back ui-btn" data-action="board-back">${_escHtml(backLabel)}</button>
+` +
+    `  <div class="main-card ui-card board-root">
+` +
+    `    <div class="main-card-badges"><span class="main-card-cat ui-badge ${_escHtml(cat.cls)}">${_escHtml(cat.code)} · ${_escHtml(cat.label)}</span><span class="main-card-type ui-badge">Reply activity</span></div>
+` +
+    `    <h3 class="main-card-title">Reply to unknown board</h3>
+` +
+    `    <p class="main-card-disclaimer">The parent board is not available locally yet.</p>
+` +
+    (parentId ? `    <div class="main-card-meta"><span>Parent ${_escHtml(_shortId(parentId))}</span></div>
+` : '') +
+    (raw ? `    <p class="main-card-preview board-body">${_escHtml(raw)}</p>
+` : '') +
+    `    <div class="main-card-meta"><span>${_escHtml(author)} · ${_escHtml(time)} · ${_escHtml(trust)}</span></div>
+` +
+    `    <div class="main-card-actions"><button class="main-card-show3d ui-btn" data-action="show-in-3d" data-id="${_escHtml(atomId)}">Show in map</button></div>
+` +
+    `  </div>
+` +
+    `</section>`;
 }
 function renderBoardDetail(atom) {
   const cat = _categoryBadge(atom.category || atom.kind || _deriveCategory(atom));
@@ -295,9 +372,9 @@ function renderBoardDetail(atom) {
     `  </div>
 ` +
     `  <div class="main-card ui-card board-replies">` +
-    `<h4>Public replies</h4>${renderReplyList(atom, replies)}</div>
+    `<h4>Replies · ${replies.length}</h4>${renderReplyList(atom, replies)}</div>
 ` +
-    `  <form class="main-card ui-card board-compose ui-reply-box" data-action="board-reply-form"><label for="board-reply-text">Public reply</label><textarea id="board-reply-text" placeholder="Write a public reply…"${disabledAttr}>${_escHtml(replyValue)}</textarea><p>Replies are public and use this board’s exact location.</p><p>Replies are public and anchored to this board.</p>${orphanText}${replyStatus}<button class="main-card-show3d ui-btn" id="board-reply-submit" type="submit" data-action="post-board-reply"${disabledAttr}>Post public reply</button></form>
+    `  <form class="main-card ui-card board-compose ui-reply-box" data-action="board-reply-form"><label for="board-reply-text">Public reply</label><textarea id="board-reply-text" placeholder="Write a public reply…"${disabledAttr}>${_escHtml(replyValue)}</textarea><p>Replies are public and anchored to this board’s exact location.</p>${orphanText}${replyStatus}<button class="main-card-show3d ui-btn" id="board-reply-submit" type="submit" data-action="post-board-reply"${disabledAttr}>Post public reply</button></form>
 ` +
     `</section>`;
 }
@@ -314,15 +391,21 @@ export function renderTextFeed({ atoms = [], locationDenied = false, loadingVisi
   if (!list) return;
 
   if (_selectedBoardId) {
-    const atomFromList = _mainFeedAtoms.find((a) => !_isReplyAtom(a) && stripPunktoPrefix(a.punkto) === _selectedBoardId);
-    const atom = atomFromList || _selectedBoardAtom;
+    const atomFromList = _mainFeedAtoms.find((a) => _normalizedAtomIds(a).includes(_selectedBoardId) || _normalizedAtomIds(a).includes('p:' + _selectedBoardId));
+    let atom = atomFromList || _selectedBoardAtom;
+    const rootForReply = _isReplyAtom(atom) ? _findRootForReply(atom, _mainFeedAtoms) : null;
+    if (rootForReply) {
+      atom = rootForReply;
+      _selectedBoardId = _atomStableId(rootForReply) || stripPunktoPrefix(rootForReply.punkto || '');
+    }
     if (atom) {
       _selectedBoardAtom = atom;
       if (locEl) locEl.style.display = 'none';
       if (emptyEl) emptyEl.style.display = 'none';
-      if (countEl) countEl.textContent = loadingVisibleAtoms ? 'Loading visible atoms…' : (_mainFeedAtoms.length + ' public boards');
-      if (statusCountEl) statusCountEl.textContent = loadingVisibleAtoms ? 'Loading visible atoms…' : (_mainFeedAtoms.length + ' visible');
-      list.innerHTML = renderBoardDetail(atom);
+      const rootCount = _mainFeedAtoms.filter(_isRootAtom).length;
+      if (countEl) countEl.textContent = loadingVisibleAtoms ? 'Loading visible atoms…' : (rootCount + ' public boards');
+      if (statusCountEl) statusCountEl.textContent = loadingVisibleAtoms ? 'Loading visible atoms…' : (rootCount + ' visible');
+      list.innerHTML = _isReplyAtom(atom) ? renderOrphanReplyDetail(atom) : renderBoardDetail(atom);
       return;
     }
     _selectedBoardId = null;
@@ -335,7 +418,7 @@ export function renderTextFeed({ atoms = [], locationDenied = false, loadingVisi
     const headingEl = document.getElementById('main-feed-heading');
     const subtitleEl = document.getElementById('main-feed-subtitle');
     if (headingEl) headingEl.textContent = _activeTab === 'activity' ? 'Activity' : 'Visible here';
-    if (subtitleEl) subtitleEl.textContent = _activeTab === 'activity' ? 'Newest public activity in this map view.' : 'Public boards in this map view.';
+    if (subtitleEl) subtitleEl.textContent = _activeTab === 'activity' ? 'Newest public roots and replies in this map view.' : 'Public boards in this map view.';
     if (statusCountEl) statusCountEl.textContent = loadingVisibleAtoms ? 'Loading visible atoms…' : '0 visible';
     if (locationDenied || !navigator.geolocation) {
       if (emptyEl) emptyEl.style.display = 'none';
@@ -366,10 +449,14 @@ export function renderTextFeed({ atoms = [], locationDenied = false, loadingVisi
   const headingEl = document.getElementById('main-feed-heading');
   const subtitleEl = document.getElementById('main-feed-subtitle');
   if (headingEl) headingEl.textContent = _activeTab === 'activity' ? 'Activity' : 'Visible here';
-  if (subtitleEl) subtitleEl.textContent = _activeTab === 'activity' ? 'Newest public activity in this map view.' : 'Public boards in this map view.';
+  if (subtitleEl) subtitleEl.textContent = _activeTab === 'activity' ? 'Newest public roots and replies in this map view.' : 'Public boards in this map view.';
 
   list.innerHTML = activeAtoms.map((atom) => {
-    const title = _escHtml(_deriveTitle(atom));
+    const isReply = _isReplyAtom(atom);
+    const root = isReply ? _findRootForReply(atom, _mainFeedAtoms) : null;
+    const title = isReply
+      ? _escHtml(root ? 'Reply in board' : 'Reply to unknown board')
+      : _escHtml(_deriveTitle(atom));
     const cat = _categoryBadge(atom.category || atom.kind || _deriveCategory(atom));
     const raw = String(atom.x || '').trim();
     const preview = raw.length > 120 ? raw.slice(0, 120) + '…' : raw;
@@ -377,22 +464,29 @@ export function renderTextFeed({ atoms = [], locationDenied = false, loadingVisi
     const dist = Number.isFinite(atom.distance) ? _fmtDistance(atom.distance) : '';
     const time = atom.t ? _fmtTime(atom.t) : '';
     const floorMeta = altLabel || 'Floor not available';
-  const distanceMeta = dist || 'Distance not available';
-  const timeMeta = time || 'Time unavailable';
-  const meta = [timeMeta, floorMeta, distanceMeta].filter(Boolean).join(' · ');
+    const distanceMeta = dist || 'Distance not available';
+    const timeMeta = time || 'Time unavailable';
+    const meta = [timeMeta, floorMeta, distanceMeta].filter(Boolean).join(' · ');
     const atomId = stripPunktoPrefix(atom.punkto);
-    return '<div class="main-card ui-card" data-atom-id="' + _escHtml(atomId) + `">
+    const stableId = _atomStableId(atom) || atomId;
+    const rootTitle = root ? _deriveTitle(root) : '';
+    const replyContext = isReply
+      ? '<div class="main-card-meta"><span>' + _escHtml(rootTitle ? ('Reply to board: ' + rootTitle) : 'Reply to unknown board') + '</span></div>'
+      : '';
+    const replyCount = isReply ? '' : '<div class="main-card-meta"><span>' + _replyCount(atom, _mainFeedAtoms) + ' replies</span></div>';
+    return '<div class="main-card ui-card" data-atom-id="' + _escHtml(stableId) + `">
 ` +
-      '<div class="main-card-badges"><span class="main-card-type ui-badge">Board</span><span class="main-card-cat ui-badge ' + _escHtml(cat.cls) + '">' + _escHtml(cat.code) + ' · ' + _escHtml(cat.label) + `</span></div>
+      '<div class="main-card-badges"><span class="main-card-type ui-badge">' + (isReply ? 'Reply activity' : 'Board') + '</span><span class="main-card-cat ui-badge ' + _escHtml(cat.cls) + '">' + _escHtml(cat.code) + ' · ' + _escHtml(cat.label) + `</span></div>
 ` +
       '<h3 class="main-card-title">' + title + `</h3>
 ` +
-      (preview && _escHtml(preview) !== title ? '<p class="main-card-preview">' + _escHtml(preview) + `</p>
+      replyContext +
+      (preview ? '<p class="main-card-preview">' + _escHtml(preview) + `</p>
 ` : '') +
       (meta ? '<div class="main-card-meta"><span>' + _escHtml(meta) + `</span></div>
 ` : '') +
-      '<div class="main-card-footer"><div class="main-card-meta-group"><div class="main-card-meta"><span>' + _escHtml(_authorLabel(atom)) + ' · ' + _escHtml(_trustLabel(atom)) + '</span></div><div class="main-card-meta"><span>' + _boardReplies(atom, _mainFeedAtoms).length + ' replies</span></div></div>' +
-      '<div class="main-card-actions"><button class="main-card-show3d ui-btn" data-action="open-board" data-id="' + _escHtml(atomId) + '">Open board</button><button class="main-card-reply ui-btn" data-action="show-in-3d" data-id="' + _escHtml(atomId) + '">Show on map</button></div></div></div>';
+      '<div class="main-card-footer"><div class="main-card-meta-group"><div class="main-card-meta"><span>' + _escHtml(_authorLabel(atom)) + ' · ' + _escHtml(_trustLabel(atom)) + '</span></div>' + replyCount + '</div>' +
+      '<div class="main-card-actions"><button class="main-card-show3d ui-btn" data-action="open-board" data-id="' + _escHtml(stableId) + '">Open board</button><button class="main-card-reply ui-btn" data-action="show-in-3d" data-id="' + _escHtml(atomId) + '">Show on map</button></div></div></div>';
   }).join(`
 `);
 }
