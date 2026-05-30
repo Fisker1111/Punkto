@@ -642,6 +642,23 @@ def _status_row(label: str, value: Any, *, mono: bool = False, multiline: bool =
     )
 
 
+def _status_html_row(
+    label: str, value_html: str, *, mono: bool = False, multiline: bool = False
+) -> str:
+    classes = []
+    if mono:
+        classes.append("mono")
+    if multiline:
+        classes.append("multiline")
+    class_attr = f' class="{" ".join(classes)}"' if classes else ""
+    return (
+        "<tr>"
+        f"<th scope=\"row\">{_html_escape(label)}</th>"
+        f"<td{class_attr}>{value_html}</td>"
+        "</tr>"
+    )
+
+
 def _status_bool_rows(values: Any) -> str:
     if not isinstance(values, dict) or not values:
         return "unknown"
@@ -655,6 +672,56 @@ def _status_list(values: Any) -> str:
     if not isinstance(values, list) or not values:
         return "none"
     return "\n".join(str(item) for item in values if str(item).strip()) or "none"
+
+
+def _status_link(path: str, label: Optional[str] = None) -> str:
+    safe_path = _html_escape(path)
+    safe_label = _html_escape(label or path)
+    return f'<a href="{safe_path}" class="mono">{safe_label}</a>'
+
+
+def _status_serving_summary(serving: Any) -> str:
+    if not isinstance(serving, dict) or not serving:
+        return "unknown"
+    labels = {
+        "serve_recent": "recent",
+        "serve_pinned": "pinned",
+        "serve_archive": "archive",
+    }
+    rows = []
+    for key in ("serve_recent", "serve_pinned", "serve_archive"):
+        value = serving.get(key)
+        label = labels[key]
+        state = (
+            "enabled"
+            if value is True
+            else "disabled"
+            if value is False
+            else "unknown"
+        )
+        rows.append(f"{label}: {state}")
+    return "\n".join(rows)
+
+
+def _recent_atom_preview_rows(atoms: List[Dict[str, Any]]) -> str:
+    if not atoms:
+        return '<tr><td colspan="5" class="muted">No public atoms in the recent buffer.</td></tr>'
+    rows = []
+    for atom in atoms[:5]:
+        atom_id = str(atom.get("atom_id") or compute_atom_id(atom))
+        relation = atom.get("relation") or "root"
+        category = atom.get("category") or atom.get("type") or atom.get("k") or "unknown"
+        timestamp = _format_utc_ms(atom.get("t"))
+        rows.append(
+            "<tr>"
+            f'<td class="mono">{_html_escape(atom_id[:12])}</td>'
+            f"<td>{_html_value(relation)}</td>"
+            f"<td>{_html_value(category)}</td>"
+            f"<td>{_html_value(timestamp)}</td>"
+            f'<td class="mono">{_html_value(atom.get("punkto"))}</td>'
+            "</tr>"
+        )
+    return "\n".join(rows)
 
 
 def render_status_page(buffer: "Buffer", sync_state: Optional["SyncState"] = None) -> str:
@@ -673,7 +740,19 @@ def render_status_page(buffer: "Buffer", sync_state: Optional["SyncState"] = Non
 
     health_status = str(health.get("status") or "unknown")
     badge_label = "healthy" if health_status == "ok" else "degraded"
+    recent_atoms = buffer.latest(5)
     recent_feed_size = len(buffer.latest(LATEST_LIMIT))
+    seed_count = (
+        len(network.get("seed_nodes"))
+        if isinstance(network.get("seed_nodes"), list)
+        else 0
+    )
+    known_peer_count = (
+        len(network.get("known_nodes"))
+        if isinstance(network.get("known_nodes"), list)
+        else 0
+    )
+    roles = info.get("roles") if isinstance(info.get("roles"), dict) else {}
     current_time = time.strftime("%Y-%m-%d %H:%M:%S UTC", time.gmtime())
     uptime = _format_duration(time.time() - STARTED_AT)
     title = "Punkto Node Status"
@@ -706,6 +785,7 @@ td {{ color: var(--text); word-break: break-word; }}
 .mono {{ font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace; font-size: .92em; }}
 .multiline {{ white-space: pre-line; }}
 .note {{ border-color: rgba(110,231,168,.35); }}
+.muted {{ color: var(--muted); }}
 a {{ color: #8bd3ff; }}
 </style>
 </head>
@@ -759,13 +839,39 @@ a {{ color: #8bd3ff; }}
 </section>
 
 <section>
-<h2>Data / feed stats</h2>
+<h2>Data flow</h2>
+<p>Public atom data enters the node, is held in the recent feed buffer, and is exposed through public read-only endpoints for clients and readers.</p>
+<table>
+{_status_html_row("Public feed endpoint", _status_link("/feed"))}
+{_status_html_row("Latest public recent endpoint", _status_link("/latest"))}
+{_status_row("Live stream endpoint", "not enabled")}
+{_status_html_row("Node info endpoint", _status_link("/node/info"))}
+{_status_html_row("Health endpoint", _status_link("/health"))}
+</table>
+</section>
+
+<section>
+<h2>Public feed health</h2>
 <table>
 {_status_row("buffer_size", stats.get("buffer_size", "not available"))}
 {_status_row("oldest_t", _format_utc_ms(stats.get("oldest_t")))}
 {_status_row("newest_t", _format_utc_ms(stats.get("newest_t")))}
-{_status_row("Atom count", stats.get("buffer_size", "not available"))}
+{_status_row("Known peer count", known_peer_count)}
+{_status_row("Seed node count", seed_count)}
+{_status_row("db_sharing role", "enabled" if roles.get("db_sharing") is True else "disabled" if roles.get("db_sharing") is False else "unknown")}
+{_status_row("Serving policy", _status_serving_summary(info.get("serving")), multiline=True)}
 {_status_row("Recent feed size", recent_feed_size)}
+</table>
+</section>
+
+<section>
+<h2>Recent public atoms</h2>
+<p>Newest five atoms only; this is a compact preview, not a raw database dump.</p>
+<table>
+<thead><tr><th scope="col">Atom id</th><th scope="col">Relation</th><th scope="col">Category/type</th><th scope="col">Timestamp</th><th scope="col">Punkto</th></tr></thead>
+<tbody>
+{_recent_atom_preview_rows(recent_atoms)}
+</tbody>
 </table>
 </section>
 

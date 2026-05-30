@@ -96,12 +96,16 @@ Every node should expose a small set of public read-only status endpoints:
 | `/status` | Humans/operators/readers | HTML | Human-readable public node status page |
 | `/node/info` | Clients/tools | JSON | Public-safe node status/config/API summary |
 | `/health` | Load balancers/monitors | JSON | Tiny health check |
+| `/feed` | Clients/readers | JSON | Public atom feed for data-flow visibility and sync |
+| `/latest` | Clients/readers | JSON | Recent public atoms, newest first |
 
 `/status` is public but read-only. It may explain the node's public URL,
 identity fingerprint, software version, config-loaded state, roles, serving
-policy, peers, feed stats, and health using only the same safe public fields as
-`/node/info`. It must not expose secrets, private keys, `.env` values, local
-tokens, or write controls.
+policy, peers, feed stats, public data-flow endpoints, health, and a compact
+recent public atom preview using only the same safe public fields as
+`/node/info` plus public feed metadata. It must not expose secrets, private
+keys, `.env` values, local tokens, raw database dumps, server logs, or write
+controls.
 
 Configuration changes are done by the node operator on the server, normally over
 SSH by editing node-local config and restarting/reloading the service. The web
@@ -390,9 +394,10 @@ Principles:
 ### Phase 2 (started)
 
 - relay loads `/config/punkto-node.yml` (or `PUNKTO_NODE_CONFIG` override) with safe defaults
-- expose read-only `/status` as a human public node status page
+- expose read-only `/status` as a human public node status page with public data-flow links, feed health stats, and a compact newest-public-atoms preview
 - expose read-only `/node/info` with a public-safe node config summary
 - keep `/health` as a tiny health check
+- keep `/feed` and `/latest` visible as public read-only atom data endpoints without exposing raw database dumps or server logs
 - relay creates/loads `/data/node-key.json` (or `PUNKTO_NODE_KEY` override) with stable fingerprint continuity
 - `/node/info` includes public node identity fields only:
   - `node_fingerprint`
