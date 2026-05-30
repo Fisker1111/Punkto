@@ -7,7 +7,10 @@ import { stripPunktoPrefix } from './protocol/punkto-id.js';
 let _onShowOnMap = null;
 let _onLeaveNote = null;
 let _onOpenBoard = null;
+let _onPostReply = null;
 let _helpers = null;
+let _replyStatus = null;
+let _replyDraft = '';
 let _mainFeedAtoms = [];
 let _selectedBoardId = null;
 let _selectedBoardAtom = null;
@@ -59,6 +62,22 @@ function _isVerified(a){ return _helpers?.isVerifiedAtom ? _helpers.isVerifiedAt
 function _fmtAltLabel(alt){ return _helpers?.fmtAltitudeLabel ? _helpers.fmtAltitudeLabel(alt) : ''; }
 function _fmtDistance(m){ return _helpers?.fmtDistance ? _helpers.fmtDistance(m) : ''; }
 function _fmtTime(t){ return _helpers?.fmtTime ? _helpers.fmtTime(t) : ''; }
+function _atomStableId(atom) {
+  return String(atom?.atom_id || atom?.id || atom?.root_id || stripPunktoPrefix(atom?.punkto || '') || '').trim();
+}
+function _isReplyAtom(atom) {
+  return String(atom?.relation || '').toLowerCase() === 'reply' || !!atom?.parent_id;
+}
+function _rootKey(atom) {
+  return String(atom?.root_id || atom?.parent_id || _atomStableId(atom)).trim();
+}
+function _boardReplies(root, atoms) {
+  const rootId = _atomStableId(root);
+  if (!rootId) return [];
+  return (Array.isArray(atoms) ? atoms : [])
+    .filter((a) => a !== root && _isReplyAtom(a) && (String(a.parent_id || '') === rootId || String(a.root_id || '') === rootId || _rootKey(a) === rootId))
+    .sort((a, b) => _activityTimestamp(a) - _activityTimestamp(b));
+}
 function _authorLabel(atom){ const a=String(atom?.author||atom?.f||'').trim(); return a?`by ${a}`:'by anonymous'; }
 function _trustLabel(atom){ return atom?.sig ? (_isVerified(atom) ? 'Verified' : 'Signed') : 'Unsigned'; }
 function _categoryBadge(catRaw){
@@ -67,10 +86,11 @@ function _categoryBadge(catRaw){
   return map[raw] || map.TEXT;
 }
 
-export function initTextView({ onShowOnMap, onLeaveNote, onOpenBoard, helpers } = {}) {
+export function initTextView({ onShowOnMap, onLeaveNote, onOpenBoard, onPostReply, helpers } = {}) {
   _onShowOnMap = typeof onShowOnMap === 'function' ? onShowOnMap : null;
   _onLeaveNote = typeof onLeaveNote === 'function' ? onLeaveNote : null;
   _onOpenBoard = typeof onOpenBoard === 'function' ? onOpenBoard : null;
+  _onPostReply = typeof onPostReply === 'function' ? onPostReply : null;
   _helpers = helpers || null;
 
   _syncTabUi();
@@ -115,6 +135,14 @@ export function initTextView({ onShowOnMap, onLeaveNote, onOpenBoard, helpers } 
         return;
       }
 
+      const postReplyBtn = e.target.closest('[data-action="post-board-reply"]');
+      if (postReplyBtn) {
+        e.preventDefault();
+        e.stopPropagation();
+        submitBoardReply();
+        return;
+      }
+
       const showBtn = e.target.closest('[data-action="show-in-3d"]');
       if (showBtn) {
         e.stopPropagation();
@@ -124,6 +152,13 @@ export function initTextView({ onShowOnMap, onLeaveNote, onOpenBoard, helpers } 
       }
     });
   }
+
+  list?.addEventListener('submit', (e) => {
+    const form = e.target.closest('[data-action="board-reply-form"]');
+    if (!form) return;
+    e.preventDefault();
+    submitBoardReply();
+  });
 
   document.addEventListener('click', (e) => {
     if (!e.target) return;
@@ -137,6 +172,8 @@ export function openBoardById(id, opts = {}) {
   _boardReturnTab = _activeTab;
   _selectedBoardId = stripPunktoPrefix(id);
   _selectedBoardAtom = opts && opts.atom ? opts.atom : null;
+  _replyStatus = null;
+  _replyDraft = '';
   if (_onOpenBoard) _onOpenBoard(_selectedBoardId);
   renderTextFeed({ atoms: Array.isArray(opts?.atoms) ? opts.atoms : _mainFeedAtoms });
 }
@@ -162,6 +199,48 @@ function _syncTabUi() {
   });
 }
 
+
+async function submitBoardReply() {
+  const textarea = document.getElementById('board-reply-text');
+  const statusEl = document.getElementById('board-reply-status');
+  const button = document.getElementById('board-reply-submit');
+  const text = String(textarea?.value || '').trim();
+  if (!text || !_selectedBoardAtom || !_onPostReply) return;
+  if (statusEl) statusEl.textContent = '';
+  if (button) button.disabled = true;
+  try {
+    await _onPostReply({ boardAtom: _selectedBoardAtom, text });
+    _replyDraft = '';
+    if (textarea) textarea.value = '';
+    _replyStatus = { type: 'success', message: 'Public reply posted.' };
+  } catch (err) {
+    _replyDraft = text;
+    _replyStatus = { type: 'error', message: err?.message || 'Could not post public reply.' };
+  } finally {
+    if (button) button.disabled = false;
+    renderTextFeed({ atoms: _mainFeedAtoms });
+  }
+}
+
+function renderReplyList(root, replies) {
+  if (!replies.length) return '<p>No public replies yet.</p>';
+  return '<div class="board-reply-list">' + replies.map((reply) => {
+    const cat = _categoryBadge(reply.category || reply.kind || _deriveCategory(reply));
+    const raw = String(reply.x || '').trim();
+    const author = _authorLabel(reply);
+    const time = reply.t ? _fmtTime(reply.t) : 'Time unavailable';
+    const trust = _trustLabel(reply);
+    return `<article class="board-reply-item">
+` +
+      `  <div class="main-card-badges"><span class="main-card-cat ui-badge ${_escHtml(cat.cls)}">${_escHtml(cat.code)} · ${_escHtml(cat.label)}</span><span class="main-card-type ui-badge">Public reply</span></div>
+` +
+      (raw ? `  <p class="main-card-preview board-body">${_escHtml(raw)}</p>
+` : '') +
+      `  <div class="main-card-meta"><span>${_escHtml(author)} · ${_escHtml(time)} · ${_escHtml(trust)}</span></div>
+` +
+      `</article>`;
+  }).join('') + '</div>';
+}
 function renderBoardDetail(atom) {
   const cat = _categoryBadge(atom.category || atom.kind || _deriveCategory(atom));
   const raw = String(atom.x || '').trim();
@@ -176,6 +255,13 @@ function renderBoardDetail(atom) {
   const timeMeta = time || 'Time unavailable';
   const meta = [timeMeta, floorMeta, distanceMeta].filter(Boolean).join(' · ');
   const atomId = stripPunktoPrefix(atom.punkto || _selectedBoardId || '');
+  const stableId = _atomStableId(atom);
+  const replies = _boardReplies(atom, _mainFeedAtoms);
+  const canReply = Boolean(stableId);
+  const replyValue = _replyStatus?.type === 'error' ? _replyDraft : '';
+  const replyStatus = _replyStatus ? `<p id="board-reply-status" class="board-reply-status ${_replyStatus.type === 'error' ? 'error' : 'success'}">${_escHtml(_replyStatus.message)}</p>` : '<p id="board-reply-status" class="board-reply-status"></p>';
+  const disabledAttr = canReply ? '' : ' disabled';
+  const orphanText = canReply ? '' : '<p class="board-reply-status error">Cannot reply: board id is missing.</p>';
   const trustLine = author ? `${trust} by ${author}` : `${trust} public post`;
   const publicLine = trust === 'Unsigned' ? 'Unsigned public post' : 'Public board';
   // Future: reply threads may include "Reply to unknown atom" when parent is missing.
@@ -209,16 +295,16 @@ function renderBoardDetail(atom) {
     `  </div>
 ` +
     `  <div class="main-card ui-card board-replies">` +
-    `<h4>Replies</h4><p>No public replies yet.</p><p>Replies will be public and may be signed.</p></div>
+    `<h4>Public replies</h4>${renderReplyList(atom, replies)}</div>
 ` +
-    `  <div class="main-card ui-card board-compose ui-reply-box"><label for="board-reply-placeholder">Reply</label><textarea id="board-reply-placeholder" placeholder="Write a public reply…" disabled></textarea><p>Reply posting is coming soon.</p></div>
+    `  <form class="main-card ui-card board-compose ui-reply-box" data-action="board-reply-form"><label for="board-reply-text">Public reply</label><textarea id="board-reply-text" placeholder="Write a public reply…"${disabledAttr}>${_escHtml(replyValue)}</textarea><p>Replies are public and use this board’s exact location.</p><p>Replies are public and anchored to this board.</p>${orphanText}${replyStatus}<button class="main-card-show3d ui-btn" id="board-reply-submit" type="submit" data-action="post-board-reply"${disabledAttr}>Post public reply</button></form>
 ` +
     `</section>`;
 }
 
 export function renderTextFeed({ atoms = [], locationDenied = false, loadingVisibleAtoms = false } = {}) {
   _mainFeedAtoms = Array.isArray(atoms) ? atoms : [];
-  const activeAtoms = _atomsForActiveTab(_mainFeedAtoms);
+  const activeAtoms = _atomsForActiveTab(_mainFeedAtoms).filter((atom) => _activeTab === 'activity' || !_isReplyAtom(atom));
   _syncTabUi();
   const list = document.getElementById('main-feed-list');
   const emptyEl = document.getElementById('main-empty-notes');
@@ -228,7 +314,7 @@ export function renderTextFeed({ atoms = [], locationDenied = false, loadingVisi
   if (!list) return;
 
   if (_selectedBoardId) {
-    const atomFromList = _mainFeedAtoms.find((a) => stripPunktoPrefix(a.punkto) === _selectedBoardId);
+    const atomFromList = _mainFeedAtoms.find((a) => !_isReplyAtom(a) && stripPunktoPrefix(a.punkto) === _selectedBoardId);
     const atom = atomFromList || _selectedBoardAtom;
     if (atom) {
       _selectedBoardAtom = atom;
@@ -305,7 +391,7 @@ export function renderTextFeed({ atoms = [], locationDenied = false, loadingVisi
 ` : '') +
       (meta ? '<div class="main-card-meta"><span>' + _escHtml(meta) + `</span></div>
 ` : '') +
-      '<div class="main-card-footer"><div class="main-card-meta-group"><div class="main-card-meta"><span>' + _escHtml(_authorLabel(atom)) + ' · ' + _escHtml(_trustLabel(atom)) + '</span></div><div class="main-card-meta"><span>0 replies</span></div></div>' +
+      '<div class="main-card-footer"><div class="main-card-meta-group"><div class="main-card-meta"><span>' + _escHtml(_authorLabel(atom)) + ' · ' + _escHtml(_trustLabel(atom)) + '</span></div><div class="main-card-meta"><span>' + _boardReplies(atom, _mainFeedAtoms).length + ' replies</span></div></div>' +
       '<div class="main-card-actions"><button class="main-card-show3d ui-btn" data-action="open-board" data-id="' + _escHtml(atomId) + '">Open board</button><button class="main-card-reply ui-btn" data-action="show-in-3d" data-id="' + _escHtml(atomId) + '">Show on map</button></div></div></div>';
   }).join(`
 `);
