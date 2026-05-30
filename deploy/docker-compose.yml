@@ -52,6 +52,8 @@ services:
     volumes:
       # Atom store — MUST be a named volume so data survives container upgrades
       - relay_data:/data
+      # Optional node config — overrides environment defaults
+      - ./config/punkto-node.yml:/config/punkto-node.yml:ro
     environment:
       PUNKTO_HOST: "0.0.0.0"
       PUNKTO_PORT: "8000"
