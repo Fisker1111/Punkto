@@ -6,7 +6,7 @@
     file_server
 
     # API / relay endpoints — proxy to relay container
-    @relay_paths path /atom /atom/* /latest /stream /feed /health /info \
+    @relay_paths path /atom /atom/* /latest /stream /feed /health /info /status /node/info /node/info/* \
         /llms.txt /robots.txt /sitemap.xml /openapi.json \
         /punkto.ai.md /punkto.md /punkto.node.md /punkto.sync.md \
         /punkto.manifest.md /punkto.identity.md /punkto.ui.md \
@@ -19,7 +19,7 @@
 
     # CORS headers on relay responses
     @is_relay {
-        path /atom /atom/* /latest /stream /feed /health /info
+        path /atom /atom/* /latest /stream /feed /health /info /status /node/info /node/info/*
         path /punkto* /p/*
     }
     header @is_relay Access-Control-Allow-Origin "*"
@@ -71,5 +71,9 @@ www.punkto.xyz {
 }
 
 app1.punkto.xyz {
+    import punkto_site
+}
+
+node1.punkto.xyz {
     import punkto_site
 }
