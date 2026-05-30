@@ -22,6 +22,7 @@ import { ensureNode } from './storage/node-store.js';
 import { fmtTime, fmtRelativeTime, fmtCoords, fmtDistance, fmtAltitudeLabel, deriveTitle, deriveCategory, escHtml, renderAtomText } from './core/display.js';
 import { isHiddenAtom, isVerifiedAtom } from './core/atoms.js';
 import { ensurePunktoPrefix, stripPunktoPrefix, parseDeepLinkPunktoId as parseDeepLinkPunktoIdFromPath } from './protocol/punkto-id.js';
+import { computeAtomId } from './protocol/atom-id.js';
 import { createNodeRegistry } from './sync/node-registry.js';
 import { postAtomToNetwork, fetchNodeInfo, fetchNodeCursor } from './sync/network-client.js';
 import { createSyncEngine } from './sync/sync-engine.js';
@@ -1009,12 +1010,78 @@ function detectBuildingAtCenter() {
   }
 }
 
+
+function selectedBoardStableId(atom) {
+  return String(atom?.atom_id || atom?.id || atom?.root_id || stripPunktoPrefix(atom?.punkto || '') || '').trim();
+}
+
+function copyRootLocationFields(root, reply) {
+  if (root?.punkto) reply.punkto = root.punkto;
+  const explicitFields = Array.isArray(root?.location_fields) ? new Set(root.location_fields) : new Set();
+  for (const field of ['lat', 'lon', 'altitude_m', 'alt', 'z', 'floor', 'level']) {
+    if (root?.[field] == null) continue;
+    if (!explicitFields.has(field)) continue;
+    reply[field] = root[field];
+  }
+}
+
+function readableReplyError(err) {
+  const code = err?.code || err?.detail?.error;
+  if (code === 'reply_location_mismatch') return 'Reply location did not match the board root.';
+  if (code === 'invalid_parent_id') return 'Cannot reply: board id is missing.';
+  return err?.message ? `Could not post public reply: ${err.message}` : 'Could not post public reply.';
+}
+
+async function submitBoardReply({ boardAtom, text }) {
+  const root = boardAtom || {};
+  let parentId = selectedBoardStableId(root);
+  if (!parentId) {
+    try { parentId = await computeAtomId(root); } catch {}
+  }
+  if (!parentId) throw new Error('Cannot reply: board id is missing.');
+
+  const rootId = String(root.root_id || parentId).trim();
+  const author = getStoredAuthorName();
+  const reply = {
+    t: Date.now(),
+    x: String(text || '').trim(),
+    category: String(root.category || root.kind || 'TEXT').toUpperCase(),
+    relation: 'reply',
+    parent_id: parentId,
+    root_id: rootId,
+    location_lock: true,
+    location_source: 'root',
+  };
+  copyRootLocationFields(root, reply);
+  if (author) reply.f = author;
+  if (!reply.x) throw new Error('Write a public reply first.');
+  if (!reply.punkto) throw new Error('Cannot reply: board location is missing.');
+
+  try {
+    const result = await postAtomToNetwork(reply, nodeRegistry);
+    if (result?.atom_id) reply.atom_id = result.atom_id;
+    await upsertAtom(reply);
+    await refreshUI();
+    setSyncStatus('ok');
+  } catch (err) {
+    console.error('[replyAtom]', err);
+    throw new Error(readableReplyError(err));
+  }
+}
+
 async function submitAtomFromModal({ text, author, category, draft }) {
   const center = draft ? { lat: draft.lat, lng: draft.lon } : map.getCenter();
   const altMeters = draft?.altitude_m || 0;
   const punkto = encodeLocation(center.lat, center.lng, altMeters);
   const t = Date.now();
-  const atom = { punkto, t };
+  const atom = {
+    punkto,
+    t,
+    lat: center.lat,
+    lon: center.lng,
+    altitude_m: altMeters,
+  };
+  if (draft?.floor_hint != null) atom.floor = draft.floor_hint;
   if (text) atom.x = text;
   if (author) atom.f = author;
   atom.category = String(category || draft?.category || 'TEXT').toUpperCase();
@@ -1022,7 +1089,8 @@ async function submitAtomFromModal({ text, author, category, draft }) {
   setCreateError('');
   try {
     if (author) setStoredAuthorName(author);
-    await postAtomToNetwork(atom, nodeRegistry);
+    const result = await postAtomToNetwork(atom, nodeRegistry);
+    if (result?.atom_id) atom.atom_id = result.atom_id;
     await upsertAtom(atom);
     closeCreateModal();
     await refreshUI();
@@ -1628,8 +1696,8 @@ function wireEvents() {
 // ---------------------------------------------------------------------------
 
 async function boot() {
-  console.log('PUNKTO APP.JS LOADED v98-hard-marker-2026-05-28-1');
-  window.PUNKTO_APP_VERSION = 'v98-hard-marker-2026-05-28-1';
+  console.log('PUNKTO APP.JS LOADED v99-hard-marker-2026-05-29-1');
+  window.PUNKTO_APP_VERSION = 'v99-hard-marker-2026-05-29-1';
 
   console.log('[punkto] booting...');
 
@@ -1694,6 +1762,7 @@ async function boot() {
     onShowOnMap: (id) => focusPunkto(id),
     onOpenBoard: (id) => { showPage('text'); },
     onLeaveNote: () => { dismissOnboarding(); openCreateModal(); },
+    onPostReply: submitBoardReply,
     helpers: {
       escHtml, deriveTitle, deriveCategory, isVerifiedAtom,
       fmtAltitudeLabel, fmtDistance, fmtTime,

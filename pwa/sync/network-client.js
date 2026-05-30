@@ -10,6 +10,8 @@ export async function postAtomToNetwork(atomBody, registry) {
   const { candidates, writeIndex } = registry.getWriteCandidateNodes();
   if (candidates.length === 0) throw new Error('No healthy nodes available');
 
+  let firstError = null;
+
   for (let i = 0; i < candidates.length; i++) {
     const url = candidates[(writeIndex + i) % candidates.length];
     try {
@@ -18,17 +20,28 @@ export async function postAtomToNetwork(atomBody, registry) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(atomBody),
       });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      if (!res.ok) {
+        let detail = null;
+        try { detail = await res.json(); } catch {}
+        const message = detail?.message || detail?.error || `HTTP ${res.status}`;
+        const err = new Error(message);
+        err.status = res.status;
+        err.code = detail?.error || null;
+        err.detail = detail;
+        throw err;
+      }
       registry.markNodeSuccess(url);
       registry.commitWriteSuccess(candidates.length);
       return await res.json();
     } catch (e) {
       console.warn(`[lb] postAtom failed for ${url}:`, e.message);
+      if (!firstError) firstError = e;
       registry.markNodeFailure(url);
+      if (e.status && e.status < 500) break;
     }
   }
 
-  throw new Error('All nodes failed');
+  throw firstError || new Error('All nodes failed');
 }
 
 export async function fetchNodeCursor(url) {
