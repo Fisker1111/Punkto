@@ -1,4 +1,4 @@
-# Server 1: handles both punkto.xyz and app1.punkto.xyz
+# node1/server1: handles punkto.xyz plus node1/app1 aliases
 # Caddy auto-HTTPS via Let's Encrypt
 
 (punkto_site) {
@@ -68,6 +68,10 @@ punkto.xyz {
 
 www.punkto.xyz {
     redir https://punkto.xyz{uri} permanent
+}
+
+node1.punkto.xyz {
+    import punkto_site
 }
 
 app1.punkto.xyz {

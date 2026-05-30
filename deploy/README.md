@@ -46,9 +46,9 @@ deploy/
   docker-compose.yml     — service definitions (web + relay)
   .env.example           — shared environment variable template
   server1/
-    Caddyfile            — Caddy config for server1 (punkto.xyz, app1, www)
+    Caddyfile            — self-contained Caddy config for node1/server1 (punkto.xyz, node1, app1, www)
   app2/
-    Caddyfile            — Caddy config for app2 (app2.punkto.xyz)
+    Caddyfile            — self-contained Caddy config for node2/app2 (node2, app2)
     .env.example         — app2-specific env template
 ```
 
@@ -69,11 +69,19 @@ Each node runs two containers:
 
 | Node | Domains | Location |
 |---|---|---|
-| node1 | `punkto.xyz`, `www.punkto.xyz` | Reference primary node |
-| node2 | operator-managed secondary hostname | Reference secondary node |
+| node1 | `punkto.xyz`, `www.punkto.xyz`, `node1.punkto.xyz`, `app1.punkto.xyz` | Reference primary node |
+| node2 | `node2.punkto.xyz`, `app2.punkto.xyz` | Reference secondary node |
 
 `server1`, `app1`, and `app2` are legacy/reference aliases that may remain in
 existing files or DNS history. Prefer `node1`/`node2` in new docs and examples.
+
+
+## Caddy template independence
+
+Each node Caddyfile is self-contained and must validate independently. Do not
+make one node deploy template depend on snippets or matchers defined only in
+another node's Caddyfile. Keep the node1/node2 canonical hostnames and the
+app1/app2 legacy aliases wired in their respective node templates.
 
 ## First deploy on a new node
 
