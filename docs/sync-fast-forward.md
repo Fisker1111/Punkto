@@ -31,6 +31,21 @@ Generate public feed and atom snapshots that can be cached at the edge while kee
 - **Public reads should be cacheable where possible.** Feed snapshots and atom JSON can become static/cacheable once generated.
 - **Writes remain dynamic and validated by the node.** Atom submission still requires live validation and append behavior.
 
+## Separating Identity from Delivery
+
+| Concept | Purpose | Scope |
+|---|---|---|
+| `atom_id` | Cryptographic identity of the atom content | Global — same on every node |
+| `cursor` / `log_seq` | Position in a node's append-only log | Local — varies per node |
+
+**Rules:**
+
+- `atom_id` deduplicates identity — two atoms with the same `atom_id` are the same content, even if received via different paths
+- `cursor`/`log_seq` deduplicates delivery — a client should not ingest the same atom twice from the same node
+- A client that reconnects uses the highest `cursor` it has seen from that node to resume
+- `atom_id` is derived from atom content (SHA-256 of canonical JSON without `sig`)
+- `cursor` is a monotonically increasing integer assigned by the accepting node
+
 ## Intended endpoints
 
 ### 1. Snapshot/feed
@@ -40,6 +55,36 @@ GET /feed?limit=100
 ```
 
 Returns a recent public feed. This is the fallback when a client has no cursor, when a cursor is missing, or when a cursor cannot be used. The response should include atoms and enough delivery metadata for a client to continue with fast-forward or stream.
+
+**Query parameters:**
+
+| Param | Type | Default | Description |
+|---|---|---|---|
+| `since` | integer | `0` | Return atoms with `cursor > since` |
+| `limit` | integer | `100` | Maximum atoms to return per response |
+
+**Response (JSON array):**
+
+```json
+[
+  {
+    "cursor": 42,
+    "atom_id": "abc123def456...",
+    "atom": { /* full atom object */ }
+  }
+]
+```
+
+**Headers:**
+
+- `X-Latest-Cursor`: the highest cursor currently on this node
+
+**Notes:**
+
+- If `since` is not provided, returns from the beginning (cursor 1)
+- If `since` exceeds the node's latest cursor, returns an empty array
+- The client should call repeatedly with the last received cursor until the response is empty
+- The client should also track `X-Latest-Cursor` for use with `GET /stream`
 
 ### 2. Fast-forward
 
@@ -55,9 +100,28 @@ Returns atoms delivered after the supplied cursor, up to the requested limit. Th
 GET /stream?since=<cursor>
 ```
 
-Starts a live stream after the supplied cursor. Clients can first fast-forward through `/feed?since=<cursor>&limit=500`, then switch to `/stream?since=<cursor>` using the newest returned cursor.
+Opens a long-lived HTTP connection that streams newly accepted atoms as they arrive. Clients can first fast-forward through `/feed?since=<cursor>&limit=500`, then switch to `/stream?since=<cursor>` using the newest returned cursor.
 
-If the cursor is absent, stale, or unsupported, the node may fall back to recent stream/feed behavior rather than treating the cursor as atom identity.
+**Response:**
+
+A Server-Sent Events (SSE) stream with `text/event-stream` content type:
+
+```text
+event: atom
+data: {"cursor":42,"atom_id":"abc...","atom":{...}}
+
+event: atom
+data: {"cursor":43,"atom_id":"def...","atom":{...}}
+
+event: heartbeat
+data: {}
+```
+
+**Notes:**
+
+- Heartbeat events are sent every 30 seconds to keep the connection alive
+- `X-Latest-Cursor` header is set on initial connection response
+- If the cursor is absent, stale, or unsupported, the node may fall back to recent stream/feed behavior rather than treating the cursor as atom identity
 
 ### 4. Atom lookup, future
 
@@ -91,17 +155,87 @@ A future atom lookup should resolve by atom identity, not delivery position. It 
 /data/punkto.db = SQLite index/cache
 ```
 
-Storage rules:
+### `/data/atoms.log.jsonl` — Append-Only Truth
+
+The canonical durable record of every atom accepted by this node.
+
+```jsonl
+{"cursor":1,"atom_id":"abc...","atom":{...}}
+{"cursor":2,"atom_id":"def...","atom":{...}}
+```
+
+**Rules:**
 
 - Accepted atoms are appended once to `/data/atoms.log.jsonl`.
+- One JSON object per line (JSONL format)
+- Each entry contains `cursor`, `atom_id`, and `atom` (full canonical atom object)
+- The log is append-only — never seek and overwrite; the cursor is the 1-indexed line number
+- The log file may be rotated but must not be truncated without archiving
 - The atom log is the durable source of truth.
-- `/data/punkto.db` is an index/cache for serving and querying.
-- SQLite can be rebuilt from the atom log.
-- Feed state survives node restart because it is derived from the durable atom log.
-- `atom_id` prevents storing the same accepted atom as a distinct identity.
-- `log_seq` or an equivalent cursor records delivery order for that node.
 
-## Cloudflare and static public-read direction
+### `/data/punkto.db` — SQLite Index/Cache
+
+A rebuildable index that mirrors the atom log for fast queries.
+
+**Properties:**
+
+- Full-text search on atom payloads
+- Spatial queries by 3D geohash
+- Board/ROOT/REPLY relationship queries
+- Can be rebuilt from `/data/atoms.log.jsonl` at any time
+- Loss of `punkto.db` is not data loss — it is index loss
+- Feed state survives node restart because it is derived from the durable atom log
+- `atom_id` prevents storing the same accepted atom as a distinct identity
+- `log_seq` or an equivalent cursor records delivery order for that node
+
+## Fast-Forward Flow
+
+```text
+Client                             Server
+  |                                  |
+  |-- GET /feed?since=42 ----------->|
+  |                                  |--- Read atoms.log.jsonl from line 43
+  |                                  |--- Slice [limit] atoms
+  |<-- [cursor:43..142, atoms] ------|
+  |<-- X-Latest-Cursor: 142 ---------|
+  |                                  |
+  |-- GET /feed?since=142 ---------->|
+  |<-- [cursor:143..150, atoms] -----|
+  |<-- X-Latest-Cursor: 150 ---------|
+  |                                  |
+  |-- GET /stream?since=150 -------->|
+  |<-- SSE: atom, atom, heartbeat... |
+```
+
+## Cache Policy
+
+### Live/Dynamic Endpoints — Do Not Cache
+
+The following endpoints produce dynamic, time-sensitive responses and must **never** be cached by CDN, Cloudflare, or browser:
+
+| Endpoint | Reason |
+|---|---|
+| `POST /atom` | Writes must be live-validated |
+| `GET /feed?since=<cursor>` | Content changes with every new atom |
+| `GET /stream` | Long-lived live stream |
+| `GET /node/info` | Status changes (load, peers, uptime) |
+| `GET /health` | Must reflect real-time health |
+| `GET /status` | Operational status must be current |
+
+### Cacheable Snapshots (Future)
+
+Periodic static snapshots may be served from a CDN for cold-start clients:
+
+| Resource | Cache | Description |
+|---|---|---|
+| Static PWA assets | Long-lived | `app.js`, `index.html`, images |
+| `/public/feed-latest.json` | Moderate (1h+) | Generated feed snapshot |
+| `/public/feed-000001.json` | Permanent | Versioned feed snapshot |
+| `/public/atoms/<atom_id>.json` | Long-lived | Individual atom JSON snapshot |
+
+These are **eventually consistent** snapshots, not substitutes for live `/feed` and `/stream` endpoints.
+
+### Cloudflare and static public-read direction
 
 The dynamic node remains responsible for:
 
@@ -134,6 +268,19 @@ Future static snapshot paths:
 ```
 
 These snapshots allow public reads to become cheap and cache-friendly while the node keeps write validation and live sync dynamic.
+
+## Future Work (Phase 8.1–8.9)
+
+| Item | Description |
+|---|---|
+| Implement append-only atom log writer | Write atoms to `/data/atoms.log.jsonl` in the relay |
+| Implement `/feed?since=<cursor>` | Serve atom log slices via HTTP |
+| Implement `/stream?since=<cursor>` | SSE streaming endpoint |
+| Rebuild SQLite from log on restart | Ensure index survives container restart |
+| Add backup/restore for atom log | `cp /data/atoms.log.jsonl /backup/` |
+| Add node doctor | Verify log integrity, cursor continuity, and index-to-log consistency |
+
+See `TODO.md` Phase 8 for the full public-readiness roadmap.
 
 ## Deliberately unchanged in PR A
 
