@@ -16,7 +16,7 @@ Punkto is the reference app built on Punkti. Punkto.xyz is the first public refe
 ## Phase 8 — Public Node Hardening
 
 - [ ] 8.0 Define public-readiness checklist
-- [ ] 8.1 Design durable storage model
+- [~] 8.1 Design durable storage model — in progress; see `docs/sync-fast-forward.md`
 - [ ] 8.2 Implement append-only atom log
 - [ ] 8.3 Add node doctor script
 - [ ] 8.4 Add rate limits and size limits
@@ -38,7 +38,13 @@ Notes:
 - SQLite can be rebuilt
 - Dedupe by atom_id
 - Feed survives restart
+- Fast-forward/cursor design is being documented in `docs/sync-fast-forward.md`
 - Backup/restore must be tested
+
+Next implementation tasks:
+- Append-only atom log
+- Feed cursor
+- Static feed snapshots
 
 ## Node roles
 
