@@ -4,7 +4,7 @@
 
 Punkto is a minimal system for addressing points in 3D space and attaching small, signed data to those locations. Open protocol, local-first, no central authority.
 
-Every atom is a board
+Every atom is addressable. Every ROOT atom is a board.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Repo release](https://img.shields.io/badge/release-v0.5-blue.svg)](https://github.com/Fisker1111/Punkto/releases/tag/v0.5)
@@ -26,6 +26,10 @@ Every atom is a board
 - Relays expose two read endpoints. `/feed?since=<cursor>` is a byte-offset stream — used by the PWA for resumable sync and by relay-to-relay replication. `/latest` returns the most recent N atoms in a single response — preferred for new clients and Flow-TV-style live displays. Both are first-class today; `/feed` may eventually be replaced by `/latest` for clients while staying for peer sync.
 - Signed atoms can be verified offline by clients or with `tools/punkto-key.py verify`. Today's relays store `sig` and `pubkey` when present but do not yet reject unsigned atoms — relay-side signature enforcement is planned for v0.5.
 - The PWA shows atoms as 3D bubbles on a map (MapLibre + deck.gl)
+- Every atom is addressable by its canonical `atom_id`
+- A ROOT atom starts a board — a public conversation at one exact location
+- A REPLY atom lives inside a board, linked by explicit `parent_id`, not by proximity
+- A nearby ROOT atom (even 2 cm away) is a separate board; clustering is UI only
 
 ### Canonical form
 
