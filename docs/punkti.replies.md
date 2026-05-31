@@ -68,7 +68,7 @@ Conceptual shape (illustrative, not a schema migration):
 ```json
 {
   "atom_id": "B",
-  "kind": "reply",
+  "relation": "reply",
   "parent_atom_id": "A",
   "author": "bob_pubkey_or_did",
   "body": "Reply text",
@@ -80,7 +80,7 @@ Conceptual shape (illustrative, not a schema migration):
 Notes:
 
 - `parent_atom_id` identifies the specific atom being replied to.
-- `kind: "reply"` is a logical classifier for interpretation.
+- `relation: "reply"` is a logical classifier for interpretation.
 - Signature covers canonicalized atom content, including parent reference.
 - Field names may be finalized during implementation, but semantics should remain.
 

@@ -189,6 +189,22 @@ Future client behavior should preserve the board's exact point:
 }
 ```
 
+## URL routing intent: `/p/<atom_id>`
+
+Every atom is addressable by its canonical `atom_id`. The URL pattern
+`/p/<atom_id>` always resolves to that exact atom. Client (not protocol)
+behavior then decides the display:
+
+- **ROOT atom**: open the atom as a board showing the ROOT plus its attached
+  REPLY atoms.
+- **REPLY atom**: open the parent/ROOT board and highlight the reply within
+  the thread.
+- **Missing parent/ROOT**: show the reply as an orphan — "Reply to unknown
+  atom" — and do not crash.
+
+This is intended client behavior, not a new protocol field. The protocol
+defines atoms and relationships; the client decides how to present them.
+
 ## Out of scope for this documentation PR
 
 This document does not change runtime atom schema, relay validation, storage,
