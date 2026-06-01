@@ -17,8 +17,8 @@ Punkto is the reference app built on Punkti. Punkto.xyz is the first public refe
 
 - [ ] 8.0 Define public-readiness checklist
 - [~] 8.1 Design durable storage model — in progress; see `docs/sync-fast-forward.md`
-- [ ] 8.2 Implement append-only atom log
-- [ ] 8.3 Add node doctor script
+- [~] 8.2 Implement append-only atom log — durable log live; rate/size limits remain follow-up
+- [x] 8.3 Add node doctor script (`scripts/node-doctor.py`)
 - [~] 8.4 Add live-forward acceptance/serving policy — implemented config policy; rate/size limits remain follow-up
 - [ ] 8.5 Define cache / Cloudflare policy
 - [ ] 8.6 Document public API
