@@ -32,6 +32,19 @@ storage:
   node_key_path: /data/node-key.json
 
 serving:
+  # Normal /feed and /latest are live-forward: serve recent atoms only.
   serve_recent: true
+  serve_recent_hours: 24
+  # Pinned/genesis atoms may remain visible outside the recent window.
   serve_pinned: true
+  pinned_atoms: []
+  # Future explicit archive mode. Keep false unless this node is intentionally an archive.
   serve_archive: false
+
+acceptance:
+  # Normal public POST /atom submissions must claim a recent atom timestamp.
+  accept_recent_hours: 24
+  # Trusted peer nodes may backfill older atoms during relay sync.
+  trusted_backfill_nodes:
+    - https://node1.example.org
+    - https://node2.example.org

@@ -67,8 +67,14 @@ storage:
   path: /data/private-ish
 serving:
   serve_recent: true
+  serve_recent_hours: 24
   serve_pinned: true
   serve_archive: false
+  pinned_atoms: []
+acceptance:
+  accept_recent_hours: 24
+  trusted_backfill_nodes:
+    - https://trusted.example
 """)
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -79,13 +85,15 @@ import relay  # noqa: E402
 
 
 _server = None
+_buffer = None
 _server_thread: threading.Thread | None = None
 
 
 def _start_server() -> None:
-    global _server, _server_thread
-    server, _, _ = relay.build_server(host=TEST_HOST, port=TEST_PORT)
+    global _server, _buffer, _server_thread
+    server, buffer, _ = relay.build_server(host=TEST_HOST, port=TEST_PORT)
     _server = server
+    _buffer = buffer
     _server_thread = threading.Thread(target=server.serve_forever, daemon=True, name="relay-test")
     _server_thread.start()
     # wait for server to be ready
@@ -113,6 +121,18 @@ def _atom(punkto: str = "p:u07qsuustfsh", t: int | None = None, **extra: Any) ->
     a = {"punkto": punkto, "t": t}
     a.update(extra)
     return a
+
+
+
+
+def _set_node_config_patch(patch: Dict[str, Any]) -> Dict[str, Any]:
+    original = relay.NODE_CONFIG
+    relay.NODE_CONFIG = relay._deep_merge(original, patch)  # type: ignore[attr-defined]
+    return original
+
+
+def _restore_node_config(original: Dict[str, Any]) -> None:
+    relay.NODE_CONFIG = original
 
 
 def _jsonl_count(path: str, atom: Dict[str, Any] | None = None) -> int:
@@ -194,7 +214,14 @@ def test_node_info_public_status_shape() -> None:
     assert body["node"]["identity_loaded"] is True
     assert isinstance(body["node"]["identity_created_at"], str)
     assert body["roles"] == {"web": True, "relay": True, "db_sharing": False}
-    assert body["serving"] == {"serve_recent": True, "serve_pinned": True, "serve_archive": False}
+    assert body["serving"] == {
+        "serve_recent": True,
+        "serve_recent_hours": 24,
+        "serve_pinned": True,
+        "serve_archive": False,
+        "pinned_atom_count": 0,
+    }
+    assert body["acceptance"] == {"accept_recent_hours": 24, "trusted_backfill_nodes_count": 1}
     assert body["network"]["seed_nodes"] == ["https://seed1.example", "https://seed2.example"]
     assert "https://known.example" in body["network"]["known_nodes"]
     assert body["config"] == {"loaded": True, "path": "/config/punkto-node.yml"}
@@ -209,6 +236,8 @@ def test_node_info_stats_fields_exist() -> None:
     assert isinstance(stats["buffer_size"], int)
     assert "oldest_t" in stats
     assert "newest_t" in stats
+    assert isinstance(stats["old_rejected_count"], int)
+    assert isinstance(stats["backfilled_accepted_count"], int)
 
 
 def test_node_info_storage_fields_safe() -> None:
@@ -360,6 +389,105 @@ def test_load_or_create_node_identity_invalid_fails() -> None:
         except SystemExit as exc:
             assert exc.code == 1
     finally:
+        shutil.rmtree(tmpdir, ignore_errors=True)
+
+
+
+def test_missing_config_uses_live_forward_defaults() -> None:
+    cfg, loaded, used = relay.load_node_config(os.path.join(_TMPDIR, "missing-node-config.yml"))
+    original_config = relay.NODE_CONFIG
+    try:
+        relay.NODE_CONFIG = cfg
+        assert loaded is False
+        assert used.endswith("missing-node-config.yml")
+        assert relay._serving_policy()["serve_recent_hours"] == 24
+        assert relay._serving_policy()["serve_pinned"] is True
+        assert relay._serving_policy()["serve_archive"] is False
+        assert relay._serving_policy()["pinned_atoms"] == []
+        assert relay._acceptance_policy()["accept_recent_hours"] == 24
+        assert relay._acceptance_policy()["trusted_backfill_nodes"] == []
+    finally:
+        relay.NODE_CONFIG = original_config
+
+
+def test_post_old_atom_rejected_by_acceptance_policy() -> None:
+    a = _atom(t=relay._now_ms() - (25 * 3600 * 1000), punkto="p:u07qoldoldaa", x="too old")
+    r = requests.post(f"{BASE_URL}/atom", json=a, timeout=5)
+    assert r.status_code == 422, r.text
+    body = r.json()
+    assert body["ok"] is False
+    assert body["error"] == "atom_too_old"
+    assert body["max_age_hours"] == 24
+    assert _jsonl_count(os.environ["PUNKTO_ATOM_LOG_PATH"], a) == 0
+
+
+def test_serving_excludes_old_non_pinned_atoms_from_feed_and_latest() -> None:
+    assert _buffer is not None
+    original_config = _set_node_config_patch({"serving": {"serve_recent_hours": 1, "serve_archive": False, "pinned_atoms": []}})
+    try:
+        old = _atom(t=relay._now_ms() - (2 * 3600 * 1000), punkto="p:u07qoldfeedx", x="old not served")
+        old_id, was_new = _buffer.append(old)
+        assert was_new is True
+        assert _jsonl_count(os.environ["PUNKTO_ATOM_LOG_PATH"], old) == 1
+
+        latest = requests.get(f"{BASE_URL}/latest", timeout=5).json()["atoms"]
+        feed = requests.get(f"{BASE_URL}/feed", timeout=5).json()["atoms"]
+        assert old_id not in [relay.compute_atom_id(a) for a in latest]
+        assert old_id not in [relay.compute_atom_id(a) for a in feed]
+    finally:
+        _restore_node_config(original_config)
+
+
+def test_pinned_old_atom_is_served_outside_recent_window() -> None:
+    assert _buffer is not None
+    old = _atom(t=relay._now_ms() - (2 * 3600 * 1000), punkto="p:u07qpinnedaa", x="pinned old served")
+    old_id = relay.compute_atom_id(old)
+    original_config = _set_node_config_patch({"serving": {"serve_recent_hours": 1, "serve_archive": False, "serve_pinned": True, "pinned_atoms": [old_id]}})
+    try:
+        _, was_new = _buffer.append(old)
+        assert was_new is True
+        latest = requests.get(f"{BASE_URL}/latest", timeout=5).json()["atoms"]
+        feed = requests.get(f"{BASE_URL}/feed", timeout=5).json()["atoms"]
+        assert old_id in [relay.compute_atom_id(a) for a in latest]
+        assert old_id in [relay.compute_atom_id(a) for a in feed]
+    finally:
+        _restore_node_config(original_config)
+
+
+def test_trusted_backfill_old_atom_accepted_and_untrusted_skipped() -> None:
+    tmpdir = tempfile.mkdtemp(prefix="punkto-sync-policy-")
+    original_config = _set_node_config_patch({
+        "acceptance": {"accept_recent_hours": 24, "trusted_backfill_nodes": ["https://trusted.example"]},
+        "serving": {"serve_recent_hours": 24, "serve_archive": False},
+    })
+    original_get = relay.requests.get
+
+    class FakeResponse:
+        status_code = 200
+
+        def __init__(self, atom: Dict[str, Any]) -> None:
+            self.atom = atom
+
+        def json(self) -> Dict[str, Any]:
+            return {"atoms": [self.atom]}
+
+    old = _atom(t=relay._now_ms() - (25 * 3600 * 1000), punkto="p:u07qbackfill", x="trusted old")
+    try:
+        relay.requests.get = lambda *args, **kwargs: FakeResponse(old)  # type: ignore[assignment]
+        trusted_buffer = relay.Buffer(os.path.join(tmpdir, "trusted.log.jsonl"), 10, 168)
+        trusted_buffer.load()
+        trusted_state = relay.SyncState(os.path.join(tmpdir, "trusted-sync.json"))
+        assert relay._sync_one_peer(trusted_buffer, trusted_state, "https://trusted.example") == 1
+        assert trusted_buffer.has(relay.compute_atom_id(old))
+
+        untrusted_buffer = relay.Buffer(os.path.join(tmpdir, "untrusted.log.jsonl"), 10, 168)
+        untrusted_buffer.load()
+        untrusted_state = relay.SyncState(os.path.join(tmpdir, "untrusted-sync.json"))
+        assert relay._sync_one_peer(untrusted_buffer, untrusted_state, "https://untrusted.example") == 0
+        assert not untrusted_buffer.has(relay.compute_atom_id(old))
+    finally:
+        relay.requests.get = original_get  # type: ignore[assignment]
+        _restore_node_config(original_config)
         shutil.rmtree(tmpdir, ignore_errors=True)
 
 
@@ -843,7 +971,12 @@ ALL_TESTS = [
     test_status_page_config_missing_fallback,
     test_load_or_create_node_identity_roundtrip,
     test_load_or_create_node_identity_invalid_fails,
+    test_missing_config_uses_live_forward_defaults,
     test_post_valid_atom,
+    test_post_old_atom_rejected_by_acceptance_policy,
+    test_serving_excludes_old_non_pinned_atoms_from_feed_and_latest,
+    test_pinned_old_atom_is_served_outside_recent_window,
+    test_trusted_backfill_old_atom_accepted_and_untrusted_skipped,
     test_post_duplicate_atom,
     test_post_invalid_missing_punkto,
     test_post_invalid_punkto_format,
