@@ -108,6 +108,16 @@ DEFAULT_NODE_CONFIG: Dict[str, Any] = {
         "enabled": False,
         "public_admin_enabled": False,
     },
+    "serving": {
+        "serve_recent_hours": 24,
+        "serve_pinned": True,
+        "serve_archive": False,
+        "pinned_atoms": [],
+    },
+    "acceptance": {
+        "accept_recent_hours": 24,
+        "trusted_backfill_nodes": [],
+    },
     "serving_policy": {
         "serve_recent": True,
         "recent_days": 30,
@@ -154,6 +164,10 @@ def _clean_node_config(candidate: Dict[str, Any]) -> Dict[str, Any]:
         cfg["node"] = deepcopy(DEFAULT_NODE_CONFIG["node"])
     if not isinstance(cfg.get("admin"), dict):
         cfg["admin"] = deepcopy(DEFAULT_NODE_CONFIG["admin"])
+    if not isinstance(cfg.get("serving"), dict):
+        cfg["serving"] = deepcopy(DEFAULT_NODE_CONFIG["serving"])
+    if not isinstance(cfg.get("acceptance"), dict):
+        cfg["acceptance"] = deepcopy(DEFAULT_NODE_CONFIG["acceptance"])
     if not isinstance(cfg.get("serving_policy"), dict):
         cfg["serving_policy"] = deepcopy(DEFAULT_NODE_CONFIG["serving_policy"])
     if not isinstance(cfg.get("bootstrap"), dict):
@@ -171,6 +185,7 @@ def _clean_node_config(candidate: Dict[str, Any]) -> Dict[str, Any]:
 
     for section, keys in {
         "admin": ["enabled", "public_admin_enabled"],
+        "serving": ["serve_pinned", "serve_archive"],
         "serving_policy": ["serve_recent", "serve_genesis", "serve_pinned", "serve_verified_only", "allow_unsigned", "archive_enabled"],
         "bootstrap": ["peer_discovery_enabled", "allow_user_added_peers"],
         "retention": ["keep_pinned_forever", "keep_genesis_forever"],
@@ -179,6 +194,8 @@ def _clean_node_config(candidate: Dict[str, Any]) -> Dict[str, Any]:
             cfg[section][key] = bool(cfg[section].get(key))
 
     for section, key, dflt in [
+        ("serving", "serve_recent_hours", DEFAULT_NODE_CONFIG["serving"]["serve_recent_hours"]),
+        ("acceptance", "accept_recent_hours", DEFAULT_NODE_CONFIG["acceptance"]["accept_recent_hours"]),
         ("serving_policy", "recent_days", DEFAULT_NODE_CONFIG["serving_policy"]["recent_days"]),
         ("retention", "stale_after_days", DEFAULT_NODE_CONFIG["retention"]["stale_after_days"]),
     ]:
@@ -197,7 +214,7 @@ def _clean_node_config(candidate: Dict[str, Any]) -> Dict[str, Any]:
         except (TypeError, ValueError):
             cfg["retention"]["delete_after_days"] = None
 
-    for section, key in [("bootstrap", "seed_nodes"), ("bootstrap", "blocked_nodes"), ("moderation", "blocked_authors"), ("moderation", "blocked_punktis"), ("moderation", "blocked_keywords")]:
+    for section, key in [("serving", "pinned_atoms"), ("acceptance", "trusted_backfill_nodes"), ("bootstrap", "seed_nodes"), ("bootstrap", "blocked_nodes"), ("moderation", "blocked_authors"), ("moderation", "blocked_punktis"), ("moderation", "blocked_keywords")]:
         value = cfg[section].get(key, [])
         cfg[section][key] = [str(x).strip() for x in value if str(x).strip()] if isinstance(value, list) else []
 
@@ -244,6 +261,109 @@ def _list_strings(value: Any) -> List[str]:
     return [str(item).strip() for item in value if str(item).strip()]
 
 
+
+
+def _int_config(section: str, key: str, default: int) -> int:
+    value = NODE_CONFIG.get(section, {}).get(key) if isinstance(NODE_CONFIG.get(section), dict) else default
+    try:
+        parsed = int(value)
+        return parsed if parsed > 0 else default
+    except (TypeError, ValueError):
+        return default
+
+
+def _normalize_node_url(url: Any) -> str:
+    return str(url or "").strip().rstrip("/")
+
+
+def _serving_policy() -> Dict[str, Any]:
+    serving = NODE_CONFIG.get("serving") if isinstance(NODE_CONFIG.get("serving"), dict) else {}
+    serving_policy = NODE_CONFIG.get("serving_policy") if isinstance(NODE_CONFIG.get("serving_policy"), dict) else {}
+    return {
+        "serve_recent_hours": _int_config("serving", "serve_recent_hours", 24),
+        "serve_pinned": bool(serving.get("serve_pinned", serving_policy.get("serve_pinned", True))),
+        "serve_archive": bool(serving.get("serve_archive", serving.get("archive_enabled", serving_policy.get("archive_enabled", False)))),
+        "pinned_atoms": _list_strings(serving.get("pinned_atoms")),
+    }
+
+
+def _acceptance_policy() -> Dict[str, Any]:
+    acceptance = NODE_CONFIG.get("acceptance") if isinstance(NODE_CONFIG.get("acceptance"), dict) else {}
+    return {
+        "accept_recent_hours": _int_config("acceptance", "accept_recent_hours", 24),
+        "trusted_backfill_nodes": [
+            _normalize_node_url(url) for url in _list_strings(acceptance.get("trusted_backfill_nodes"))
+        ],
+    }
+
+
+def _is_trusted_backfill_peer(peer: str) -> bool:
+    normalized = _normalize_node_url(peer)
+    return bool(normalized and normalized in set(_acceptance_policy()["trusted_backfill_nodes"]))
+
+
+def _atom_id_value(atom: Dict[str, Any]) -> str:
+    existing = atom.get("atom_id")
+    if isinstance(existing, str) and ATOM_ID_RE.match(existing):
+        return existing
+    return compute_atom_id(atom)
+
+
+def _is_pinned_atom(atom: Dict[str, Any]) -> bool:
+    policy = _serving_policy()
+    if not policy["serve_pinned"]:
+        return False
+    return _atom_id_value(atom) in set(policy["pinned_atoms"])
+
+
+def _atom_within_recent_window(atom: Dict[str, Any], hours: int) -> bool:
+    t = atom.get("t")
+    if not isinstance(t, int):
+        return False
+    return t >= _now_ms() - (max(1, int(hours)) * 3600 * 1000)
+
+
+def atom_is_publicly_served(atom: Dict[str, Any]) -> bool:
+    policy = _serving_policy()
+    if policy["serve_archive"]:
+        return True
+    if _is_pinned_atom(atom):
+        return True
+    return _atom_within_recent_window(atom, int(policy["serve_recent_hours"]))
+
+
+def validate_acceptance_policy(atom: Dict[str, Any], *, trusted_backfill: bool = False) -> Tuple[bool, Optional[Dict[str, Any]]]:
+    if trusted_backfill:
+        return True, None
+    policy = _acceptance_policy()
+    max_age_hours = int(policy["accept_recent_hours"])
+    if not _atom_within_recent_window(atom, max_age_hours):
+        return False, {
+            "ok": False,
+            "error": "atom_too_old",
+            "message": f"field 't' is older than the live acceptance window ({max_age_hours}h)",
+            "max_age_hours": max_age_hours,
+        }
+    return True, None
+
+
+POLICY_STATS_LOCK = threading.Lock()
+POLICY_STATS: Dict[str, int] = {
+    "old_rejected": 0,
+    "backfilled_accepted": 0,
+}
+
+
+def _inc_policy_stat(key: str) -> None:
+    with POLICY_STATS_LOCK:
+        POLICY_STATS[key] = int(POLICY_STATS.get(key, 0)) + 1
+
+
+def _policy_stats_snapshot() -> Dict[str, int]:
+    with POLICY_STATS_LOCK:
+        return dict(POLICY_STATS)
+
+
 def _safe_public_config() -> Dict[str, Any]:
     core = NODE_CONFIG.get("core") if isinstance(NODE_CONFIG.get("core"), dict) else {}
     node = NODE_CONFIG.get("node") if isinstance(NODE_CONFIG.get("node"), dict) else {}
@@ -271,8 +391,14 @@ def _safe_public_config() -> Dict[str, Any]:
         },
         "serving": {
             "serve_recent": bool(serving.get("serve_recent", serving_policy.get("serve_recent", True))),
-            "serve_pinned": bool(serving.get("serve_pinned", serving_policy.get("serve_pinned", True))),
-            "serve_archive": bool(serving.get("serve_archive", serving.get("archive_enabled", serving_policy.get("archive_enabled", False)))),
+            "serve_recent_hours": _serving_policy()["serve_recent_hours"],
+            "serve_pinned": _serving_policy()["serve_pinned"],
+            "serve_archive": _serving_policy()["serve_archive"],
+            "pinned_atom_count": len(_serving_policy()["pinned_atoms"]),
+        },
+        "acceptance": {
+            "accept_recent_hours": _acceptance_policy()["accept_recent_hours"],
+            "trusted_backfill_nodes_count": len(_acceptance_policy()["trusted_backfill_nodes"]),
         },
         "seed_nodes": seed_nodes,
         "known_nodes": known_nodes,
@@ -305,6 +431,7 @@ def _node_info_payload(buffer: "Buffer", sync_state: Optional["SyncState"] = Non
         },
         "roles": public_cfg["roles"],
         "serving": public_cfg["serving"],
+        "acceptance": public_cfg["acceptance"],
         "network": {
             "seed_nodes": public_cfg["seed_nodes"],
             "known_nodes": known_nodes,
@@ -320,6 +447,8 @@ def _node_info_payload(buffer: "Buffer", sync_state: Optional["SyncState"] = Non
             "buffer_size": buffer.size(),
             "oldest_t": buffer.oldest_t(),
             "newest_t": buffer.newest_t(),
+            "old_rejected_count": _policy_stats_snapshot().get("old_rejected", 0),
+            "backfilled_accepted_count": _policy_stats_snapshot().get("backfilled_accepted", 0),
         },
         "config": {
             "loaded": NODE_CONFIG_LOADED,
@@ -708,6 +837,8 @@ def _status_serving_summary(serving: Any) -> str:
             else "unknown"
         )
         rows.append(f"{label}: {state}")
+    rows.append(f"recent_hours: {serving.get('serve_recent_hours', 'unknown')}")
+    rows.append(f"pinned_atom_count: {serving.get('pinned_atom_count', 'unknown')}")
     return "\n".join(rows)
 
 
@@ -743,6 +874,8 @@ def render_status_page(buffer: "Buffer", sync_state: Optional["SyncState"] = Non
     node = info.get("node") if isinstance(info.get("node"), dict) else {}
     network = info.get("network") if isinstance(info.get("network"), dict) else {}
     stats = info.get("stats") if isinstance(info.get("stats"), dict) else {}
+    serving = info.get("serving") if isinstance(info.get("serving"), dict) else {}
+    acceptance = info.get("acceptance") if isinstance(info.get("acceptance"), dict) else {}
     storage = info.get("storage") if isinstance(info.get("storage"), dict) else {}
     config = info.get("config") if isinstance(info.get("config"), dict) else {}
     health = info.get("health") if isinstance(info.get("health"), dict) else {}
@@ -835,7 +968,8 @@ a {{ color: #8bd3ff; }}
 {_status_row("Config loaded", config.get("loaded"))}
 {_status_row("Config path", config.get("path") or "not available", mono=True)}
 {_status_row("Roles", _status_bool_rows(info.get("roles")), multiline=True)}
-{_status_row("Serving policy", _status_bool_rows(info.get("serving")), multiline=True)}
+{_status_row("Serving policy", _status_serving_summary(serving), multiline=True)}
+{_status_row("Acceptance policy", f"accept_recent_hours: {acceptance.get('accept_recent_hours', 'unknown')}\ntrusted_backfill_nodes_count: {acceptance.get('trusted_backfill_nodes_count', 'unknown')}", multiline=True)}
 </table>
 </section>
 
@@ -872,7 +1006,10 @@ a {{ color: #8bd3ff; }}
 {_status_row("Known peer count", known_peer_count)}
 {_status_row("Seed node count", seed_count)}
 {_status_row("db_sharing role", "enabled" if roles.get("db_sharing") is True else "disabled" if roles.get("db_sharing") is False else "unknown")}
-{_status_row("Serving policy", _status_serving_summary(info.get("serving")), multiline=True)}
+{_status_row("Serving policy", _status_serving_summary(serving), multiline=True)}
+{_status_row("Acceptance policy", f"accept_recent_hours: {acceptance.get('accept_recent_hours', 'unknown')}\ntrusted_backfill_nodes_count: {acceptance.get('trusted_backfill_nodes_count', 'unknown')}", multiline=True)}
+{_status_row("Old atoms rejected", stats.get("old_rejected_count", "not available"))}
+{_status_row("Backfilled atoms accepted", stats.get("backfilled_accepted_count", "not available"))}
 {_status_row("Recent feed size", recent_feed_size)}
 </table>
 </section>
@@ -1036,9 +1173,9 @@ class Buffer:
             return sum(1 for a in self._atoms if a.get("punkto") == canonical)
 
     def latest(self, limit: int) -> List[Dict[str, Any]]:
-        """Return up to `limit` atoms, newest first by `t`."""
+        """Return up to `limit` publicly served atoms, newest first by `t`."""
         with self._lock:
-            atoms = list(self._atoms)
+            atoms = [a for a in self._atoms if atom_is_publicly_served(a)]
         atoms.sort(key=lambda a: int(a.get("t", 0)), reverse=True)
         return atoms[: max(0, int(limit))]
 
@@ -1057,8 +1194,8 @@ class Buffer:
         if cursor < 0:
             cursor = 0
         if cursor == 0:
-            # Full snapshot from start.
-            return atoms_snapshot, file_size, False
+            # Full public snapshot from start.
+            return [a for a in atoms_snapshot if atom_is_publicly_served(a)], file_size, False
         if cursor > file_size:
             # Cursor past EOF - either client cached a stale offset or we pruned.
             return [], file_size, True
@@ -1084,7 +1221,7 @@ class Buffer:
             except json.JSONDecodeError:
                 continue
             ok, _ = validate_atom(atom)
-            if ok:
+            if ok and atom_is_publicly_served(atom):
                 atoms_out.append(atom)
         return atoms_out, new_cursor, False
 
@@ -1113,27 +1250,26 @@ class Buffer:
         return atom_id, True
 
     def _maybe_prune_locked(self) -> None:
-        """Prune oldest atoms if over count or age limits. Caller holds lock."""
+        """Prune non-pinned runtime atoms if over count or age limits. Caller holds lock."""
         now = _now_ms()
         cutoff = now - self.max_age_ms
-        # Determine how many to drop.
-        n_over = max(0, len(self._atoms) - self.max_atoms)
-        # Drop atoms older than cutoff (by `t`).
-        drop_indices: List[int] = []
-        for i, a in enumerate(self._atoms):
-            t = a.get("t")
-            if isinstance(t, int) and t < cutoff:
-                drop_indices.append(i)
-        # Combine: drop the union of (oldest n_over) and (any older than cutoff).
+        over_count_to_drop = max(0, len(self._atoms) - self.max_atoms)
+        dropped_for_count = 0
         keep_set: List[Dict[str, Any]] = []
-        if n_over > 0:
-            kept_after_count = self._atoms[n_over:]
-        else:
-            kept_after_count = list(self._atoms)
-        if drop_indices or n_over > 0:
-            keep_set = [a for a in kept_after_count if isinstance(a.get("t"), int) and a["t"] >= cutoff]
-            if len(keep_set) == len(self._atoms):
-                return  # nothing pruned
+
+        for atom in self._atoms:
+            if _is_pinned_atom(atom):
+                keep_set.append(atom)
+                continue
+            t = atom.get("t")
+            if isinstance(t, int) and t < cutoff:
+                continue
+            if dropped_for_count < over_count_to_drop:
+                dropped_for_count += 1
+                continue
+            keep_set.append(atom)
+
+        if len(keep_set) != len(self._atoms):
             self._rewrite_locked(keep_set)
 
     def _rewrite_locked(self, new_atoms: List[Dict[str, Any]]) -> None:
@@ -1245,11 +1381,16 @@ def _sync_one_peer(buffer: Buffer, sync_state: SyncState, peer: str) -> int:
     if not isinstance(atoms, list):
         return 0
 
+    trusted_backfill = _is_trusted_backfill_peer(peer)
     for atom in atoms:
         if not isinstance(atom, dict):
             continue
         ok, _ = validate_atom(atom)
         if not ok:
+            continue
+        accepted_by_policy, _ = validate_acceptance_policy(atom, trusted_backfill=trusted_backfill)
+        if not accepted_by_policy:
+            _inc_policy_stat("old_rejected")
             continue
         if atom_relation(atom) == "reply":
             location_anchors = [
@@ -1274,6 +1415,8 @@ def _sync_one_peer(buffer: Buffer, sync_state: SyncState, peer: str) -> int:
         _, was_new = buffer.append(atom)
         if was_new:
             new_count += 1
+            if trusted_backfill and not _atom_within_recent_window(atom, int(_acceptance_policy()["accept_recent_hours"])):
+                _inc_policy_stat("backfilled_accepted")
             log(
                 f"atom appended (sync<-{peer}): {atom.get('punkto')} "
                 f"id={atom_id[:12]} buffer_size={buffer.size()}"
@@ -1387,6 +1530,8 @@ class RelayHandler(BaseHTTPRequestHandler):
                 "buffer_hours_max": BUFFER_HOURS,
                 "latest_limit": LATEST_LIMIT,
                 "sync_interval": SYNC_INTERVAL,
+                "serving": _safe_public_config()["serving"],
+                "acceptance": _safe_public_config()["acceptance"],
                 "capabilities": ["write", "latest", "feed", "sync"],
             })
             return
@@ -1485,6 +1630,13 @@ class RelayHandler(BaseHTTPRequestHandler):
             assert err is not None
             status = 422 if err["error"] == "invalid_punkto" else 400
             self._send_json(status, err)
+            return
+
+        accepted_by_policy, policy_err = validate_acceptance_policy(atom)
+        if not accepted_by_policy:
+            assert policy_err is not None
+            _inc_policy_stat("old_rejected")
+            self._send_json(422, policy_err)
             return
 
         if atom_relation(atom) == "reply":
