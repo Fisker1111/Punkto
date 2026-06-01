@@ -184,10 +184,39 @@ Current documentation example top-level sections:
 - `operator` — public operator labels/contact metadata
 - `storage` — persistent data, atom log, database, and node-key paths
 - `serving` — node-local serving policy switches
+- `acceptance` — node-local live-forward acceptance/backfill policy
 
 A generic example lives at `docs/examples/punkto-node.example.yml`. It uses
 `example.org`, `node1`, and `node2` intentionally so it is safe to commit and
 safe for operators to copy before editing.
+
+### Live-forward acceptance and serving config
+
+Punkto nodes are live-forward by default, closer to an old public IRC flow than a full public archive. The relay may durably store more atoms than it normally serves. Operators configure two related but separate policies:
+
+```yaml
+serving:
+  serve_recent_hours: 24
+  serve_pinned: true
+  serve_archive: false
+  pinned_atoms: []
+
+acceptance:
+  accept_recent_hours: 24
+  trusted_backfill_nodes:
+    - https://node1.example.org
+    - https://node2.example.org
+```
+
+Policy meanings:
+
+- `acceptance.accept_recent_hours` limits normal public `POST /atom` submissions by the claimed atom timestamp (`t`). If an atom claims to be older than the window, the relay rejects it with `atom_too_old`. Old atoms are not trusted merely because they claim an old time.
+- `acceptance.trusted_backfill_nodes` lists public peer node URLs that may backfill older atoms during relay sync. Trusted backfill affects acceptance only; it does not make the atom's claimed time the node's delivery time.
+- `serving.serve_recent_hours` limits normal `/feed` and `/latest` responses to recent public flow. The durable atom log can still contain older accepted atoms.
+- `serving.serve_pinned` and `serving.pinned_atoms` allow specific atom IDs, including future genesis atoms, to remain served outside the normal recent window.
+- `serving.serve_archive` is reserved for explicit future archive nodes. It should remain `false` unless an operator intentionally enables archive behavior in a future version.
+
+The current relay stores accepted atoms as atom-only JSONL in `/data/atoms.log.jsonl`. It does not inject relay metadata into the signed/canonical atom before computing `atom_id`. A future envelope/index can add node-local `seen_t` and `log_seq` metadata outside the canonical atom; until then, serving policy uses the best available atom timestamp while the append-only log remains durable truth.
 
 ## Conversation model: ROOT/REPLY atoms
 
@@ -268,6 +297,14 @@ Definitions:
 
 A record cannot demand permanent service. The operator policy decides whether a stored record is served, pinned, archived, blocked, or aged out.
 
+Current relay behavior:
+
+- Normal public `POST /atom` accepts only recent atoms according to `acceptance.accept_recent_hours`.
+- Sync from URLs listed in `acceptance.trusted_backfill_nodes` may accept older atoms as backfill; non-trusted peers are held to the same recent acceptance window as public clients.
+- `/feed` and `/latest` serve recent atoms according to `serving.serve_recent_hours`, plus pinned atom IDs when `serving.serve_pinned` is enabled.
+- `serving.serve_archive=false` means normal public feed endpoints are not a full old archive, even though `/data/atoms.log.jsonl` remains the durable internal record.
+
+
 ## Node-local metadata
 
 Node-local serving metadata (conceptual) should include:
@@ -326,7 +363,7 @@ Policy intent:
 - client DB reset should not remove genesis from the network
 - genesis records should be inserted/served through normal node feed later
 
-This PR does **not** implement genesis insertion or runtime serving behavior.
+This PR does **not** implement genesis insertion. Runtime serving can keep configured genesis atom IDs visible by listing their `atom_id`s in `serving.pinned_atoms` while `serving.serve_pinned` is enabled.
 
 ## Node Admin UI (future)
 

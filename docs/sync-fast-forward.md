@@ -31,6 +31,30 @@ Generate public feed and atom snapshots that can be cached at the edge while kee
 - **Public reads should be cacheable where possible.** Feed snapshots and atom JSON can become static/cacheable once generated.
 - **Writes remain dynamic and validated by the node.** Atom submission still requires live validation and append behavior.
 
+
+## Live-forward policy
+
+Punkto's public node default is live-forward rather than full-archive. A node can keep a durable append-only truth log while limiting what normal public clients can submit and what normal public feed endpoints serve.
+
+Core times and identities:
+
+| Concept | Meaning | Trust boundary |
+|---|---|---|
+| `atom_time` / `t` | Claimed timestamp inside the atom | Atom/content claim; useful but not delivery truth |
+| `node_seen_time` | When this node accepted/saw the atom | Node-local relay metadata; future envelope/index field |
+| `cursor` / `log_seq` | Node-local delivery order | Local to the serving node |
+| `atom_id` | Dedupe identity of canonical atom JSON | Global content identity |
+
+Current implemented policy:
+
+- Normal public `POST /atom` rejects atoms whose claimed `t` is older than `acceptance.accept_recent_hours` (default 24h).
+- Relay sync from URLs listed in `acceptance.trusted_backfill_nodes` may accept older atoms as trusted backfill. Non-trusted peers skip old atoms.
+- `/feed` and `/latest` serve the live-forward recent window from `serving.serve_recent_hours` (default 24h), plus configured pinned atom IDs when `serving.serve_pinned` is enabled.
+- `serving.serve_archive` remains `false` by default. Full archive serving is explicit future work; normal feed endpoints should not become raw log dumps.
+- Accepted old backfill atoms are still appended/deduped like any other accepted atom. The claimed atom time is not treated as node delivery order.
+
+The current atom log stores atom JSON only, preserving atom identity assumptions. A future sidecar/envelope such as `{"seq":123,"seen_t":"...","atom":{...}}` can add node-local `seen_t`/`log_seq` without mutating the signed/canonical atom.
+
 ## Separating Identity from Delivery
 
 | Concept | Purpose | Scope |
@@ -54,7 +78,7 @@ Generate public feed and atom snapshots that can be cached at the edge while kee
 GET /feed?limit=100
 ```
 
-Returns a recent public feed. This is the fallback when a client has no cursor, when a cursor is missing, or when a cursor cannot be used. The response should include atoms and enough delivery metadata for a client to continue with fast-forward or stream.
+Returns a recent public feed within the node's serving policy. This is the fallback when a client has no cursor, when a cursor is missing, or when a cursor cannot be used. The response should include atoms and enough delivery metadata for a client to continue with fast-forward or stream. It is not a full archive when `serving.serve_archive=false`.
 
 **Query parameters:**
 
@@ -173,6 +197,9 @@ The canonical durable record of every atom accepted by this node. The current im
 - Malformed JSONL lines are skipped and counted at startup instead of crashing the relay.
 - Backups must include `/data/atoms.log.jsonl`; SQLite remains future rebuildable index/cache state.
 - The atom log is the durable source of truth.
+- Public serving is policy-limited: old atoms may remain in this log even when `/feed` and `/latest` no longer serve them.
+- Pinned/genesis atom IDs may be served beyond the normal recent window when configured.
+- Full archive exposure remains future explicit functionality, not the default feed behavior.
 
 ### `/data/punkto.db` — SQLite Index/Cache
 
