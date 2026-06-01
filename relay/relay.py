@@ -6,7 +6,7 @@ Single-file Python 3 server. Stdlib + `requests`.
 
 Roles:
   - Accept POST /atom from clients
-  - Maintain a bounded rolling buffer of recent atoms (atoms.ndjson)
+  - Maintain a bounded rolling buffer of recent atoms backed by an append-only JSONL log
   - Serve GET /latest, GET /feed?since=<cursor>, GET /health, GET /info
   - Server-render GET /p/<atom_id> with OpenGraph meta for share cards
   - Pull from configured peers via /latest (fallback /feed) on a background thread
@@ -67,7 +67,8 @@ BUFFER_HOURS = int(os.environ.get("PUNKTO_BUFFER_HOURS", "168"))
 LATEST_LIMIT = int(os.environ.get("PUNKTO_LATEST_LIMIT", "100"))
 SYNC_INTERVAL = int(os.environ.get("PUNKTO_SYNC_INTERVAL", "30"))
 
-ATOMS_FILE = os.path.join(DATA_DIR, "atoms.ndjson")
+DEFAULT_ATOM_LOG_PATH = "/data/atoms.log.jsonl"
+ATOM_LOG_FILE = os.environ.get("PUNKTO_ATOM_LOG_PATH", DEFAULT_ATOM_LOG_PATH)
 SYNC_STATE_FILE = os.path.join(DATA_DIR, "sync_state.json")
 
 MAX_BODY_BYTES = 65_536  # 64 KB
@@ -308,7 +309,14 @@ def _node_info_payload(buffer: "Buffer", sync_state: Optional["SyncState"] = Non
             "seed_nodes": public_cfg["seed_nodes"],
             "known_nodes": known_nodes,
         },
+        "storage": {
+            "mode": "append_only_log",
+            "log_path": DEFAULT_ATOM_LOG_PATH,
+            "log_loaded": buffer.log_loaded(),
+            "corrupt_lines": buffer.corrupt_lines(),
+        },
         "stats": {
+            "atom_count": buffer.size(),
             "buffer_size": buffer.size(),
             "oldest_t": buffer.oldest_t(),
             "newest_t": buffer.newest_t(),
@@ -735,6 +743,7 @@ def render_status_page(buffer: "Buffer", sync_state: Optional["SyncState"] = Non
     node = info.get("node") if isinstance(info.get("node"), dict) else {}
     network = info.get("network") if isinstance(info.get("network"), dict) else {}
     stats = info.get("stats") if isinstance(info.get("stats"), dict) else {}
+    storage = info.get("storage") if isinstance(info.get("storage"), dict) else {}
     config = info.get("config") if isinstance(info.get("config"), dict) else {}
     health = info.get("health") if isinstance(info.get("health"), dict) else {}
 
@@ -856,6 +865,10 @@ a {{ color: #8bd3ff; }}
 {_status_row("buffer_size", stats.get("buffer_size", "not available"))}
 {_status_row("oldest_t", _format_utc_ms(stats.get("oldest_t")))}
 {_status_row("newest_t", _format_utc_ms(stats.get("newest_t")))}
+{_status_row("storage_mode", storage.get("mode", "not available"))}
+{_status_row("atom_log_path", storage.get("log_path", "not available"), mono=True)}
+{_status_row("atom_log_loaded", storage.get("log_loaded", "not available"))}
+{_status_row("corrupt_lines", storage.get("corrupt_lines", "not available"))}
 {_status_row("Known peer count", known_peer_count)}
 {_status_row("Seed node count", seed_count)}
 {_status_row("db_sharing role", "enabled" if roles.get("db_sharing") is True else "disabled" if roles.get("db_sharing") is False else "unknown")}
@@ -895,17 +908,19 @@ a {{ color: #8bd3ff; }}
 
 
 # ---------------------------------------------------------------------------
-# Buffer — in-memory rolling store backed by atoms.ndjson
+# Buffer — in-memory rolling store backed by append-only atom log
 # ---------------------------------------------------------------------------
 
 
 class Buffer:
-    """Thread-safe rolling buffer of atoms.
+    """Thread-safe rolling buffer of atoms backed by durable JSONL storage.
 
     Invariants (under self._lock):
-      - self._atoms is a list of dicts in append order.
-      - self._atom_ids maps atom_id -> index in _atoms.
-      - atoms.ndjson on disk holds exactly the atoms in self._atoms, one per line.
+      - self._atoms is a bounded runtime list of dicts in append order.
+      - self._atom_ids maps buffered atom_id -> index in _atoms.
+      - self._seen_atom_ids contains every atom_id loaded from or appended to the log.
+      - self.atoms_file is append-only durable truth: one accepted atom JSON object
+        per line, never rewritten for runtime buffer pruning.
     """
 
     def __init__(self, atoms_file: str, max_atoms: int, max_hours: int) -> None:
@@ -915,8 +930,11 @@ class Buffer:
         self._lock = threading.Lock()
         self._atoms: List[Dict[str, Any]] = []
         self._atom_ids: Dict[str, int] = {}
+        self._seen_atom_ids: set[str] = set()
         self._pruned_ever: bool = False
-        # Track current file size for /feed cursor compat
+        self._log_loaded: bool = False
+        self._corrupt_lines: int = 0
+        # Track current append-only log size for /feed cursor compatibility.
         self._file_size: int = 0
 
     # -- lifecycle -----------------------------------------------------------
@@ -924,13 +942,19 @@ class Buffer:
     def load(self) -> None:
         os.makedirs(os.path.dirname(self.atoms_file) or ".", exist_ok=True)
         if not os.path.exists(self.atoms_file):
-            with open(self.atoms_file, "a"):
+            with open(self.atoms_file, "ab"):
                 pass
-            self._file_size = 0
+            with self._lock:
+                self._file_size = 0
+                self._log_loaded = True
+                self._corrupt_lines = 0
             return
+
         with self._lock:
             self._atoms.clear()
             self._atom_ids.clear()
+            self._seen_atom_ids.clear()
+            self._corrupt_lines = 0
             with open(self.atoms_file, "rb") as f:
                 data = f.read()
             self._file_size = len(data)
@@ -941,17 +965,22 @@ class Buffer:
                 try:
                     atom = json.loads(line)
                 except json.JSONDecodeError:
+                    self._corrupt_lines += 1
                     continue
                 ok, _ = validate_atom(atom)
                 if not ok:
                     continue
                 aid = compute_atom_id(atom)
-                if aid in self._atom_ids:
+                if aid in self._seen_atom_ids:
                     continue
+                self._seen_atom_ids.add(aid)
                 self._atom_ids[aid] = len(self._atoms)
                 self._atoms.append(atom)
+            self._maybe_prune_locked()
+            self._log_loaded = True
         log(
-            f"buffer loaded: {len(self._atoms)} atoms, file_size={self._file_size}"
+            f"buffer loaded: {len(self._atoms)} atoms, file_size={self._file_size}, "
+            f"corrupt_lines={self._corrupt_lines}"
         )
 
     # -- read API ------------------------------------------------------------
@@ -959,6 +988,14 @@ class Buffer:
     def size(self) -> int:
         with self._lock:
             return len(self._atoms)
+
+    def log_loaded(self) -> bool:
+        with self._lock:
+            return self._log_loaded
+
+    def corrupt_lines(self) -> int:
+        with self._lock:
+            return self._corrupt_lines
 
     def oldest_t(self) -> Optional[int]:
         with self._lock:
@@ -976,7 +1013,7 @@ class Buffer:
 
     def has(self, atom_id: str) -> bool:
         with self._lock:
-            return atom_id in self._atom_ids
+            return atom_id in self._seen_atom_ids
 
     def get_by_id(self, atom_id: str) -> Optional[Dict[str, Any]]:
         with self._lock:
@@ -1010,8 +1047,8 @@ class Buffer:
     ) -> Tuple[List[Dict[str, Any]], int, bool]:
         """Return (atoms, new_cursor, buffer_underflow).
 
-        The cursor is a byte offset in atoms.ndjson. After any prune, old
-        cursors become unreliable; we report buffer_underflow so clients reset.
+        The cursor is a byte offset in atoms.log.jsonl. Runtime buffer pruning
+        does not rewrite the durable log, so cursors remain log offsets.
         """
         with self._lock:
             file_size = self._file_size
@@ -1026,9 +1063,10 @@ class Buffer:
             # Cursor past EOF - either client cached a stale offset or we pruned.
             return [], file_size, True
         if pruned:
-            # We can't trust mid-file offsets after a prune.
-            return [], file_size, True
-        # No prunes yet; safe to read from disk at offset.
+            # The append-only log is not rewritten during runtime buffer pruning,
+            # so mid-log offsets remain safe.
+            pass
+        # Safe to read from append-only log at offset.
         atoms_out: List[Dict[str, Any]] = []
         try:
             with open(self.atoms_file, "rb") as f:
@@ -1042,9 +1080,12 @@ class Buffer:
             if not line:
                 continue
             try:
-                atoms_out.append(json.loads(line))
+                atom = json.loads(line)
             except json.JSONDecodeError:
-                pass
+                continue
+            ok, _ = validate_atom(atom)
+            if ok:
+                atoms_out.append(atom)
         return atoms_out, new_cursor, False
 
     # -- write API -----------------------------------------------------------
@@ -1053,7 +1094,7 @@ class Buffer:
         """Append atom if new. Returns (atom_id, was_new)."""
         atom_id = compute_atom_id(atom)
         with self._lock:
-            if atom_id in self._atom_ids:
+            if atom_id in self._seen_atom_ids:
                 return atom_id, False
             line = json.dumps(atom, separators=(",", ":"), ensure_ascii=False) + "\n"
             encoded = line.encode("utf-8")
@@ -1065,6 +1106,7 @@ class Buffer:
                 except OSError:
                     pass
             self._file_size += len(encoded)
+            self._seen_atom_ids.add(atom_id)
             self._atom_ids[atom_id] = len(self._atoms)
             self._atoms.append(atom)
             self._maybe_prune_locked()
@@ -1095,28 +1137,17 @@ class Buffer:
             self._rewrite_locked(keep_set)
 
     def _rewrite_locked(self, new_atoms: List[Dict[str, Any]]) -> None:
-        """Atomically rewrite atoms.ndjson with new_atoms. Caller holds lock."""
+        """Replace only runtime buffer contents. Caller holds lock.
+
+        Despite the historical method name, this never rewrites the durable atom
+        log. /data/atoms.log.jsonl remains append-only truth.
+        """
         before = len(self._atoms)
-        tmp = self.atoms_file + ".tmp"
-        with open(tmp, "wb") as f:
-            for atom in new_atoms:
-                line = json.dumps(atom, separators=(",", ":"), ensure_ascii=False) + "\n"
-                f.write(line.encode("utf-8"))
-            f.flush()
-            try:
-                os.fsync(f.fileno())
-            except OSError:
-                pass
-        os.replace(tmp, self.atoms_file)
         self._atoms = list(new_atoms)
         self._atom_ids = {compute_atom_id(a): i for i, a in enumerate(self._atoms)}
-        try:
-            self._file_size = os.path.getsize(self.atoms_file)
-        except OSError:
-            self._file_size = 0
         self._pruned_ever = True
         log(
-            f"prune: {before} -> {len(self._atoms)} atoms (max_atoms={self.max_atoms}, "
+            f"runtime prune: {before} -> {len(self._atoms)} atoms (max_atoms={self.max_atoms}, "
             f"max_hours={self.max_age_ms // 3600000})"
         )
 
@@ -1647,7 +1678,7 @@ def build_server(
     host: str = HOST, port: int = PORT
 ) -> Tuple[ThreadingHTTPServer, Buffer, SyncState]:
     """Build (but do not start) the HTTP server. Used by tests too."""
-    buffer = Buffer(ATOMS_FILE, BUFFER_ATOMS, BUFFER_HOURS)
+    buffer = Buffer(ATOM_LOG_FILE, BUFFER_ATOMS, BUFFER_HOURS)
     buffer.load()
     sync_state = SyncState(SYNC_STATE_FILE)
     RelayHandler.buffer = buffer
@@ -1659,7 +1690,7 @@ def build_server(
 def main() -> None:
     server, buffer, sync_state = build_server()
     log(f"punkto-relay {VERSION} listening on http://{HOST}:{PORT}")
-    log(f"node={NODE_NAME} data_dir={DATA_DIR} buffer_atoms={BUFFER_ATOMS} buffer_hours={BUFFER_HOURS}")
+    log(f"node={NODE_NAME} data_dir={DATA_DIR} atom_log={ATOM_LOG_FILE} buffer_atoms={BUFFER_ATOMS} buffer_hours={BUFFER_HOURS}")
     if PEERS:
         log(f"peers: {PEERS}")
         t = threading.Thread(target=_sync_loop, args=(buffer, sync_state), daemon=True, name="sync-loop")
