@@ -182,7 +182,7 @@ Current documentation example top-level sections:
 - `roles` — which node roles are enabled
 - `network` — seed nodes and peer bootstrap inputs
 - `operator` — public operator labels/contact metadata
-- `storage` — persistent data, database, and node-key paths
+- `storage` — persistent data, atom log, database, and node-key paths
 - `serving` — node-local serving policy switches
 
 A generic example lives at `docs/examples/punkto-node.example.yml`. It uses
@@ -202,6 +202,13 @@ design documentation only; current relay validation, storage, sync, and PWA UI
 behavior are unchanged.
 
 ## Node identity
+
+Persistent atom log path:
+
+- `/data/atoms.log.jsonl`
+- override with `PUNKTO_ATOM_LOG_PATH=/path/to/atoms.log.jsonl`
+- backup/restore procedures must include this file; it is the durable source of accepted public atoms
+- SQLite remains a future rebuildable index/cache, not the authoritative storage layer
 
 Persistent node identity path:
 

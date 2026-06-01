@@ -1,6 +1,6 @@
 # Sync fast-forward and atom log plan
 
-This document defines the intended public-readiness storage and sync model before implementation. It is a plan for the node API and persistence behavior, not a runtime change.
+This document defines the public-readiness storage and sync model. The first durable storage step is implemented: accepted public atoms are appended to `/data/atoms.log.jsonl` and the relay rebuilds its runtime feed buffer from that log on startup. Cursor, SQLite, and generated-cache work remain incremental follow-ups.
 
 ## Three-step public-readiness plan
 
@@ -12,9 +12,9 @@ This PR is documentation-only. It does not change runtime code, relay behavior, 
 
 ### PR B — implement append-only atom log and feed cursor
 
-Add the durable append-only atom log and make feed delivery cursor-aware. Accepted atoms should be appended once to the durable log, exposed through a recent snapshot/feed, and available through fast-forward from a node-local cursor.
+The append-only atom log is now implemented as the first durable storage step. Accepted atoms are appended once to `/data/atoms.log.jsonl`, the relay loads that log at startup, skips malformed JSONL lines, dedupes by `atom_id`, and rebuilds its bounded in-memory feed buffer from the durable log. Full cursor semantics remain future work beyond the current byte-offset compatibility behavior.
 
-SQLite remains an index/cache and must be rebuildable from the atom log.
+SQLite remains a future index/cache and must be rebuildable from the atom log.
 
 ### PR C — generate cacheable public read snapshots
 
@@ -157,20 +157,21 @@ A future atom lookup should resolve by atom identity, not delivery position. It 
 
 ### `/data/atoms.log.jsonl` — Append-Only Truth
 
-The canonical durable record of every atom accepted by this node.
+The canonical durable record of every atom accepted by this node. The current implemented file stores one full atom JSON object per line.
 
 ```jsonl
-{"cursor":1,"atom_id":"abc...","atom":{...}}
-{"cursor":2,"atom_id":"def...","atom":{...}}
+{"punkto":"p:u07qsuustfsh","t":1780000000000,"x":"hello"}
+{"punkto":"p:u07qskyuhbus","t":1780000001000,"relation":"root","x":"root"}
 ```
 
 **Rules:**
 
 - Accepted atoms are appended once to `/data/atoms.log.jsonl`.
-- One JSON object per line (JSONL format)
-- Each entry contains `cursor`, `atom_id`, and `atom` (full canonical atom object)
-- The log is append-only — never seek and overwrite; the cursor is the 1-indexed line number
-- The log file may be rotated but must not be truncated without archiving
+- One full atom JSON object per line (JSONL format).
+- The relay computes `atom_id` from each atom for dedupe; duplicate `atom_id`s are not appended again.
+- The log is append-only — runtime buffer pruning must not rewrite it.
+- Malformed JSONL lines are skipped and counted at startup instead of crashing the relay.
+- Backups must include `/data/atoms.log.jsonl`; SQLite remains future rebuildable index/cache state.
 - The atom log is the durable source of truth.
 
 ### `/data/punkto.db` — SQLite Index/Cache

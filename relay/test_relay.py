@@ -11,6 +11,7 @@ Works with or without pytest installed.
 
 from __future__ import annotations
 
+import json
 import os
 import shutil
 import sys
@@ -39,6 +40,7 @@ os.environ["PUNKTO_LATEST_LIMIT"] = "10"
 os.environ["PUNKTO_SYNC_INTERVAL"] = "3600"  # effectively disabled
 os.environ["PUNKTO_NODE_CONFIG"] = os.path.join(_TMPDIR, "punkto-node.yml")
 os.environ["PUNKTO_NODE_KEY"] = os.path.join(_TMPDIR, "node-key.json")
+os.environ["PUNKTO_ATOM_LOG_PATH"] = os.path.join(_TMPDIR, "atoms.log.jsonl")
 os.environ["PUNKTO_TEST_SECRET"] = "relay-test-env-secret-value"
 with open(os.environ["PUNKTO_NODE_CONFIG"], "w", encoding="utf-8") as f:
     f.write("""core:
@@ -113,6 +115,27 @@ def _atom(punkto: str = "p:u07qsuustfsh", t: int | None = None, **extra: Any) ->
     return a
 
 
+def _jsonl_count(path: str, atom: Dict[str, Any] | None = None) -> int:
+    if not os.path.exists(path):
+        return 0
+    count = 0
+    expected_id = relay.compute_atom_id(atom) if atom is not None else None
+    with open(path, "r", encoding="utf-8") as f:
+        for line in f:
+            if not line.strip():
+                continue
+            if expected_id is None:
+                count += 1
+                continue
+            try:
+                parsed = json.loads(line)
+            except json.JSONDecodeError:
+                continue
+            if relay.compute_atom_id(parsed) == expected_id:
+                count += 1
+    return count
+
+
 # ---------------------------------------------------------------------------
 # Tests
 # ---------------------------------------------------------------------------
@@ -182,9 +205,23 @@ def test_node_info_stats_fields_exist() -> None:
     r = requests.get(f"{BASE_URL}/node/info", timeout=5)
     assert r.status_code == 200, r.text
     stats = r.json()["stats"]
+    assert isinstance(stats["atom_count"], int)
     assert isinstance(stats["buffer_size"], int)
     assert "oldest_t" in stats
     assert "newest_t" in stats
+
+
+def test_node_info_storage_fields_safe() -> None:
+    r = requests.get(f"{BASE_URL}/node/info", timeout=5)
+    assert r.status_code == 200, r.text
+    storage = r.json()["storage"]
+    assert storage == {
+        "mode": "append_only_log",
+        "log_path": "/data/atoms.log.jsonl",
+        "log_loaded": True,
+        "corrupt_lines": 0,
+    }
+    assert _TMPDIR not in r.text
 
 
 def test_node_info_does_not_expose_private_values() -> None:
@@ -237,6 +274,9 @@ def test_status_page_data_flow_links_and_stats() -> None:
     assert "Live stream endpoint" in text
     assert "not enabled" in text
     assert "buffer_size" in text
+    assert "storage_mode" in text
+    assert "append_only_log" in text
+    assert "corrupt_lines" in text
     assert "Known peer count" in text
     assert "Seed node count" in text
     assert "db_sharing role" in text
@@ -533,6 +573,140 @@ def test_feed_returns_root_reply_metadata_fields() -> None:
     assert stored["location_source"] == "root"
 
 
+
+def test_missing_atom_log_startup_works() -> None:
+    with tempfile.TemporaryDirectory(prefix="punkto-log-missing-") as td:
+        path = os.path.join(td, "nested", "atoms.log.jsonl")
+        buffer = relay.Buffer(path, max_atoms=10, max_hours=168)
+        buffer.load()
+        assert buffer.log_loaded() is True
+        assert buffer.corrupt_lines() == 0
+        assert buffer.size() == 0
+        assert os.path.exists(path)
+
+
+def test_accepted_atom_appended_to_log() -> None:
+    atom = _atom(punkto="p:u07qsvy8txhf", t=relay._now_ms() - 700, f="log", x="append once")
+    before = _jsonl_count(relay.ATOM_LOG_FILE, atom)
+    r = requests.post(f"{BASE_URL}/atom", json=atom, timeout=5)
+    assert r.status_code == 201, r.text
+    assert _jsonl_count(relay.ATOM_LOG_FILE, atom) == before + 1
+
+
+def test_relay_reload_from_log_returns_atom_in_feed() -> None:
+    with tempfile.TemporaryDirectory(prefix="punkto-log-reload-") as td:
+        path = os.path.join(td, "atoms.log.jsonl")
+        atom = _atom(punkto="p:u07qskyuhbmw", t=relay._now_ms() - 650, x="reload me")
+        buffer = relay.Buffer(path, max_atoms=10, max_hours=168)
+        buffer.load()
+        atom_id, was_new = buffer.append(atom)
+        assert was_new is True
+        reloaded = relay.Buffer(path, max_atoms=10, max_hours=168)
+        reloaded.load()
+        atoms, cursor, underflow = reloaded.feed_since(0)
+        assert underflow is False
+        assert cursor > 0
+        assert any(relay.compute_atom_id(a) == atom_id for a in atoms)
+
+
+def test_duplicate_atom_id_not_appended_twice() -> None:
+    atom = _atom(punkto="p:u07qskyuhbuu", t=relay._now_ms() - 600, f="dup-log", x="duplicate log")
+    first = requests.post(f"{BASE_URL}/atom", json=atom, timeout=5)
+    assert first.status_code == 201, first.text
+    before = _jsonl_count(relay.ATOM_LOG_FILE, atom)
+    second = requests.post(f"{BASE_URL}/atom", json=atom, timeout=5)
+    assert second.status_code == 200, second.text
+    assert second.json()["status"] == "duplicate"
+    assert _jsonl_count(relay.ATOM_LOG_FILE, atom) == before
+
+
+def test_duplicate_pruned_atom_id_not_appended_twice() -> None:
+    with tempfile.TemporaryDirectory(prefix="punkto-log-pruned-dup-") as td:
+        path = os.path.join(td, "atoms.log.jsonl")
+        first = _atom(punkto="p:u07qskyuhbuu", t=relay._now_ms() - 600, x="first durable")
+        second = _atom(punkto="p:u07qskyuhsqu", t=relay._now_ms() - 500, x="forces prune")
+        buffer = relay.Buffer(path, max_atoms=1, max_hours=168)
+        buffer.load()
+        first_id, was_new = buffer.append(first)
+        assert was_new is True
+        _, was_new = buffer.append(second)
+        assert was_new is True
+        assert buffer.get_by_id(first_id) is None
+        _, duplicate_new = buffer.append(first)
+        assert duplicate_new is False
+        assert _jsonl_count(path, first) == 1
+
+
+def test_corrupt_jsonl_line_skipped_and_counted() -> None:
+    with tempfile.TemporaryDirectory(prefix="punkto-log-corrupt-") as td:
+        path = os.path.join(td, "atoms.log.jsonl")
+        good = _atom(punkto="p:u07qskyuhsqu", t=relay._now_ms() - 550, x="valid after corrupt")
+        with open(path, "w", encoding="utf-8") as f:
+            f.write('{"punkto":')
+            f.write("\n")
+            json.dump(good, f, separators=(",", ":"), ensure_ascii=False)
+            f.write("\n")
+        buffer = relay.Buffer(path, max_atoms=10, max_hours=168)
+        buffer.load()
+        assert buffer.corrupt_lines() == 1
+        assert buffer.size() == 1
+        assert buffer.latest(1)[0]["x"] == "valid after corrupt"
+
+
+def test_old_atom_without_relation_parent_loads_as_root() -> None:
+    with tempfile.TemporaryDirectory(prefix="punkto-log-old-") as td:
+        path = os.path.join(td, "atoms.log.jsonl")
+        old = _atom(punkto="p:u07quvubhgbd", t=relay._now_ms() - 500, x="old root")
+        with open(path, "w", encoding="utf-8") as f:
+            json.dump(old, f, separators=(",", ":"), ensure_ascii=False)
+            f.write("\n")
+        buffer = relay.Buffer(path, max_atoms=10, max_hours=168)
+        buffer.load()
+        loaded = buffer.latest(1)[0]
+        assert "relation" not in loaded
+        assert relay.atom_relation(loaded) == "root"
+
+
+def test_root_reply_fields_survive_reload() -> None:
+    with tempfile.TemporaryDirectory(prefix="punkto-log-reply-") as td:
+        path = os.path.join(td, "atoms.log.jsonl")
+        parent = _atom(
+            punkto="p:u07qskyuhbmy",
+            t=relay._now_ms() - 450,
+            relation="root",
+            lat=1,
+            lon=2,
+            altitude_m=3,
+            x="reply root",
+        )
+        parent_id = relay.compute_atom_id(parent)
+        reply = _atom(
+            punkto=parent["punkto"],
+            t=relay._now_ms() - 400,
+            relation="reply",
+            parent_id=parent_id,
+            root_id=parent_id,
+            location_lock=True,
+            location_source="root",
+            lat=1,
+            lon=2,
+            altitude_m=3,
+            x="reply fields",
+        )
+        with open(path, "w", encoding="utf-8") as f:
+            for atom in (parent, reply):
+                json.dump(atom, f, separators=(",", ":"), ensure_ascii=False)
+                f.write("\n")
+        buffer = relay.Buffer(path, max_atoms=10, max_hours=168)
+        buffer.load()
+        loaded = buffer.get_by_id(relay.compute_atom_id(reply))
+        assert loaded is not None
+        assert loaded["relation"] == "reply"
+        assert loaded["parent_id"] == parent_id
+        assert loaded["root_id"] == parent_id
+        assert loaded["location_lock"] is True
+        assert loaded["location_source"] == "root"
+
 def test_latest() -> None:
     r = requests.get(f"{BASE_URL}/latest", timeout=5)
     assert r.status_code == 200, r.text
@@ -660,6 +834,7 @@ ALL_TESTS = [
     test_info,
     test_node_info_public_status_shape,
     test_node_info_stats_fields_exist,
+    test_node_info_storage_fields_safe,
     test_node_info_does_not_expose_private_values,
     test_status_page_public_html,
     test_status_page_data_flow_links_and_stats,
@@ -683,6 +858,14 @@ ALL_TESTS = [
     test_parent_known_reply_same_punkto_location_is_accepted,
     test_parent_known_reply_different_punkto_location_rejects_400,
     test_feed_returns_root_reply_metadata_fields,
+    test_missing_atom_log_startup_works,
+    test_accepted_atom_appended_to_log,
+    test_relay_reload_from_log_returns_atom_in_feed,
+    test_duplicate_atom_id_not_appended_twice,
+    test_duplicate_pruned_atom_id_not_appended_twice,
+    test_corrupt_jsonl_line_skipped_and_counted,
+    test_old_atom_without_relation_parent_loads_as_root,
+    test_root_reply_fields_survive_reload,
     test_latest,
     test_feed_initial,
     test_buffer_rotation,
