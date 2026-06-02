@@ -74,3 +74,11 @@ Next implementation tasks:
 - [ ] No secrets exposed in /status or /node/info
 - [ ] node1/node2 healthy
 - [ ] Public launch note drafted
+
+## IP-first bootstrap follow-ups
+
+- Keep DNS/HTTPS as convenience layers, not protocol requirements.
+- Add future structured `network.seed_nodes` entries with `url` plus `node_id` once config parsing supports them.
+- Add future `/data/known-peers.json` learned peer cache for peer memory.
+- Consider future `/peers`, signed node records, QR/imported peer records, manual peer add, peer capabilities, `last_seen`, and trust levels.
+- Move backfill trust toward node identity/fingerprint rather than DNS-only endpoint strings.

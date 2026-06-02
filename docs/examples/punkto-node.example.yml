@@ -17,9 +17,17 @@ roles:
   db_sharing: true
 
 network:
+  # Current runtime seed entries are endpoint URLs. DNS/HTTPS is convenient,
+  # but IP:port endpoints are also valid for node-to-node bootstrap.
   seed_nodes:
     - https://node1.example.org
-    - https://node2.example.org
+    - http://203.0.113.10:7777
+  # Future structured seed entries may pin reachability to node identity:
+  # seed_nodes:
+  #   - url: "https://node1.example.org"
+  #     node_id: "node:abc123..."
+  #   - url: "http://203.0.113.10:7777"
+  #     node_id: "node:def456..."
 
 operator:
   node_name: "Example Punkto Node 1"
@@ -44,7 +52,12 @@ serving:
 acceptance:
   # Normal public POST /atom submissions must claim a recent atom timestamp.
   accept_recent_hours: 24
-  # Trusted peer nodes may backfill older atoms during relay sync.
+  # Current runtime entries are trusted peer endpoint URLs. Future config should
+  # prefer pinning this trust to node_id/fingerprint instead of DNS alone.
   trusted_backfill_nodes:
     - https://node1.example.org
-    - https://node2.example.org
+    - http://203.0.113.10:7777
+  # Future identity-pinned backfill policy may look like:
+  # trusted_backfill_nodes:
+  #   - url: "https://node1.example.org"
+  #     node_id: "node:abc123..."
