@@ -37,7 +37,24 @@ Once a node is running, these documents describe how to ship updates safely:
 | [`DEPLOYMENT_TROUBLESHOOTING.md`](../DEPLOYMENT_TROUBLESHOOTING.md) | Decision tree for common deployment failures |
 | [`verify.sh`](./verify.sh) | Executable smoke-test script for CI/CD and manual post-deploy verification |
 
-**TL;DR:** after every deploy, run `bash deploy/verify.sh <node-host> <expected-hard-marker>`.
+**TL;DR:** after every deploy, run the node doctor from an external machine:
+
+```bash
+scripts/node-doctor.py https://node1.punkto.xyz
+scripts/node-doctor.py https://node1.punkto.xyz \
+  --expect-ip 46.101.118.157 \
+  --expect-name "Punkto Reference Node 1"
+```
+
+When SSHed into the server, add local host checks:
+
+```bash
+scripts/node-doctor.py https://node1.punkto.xyz --local
+```
+
+`bash deploy/verify.sh <node-host> <expected-hard-marker>` remains available as
+the older PWA smoke-test helper. Use `scripts/node-doctor.py --expect-marker`
+when the hard marker should be enforced as part of node verification.
 
 ## Structure
 

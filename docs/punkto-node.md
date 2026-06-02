@@ -111,6 +111,40 @@ Configuration changes are done by the node operator on the server, normally over
 SSH by editing node-local config and restarting/reloading the service. The web
 can explain the node; SSH controls the node.
 
+### Node doctor
+
+`scripts/node-doctor.py` is the repeatable deploy and launch-readiness check for
+a Punkto node. It verifies the public read-only endpoints from outside the node
+and can add server-local filesystem, Docker, Caddy, and disk checks when run on
+the host. Run it after every deploy and before public launch so hostname, proxy,
+config-mount, stale-container, and public-safety mistakes are caught consistently.
+
+Remote check:
+
+```bash
+scripts/node-doctor.py https://node1.punkto.xyz
+```
+
+Remote check with expected DNS/name guardrails:
+
+```bash
+scripts/node-doctor.py https://node1.punkto.xyz \
+  --expect-ip 46.101.118.157 \
+  --expect-name "Punkto Reference Node 1"
+```
+
+Local server check, run from the deployed project directory on the node:
+
+```bash
+scripts/node-doctor.py https://node1.punkto.xyz --local
+```
+
+Machine-readable output is available for automation with `--json`; use
+`--expect-marker` to require a deployed `/app.js` hard marker/version string.
+The doctor does not print config contents or secrets. It fails if public
+`/status` or `/node/info` expose forbidden private-key, token, secret, `.env`,
+or raw private key material.
+
 ### Reference deployment names
 
 Use `node1` and `node2` as preferred reference names in public examples and new
