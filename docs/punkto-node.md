@@ -406,17 +406,25 @@ A future Node Admin UI should read/write node config and display node state.
 
 ## Bootstrap and peers
 
+Punkto uses an **IP-first bootstrap model**: DNS/HTTPS are useful convenience layers, but Punkti node sync must not require domain ownership, Cloudflare, app stores, or any central service. A node endpoint is how to reach a node; `node_id` / fingerprint is who the node is. Trust must be attached to node identity and local operator policy, not to DNS alone.
+
+See `docs/ip-first-bootstrap.md` for the full endpoint-vs-identity model, bootstrap sources, config-vs-learned-peer split, sync/discovery flow, security notes, and future implementation fields.
+
 Peer sources should be config-controlled:
 
-- **seed nodes**: built-in or configured bootstrap nodes
-- **discovered peers**: learned from network later
+- **seed nodes**: built-in or configured bootstrap nodes, including DNS/HTTPS URLs or `IP:port` endpoints
+- **discovered peers**: learned from `/node/info` or future peer exchange
+- **learned peer cache**: future `/data/known-peers.json` network memory
 - **blocked nodes**: never use
-- **user-added peers**: operator configured
+- **user-added peers**: operator configured manually by URL, `IP:port`, or imported peer record
 
 Principles:
 
 - bootstrap should be config-driven
+- DNS is optional naming, not a protocol requirement
+- IP:port endpoints are valid for node sync
 - adding peers should not automatically imply trust
+- `trusted_backfill_nodes` should refer to node identity where possible in future, not only DNS names
 - node trust and reputation are future work
 
 ## Security and safety principles
