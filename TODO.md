@@ -21,7 +21,7 @@ Punkto is the reference app built on Punkti. Punkto.xyz is the first public refe
 - [x] 8.3 Add node doctor script (`scripts/node-doctor.py`)
 - [~] 8.4 Add live-forward acceptance/serving policy — implemented config policy; rate/size limits remain follow-up
 - [ ] 8.5 Define cache / Cloudflare policy
-- [ ] 8.6 Document public API
+- [x] 8.6 Document public API
 - [ ] 8.7 Add backup and restore scripts
 - [ ] 8.8 Fresh install guide from clean VM
 - [ ] 8.9 Launch candidate checklist
