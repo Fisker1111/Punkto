@@ -203,3 +203,7 @@ docker compose restart relay
 # Open relay shell (debug)
 docker compose exec relay sh
 ```
+
+### Cache and CDN Policy
+
+See [docs/cache-cloudflare.md](../docs/cache-cloudflare.md) for the cache and Cloudflare/CDN policy.
