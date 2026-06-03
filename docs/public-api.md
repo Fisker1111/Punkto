@@ -1,5 +1,8 @@
 # Punkto Public API
 
+> **Cache policy:** See [docs/cache-cloudflare.md](cache-cloudflare.md) for the full cache and CDN policy definition.
+
+
 > This document describes all public HTTP endpoints exposed by a Punkto node's relay service. These endpoints form the public API surface for clients, tools, peer nodes, and monitoring systems.
 >
 > **Status:** Live — describes the current implementation.
@@ -591,3 +594,7 @@ Legacy node summary. Superseded by `/node/info`. Maintained for backward compati
 | 1.0 | v0.1 | Initial API: /health, /info, /latest, /feed, /atom |
 | 1.1 | v0.1 | Added /node/info, /status, /p/<id> |
 | 1.2 | v0.1 | Added live-forward policy to /info and /node/info, config_loaded support |
+
+### Cache Policy Reference
+
+See [docs/cache-cloudflare.md](cache-cloudflare.md) for the full cache policy, Cloudflare guidance, and Caddy header configuration.
