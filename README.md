@@ -134,6 +134,7 @@ All specs are authoritative source-of-truth Markdown files in this repository:
 | [`punkto.ui.md`](punkto.ui.md) | UI principles for any Punkto client |
 | [`punkto.ai.md`](punkto.ai.md) | AI agents as Punkto nodes |
 | [`docs/punkto-node.md`](docs/punkto-node.md) | Deployable node model: config, persistence, identity, serving policy |
+| [`docs/fresh-install-ubuntu.md`](docs/fresh-install-ubuntu.md) | Step-by-step: fresh Ubuntu 24.04 server to running Punkto node |
 
 Also of interest:
 
