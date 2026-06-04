@@ -479,3 +479,9 @@ Principles:
 - trust registry
 - archive proofs
 - proof-of-service later
+
+---
+
+## See Also
+
+- [Fresh Ubuntu Install Guide](fresh-install-ubuntu.md) — Step-by-step guide from fresh server to running node
