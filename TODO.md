@@ -24,7 +24,7 @@ Punkto is the reference app built on Punkti. Punkto.xyz is the first public refe
 - [x] 8.6 Document public API
 - [x] 8.7 Add backup and restore scripts
 - [x] 8.8 Fresh install guide from clean VM
-- [ ] 8.9 Launch candidate checklist
+- [x] 8.9 Launch candidate checklist
 
 ## Storage direction
 
