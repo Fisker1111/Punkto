@@ -38,6 +38,10 @@ os.environ["PUNKTO_BUFFER_ATOMS"] = "5"
 os.environ["PUNKTO_BUFFER_HOURS"] = "168"
 os.environ["PUNKTO_LATEST_LIMIT"] = "10"
 os.environ["PUNKTO_SYNC_INTERVAL"] = "3600"  # effectively disabled
+# Generous default so the suite's own POST volume from one IP is never
+# rate limited; dedicated rate-limit tests swap in a low limiter at runtime.
+os.environ["PUNKTO_RATE_LIMIT_WINDOW_SECONDS"] = "60"
+os.environ["PUNKTO_RATE_LIMIT_MAX_POSTS"] = "100000"
 os.environ["PUNKTO_NODE_CONFIG"] = os.path.join(_TMPDIR, "punkto-node.yml")
 os.environ["PUNKTO_NODE_KEY"] = os.path.join(_TMPDIR, "node-key.json")
 os.environ["PUNKTO_ATOM_LOG_PATH"] = os.path.join(_TMPDIR, "atoms.log.jsonl")
@@ -957,6 +961,121 @@ def test_options_cors() -> None:
     assert r.headers.get("Access-Control-Allow-Origin") == "*"
 
 
+# ---------------------------------------------------------------------------
+# Rate limiting (POST /atom) tests
+# ---------------------------------------------------------------------------
+
+
+def _swap_rate_limiter(window_seconds: int, max_posts: int):
+    """Install a low-limit rate limiter and return the original for restore."""
+    original = relay._post_rate_limiter
+    relay._post_rate_limiter = relay.RateLimiter(window_seconds, max_posts)
+    return original
+
+
+def test_rate_limiter_class_sliding_window() -> None:
+    """Unit test: per-key window + max, independent keys, max<=0 disables."""
+    rl = relay.RateLimiter(window_seconds=10, max_events=2)
+    now = 1000.0
+    assert rl.allow("a", now=now) is True
+    assert rl.allow("a", now=now) is True
+    assert rl.allow("a", now=now) is False        # third in window -> blocked
+    assert rl.allow("b", now=now) is True          # different key independent
+    assert rl.allow("a", now=now + 11) is True     # window slid past -> allowed
+    disabled = relay.RateLimiter(window_seconds=10, max_events=0)
+    assert all(disabled.allow("x") for _ in range(50))  # 0 disables limiting
+
+
+def test_post_under_limit_accepted() -> None:
+    """A normal single POST under the limit is accepted (not rate limited)."""
+    original = _swap_rate_limiter(60, 5)
+    try:
+        a = _atom(t=relay._now_ms(), x="rate-under-limit")
+        r = requests.post(f"{BASE_URL}/atom", json=a, timeout=5)
+        assert r.status_code in (200, 201), r.text
+        assert r.json().get("status") in ("accepted", "duplicate")
+    finally:
+        relay._post_rate_limiter = original
+
+
+def test_post_burst_over_limit_returns_429() -> None:
+    """Burst beyond the per-IP limit returns 429 with the documented JSON body."""
+    original = _swap_rate_limiter(60, 2)
+    try:
+        headers = {"X-Forwarded-For": "203.0.113.7"}
+        codes = []
+        for i in range(3):
+            a = _atom(t=relay._now_ms(), x=f"rate-burst-{i}")
+            r = requests.post(f"{BASE_URL}/atom", json=a, headers=headers, timeout=5)
+            codes.append(r.status_code)
+        assert codes[0] in (200, 201), codes
+        assert codes[1] in (200, 201), codes
+        assert codes[2] == 429, codes
+        blocked = requests.post(
+            f"{BASE_URL}/atom",
+            json=_atom(t=relay._now_ms(), x="rate-burst-x"),
+            headers=headers,
+            timeout=5,
+        )
+        assert blocked.status_code == 429
+        assert blocked.json() == {"ok": False, "error": "rate_limited"}
+    finally:
+        relay._post_rate_limiter = original
+
+
+def test_rate_limit_is_per_ip() -> None:
+    """Exhausting one IP does not block a different IP."""
+    original = _swap_rate_limiter(60, 1)
+    try:
+        ip_a = {"X-Forwarded-For": "198.51.100.10"}
+        ip_b = {"X-Forwarded-For": "198.51.100.20"}
+        first_a = requests.post(
+            f"{BASE_URL}/atom", json=_atom(t=relay._now_ms(), x="perip-a1"),
+            headers=ip_a, timeout=5,
+        )
+        assert first_a.status_code in (200, 201), first_a.text
+        second_a = requests.post(
+            f"{BASE_URL}/atom", json=_atom(t=relay._now_ms(), x="perip-a2"),
+            headers=ip_a, timeout=5,
+        )
+        assert second_a.status_code == 429, second_a.text
+        first_b = requests.post(
+            f"{BASE_URL}/atom", json=_atom(t=relay._now_ms(), x="perip-b1"),
+            headers=ip_b, timeout=5,
+        )
+        assert first_b.status_code in (200, 201), first_b.text
+    finally:
+        relay._post_rate_limiter = original
+
+
+def test_duplicate_behavior_unchanged_under_limit() -> None:
+    """Under a generous limit, posting the same atom twice still dedupes."""
+    original = _swap_rate_limiter(60, 10)
+    try:
+        a = _atom(t=relay._now_ms(), x="rate-dup-check")
+        first = requests.post(f"{BASE_URL}/atom", json=a, timeout=5)
+        assert first.status_code == 201, first.text
+        assert first.json()["status"] == "accepted"
+        second = requests.post(f"{BASE_URL}/atom", json=a, timeout=5)
+        assert second.status_code == 200, second.text
+        assert second.json()["status"] == "duplicate"
+    finally:
+        relay._post_rate_limiter = original
+
+
+def test_get_endpoints_not_rate_limited() -> None:
+    """GET endpoints are never rate limited even with an exhausted limiter."""
+    original = _swap_rate_limiter(60, 1)
+    try:
+        headers = {"X-Forwarded-For": "192.0.2.55"}
+        for _ in range(5):
+            for path in ("/health", "/status", "/node/info", "/feed"):
+                r = requests.get(f"{BASE_URL}{path}", headers=headers, timeout=5)
+                assert r.status_code == 200, f"{path} -> {r.status_code}"
+    finally:
+        relay._post_rate_limiter = original
+
+
 ALL_TESTS = [
     test_health,
     test_info,
@@ -1008,6 +1127,12 @@ ALL_TESTS = [
     test_p_canonical_with_prefix,
     test_p_canonical_unknown,
     test_options_cors,
+    test_rate_limiter_class_sliding_window,
+    test_post_under_limit_accepted,
+    test_post_burst_over_limit_returns_429,
+    test_rate_limit_is_per_ip,
+    test_duplicate_behavior_unchanged_under_limit,
+    test_get_endpoints_not_rate_limited,
 ]
 
 

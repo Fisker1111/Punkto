@@ -518,6 +518,17 @@ Submit a new atom to the node. Atoms must be valid JSON objects with required fi
 | `422` | `invalid_punkto` | Punkto address fails validation |
 | `400` | (reply validation) | REPLY atom references a parent that doesn't exist or has wrong location |
 | `404` | `not_found` | Only `POST /atom` is allowed — other paths return 404 |
+| `429` | `rate_limited` | Too many `POST /atom` requests from this client — see Rate Limiting below |
+
+### Rate Limiting
+
+`POST /atom` is rate limited per client IP to protect the public buffer from flooding. By default a client may submit at most **30 POSTs per 60 seconds**; exceeding this returns:
+
+```json
+{ "ok": false, "error": "rate_limited" }
+```
+
+with HTTP status `429`. Limits are configurable per node via `PUNKTO_RATE_LIMIT_MAX_POSTS` and `PUNKTO_RATE_LIMIT_WINDOW_SECONDS`. The limiter is in-memory and per-node (it resets on restart). Read endpoints (`/health`, `/status`, `/node/info`, `/feed`, `/latest`) are **not** rate limited.
 
 ### Acceptance Policy
 
@@ -556,6 +567,7 @@ All error responses (except HTML paths) use a consistent JSON format:
 | `404` | Endpoint or resource not found |
 | `413` | Request body too large |
 | `422` | Semantic validation failure (atom too old, invalid punkto address) |
+| `429` | Rate limited (too many `POST /atom` requests from this client) |
 | `500` | Internal server error |
 
 ---

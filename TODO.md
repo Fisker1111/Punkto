@@ -67,7 +67,7 @@ Next implementation tasks:
 - [ ] Restart persistence tested
 - [ ] Backup/restore tested
 - [ ] Node doctor passes node1/node2
-- [ ] Rate limits active
+- [x] Rate limits active — per-IP POST /atom rate limit (default 30/60s, configurable)
 - [ ] Cache policy active
 - [ ] API docs complete
 - [ ] Fresh install works
