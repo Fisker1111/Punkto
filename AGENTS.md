@@ -22,6 +22,9 @@ Approximate nav weighting:
 - +: 15%
 - Settings: 15%
 
+> **Next styling-only PR** (no behavior/protocol/backend changes) must follow `PUNKTO_UI_PRINCIPLES.md`:
+> dark/glass unification · one nav bubble (docks bottom on mobile, left on desktop) · no hamburger · map control clustering · staged Create sheet.
+
 ---
 
 ## Team roles
