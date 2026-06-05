@@ -67,6 +67,13 @@ BUFFER_HOURS = int(os.environ.get("PUNKTO_BUFFER_HOURS", "168"))
 LATEST_LIMIT = int(os.environ.get("PUNKTO_LATEST_LIMIT", "100"))
 SYNC_INTERVAL = int(os.environ.get("PUNKTO_SYNC_INTERVAL", "30"))
 
+# Basic per-IP rate limit for POST /atom (alpha abuse guard).
+# Sliding window: at most MAX_POSTS accepted POST /atom attempts per WINDOW per IP.
+RATE_LIMIT_WINDOW_SECONDS = int(
+    os.environ.get("PUNKTO_RATE_LIMIT_WINDOW_SECONDS", "60")
+)
+RATE_LIMIT_MAX_POSTS = int(os.environ.get("PUNKTO_RATE_LIMIT_MAX_POSTS", "30"))
+
 DEFAULT_ATOM_LOG_PATH = "/data/atoms.log.jsonl"
 ATOM_LOG_FILE = os.environ.get("PUNKTO_ATOM_LOG_PATH", DEFAULT_ATOM_LOG_PATH)
 SYNC_STATE_FILE = os.path.join(DATA_DIR, "sync_state.json")
@@ -1448,6 +1455,49 @@ def _sync_loop(buffer: Buffer, sync_state: SyncState) -> None:
 
 
 # ---------------------------------------------------------------------------
+# Rate limiting (per-IP sliding window, in-memory)
+# ---------------------------------------------------------------------------
+
+
+class RateLimiter:
+    """Thread-safe in-memory per-IP sliding-window rate limiter.
+
+    Allows at most ``max_events`` events per ``window_seconds`` per key (IP).
+    State is process-local and resets on restart \u2014 a deliberately simple
+    alpha abuse guard, not a distributed quota system.
+    """
+
+    def __init__(self, window_seconds: int, max_events: int) -> None:
+        self.window_seconds = max(1, int(window_seconds))
+        self.max_events = max(0, int(max_events))
+        self._hits: Dict[str, List[float]] = {}
+        self._lock = threading.Lock()
+
+    def allow(self, key: str, now: Optional[float] = None) -> bool:
+        """Record an attempt for ``key``; return False if over the limit."""
+        if self.max_events <= 0:
+            return True
+        ts = time.time() if now is None else now
+        cutoff = ts - self.window_seconds
+        with self._lock:
+            hits = [h for h in self._hits.get(key, ()) if h > cutoff]
+            if len(hits) >= self.max_events:
+                self._hits[key] = hits
+                return False
+            hits.append(ts)
+            self._hits[key] = hits
+            # Opportunistic cleanup so idle IPs don't accumulate forever.
+            if len(self._hits) > 4096:
+                for k in [k for k, v in self._hits.items()
+                          if not any(h > cutoff for h in v)]:
+                    self._hits.pop(k, None)
+            return True
+
+
+_post_rate_limiter = RateLimiter(RATE_LIMIT_WINDOW_SECONDS, RATE_LIMIT_MAX_POSTS)
+
+
+# ---------------------------------------------------------------------------
 # HTTP handler
 # ---------------------------------------------------------------------------
 
@@ -1498,6 +1548,19 @@ class RelayHandler(BaseHTTPRequestHandler):
             "Access-Control-Allow-Methods": "GET,POST,OPTIONS",
             "Access-Control-Allow-Headers": "Content-Type",
         }
+
+    def _client_ip(self) -> str:
+        """Best-effort client IP. Behind Caddy/CDN the real client is the
+        first hop of X-Forwarded-For; fall back to the socket peer."""
+        fwd = self.headers.get("X-Forwarded-For", "")
+        if fwd:
+            first = fwd.split(",")[0].strip()
+            if first:
+                return first
+        try:
+            return self.client_address[0]
+        except (AttributeError, IndexError, TypeError):
+            return "unknown"
 
     # -- methods -------------------------------------------------------------
 
@@ -1602,6 +1665,11 @@ class RelayHandler(BaseHTTPRequestHandler):
 
         if path != "/atom":
             self._send_error_json(404, "not_found", f"No endpoint: {path}")
+            return
+
+        if not _post_rate_limiter.allow(self._client_ip()):
+            _inc_policy_stat("rate_limited")
+            self._send_json(429, {"ok": False, "error": "rate_limited"})
             return
 
         try:
