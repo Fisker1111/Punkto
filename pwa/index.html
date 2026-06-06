@@ -362,6 +362,48 @@
     }
     #toggle-3d:hover { color: var(--accent); border-color: var(--accent-dim); }
 
+    /* ── PR3: map control cluster ───────────────────────────────
+       Group locate/zoom (MapLibre, bottom-right) and the 2D/3D
+       toggle into ONE dark-glass cluster in a single corner.
+       Styling only; also fixes the default light MapLibre controls. */
+    .maplibregl-ctrl-bottom-right {
+      right: 16px;
+      bottom: 16px;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 8px;
+    }
+    .maplibregl-ctrl-group {
+      background: var(--surface) !important;
+      backdrop-filter: blur(8px);
+      border: 1px solid var(--border2) !important;
+      border-radius: 10px !important;
+      box-shadow: 0 12px 30px rgba(8,12,20,0.45) !important;
+      overflow: hidden;
+    }
+    .maplibregl-ctrl-group button {
+      background: transparent !important;
+      width: 38px !important;
+      height: 38px !important;
+    }
+    .maplibregl-ctrl-group button + button {
+      border-top: 1px solid var(--border2) !important;
+    }
+    .maplibregl-ctrl-group button:hover {
+      background: rgba(255,255,255,0.06) !important;
+    }
+    /* MapLibre icons are dark sprites; invert them to read on dark glass */
+    .maplibregl-ctrl-group button .maplibregl-ctrl-icon {
+      filter: invert(1) brightness(1.4);
+    }
+    /* Dock the 2D/3D toggle into the same bottom-right cluster, above
+       the MapLibre group, sharing the same right edge */
+    #toggle-3d {
+      right: 16px;
+      bottom: calc(var(--nav-h) + var(--safe-b) + 116px);
+    }
+
     #fab-panel {
       box-shadow: 0 12px 30px rgba(25,64,106,0.15);
       position: fixed;
