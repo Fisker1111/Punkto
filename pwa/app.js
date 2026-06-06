@@ -1714,8 +1714,8 @@ function wireEvents() {
 // ---------------------------------------------------------------------------
 
 async function boot() {
-  console.log('PUNKTO APP.JS LOADED v102-dark-glass-2026-06-06-1');
-  window.PUNKTO_APP_VERSION = 'v102-dark-glass-2026-06-06-1';
+  console.log('PUNKTO APP.JS LOADED v103-nav-hamburger-2026-06-06-1');
+  window.PUNKTO_APP_VERSION = 'v103-nav-hamburger-2026-06-06-1';
 
   console.log('[punkto] booting...');
 
