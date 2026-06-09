@@ -1156,6 +1156,12 @@
     #modal-altitude-secondary { font-size: 11px; color: var(--text-dim); margin-bottom: 8px; }
     #modal-altitude-hint { font-size: 10px; color: var(--text-dim); }
     #modal-altitude-slider { width: 100%; margin: 8px 0; accent-color: var(--accent); }
+    details#modal-altitude > summary { cursor: pointer; list-style: none; display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 13px; font-weight: 600; color: var(--text); }
+    details#modal-altitude > summary::-webkit-details-marker { display: none; }
+    details#modal-altitude > summary::after { content: '\25B8'; color: var(--text-dim); transition: transform .15s ease; }
+    details#modal-altitude[open] > summary::after { transform: rotate(90deg); }
+    details#modal-altitude[open] > summary { margin-bottom: 8px; }
+    .modal-adjust-hint { font-size: 11px; font-weight: 400; color: var(--text-dim); }
 
     #modal-placement-modes { display: flex; gap: 6px; flex-wrap: wrap; margin: 8px 0; }
     #modal-floor-stepper { display: flex; align-items: center; gap: 8px; margin: 6px 0; font-size: 12px; color: var(--text-dim); }
@@ -1447,8 +1453,8 @@
         </select>
         <div id="modal-emergency-hint" style="display:none;font-size:12px;color:var(--text-dim);margin-top:6px;">Public urgent post — not a replacement for calling emergency services.</div>
       </div>
-      <div id="modal-altitude">
-        <div><strong>Height</strong></div>
+      <details id="modal-altitude" class="modal-adjust">
+        <summary><span class="modal-adjust-label">Adjust height</span><span class="modal-adjust-hint">optional · defaults to ground</span></summary>
         <div id="modal-altitude-primary">Ground level</div>
         <input id="modal-altitude-slider" type="range" min="0" max="100" step="1" value="0" />
         <div id="modal-altitude-secondary">+0 m above ground</div>
@@ -1470,7 +1476,7 @@
             <input id="modal-manual-altitude-value" type="number" step="1" value="0" />
           </div>
         </div>
-      </div>
+      </details>
       <textarea id="modal-text" placeholder="Write a note for this place (optional)"></textarea>
       <div id="modal-author-row">
         <input id="modal-author" type="text" placeholder="your name / handle (optional)" />

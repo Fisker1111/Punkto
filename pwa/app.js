@@ -1714,8 +1714,8 @@ function wireEvents() {
 // ---------------------------------------------------------------------------
 
 async function boot() {
-  console.log('PUNKTO APP.JS LOADED v105-text-token-fix-2026-06-06-1');
-  window.PUNKTO_APP_VERSION = 'v105-text-token-fix-2026-06-06-1';
+  console.log('PUNKTO APP.JS LOADED v106-create-stage-2026-06-09-1');
+  window.PUNKTO_APP_VERSION = 'v106-create-stage-2026-06-09-1';
 
   console.log('[punkto] booting...');
 
