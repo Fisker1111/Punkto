@@ -178,3 +178,148 @@ feed items: 2 ✅
 | 6 | Backup and restore test | Maybe | TODO | Not tested |
 | 7 | Public alpha GitHub issues | No | TODO | Not tested |
 | 8 | Public alpha wording | Maybe | TODO | Not tested |
+
+---
+
+## Point 3 — Validate and update full pre-release checklist
+
+**Status: PARTIAL**
+
+**Commit tested:** `145edf9`
+
+**Deploy required:** no (for checklist audit itself)
+
+**Date verified:** 2026-06-14
+
+### Summary
+
+| Section | Checks | Result |
+|---------|--------|--------|
+| A. Repository and tests | 8/8 | ✅ PASS |
+| B. Relay runtime | 6/6 | ✅ PASS |
+| C. Storage | 4/4 (with finding) | ⚠️ PARTIAL |
+| D. Configuration | 5/5 | ✅ PASS |
+| E. Public endpoint safety | 4/4 | ✅ PASS |
+| F. Documentation consistency | 7/7 | ✅ PASS |
+| G. Deployment-dependent | 6 items | 📋 TODO |
+
+**Total: 34/34 local checks PASS, 6 TODO (deployment-only), 1 defect documented (C-finding)**
+
+---
+
+### A. Repository and tests — PASS
+
+```
+[PASS] A1. Working tree clean
+[PASS] A2. Signature tests (test_sig.py): 6/6 passed STATUS: ALL PASS
+[PASS] A3. relay.py syntax clean
+[PASS] A4. test_relay.py syntax clean
+[PASS] A5. node --check pwa/app.js
+[PASS] A5. node --check pwa/ui-shell.js
+[PASS] A5. node --check pwa/ui-text.js
+[PASS] A5. node --check pwa/ui-map.js
+```
+
+### B. Relay runtime — PASS
+
+Relay started on port 8000, `PUNKTO_REQUIRE_SIG=false`.
+
+```
+[PASS] B1. /health HTTP 200: {"status":"ok","node":"relay-f1360a5ece01","buffer_size":1}
+[PASS] B2. /status HTTP 200
+[PASS] B3. /node/info HTTP 200 JSON: name=Punkto ver=v0.1 ok=True
+[PASS] B4. POST unsigned atom → HTTP 201
+        {"status":"accepted","atom_id":"8c71ffd3d689efd0071e4a33d2cfe0d75a5991445e3c1ead361a31be85422b0b","punkto":"p:test00000000"}
+[PASS] B5. POST invalid atom (no t) → HTTP 422 error=invalid_punkto
+[PASS] B6. GET /feed → HTTP 200, 2 items
+```
+
+Note: punkto ID must match `p:[0-9a-z]{12}` exactly (12 lowercase alphanumeric chars).
+
+### C. Storage — PARTIAL
+
+```
+[PASS] C1. atom log exists on disk: /data/atoms.log.jsonl
+[PASS] C2. atom log non-empty: 3 lines
+[PASS] C3. atom log lines are valid JSON
+[PASS] C4. duplicate atom idempotent: HTTP 200 {"status":"duplicate","atom_id":"..."}  
+```
+
+**⚠️ DEFECT FOUND — C-finding: atom log missing cursor and atom_id fields**
+
+Actual log format:
+```json
+{"punkto": "p:test00000000", "content": "...", "t": 1749900000000}
+```
+
+Expected format per `docs/sync-fast-forward.md`:
+```json
+{"cursor": 1, "atom_id": "abc123...", "atom": {"punkto": "...", "content": "...", "t": ...}}
+```
+
+The relay does not write `cursor` or `atom_id` to the log. Fast-forward protocol (`/feed?since=<cursor>`) cannot work from this log without recomputing atom_ids and adding sequence numbers. This defect should be addressed before public alpha.
+
+**Recommendation:** implement atom log writer per `docs/sync-fast-forward.md` spec (Phase 8B).
+
+### D. Configuration — PASS
+
+```
+[PASS] D1. PUNKTO_REQUIRE_SIG=true rejects unsigned (pure fn): error=missing_sig
+[PASS] D2. PUNKTO_REQUIRE_SIG=false allows unsigned (pure fn): accepted
+[PASS] D3. require_signature_enabled()=True when env=true
+[PASS] D4. require_signature_enabled()=False when env=false
+[PASS] D5. cryptography library available: _HAS_CRYPTO=True
+```
+
+### E. Public Endpoint Safety — PASS
+
+Checked /health, /node/info, /feed, /status for: private_key, secrets.env, password, secret_key, auth_token.
+
+```
+[PASS] E1. /health: no secret material exposed
+[PASS] E2. /node/info: no secret material exposed
+[PASS] E3. /feed: no secret material exposed
+[PASS] E4. /status: no secret material exposed
+```
+
+### F. Documentation consistency — PASS
+
+```
+[PASS] F1. guide uses "t" not "timestamp" (atom field)
+[PASS] F2. guide uses date +%s%3N (milliseconds)
+[PASS] F3. guide mentions PUNKTO_REQUIRE_SIG
+[PASS] F4. guide has /atom endpoint
+[PASS] F5. guide has /feed endpoint
+[PASS] F6. guide has /node/info endpoint
+[PASS] F7. public-api.md present (17530 chars)
+```
+
+### G. Deployment-dependent — TODO
+
+These checks require live deployed nodes and cannot be verified locally:
+
+| Item | Reason |
+|------|--------|
+| G1. node doctor passes on deployed node | Requires SSH to node1/node2 |
+| G2. atom persists after docker compose restart | Requires deployed node |
+| G3. YAML config loaded (config_loaded=true) | Requires deployed node |
+| G4. TLS/HTTPS endpoints reachable | Requires deployed node |
+| G5. PWA app marker visible on app1/app2 | Requires browser + deployed node |
+| G6. Backup/restore scripts on deployed node | Requires deployed node |
+
+### Launch candidate checklist status
+
+Based on local verification, the overall `docs/launch-candidate-checklist.md` status:
+
+| Section | Locally verifiable | Local status | Deploy-only |
+|---------|-------------------|--------------|-------------|
+| 1. Runtime Health | 5/7 | PASS | 2 items (nodes 1.1, 1.2) |
+| 2. Storage | 2/4 | PARTIAL (log format defect) | 2 items |
+| 3. Live-Forward Policy | 1/5 | PASS (old atom rejection works) | 4 items |
+| 4. Backup / Restore | 0/5 | TODO | 5 items |
+| 5. Fresh Install | 1/4 | PASS (guide exists, updated) | 3 items |
+| 6. API / Docs | 3/6 | PASS (public-api.md, fresh-install, node.md present) | 3 items |
+| 7. Security | 3/7 | PASS (no secrets in endpoints) | 4 items |
+
+**Point 3 status: PARTIAL** — all locally testable checks PASS; storage log format defect found (C-finding); 6 deployment-dependent checks remain TODO.
+
