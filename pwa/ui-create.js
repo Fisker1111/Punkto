@@ -6,6 +6,19 @@ const elModalAuthor = document.getElementById('modal-author');
 const elModalSubmit = document.getElementById('modal-submit');
 const elModalCancel = document.getElementById('modal-cancel');
 const elModalError = document.getElementById('modal-error');
+const elAckBanner = document.getElementById('ack-banner');
+const elAckBtn = document.getElementById('ack-btn');
+
+const ACK_KEY = 'punkto-public-ack';
+
+if (elAckBtn) {
+  elAckBtn.addEventListener('click', () => {
+    localStorage.setItem(ACK_KEY, '1');
+    if (elAckBanner) elAckBanner.style.display = 'none';
+    if (elModalSubmit) elModalSubmit.disabled = false;
+    setTimeout(() => elModalText?.focus(), 40);
+  });
+}
 const elModalAltitudeSlider = document.getElementById('modal-altitude-slider');
 const elModalAltitudePrimary = document.getElementById('modal-altitude-primary');
 const elModalAltitudeSecondary = document.getElementById('modal-altitude-secondary');
@@ -135,7 +148,14 @@ export function openCreateModal() {
   updateAltitudeLabels();
   requestDeviceAltitude();
   elModalOverlay.classList.add('open');
-  setTimeout(() => elModalText.focus(), 80);
+  // First-use public-data acknowledgement
+  const acked = !!localStorage.getItem(ACK_KEY);
+  if (elAckBanner) elAckBanner.style.display = acked ? 'none' : 'block';
+  if (elModalSubmit) elModalSubmit.disabled = !acked;
+  setTimeout(() => {
+    if (!acked && elAckBtn) elAckBtn.focus();
+    else elModalText?.focus();
+  }, 80);
 }
 
 export function closeCreateModal() {

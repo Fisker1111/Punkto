@@ -252,26 +252,38 @@ Expected:
 
 ## 12. First Atom Test
 
+> **Signature policy:** The relay defaults to `PUNKTO_REQUIRE_SIG=false`, which allows unsigned atoms for local development and initial setup. If you have enabled `require_sig: true` in your node config, see the signed-atom example below.
+
 Post a test atom with a recent timestamp:
 
 ```bash
-TS=$(date +%s)
+TS=$(date +%s%3N)  # Unix milliseconds
 curl -X POST https://node.example.org/atom \
   -H "Content-Type: application/json" \
   -d '{
     "punkto": "p:test00000000",
     "content": "Hello from my new Punkto node!",
-    "timestamp": '$TS'
+    "t": '$TS'
   }'
 ```
 
-Expected response: `HTTP 201` with atom ID.
+Expected response: `HTTP 201` with atom ID, for example:
+
+```json
+{"ok": true, "atom_id": "a1b2c3d4e5f6..."}
+```
+
+If you receive `HTTP 400` with `"error": "invalid_timestamp"`, check that `t` is in **milliseconds** (13 digits), not seconds.
+
+If you receive `HTTP 403` with `"error": "missing_sig"`, your relay has `PUNKTO_REQUIRE_SIG=true`. Either set `PUNKTO_REQUIRE_SIG=false` in your relay environment, or use a signed atom (see `tools/punkto-key.py` for key generation).
 
 Verify it appears in the feed:
 
 ```bash
 curl https://node.example.org/feed
 ```
+
+Expected: JSON array containing the atom you just posted.
 
 ---
 
@@ -333,9 +345,10 @@ python3 scripts/node-doctor.py https://node.example.org --expect-name "My Punkto
 
 ## 16. Security Notes
 
-1.  **Punkto is public.** Atoms posted to a Punkto node are public data.
-    There is no access control, authentication, or authorization on public
-    endpoints. Do not post secrets.
+1.  **Punkto is public.** Atoms are public and may be retained by other
+    nodes. Do not post passwords, secrets, sensitive personal information,
+    or anything you may need permanently deleted. Signing proves authorship
+    and integrity; it does not encrypt the atom.
 
 2.  **Do not commit secrets.** `config/`, `data/`, and `.env` are in
     `.gitignore` and must never be committed.

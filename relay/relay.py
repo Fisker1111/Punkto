@@ -30,6 +30,16 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from typing import Any, Dict, List, Optional, Tuple
 from urllib.parse import urlparse, parse_qs, unquote
 
+try:
+    from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PublicKey
+    from cryptography.exceptions import InvalidSignature
+    import base64 as _base64
+    _HAS_CRYPTO = True
+except ImportError:
+    _HAS_CRYPTO = False
+    Ed25519PublicKey = None  # type: ignore[assignment]
+    InvalidSignature = None  # type: ignore[assignment]
+
 
 try:
     import yaml
@@ -132,6 +142,7 @@ DEFAULT_NODE_CONFIG: Dict[str, Any] = {
         "serve_pinned": True,
         "serve_verified_only": False,
         "allow_unsigned": True,
+        "require_sig": False,
         "archive_enabled": False,
     },
     "bootstrap": {
@@ -193,7 +204,7 @@ def _clean_node_config(candidate: Dict[str, Any]) -> Dict[str, Any]:
     for section, keys in {
         "admin": ["enabled", "public_admin_enabled"],
         "serving": ["serve_pinned", "serve_archive"],
-        "serving_policy": ["serve_recent", "serve_genesis", "serve_pinned", "serve_verified_only", "allow_unsigned", "archive_enabled"],
+        "serving_policy": ["serve_recent", "serve_genesis", "serve_pinned", "serve_verified_only", "allow_unsigned", "require_sig", "archive_enabled"],
         "bootstrap": ["peer_discovery_enabled", "allow_user_added_peers"],
         "retention": ["keep_pinned_forever", "keep_genesis_forever"],
     }.items():
@@ -581,6 +592,67 @@ def canonical_bytes(atom: Dict[str, Any]) -> bytes:
 
 def compute_atom_id(atom: Dict[str, Any]) -> str:
     return hashlib.sha256(canonical_bytes(atom)).hexdigest()
+
+
+# ---------------------------------------------------------------------------
+# Signature enforcement (PUNKTO_REQUIRE_SIG)
+# ---------------------------------------------------------------------------
+
+def require_signature_enabled() -> bool:
+    """Return True if relay is configured to require atom signatures."""
+    sp = NODE_CONFIG.get("serving_policy") if isinstance(NODE_CONFIG.get("serving_policy"), dict) else {}
+    env_val = os.environ.get("PUNKTO_REQUIRE_SIG", "").strip().lower()
+    if env_val in ("true", "1", "yes"):
+        return True
+    if env_val in ("false", "0", "no"):
+        return False
+    return bool(sp.get("require_sig", False))
+
+
+def canonical_atom_for_signing(atom: Dict[str, Any]) -> bytes:
+    """Canonical bytes used when verifying atom signature.
+
+    Excludes both 'sig' and 'pubkey' so clients sign the payload
+    before those fields are appended.
+    """
+    payload = {k: v for k, v in atom.items() if k not in ("sig", "pubkey")}
+    return json.dumps(
+        payload, sort_keys=True, separators=(",", ":"), ensure_ascii=False
+    ).encode("utf-8")
+
+
+def verify_atom_signature(atom: Dict[str, Any]) -> Optional[Dict[str, str]]:
+    """Verify Ed25519 signature on atom. Returns None on success, error dict on failure."""
+    if not _HAS_CRYPTO:
+        return {"error": "sig_unsupported", "message": "cryptography library not installed"}
+    sig_b64 = atom.get("sig")
+    pubkey_b64 = atom.get("pubkey")
+    if not sig_b64:
+        return {"error": "missing_sig", "message": "atom missing required field 'sig'"}
+    if not pubkey_b64:
+        return {"error": "missing_pubkey", "message": "atom missing required field 'pubkey'"}
+    try:
+        sig_bytes = _base64.b64decode(sig_b64, validate=True)
+        pubkey_bytes = _base64.b64decode(pubkey_b64, validate=True)
+        pub_key = Ed25519PublicKey.from_public_bytes(pubkey_bytes)
+        pub_key.verify(sig_bytes, canonical_atom_for_signing(atom))
+        return None
+    except (ValueError, TypeError) as exc:
+        return {"error": "invalid_sig_encoding", "message": f"sig/pubkey decode error: {exc}"}
+    except InvalidSignature:
+        return {"error": "invalid_sig", "message": "signature does not match atom content"}
+    except Exception as exc:  # noqa: BLE001
+        return {"error": "sig_error", "message": f"signature check failed: {exc}"}
+
+
+def validate_signature_policy(atom: Dict[str, Any]) -> Tuple[bool, Optional[Dict[str, str]]]:
+    """Return (True, None) if atom passes signature policy, else (False, error_dict)."""
+    if not require_signature_enabled():
+        return True, None
+    err = verify_atom_signature(atom)
+    if err is not None:
+        return False, {"ok": False, **err}
+    return True, None
 
 
 def _is_blank(value: Any) -> bool:
@@ -1080,6 +1152,9 @@ class Buffer:
         self._corrupt_lines: int = 0
         # Track current append-only log size for /feed cursor compatibility.
         self._file_size: int = 0
+        # Monotonically increasing log sequence number assigned to each accepted atom.
+        # Distinct from the byte-offset cursor used by /feed?since= and peer sync.
+        self._next_log_seq: int = 1
 
     # -- lifecycle -----------------------------------------------------------
 
@@ -1107,10 +1182,21 @@ class Buffer:
                 if not line:
                     continue
                 try:
-                    atom = json.loads(line)
+                    record = json.loads(line)
                 except json.JSONDecodeError:
                     self._corrupt_lines += 1
                     continue
+                # Support both legacy raw atoms and new wrapped records.
+                # New format: {"log_seq": N, "atom_id": "...", "atom": {...}}
+                # Compat: also accept old 'cursor' key written before this rename.
+                # Legacy format: raw atom dict (e.g. {"punkto": "...", "t": ...})
+                if isinstance(record, dict) and "atom" in record and isinstance(record["atom"], dict):
+                    atom = record["atom"]
+                    stored_seq = record.get("log_seq") or record.get("cursor")
+                    if isinstance(stored_seq, int) and stored_seq >= self._next_log_seq:
+                        self._next_log_seq = stored_seq + 1
+                else:
+                    atom = record
                 ok, _ = validate_atom(atom)
                 if not ok:
                     continue
@@ -1191,8 +1277,13 @@ class Buffer:
     ) -> Tuple[List[Dict[str, Any]], int, bool]:
         """Return (atoms, new_cursor, buffer_underflow).
 
-        The cursor is a byte offset in atoms.log.jsonl. Runtime buffer pruning
-        does not rewrite the durable log, so cursors remain log offsets.
+        The cursor is a **byte offset** in atoms.log.jsonl.
+        This is the authoritative cursor model per punkto.sync.md §236.
+        Each accepted atom is also assigned a sequential log_seq in the log
+        wrapper, but that value is for record ordering only — it is distinct
+        from the byte-offset cursor returned here and used by /feed?since= and
+        peer sync. Runtime buffer pruning does not rewrite the durable log, so
+        byte-offset cursors remain stable across relay restarts.
         """
         with self._lock:
             file_size = self._file_size
@@ -1224,9 +1315,11 @@ class Buffer:
             if not line:
                 continue
             try:
-                atom = json.loads(line)
+                record = json.loads(line)
             except json.JSONDecodeError:
                 continue
+            # Unwrap new format {cursor, atom_id, atom} or accept legacy raw atom.
+            atom = record["atom"] if isinstance(record, dict) and "atom" in record and isinstance(record["atom"], dict) else record
             ok, _ = validate_atom(atom)
             if ok and atom_is_publicly_served(atom):
                 atoms_out.append(atom)
@@ -1240,7 +1333,10 @@ class Buffer:
         with self._lock:
             if atom_id in self._seen_atom_ids:
                 return atom_id, False
-            line = json.dumps(atom, separators=(",", ":"), ensure_ascii=False) + "\n"
+            log_seq = self._next_log_seq
+            self._next_log_seq += 1
+            record = {"log_seq": log_seq, "atom_id": atom_id, "atom": atom}
+            line = json.dumps(record, separators=(",", ":"), ensure_ascii=False) + "\n"
             encoded = line.encode("utf-8")
             with open(self.atoms_file, "ab") as f:
                 f.write(encoded)
@@ -1705,6 +1801,12 @@ class RelayHandler(BaseHTTPRequestHandler):
             assert policy_err is not None
             _inc_policy_stat("old_rejected")
             self._send_json(422, policy_err)
+            return
+
+        sig_ok, sig_err = validate_signature_policy(atom)
+        if not sig_ok:
+            assert sig_err is not None
+            self._send_json(403, sig_err)
             return
 
         if atom_relation(atom) == "reply":
