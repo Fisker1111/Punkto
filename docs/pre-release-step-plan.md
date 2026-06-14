@@ -323,3 +323,118 @@ Based on local verification, the overall `docs/launch-candidate-checklist.md` st
 
 **Point 3 status: PARTIAL** — all locally testable checks PASS; storage log format defect found (C-finding); 6 deployment-dependent checks remain TODO.
 
+
+---
+
+## Point 4 — Fix append-only atom log format and fast-forward persistence
+
+**Status: PASS**
+
+**Commit tested:** (see below)
+
+**Deploy required:** yes (relay code changed)
+
+**Deploy status:** not deployed
+
+**Date verified:** 2026-06-14
+
+### Problem
+
+Atom log stored raw atoms only (`{punkto, content, t}`). No cursor or atom_id in log records. Identified in Point 3 audit as C-finding.
+
+### Solution (Option A — backward-compatible migration)
+
+Modified `Buffer` class in `relay/relay.py`:
+
+1. **`Buffer.__init__`**: Added `self._next_cursor: int = 1` — monotonically increasing sequential cursor.
+2. **`Buffer.load()`**: Detects both legacy raw atoms and new wrapped records:
+   - New format: `{"cursor": N, "atom_id": "...", "atom": {...}}` — extracts atom, updates `_next_cursor` from stored cursor.
+   - Legacy format: raw atom dict — loads as-is, `_next_cursor` starts from 1.
+3. **`Buffer.append()`**: Now writes wrapped format: `{"cursor": N, "atom_id": "...", "atom": {...}}`.
+4. **`Buffer.feed_since()`**: Unwraps atom from wrapper when parsing log records. Byte-offset cursor preserved for backward compatibility.
+
+### Test command
+
+```bash
+cd /a0/usr/projects/punkto/relay && python3 test_log_format.py
+```
+
+### Test output
+
+```
+============================================================
+POINT 4 — Atom log format and fast-forward tests
+============================================================
+
+A. New atom gets atom_id and cursor in log record
+  [PASS] A. was_new=True
+  [PASS] A. log has 1 record
+  [PASS] A. record has 'cursor' key: ['cursor', 'atom_id', 'atom']
+  [PASS] A. record has 'atom_id' key
+  [PASS] A. record has 'atom' key
+  [PASS] A. atom_id matches computed: d47efb04d099
+  [PASS] A. cursor is integer >= 1: cursor=1
+
+B. Two unique atoms get monotonically increasing cursors
+  [PASS] B. log has 2 records
+  [PASS] B. cursor2 > cursor1: cursor1=1 cursor2=2
+
+C. Duplicate atom is idempotent (no second cursor)
+  [PASS] C. first append was_new=True
+  [PASS] C. second append was_new=False
+  [PASS] C. log has exactly 1 record
+  [PASS] C. both calls return same atom_id
+
+D. New-format log survives relay restart (atom_id and cursor preserved)
+  [PASS] D. buffer size=1 after restart
+  [PASS] D. atom retrievable by id after restart
+  [PASS] D. new cursor after restart > original cursor: orig=1 new=2
+
+E. Legacy raw-atom log loads without crashing
+  [PASS] E. loads without exception
+  [PASS] E. buffer has 2 legacy atoms: size=2
+  [PASS] E. corrupt_lines=0 for legacy
+
+F. After loading legacy entries, new entries continue with safe increasing cursors
+  [PASS] F. log has 2 lines total
+  [PASS] F. new record is wrapped format: ['cursor', 'atom_id', 'atom']
+  [PASS] F. new cursor >= 1: cursor=1
+
+G. feed_since(cursor=0) returns all public atoms
+  [PASS] G. feed_since(0) returns 3 atoms
+  [PASS] G. new_cursor > 0: new_cursor=474
+  [PASS] G. underflow=False
+
+H. feed_since(first_cursor) returns only atoms after that cursor
+  [PASS] H. feed_since(after H1) returns 2 atoms
+  [PASS] H. underflow=False
+
+I. Corrupt log line is skipped; relay loads remaining atoms normally
+  [PASS] I. loads without exception
+  [PASS] I. corrupt_lines=1: corrupt=1
+  [PASS] I. buffer has 2 valid atoms: size=2
+
+============================================================
+Results: 30/30 passed, 0 failed
+STATUS: ALL PASS
+```
+
+### Point 1 regression check
+
+```
+cd /a0/usr/projects/punkto/relay && python3 test_sig.py
+Results: 6/6 passed
+STATUS: ALL PASS
+```
+
+### C-finding from Point 3 — RESOLVED
+
+The atom log format defect identified in Point 3 is now fixed. New log records include `cursor`, `atom_id`, and `atom`. Legacy raw-atom logs load without crashing and continue with safe sequential cursors.
+
+### git diff stats
+
+```
+relay/relay.py     | 23 ++++++++++++++++++++---
+relay/test_log_format.py | 266 lines (new file)
+```
+

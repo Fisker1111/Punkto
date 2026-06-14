@@ -1152,6 +1152,8 @@ class Buffer:
         self._corrupt_lines: int = 0
         # Track current append-only log size for /feed cursor compatibility.
         self._file_size: int = 0
+        # Monotonically increasing sequential cursor assigned to each accepted atom.
+        self._next_cursor: int = 1
 
     # -- lifecycle -----------------------------------------------------------
 
@@ -1179,10 +1181,20 @@ class Buffer:
                 if not line:
                     continue
                 try:
-                    atom = json.loads(line)
+                    record = json.loads(line)
                 except json.JSONDecodeError:
                     self._corrupt_lines += 1
                     continue
+                # Support both legacy raw atoms and new wrapped records.
+                # New format: {"cursor": N, "atom_id": "...", "atom": {...}}
+                # Legacy format: raw atom dict (e.g. {"punkto": "...", "t": ...})
+                if isinstance(record, dict) and "atom" in record and isinstance(record["atom"], dict):
+                    atom = record["atom"]
+                    stored_cursor = record.get("cursor")
+                    if isinstance(stored_cursor, int) and stored_cursor >= self._next_cursor:
+                        self._next_cursor = stored_cursor + 1
+                else:
+                    atom = record
                 ok, _ = validate_atom(atom)
                 if not ok:
                     continue
@@ -1296,9 +1308,11 @@ class Buffer:
             if not line:
                 continue
             try:
-                atom = json.loads(line)
+                record = json.loads(line)
             except json.JSONDecodeError:
                 continue
+            # Unwrap new format {cursor, atom_id, atom} or accept legacy raw atom.
+            atom = record["atom"] if isinstance(record, dict) and "atom" in record and isinstance(record["atom"], dict) else record
             ok, _ = validate_atom(atom)
             if ok and atom_is_publicly_served(atom):
                 atoms_out.append(atom)
@@ -1312,7 +1326,10 @@ class Buffer:
         with self._lock:
             if atom_id in self._seen_atom_ids:
                 return atom_id, False
-            line = json.dumps(atom, separators=(",", ":"), ensure_ascii=False) + "\n"
+            cursor = self._next_cursor
+            self._next_cursor += 1
+            record = {"cursor": cursor, "atom_id": atom_id, "atom": atom}
+            line = json.dumps(record, separators=(",", ":"), ensure_ascii=False) + "\n"
             encoded = line.encode("utf-8")
             with open(self.atoms_file, "ab") as f:
                 f.write(encoded)
