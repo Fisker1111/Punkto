@@ -2166,23 +2166,41 @@ function importKeyFromJson(jsonStr) {
   };
 }
 
-// Sign an atom (canonical bytes without sig)
-async function signAtom(atom, secretKey) {
-  const payload = { ...atom };
+// Canonical JSON for signing and atom_id — mirrors relay canonical_bytes().
+// Excludes ONLY 'sig'. pubkey IS included when present.
+// Matches spec: punkto.sync.md + punkto.identity.md.
+function _canonicalJson(value) {
+  if (Array.isArray(value)) return '[' + value.map(_canonicalJson).join(',') + ']';
+  if (value && typeof value === 'object') {
+    return '{' + Object.keys(value)
+      .filter(k => k !== 'sig' && value[k] !== undefined)
+      .sort()
+      .map(k => JSON.stringify(k) + ':' + _canonicalJson(value[k]))
+      .join(',') + '}';
+  }
+  return JSON.stringify(value);
+}
+
+// Sign an atom per spec:
+// 1. pubkey is added to atom BEFORE computing canonical bytes.
+// 2. canonical bytes exclude only sig (pubkey is included).
+// 3. sig is added after signing.
+async function signAtom(atom, secretKey, pubkeyB64) {
+  // pubkeyB64 is the base64-encoded public key (32 bytes -> 44 chars)
+  const payload = { ...atom, pubkey: pubkeyB64 };
   delete payload.sig;
-  const canonical = JSON.stringify(payload, Object.keys(payload).sort());
+  const canonical = _canonicalJson(payload);
   const msgBytes = new TextEncoder().encode(canonical);
   const signature = nacl.sign.detached(msgBytes, new Uint8Array(secretKey));
   const sigB64 = btoa(String.fromCharCode(...signature));
-  return { ...atom, sig: sigB64 };
+  return { ...payload, sig: sigB64 };
 }
 
-// Verify atom signature
+// Verify atom signature.
+// canonical bytes exclude only sig (pubkey is included).
 function verifyAtom(atom) {
   if (!atom.sig || !atom.pubkey) return false;
-  const payload = { ...atom };
-  delete payload.sig;
-  const canonical = JSON.stringify(payload, Object.keys(payload).sort());
+  const canonical = _canonicalJson(atom);  // excludes sig via filter, includes pubkey
   const msgBytes = new TextEncoder().encode(canonical);
   const sigBytes = Uint8Array.from(atob(atom.sig), c => c.charCodeAt(0));
   const pubkeyBytes = Uint8Array.from(atob(atom.pubkey), c => c.charCodeAt(0));

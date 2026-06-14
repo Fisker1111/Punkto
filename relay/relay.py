@@ -610,15 +610,20 @@ def require_signature_enabled() -> bool:
 
 
 def canonical_atom_for_signing(atom: Dict[str, Any]) -> bytes:
-    """Canonical bytes used when verifying atom signature.
+    """Canonical bytes for signing and atom_id — identical function.
 
-    Excludes both 'sig' and 'pubkey' so clients sign the payload
-    before those fields are appended.
+    Excludes ONLY 'sig'. pubkey IS included when present.
+    This matches the authoritative spec in punkto.sync.md and punkto.identity.md:
+      canonical_bytes = UTF-8(json_sorted_no_whitespace(atom_without_sig))
+    Signing and atom_id share the same canonical-bytes definition.
+
+    Signing workflow:
+      1. Build atom payload (including pubkey if signing).
+      2. Call canonical_atom_for_signing(atom) — sig excluded, pubkey included.
+      3. Sign the result.
+      4. Add sig field to atom.
     """
-    payload = {k: v for k, v in atom.items() if k not in ("sig", "pubkey")}
-    return json.dumps(
-        payload, sort_keys=True, separators=(",", ":"), ensure_ascii=False
-    ).encode("utf-8")
+    return canonical_bytes(atom)
 
 
 def verify_atom_signature(atom: Dict[str, Any]) -> Optional[Dict[str, str]]:

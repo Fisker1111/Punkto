@@ -49,11 +49,14 @@ def make_atom(**extra):
 
 
 def sign_atom(atom, private_key):
-    """Sign atom using canonical_atom_for_signing and return (sig_b64, pubkey_b64)."""
-    canonical = canonical_atom_for_signing(atom)
-    sig = private_key.sign(canonical)
+    """Sign atom per spec: add pubkey first, canonical excludes only sig, then sign."""
     pub_bytes = private_key.public_key().public_bytes(Encoding.Raw, PublicFormat.Raw)
-    return base64.b64encode(sig).decode(), base64.b64encode(pub_bytes).decode()
+    pubkey_b64 = base64.b64encode(pub_bytes).decode()
+    # Spec: canonical includes pubkey, excludes only sig
+    atom_with_key = {**atom, "pubkey": pubkey_b64}
+    canonical = canonical_atom_for_signing(atom_with_key)
+    sig = private_key.sign(canonical)
+    return base64.b64encode(sig).decode(), pubkey_b64
 
 
 def assert_rejected(result, label):

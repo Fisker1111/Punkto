@@ -110,13 +110,13 @@ def make_unsigned_atom(content: str) -> dict:
 
 def make_signed_atom(content: str, private_key) -> dict:
     atom = make_unsigned_atom(content)
-    # canonical bytes = sorted JSON excluding sig and pubkey
-    payload = {k: v for k, v in atom.items() if k not in ("sig", "pubkey")}
-    canonical = json.dumps(payload, sort_keys=True, separators=(",", ":"), ensure_ascii=False).encode("utf-8")
-    sig = private_key.sign(canonical)
+    # Spec: add pubkey first, canonical excludes only sig (pubkey included)
     pub = private_key.public_key().public_bytes(Encoding.Raw, PublicFormat.Raw)
-    atom["sig"] = base64.b64encode(sig).decode()
     atom["pubkey"] = base64.b64encode(pub).decode()
+    canonical = json.dumps({k: v for k, v in atom.items() if k != "sig"},
+                           sort_keys=True, separators=(",", ":"), ensure_ascii=False).encode("utf-8")
+    sig = private_key.sign(canonical)
+    atom["sig"] = base64.b64encode(sig).decode()
     return atom
 
 
