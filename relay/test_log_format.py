@@ -77,11 +77,11 @@ try:
     records = read_log_records(log_path)
     check("A. log has 1 record", len(records) == 1, f"{len(records)} record(s)")
     rec = records[0]
-    check("A. record has 'cursor' key", "cursor" in rec, str(list(rec.keys())))
+    check("A. record has 'log_seq' key", "log_seq" in rec, str(list(rec.keys())))
     check("A. record has 'atom_id' key", "atom_id" in rec, str(list(rec.keys())))
     check("A. record has 'atom' key", "atom" in rec, str(list(rec.keys())))
     check("A. atom_id matches computed", rec.get("atom_id") == atom_id_a, f"{rec.get('atom_id')[:12]}")
-    check("A. cursor is integer >= 1", isinstance(rec.get("cursor"), int) and rec["cursor"] >= 1, f"cursor={rec.get('cursor')}")
+    check("A. log_seq is integer >= 1", isinstance(rec.get("log_seq"), int) and rec["log_seq"] >= 1, f"log_seq={rec.get('log_seq')}")
 finally:
     shutil.rmtree(tmpdir_a)
 
@@ -96,9 +96,9 @@ try:
     id2, _ = buf.append(make_atom("atom B2", offset_ms=1))
     records = read_log_records(log_path)
     check("B. log has 2 records", len(records) == 2, f"{len(records)} record(s)")
-    c1 = records[0].get("cursor", -1)
-    c2 = records[1].get("cursor", -1)
-    check("B. cursor2 > cursor1", c2 > c1, f"cursor1={c1} cursor2={c2}")
+    c1 = records[0].get("log_seq", -1)
+    c2 = records[1].get("log_seq", -1)
+    check("B. log_seq2 > log_seq1", c2 > c1, f"log_seq1={c1} log_seq2={c2}")
 finally:
     shutil.rmtree(tmpdir_b)
 
@@ -131,18 +131,18 @@ try:
     atom_d = make_atom("atom D")
     orig_id, _ = buf1.append(atom_d)
     records_before = read_log_records(log_path)
-    orig_cursor = records_before[0]["cursor"]
+    orig_cursor = records_before[0]["log_seq"]
     # Simulated restart: new Buffer instance, same log file
     buf2 = Buffer(log_path, max_atoms=1000, max_hours=24)
     buf2.load()
     check("D. buffer size=1 after restart", buf2.size() == 1, f"size={buf2.size()}")
     check("D. atom retrievable by id after restart", buf2.has(orig_id), f"has={buf2.has(orig_id)}")
-    # New append after restart should use cursor > orig_cursor
+    # New append after restart should use log_seq > orig_log_seq
     atom_d2 = make_atom("atom D2", offset_ms=1)
     new_id, _ = buf2.append(atom_d2)
     records_after = read_log_records(log_path)
-    new_cursor = records_after[1]["cursor"]
-    check("D. new cursor after restart > original cursor", new_cursor > orig_cursor, f"orig={orig_cursor} new={new_cursor}")
+    new_cursor = records_after[1]["log_seq"]
+    check("D. new log_seq after restart > original log_seq", new_cursor > orig_cursor, f"orig={orig_cursor} new={new_cursor}")
 finally:
     shutil.rmtree(tmpdir_d)
 
@@ -185,9 +185,9 @@ try:
     # Legacy line is raw dict; new line is wrapped
     check("F. log has 2 lines total", len(records) == 2, f"{len(records)} lines")
     wrapped = records[1]
-    check("F. new record is wrapped format", "cursor" in wrapped and "atom_id" in wrapped and "atom" in wrapped,
+    check("F. new record is wrapped format", "log_seq" in wrapped and "atom_id" in wrapped and "atom" in wrapped,
           str(list(wrapped.keys())))
-    check("F. new cursor >= 1", wrapped.get("cursor", 0) >= 1, f"cursor={wrapped.get('cursor')}")
+    check("F. new log_seq >= 1", wrapped.get("log_seq", 0) >= 1, f"log_seq={wrapped.get('log_seq')}")
 finally:
     shutil.rmtree(tmpdir_f)
 
@@ -234,9 +234,9 @@ try:
     log_path = os.path.join(tmpdir_i, "atoms.log.jsonl")
     # Write: valid wrapped, corrupt line, valid wrapped
     now_ms = int(time.time() * 1000)
-    valid1 = {"cursor": 1, "atom_id": compute_atom_id({"punkto": "p:test00000000", "content": "I1", "t": now_ms}),
+    valid1 = {"log_seq": 1, "atom_id": compute_atom_id({"punkto": "p:test00000000", "content": "I1", "t": now_ms}),
               "atom": {"punkto": "p:test00000000", "content": "I1", "t": now_ms}}
-    valid2 = {"cursor": 2, "atom_id": compute_atom_id({"punkto": "p:test00000000", "content": "I2", "t": now_ms + 1}),
+    valid2 = {"log_seq": 2, "atom_id": compute_atom_id({"punkto": "p:test00000000", "content": "I2", "t": now_ms + 1}),
               "atom": {"punkto": "p:test00000000", "content": "I2", "t": now_ms + 1}}
     with open(log_path, "w") as f:
         f.write(json.dumps(valid1) + "\n")

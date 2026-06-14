@@ -1152,8 +1152,9 @@ class Buffer:
         self._corrupt_lines: int = 0
         # Track current append-only log size for /feed cursor compatibility.
         self._file_size: int = 0
-        # Monotonically increasing sequential cursor assigned to each accepted atom.
-        self._next_cursor: int = 1
+        # Monotonically increasing log sequence number assigned to each accepted atom.
+        # Distinct from the byte-offset cursor used by /feed?since= and peer sync.
+        self._next_log_seq: int = 1
 
     # -- lifecycle -----------------------------------------------------------
 
@@ -1186,13 +1187,14 @@ class Buffer:
                     self._corrupt_lines += 1
                     continue
                 # Support both legacy raw atoms and new wrapped records.
-                # New format: {"cursor": N, "atom_id": "...", "atom": {...}}
+                # New format: {"log_seq": N, "atom_id": "...", "atom": {...}}
+                # Compat: also accept old 'cursor' key written before this rename.
                 # Legacy format: raw atom dict (e.g. {"punkto": "...", "t": ...})
                 if isinstance(record, dict) and "atom" in record and isinstance(record["atom"], dict):
                     atom = record["atom"]
-                    stored_cursor = record.get("cursor")
-                    if isinstance(stored_cursor, int) and stored_cursor >= self._next_cursor:
-                        self._next_cursor = stored_cursor + 1
+                    stored_seq = record.get("log_seq") or record.get("cursor")
+                    if isinstance(stored_seq, int) and stored_seq >= self._next_log_seq:
+                        self._next_log_seq = stored_seq + 1
                 else:
                     atom = record
                 ok, _ = validate_atom(atom)
@@ -1275,8 +1277,13 @@ class Buffer:
     ) -> Tuple[List[Dict[str, Any]], int, bool]:
         """Return (atoms, new_cursor, buffer_underflow).
 
-        The cursor is a byte offset in atoms.log.jsonl. Runtime buffer pruning
-        does not rewrite the durable log, so cursors remain log offsets.
+        The cursor is a **byte offset** in atoms.log.jsonl.
+        This is the authoritative cursor model per punkto.sync.md §236.
+        Each accepted atom is also assigned a sequential log_seq in the log
+        wrapper, but that value is for record ordering only — it is distinct
+        from the byte-offset cursor returned here and used by /feed?since= and
+        peer sync. Runtime buffer pruning does not rewrite the durable log, so
+        byte-offset cursors remain stable across relay restarts.
         """
         with self._lock:
             file_size = self._file_size
@@ -1326,9 +1333,9 @@ class Buffer:
         with self._lock:
             if atom_id in self._seen_atom_ids:
                 return atom_id, False
-            cursor = self._next_cursor
-            self._next_cursor += 1
-            record = {"cursor": cursor, "atom_id": atom_id, "atom": atom}
+            log_seq = self._next_log_seq
+            self._next_log_seq += 1
+            record = {"log_seq": log_seq, "atom_id": atom_id, "atom": atom}
             line = json.dumps(record, separators=(",", ":"), ensure_ascii=False) + "\n"
             encoded = line.encode("utf-8")
             with open(self.atoms_file, "ab") as f:

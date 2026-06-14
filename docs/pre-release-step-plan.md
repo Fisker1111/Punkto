@@ -438,3 +438,79 @@ relay/relay.py     | 23 ++++++++++++++++++++---
 relay/test_log_format.py | 266 lines (new file)
 ```
 
+
+## Point 4 Addendum — Cursor Semantics Review
+
+### Authoritative conclusion: Option B — Byte-offset cursor
+
+**Evidence:**
+- `punkto.sync.md §236`: "Cursors are byte offsets as defined in `punkto.node.md §14`." (normative)
+- `docs/sync-fast-forward.md §15`: "Full cursor semantics remain future work beyond the current byte-offset compatibility behavior."
+- `Buffer.feed_since()` docstring: "The cursor is a byte offset in atoms.log.jsonl."
+- Peer sync code (`_sync_one_peer`): reads `int(payload.get('cursor', 0))` — byte offset
+
+**Problem found:** Point 4 initial commit used `"cursor"` as both:
+1. Sequential integer in log wrapper record
+2. Byte-offset returned by /feed and used by peer sync
+
+This violated the rule: "Do not keep two unrelated values both named cursor without explicit specification."
+
+**Fix applied:** Renamed log wrapper field from `cursor` to `log_seq`. Updated:
+- `Buffer.__init__`: `_next_cursor` → `_next_log_seq`
+- `Buffer.load()`: detects `log_seq` or legacy `cursor` key for backward compat
+- `Buffer.append()`: writes `log_seq` field in wrapper
+- `Buffer.feed_since()` docstring: clarified byte-offset is authoritative
+- `test_log_format.py`: updated all wrapper field references
+- New `test_cursor_semantics.py`: 5-step integration test with real relay process
+
+### Integration test results (18/18 PASS)
+
+```
+cd /a0/usr/projects/punkto/relay && python3 test_cursor_semantics.py
+
+============================================================
+POINT 4 — Cursor semantics integration tests
+Authoritative model: byte-offset cursor (punkto.sync.md §236)
+============================================================
+
+[Setup] Starting relay on port 19877
+  [PASS] Relay starts and /health returns 200
+
+1. POST atom1, capture cursor from /feed
+  [PASS] 1. POST atom1 returns 201
+  [PASS] 1. atom1_id present
+  [PASS] 1. /feed cursor is integer > 0: cursor=1427
+  [PASS] 1. atom1 is in feed
+
+2. POST atom2
+  [PASS] 2. POST atom2 returns 201
+  [PASS] 2. atom2_id present and distinct
+
+3. GET /feed?since=1427 → should return only atom2
+  [PASS] 3. /feed?since=cursor returns exactly 1 atom: count=1
+  [PASS] 3. returned atom is atom2: content='second atom'
+
+4. Restart relay, repeat /feed?since=<cursor>
+  [PASS] 4. Relay restarts and /health returns 200
+  [PASS] 4. /feed?since=cursor after restart returns 1 atom: count=1
+  [PASS] 4. atom after restart matches atom2: content='second atom'
+  [PASS] 4. cursor unchanged after restart
+
+5. Legacy raw-atom log: relay starts cleanly, new atoms get correct cursors
+  [PASS] 5. Relay with legacy log starts
+  [PASS] 5. Legacy atoms loaded (feed has >= 2)
+  [PASS] 5. New atom accepted after legacy load
+  [PASS] 5. Feed has >= 3 atoms after new post
+  [PASS] 5. Cursor after new post > 0
+
+============================================================
+Results: 18/18 passed, 0 failed
+STATUS: ALL PASS
+```
+
+### Updated Point 4 status: PASS
+- All storage tests: 30/30 PASS (test_log_format.py)
+- All cursor semantics integration tests: 18/18 PASS (test_cursor_semantics.py)
+- Point 1 regression: 6/6 PASS
+- Deploy required: yes
+- Deploy status: not deployed
