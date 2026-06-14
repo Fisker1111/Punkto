@@ -196,3 +196,31 @@ Options:
 - Do not commit backup files to Git (they are in `.gitignore` by convention)
 - Do not expose backup files through any public endpoint
 - After restore on a new server, rotate any credentials that may have been compromised
+
+---
+
+## Operator Path Isolation — Important
+
+Setting only `PUNKTO_DATA_DIR` does **not** control all persistent paths.
+For full isolation (testing, restore verification, dev environments), all four must be set:
+
+| Env variable | Controls | Default |
+|---|---|---|
+| `PUNKTO_DATA_DIR` | `sync_state.json` location | `./data/` |
+| `PUNKTO_ATOM_LOG_PATH` | `atoms.log.jsonl` path | `/data/atoms.log.jsonl` |
+| `PUNKTO_NODE_KEY` | `node-key.json` path | `/data/node-key.json` |
+| `PUNKTO_NODE_CONFIG` | node config YAML path | `/config/punkto-node.yml` |
+
+In Docker deployments this is handled via volume mounts — all four defaults resolve to paths inside the container.
+For bare-metal or test deployments, set all four explicitly.
+
+## Identity Key Warning
+
+> **WARNING:** The `node-key.json` file contains the node's private signing key.
+> Anyone with access to this file can impersonate your node.
+> Encrypt or restrict access to backups that include this file.
+> Never commit `node-key.json` to version control.
+
+Restoring `atoms.log.jsonl` **without** `node-key.json` will cause the relay to generate
+a **new node identity** (different fingerprint). Atom data is preserved, but node identity is lost.
+
