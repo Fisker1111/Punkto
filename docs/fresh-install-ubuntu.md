@@ -345,9 +345,10 @@ python3 scripts/node-doctor.py https://node.example.org --expect-name "My Punkto
 
 ## 16. Security Notes
 
-1.  **Punkto is public.** Atoms posted to a Punkto node are public data.
-    There is no access control, authentication, or authorization on public
-    endpoints. Do not post secrets.
+1.  **Punkto is public.** Atoms are public and may be retained by other
+    nodes. Do not post passwords, secrets, sensitive personal information,
+    or anything you may need permanently deleted. Signing proves authorship
+    and integrity; it does not encrypt the atom.
 
 2.  **Do not commit secrets.** `config/`, `data/`, and `.env` are in
     `.gitignore` and must never be committed.

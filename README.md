@@ -23,6 +23,8 @@ Every atom is addressable. Every ROOT atom is a board.
 - Every location in the world has a canonical address: `p:<12-char-3D-geohash>`
 - You drop an **atom** (a short signed message) at a real-world coordinate
 - Atoms are stored in an append-only NDJSON log on a relay node
+
+> **⚠ Public data notice:** Atoms are public and may be retained by other nodes. Do not post passwords, secrets, sensitive personal information, or anything you may need permanently deleted. Signing proves authorship and integrity; it does not encrypt the atom.
 - Relays expose two read endpoints. `/feed?since=<cursor>` is a byte-offset stream — used by the PWA for resumable sync and by relay-to-relay replication. `/latest` returns the most recent N atoms in a single response — preferred for new clients and Flow-TV-style live displays. Both are first-class today; `/feed` may eventually be replaced by `/latest` for clients while staying for peer sync.
 - Signed atoms can be verified offline by clients or with `tools/punkto-key.py verify`. Today's relays store `sig` and `pubkey` when present but do not yet reject unsigned atoms — relay-side signature enforcement is planned for v0.5.
 - The PWA shows atoms as 3D bubbles on a map (MapLibre + deck.gl)
