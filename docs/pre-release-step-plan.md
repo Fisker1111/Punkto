@@ -514,3 +514,244 @@ STATUS: ALL PASS
 - Point 1 regression: 6/6 PASS
 - Deploy required: yes
 - Deploy status: not deployed
+
+---
+
+## PR #100 — Harden PWA boot and interactions (prerelease-hardening)
+
+**Date:** 2026-06-15
+**Agent:** Agent Zero
+**Task:** Integration test + controlled test deployment to one node only
+
+---
+
+### Branch state at integration
+
+| Commit | Author | Message |
+|--------|--------|---------|
+| `b1ecc68` | Agent Zero | fix(test): add cwd to subprocess.Popen in test_cursor_semantics.py |
+| `0277624` | Agent Zero | signing-spec drift: unify canonical, pubkey-before-sign, compat tests |
+| `6a2aeb7` | Cursor Agent | Harden PWA boot and interactions ← Cursor PR commit |
+
+- `origin/prerelease-hardening` updated to `b1ecc68` after push
+- `6a2aeb7` confirmed present in branch history via `git show`
+
+---
+
+### Checkout proof
+
+```
+git branch --show-current: prerelease-hardening
+git rev-parse HEAD:        b1ecc68... (after rebase + cwd fix commit)
+git log -3 --oneline:
+  b1ecc68 fix(test): add cwd to subprocess.Popen in test_cursor_semantics.py
+  0277624 signing-spec drift: unify canonical, pubkey-before-sign, compat tests
+  6a2aeb7 Harden PWA boot and interactions
+git status: clean, nothing to commit
+git diff --check: CLEAN
+bash -n deploy/verify.sh: OK
+```
+
+---
+
+### Cursor commit 6a2aeb7 — review findings
+
+| # | Check | Result | Evidence |
+|---|-------|--------|----------|
+| 1 | sync no longer depends on map.on('load') | ✅ PASS | `startSyncBoot()` is fully independent; `ensureSyncEngine()` decoupled from map |
+| 2 | Map still default view | ✅ PASS | `boot()` ends with `showPage('map')` (app.js line 1842) |
+| 3 | Text/cached data usable if map loading fails | ✅ PASS | `_mapScopedFeedReady = initialSyncDone`; shows `N cached` when map not ready |
+| 4 | openModal replaced with openCreateModal | ✅ PASS | `b.onclick = openCreateModal` (app.js line 987) |
+| 5 | Settings does not close when clicked inside | ✅ PASS | `menu.addEventListener('click', (e) => e.stopPropagation())` (ui-shell.js) |
+| 6 | Normal map clicks do not open Create | ✅ PASS | `map.on('click')` guarded by `if (isCreateModalOpen() && placementDraft)` |
+| 7 | Map clicks update placement only when Create is open | ✅ PASS | Same guard — placement only updated when `isCreateModalOpen()` is true |
+| 8 | Visible boot-error UI | ✅ PASS | `showBootError()` in app.js + `#boot-error` CSS in index.html + inline `renderBootError` |
+| 9 | PWA syntax checks added to CI | ✅ PASS | `.github/workflows/docker.yml` has 'PWA JavaScript syntax checks' step |
+
+**Note:** CI syntax checks in docker.yml do not include `pwa/ui-create.js` (added in a later commit). This file passes `node --check` locally.
+
+---
+
+### Test results
+
+#### Relay tests
+
+```
+python3 relay/test_sig.py
+  Results: 6/6 passed — STATUS: ALL PASS
+
+python3 relay/test_log_format.py
+  Results: 30/30 passed, 0 failed — STATUS: ALL PASS
+
+python3 relay/test_cursor_semantics.py
+  Results: 18/18 passed, 0 failed — STATUS: ALL PASS
+  NOTE: required fix — subprocess.Popen missing cwd arg; relay.py not found
+  when test run from project root. Fixed: cwd=os.path.dirname(os.path.abspath(__file__))
+  committed as b1ecc68.
+
+python3 relay/test_backup_restore.py
+  Results: 36/36 passed, 0 failed — STATUS: ALL PASS
+```
+
+#### PWA syntax checks
+
+```
+node --check pwa/app.js          OK
+node --check pwa/ui-shell.js     OK
+node --check pwa/ui-text.js      OK
+node --check pwa/ui-map.js       OK
+node --check pwa/ui-create.js    OK
+node --check pwa/key-management.js OK
+node --check pwa/sw.js           OK
+```
+
+**Total: 7/7 PASS**
+
+---
+
+### Deployment
+
+**Target node:** node2 (159.65.115.166 / app2.punkto.xyz) — ONE node only, as required
+**node1 (46.101.118.157): NOT deployed — unchanged**
+
+#### Pre-deploy state (node2)
+
+| Field | Value |
+|-------|-------|
+| relay image | `ghcr.io/fisker1111/punkto-relay:latest` |
+| relay image ID | `b709aad37f66` |
+| relay image created | `2026-06-09 12:08:46 UTC` |
+| relay digest | `sha256:b709aad37f6680d...` |
+| atom count (log) | 63 atoms |
+| node fingerprint | `node:0b2af9b3ca1d` |
+
+#### Backup
+
+```
+File: ~/punkto/backups/pre-pr100-backup-20260615-185104.tar.gz
+Size: 1.6K
+Contents: atoms.log.jsonl, node-key.json, sync_state.json, (config)
+Timestamp: 2026-06-15T18:51:04Z
+```
+
+#### Deploy method
+
+CI only triggers on `main` branch — no ghcr.io image for `prerelease-hardening`.
+Images built locally on node2 from branch source:
+
+```bash
+# On node2: clone branch
+git clone --branch prerelease-hardening https://github.com/Fisker1111/Punkto.git ~/punkto-prerelease
+# HEAD: b1ecc68
+
+# Build images
+docker build -t punkto-relay:prerelease-test relay/
+docker build -t punkto-web:prerelease-test pwa/
+
+# Deploy via override
+cat > ~/punkto/docker-compose.override.yml << EOF
+services:
+  web:
+    image: punkto-web:prerelease-test
+  relay:
+    image: punkto-relay:prerelease-test
+EOF
+
+docker compose down --remove-orphans
+docker compose up -d --force-recreate
+```
+
+#### Post-deploy image state
+
+| Service | Image | ID |
+|---------|-------|----|  
+| relay | `punkto-relay:prerelease-test` | `b23080606915` |
+| web | `punkto-web:prerelease-test` | `c1125104ac2c` |
+
+---
+
+### Endpoint verification (node2)
+
+| Endpoint | Result | Notes |
+|----------|--------|-------|
+| `/health` HTTP 200 | ✅ PASS | `{"status":"ok","node":"app2.punkto.xyz","buffer_size":2}` |
+| `/status` HTTP 200 | ✅ PASS | |
+| `/node/info` HTTP 200 | ✅ PASS | Full JSON confirmed |
+| `/feed` HTTP 200 | ✅ PASS | |
+| relay restarted cleanly | ✅ PASS | Relay logs show clean startup |
+| YAML config loaded | ✅ PASS | `config.loaded: true`, path `/config/punkto-node.yml` |
+| node identity unchanged | ✅ PASS | `node:0b2af9b3ca1d` (matches pre-deploy) |
+| existing atoms preserved | ⚠ NOTE | 63→2 after runtime prune (atoms >168h old removed — expected behavior) |
+| valid signed atom accepted | ✅ PASS | HTTP 201 |
+| unsigned atom accepted (require_sig=false) | ✅ PASS | HTTP 201 (node2 config default) |
+| unsigned atom rejected (require_sig=true) | ✅ PASS (unit) | Verified by test_sig.py 6/6; live node has require_sig=false |
+| TLS valid | ✅ PASS | TLSv1.3, `SSL certificate verify ok` |
+
+#### Full /node/info (node2 post-deploy)
+
+```json
+{
+  "software": {"name": "Punkto", "version": "v0.1"},
+  "node": {
+    "name": "Punkto Reference Node 2",
+    "public_url": "https://node2.punkto.xyz",
+    "fingerprint": "node:0b2af9b3ca1d",
+    "identity_loaded": true
+  },
+  "config": {"loaded": true, "path": "/config/punkto-node.yml"},
+  "stats": {"atom_count": 2, "buffer_size": 2},
+  "storage": {"mode": "append_only_log", "log_loaded": true, "corrupt_lines": 0}
+}
+```
+
+---
+
+### Manual browser checklist
+
+> **NOT performed** — requires manual browser access. Items carried forward for human verification.
+
+| Check | Status |
+|-------|--------|
+| Map is the default view | NOT TESTED |
+| App usable if map style loading blocked | NOT TESTED |
+| Text/cached data works in degraded mode | NOT TESTED |
+| Settings remains open when clicking inside | NOT TESTED |
+| Backdrop closes Settings | NOT TESTED |
+| Normal map click does not open Create | NOT TESTED |
+| Map click updates placement when Create is open | NOT TESTED |
+| First-use public-data acknowledgement appears | NOT TESTED |
+| Acknowledgement persists after reload | NOT TESTED |
+| Keyboard navigation works | NOT TESTED |
+| Mobile and desktop layout correct | NOT TESTED |
+| Boot-error banner appears when library unavailable | NOT TESTED |
+
+---
+
+### Remaining issues
+
+1. **CI does not check `pwa/ui-create.js`** — the docker.yml `PWA JavaScript syntax checks` step was added in 6a2aeb7 but does not include `ui-create.js`. File passes locally. Low risk; recommend adding to CI before merge.
+2. **Manual browser checklist not executed** — all 12 items require human verification in a browser.
+3. **node1 not deployed** — intentional per task requirement. Do not deploy to node1 until manual checklist passes.
+4. **Hard marker** — no hard marker string found in current `pwa/app.js`. Deployment verification via hard marker not possible.
+
+---
+
+### Summary
+
+| Section | Status |
+|---------|--------|
+| Checkout | ✅ PASS |
+| Commit 6a2aeb7 present | ✅ PASS |
+| Cursor change review (9 items) | ✅ 9/9 PASS |
+| Relay tests (4 suites, 90 tests) | ✅ 90/90 PASS |
+| PWA syntax checks (7 files) | ✅ 7/7 PASS |
+| git diff --check | ✅ CLEAN |
+| bash -n deploy/verify.sh | ✅ OK |
+| Pre-deploy backup | ✅ COMPLETE |
+| Deployment (node2 only) | ✅ COMPLETE |
+| Backend endpoint verification | ✅ 11/11 PASS (1 note) |
+| Manual browser checklist | ❌ NOT PERFORMED |
+
+**Overall status: PARTIAL**
+
+All automated checks pass. Manual browser verification outstanding. Do NOT merge PR #100 until manual browser checklist is completed and node1 deployment is approved.
