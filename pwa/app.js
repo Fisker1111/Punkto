@@ -57,6 +57,7 @@ function getCategoryMeta(atom) {
 }
 let syncEngine = null;
 let lastSyncAtMs = null;
+let syncBootPromise = null;
 
 // ---------------------------------------------------------------------------
 // IndexedDB (Dexie)
@@ -68,10 +69,12 @@ let lastSyncAtMs = null;
 
 let map = null;
 let mapInitStarted = false;
+let mapLoadComplete = false;
 let deckOverlay = null;
 let is3D = true;
 let initialSyncDone = false;
 let deepLinkPunkto = null; // captured at boot, consumed after first refreshUI
+let deepLinkFocused = false;
 // ============================================================
 // Two-view shell — Text / Map
 // ============================================================
@@ -118,6 +121,11 @@ function openBoardForAtom(atom, atoms = _mainFeedAtoms) {
 
 function ensureMapInitialized() {
   console.log('[map] ensure init');
+  const missing = missingMapLibraries();
+  if (missing.length) {
+    showBootError(`Map unavailable: missing ${missing.join(', ')}.`);
+    return null;
+  }
   if (map) {
     console.log('[map] init skipped existing');
     requestAnimationFrame(() => {
@@ -138,6 +146,30 @@ function renderMainFeed() {
     locationDenied: _locationDenied,
     loadingVisibleAtoms: !_mapScopedFeedReady,
   });
+}
+
+function missingMapLibraries() {
+  const missing = [];
+  if (!window.maplibregl) missing.push('MapLibre');
+  if (!window.deck || !window.deck.MapboxOverlay) missing.push('deck.gl');
+  return missing;
+}
+
+function showBootError(message) {
+  const text = String(message || 'Punkto could not start.').trim();
+  if (window.renderBootError) {
+    window.renderBootError(text);
+    return;
+  }
+  let el = document.getElementById('boot-error');
+  if (!el) {
+    el = document.createElement('div');
+    el.id = 'boot-error';
+    el.setAttribute('role', 'alert');
+    el.style.cssText = 'position:fixed;left:12px;right:12px;top:12px;z-index:1000;padding:12px 14px;border-radius:14px;border:1px solid rgba(255,120,120,.45);background:rgba(43,18,24,.94);color:#fff;font:14px system-ui,sans-serif;box-shadow:0 18px 40px rgba(0,0,0,.35)';
+    document.body.appendChild(el);
+  }
+  el.textContent = text;
 }
 
 function queueRefreshUI(newAtomIds = null, delayMs = 120) {
@@ -191,6 +223,60 @@ function setSyncStatus(state) {
   if (elMainSyncDot) elMainSyncDot.className = '';
   if (state) elSyncDot.classList.add(state);
   if (state && elMainSyncDot) elMainSyncDot.classList.add(state);
+}
+
+function ensureSyncEngine() {
+  if (syncEngine) return syncEngine;
+  syncEngine = createSyncEngine({
+    nodeUrl: NODE_URL,
+    seedNodes: SEED_NODES,
+    syncIntervalMs: SYNC_INTERVAL_MS,
+    nodeRegistry,
+    isHiddenAtom,
+    callbacks: {
+      onSyncStart: () => setSyncStatus('syncing'),
+      onSyncDone: ({ anyError }) => {
+        setSyncStatus(anyError ? 'error' : 'ok');
+        if (!anyError) lastSyncAtMs = Date.now();
+      },
+      onSyncError: () => setSyncStatus('error'),
+      onAtomsChanged: (newAtomIds) => queueRefreshUI(newAtomIds, 50),
+      onPeersChanged: () => refreshSettingsNetworkInfo().catch(() => {}),
+    },
+  });
+  return syncEngine;
+}
+
+async function focusDeepLinkIfReady() {
+  if (!deepLinkPunkto || deepLinkFocused || !initialSyncDone || !mapLoadComplete || !map) return;
+  deepLinkFocused = true;
+  await focusPunkto(deepLinkPunkto);
+}
+
+async function startSyncBoot() {
+  if (syncBootPromise) return syncBootPromise;
+  syncBootPromise = (async () => {
+    const engine = ensureSyncEngine();
+    try {
+      nodeRegistry.initNodeRegistry();
+      for (const url of SEED_NODES) {
+        const seeded = await ensureNode(url, 0);
+        if (seeded) console.log('[lb] seeded node:', url);
+      }
+
+      await engine.discoverPeers();
+      await engine.syncFeed();
+    } catch (err) {
+      console.warn('[sync] boot sync failed:', err);
+      setSyncStatus('error');
+    } finally {
+      initialSyncDone = true;
+      await refreshUI().catch((err) => console.warn('[ui] post-sync refresh failed:', err));
+      await focusDeepLinkIfReady().catch((err) => console.warn('[deep-link] focus failed:', err));
+      engine.start();
+    }
+  })();
+  return syncBootPromise;
 }
 // ── Network page renderer ─────────────────────────────────────────────────────
 // Shows live node/peer/sync data. Called by showPage('network').
@@ -879,12 +965,16 @@ async function refreshUI(newAtomIds = null) {
       return Number(b.t) - Number(a.t);
     });
     recent = enriched.slice(0, 50);
-    _mapScopedFeedReady = false;
+    // If the map style never loads, Text still has useful cached/synced data.
+    // Keep it in a loading state only until the first sync/cache pass finishes.
+    _mapScopedFeedReady = initialSyncDone;
   }
   // Expose to main-view feed
   _mainFeedAtoms = recent;
   if (elMainStatusCount) {
-    elMainStatusCount.textContent = _mapScopedFeedReady ? `${recent.length} visible` : 'Loading visible atoms…';
+    elMainStatusCount.textContent = mapReadyForScope
+      ? `${recent.length} visible`
+      : (initialSyncDone ? `${recent.length} cached` : 'Loading visible atoms…');
   }
   if (currentPage === 'text') renderMainFeed();
 
@@ -894,7 +984,7 @@ async function refreshUI(newAtomIds = null) {
     // users see a clean list instead of a flash of "No atoms yet".
     if (initialSyncDone) {
       elAtomEmpty.innerHTML = '<strong>No text here yet</strong><br/>Be the first to leave something at this place.<br/><button id="empty-leave-note" class="btn btn-secondary" style="margin-top:8px">Leave note here</button>';
-      requestAnimationFrame(() => { const b = document.getElementById('empty-leave-note'); if (b) b.onclick = openModal; });
+      requestAnimationFrame(() => { const b = document.getElementById('empty-leave-note'); if (b) b.onclick = openCreateModal; });
       elAtomEmpty.style.display = 'block';
     } else {
       elAtomEmpty.style.display = 'none';
@@ -1200,26 +1290,9 @@ function initMap() {
   });
   map.addControl(deckOverlay);
 
-  syncEngine = createSyncEngine({
-    nodeUrl: NODE_URL,
-    seedNodes: SEED_NODES,
-    syncIntervalMs: SYNC_INTERVAL_MS,
-    nodeRegistry,
-    isHiddenAtom,
-    callbacks: {
-      onSyncStart: () => setSyncStatus('syncing'),
-      onSyncDone: ({ anyError }) => {
-        setSyncStatus(anyError ? 'error' : 'ok');
-        if (!anyError) lastSyncAtMs = Date.now();
-      },
-      onSyncError: () => setSyncStatus('error'),
-      onAtomsChanged: (newAtomIds) => queueRefreshUI(newAtomIds, 50),
-      onPeersChanged: () => refreshSettingsNetworkInfo().catch(() => {}),
-    },
-  });
-
   map.on('load', async () => {
     console.log('[map] loaded');
+    mapLoadComplete = true;
 
     // Update DOM bubble LOD whenever zoom or pan changes.
     map.on('zoomend', () => {
@@ -1240,10 +1313,7 @@ function initMap() {
     ensureLeaderOverlay();
     map.on('render', drawLeaderLines);
     map.on('click', (e) => {
-      if (!isCreateModalOpen()) {
-        openCreateModal();
-      }
-      if (placementDraft) {
+      if (isCreateModalOpen() && placementDraft) {
         placementDraft.lat = e.lngLat.lat;
         placementDraft.lon = e.lngLat.lng;
         updateCreateCenter(e.lngLat.lat, e.lngLat.lng);
@@ -1272,29 +1342,11 @@ function initMap() {
     await refreshUI();
     requestAnimationFrame(() => { if (map) map.resize(); });
 
-    // Init load balancer registry and seed Dexie nodes table with SEED_NODES
-    nodeRegistry.initNodeRegistry();
-    for (const url of SEED_NODES) {
-      const seeded = await ensureNode(url, 0);
-      if (seeded) console.log('[lb] seeded node:', url);
-    }
-
-    // Discover peers from all known nodes, then start sync
-    await syncEngine.discoverPeers();
-    await syncEngine.syncFeed();
-    initialSyncDone = true;
-    await refreshUI();
-    requestAnimationFrame(() => { if (map) map.resize(); });
-
     // If the user opened a /p/<id> deep-link, focus it now that atoms are loaded
-    if (deepLinkPunkto) {
-      await focusPunkto(deepLinkPunkto);
-    }
+    await focusDeepLinkIfReady();
 
     // Show first-visit onboarding hint (skipped for deep-link visitors and repeat users)
     showOnboarding();
-
-    syncEngine.start();
   });
   return map;
 }
@@ -1662,11 +1714,6 @@ function wireEvents() {
   // 3D toggle
   elToggle3D.addEventListener('click', toggle3D);
 
-  // Close settings on outside click
-  document.addEventListener('click', () => {
-    if (shellIsSettingsOpen()) closeSettingsMenu();
-  });
-
   // Add atom
   elFabAdd.addEventListener('click', () => {
     dismissOnboarding();
@@ -1719,17 +1766,14 @@ async function boot() {
 
   console.log('[punkto] booting...');
 
-  // Verify deck.gl UMD is available
-  if (!window.deck || !window.deck.MapboxOverlay) {
-    console.error('[punkto] deck.gl not loaded — check CDN script tag');
-    return;
-  }
-  if (!window.maplibregl) {
-    console.error('[punkto] MapLibre GL not loaded — check CDN script tag');
-    return;
+  const missingMapLibs = missingMapLibraries();
+  if (missingMapLibs.length) {
+    console.error(`[punkto] map libraries missing: ${missingMapLibs.join(', ')}`);
+    showBootError(`Map unavailable: missing ${missingMapLibs.join(', ')}.`);
   }
   if (!window.Dexie) {
     console.error('[punkto] Dexie not loaded — check CDN script tag');
+    showBootError('Storage unavailable: missing Dexie. Punkto cannot load cached text.');
     return;
   }
 
@@ -1791,6 +1835,10 @@ async function boot() {
     initMap: () => initMap(),
   });
 
+  startSyncBoot().catch((err) => {
+    console.warn('[sync] boot promise failed:', err);
+    setSyncStatus('error');
+  });
   showPage('map');
   ensureMapInitialized();
   if (deepLinkPunkto) {
@@ -1798,7 +1846,10 @@ async function boot() {
   }
 }
 
-boot();
+boot().catch((err) => {
+  console.error('[punkto] boot failed:', err);
+  showBootError(`Punkto could not start: ${err?.message || err}`);
+});
 
 
 // --- Key Management ---

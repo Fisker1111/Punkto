@@ -1059,6 +1059,22 @@
     }
     #settings-backdrop.open { display: block; }
 
+    #boot-error {
+      position: fixed;
+      left: 12px;
+      right: 12px;
+      top: 12px;
+      z-index: 1000;
+      padding: 12px 14px;
+      border-radius: 14px;
+      border: 1px solid rgba(255,120,120,0.45);
+      background: rgba(43,18,24,0.94);
+      color: var(--text);
+      box-shadow: 0 18px 40px rgba(0,0,0,0.35);
+      font-size: 14px;
+      line-height: 1.4;
+    }
+
     /* ── Modals (add atom, mnemonic, import, error) ─────────── */
     .modal-overlay {
       position: fixed;
@@ -1566,6 +1582,18 @@
        from `?debug=1` query (renders to DOM after 2s). */
     window.__earlyErrors = [];
     window.__earlyBoot = Date.now();
+    window.renderBootError = function(message) {
+      try {
+        var el = document.getElementById('boot-error');
+        if (!el) {
+          el = document.createElement('div');
+          el.id = 'boot-error';
+          el.setAttribute('role', 'alert');
+          document.body.appendChild(el);
+        }
+        el.textContent = message || 'Punkto could not start.';
+      } catch (_) {}
+    };
     function capture(type, detail) {
       try {
         var e = {
@@ -1581,6 +1609,15 @@
         console.error('[early-boot]', type, e);
       } catch (_) {}
     }
+    (function checkRequiredLibraries() {
+      var missing = [];
+      if (!window.maplibregl) missing.push('MapLibre');
+      if (!window.deck || !window.deck.MapboxOverlay) missing.push('deck.gl');
+      if (!window.Dexie) missing.push('Dexie');
+      if (missing.length) {
+        window.renderBootError('Punkto could not load required browser libraries: ' + missing.join(', ') + '.');
+      }
+    })();
     window.addEventListener('error', function(ev) {
       capture('error', {
         message: ev.message,
