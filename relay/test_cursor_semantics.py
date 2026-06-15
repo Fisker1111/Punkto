@@ -72,6 +72,7 @@ def start_relay(data_dir: str, env_extra: dict = None) -> subprocess.Popen:
     proc = subprocess.Popen(
         [sys.executable, "relay.py"],
         env=env,
+        cwd=os.path.dirname(os.path.abspath(__file__)),
         stdout=subprocess.DEVNULL,
         stderr=subprocess.DEVNULL,
     )
