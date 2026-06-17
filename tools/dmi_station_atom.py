@@ -137,7 +137,7 @@ def build_atom(
         "f": "DMI",
         "x": (
             f"DMI weather station: {name} ({station_id})\n"
-            "Official DMI import\n"
+            "Imported source data\n"
             f"Coordinates: {lat:.6f}, {lon:.6f}, {altitude_m:g} m\n"
             f"Observation: {parameter_id} = {value_text}\n"
             f"Observed: {observed}\n"
