@@ -112,6 +112,21 @@ function _categoryBadge(catRaw){
   const map={TEXT:{code:'TEXT',label:'Talk',cls:'cat-talk'},TALK:{code:'TEXT',label:'Talk',cls:'cat-talk'},INFO:{code:'INFO',label:'Info',cls:'cat-info'},WARN:{code:'WARN',label:'Warning',cls:'cat-warn'},EMGC:{code:'EMGC',label:'Emergency',cls:'cat-emgc'},EVNT:{code:'EVNT',label:'Event',cls:'cat-evnt'},LOST:{code:'LOST',label:'Lost/Found',cls:'cat-lost'}};
   return map[raw] || map.TEXT;
 }
+function _isOfficialDmiAtom(atom) {
+  const kind = String(atom?.kind || '').trim().toUpperCase();
+  const source = String(atom?.source || atom?.import_source || '').trim().toUpperCase();
+  return kind === 'DMI_STATION_OBSERVATION' || source === 'DMI' || source === 'OFFICIAL_DMI_METOBS';
+}
+function _officialDmiBadge(atom) {
+  return _isOfficialDmiAtom(atom) ? '<span class="main-card-source-badge ui-badge">Official DMI</span>' : '';
+}
+function _officialDmiLine(atom) {
+  if (!_isOfficialDmiAtom(atom)) return '';
+  const station = String(atom?.source_station_name || '').trim();
+  const stationId = String(atom?.source_station_id || '').trim();
+  const stationPart = station || stationId ? ` · ${[station, stationId].filter(Boolean).join(' ')}` : '';
+  return `Imported official weather-station data${stationPart}`;
+}
 
 export function initTextView({ onShowOnMap, onLeaveNote, onOpenBoard, onPostReply, helpers } = {}) {
   _onShowOnMap = typeof onShowOnMap === 'function' ? onShowOnMap : null;
@@ -340,7 +355,9 @@ function renderBoardDetail(atom) {
   const disabledAttr = canReply ? '' : ' disabled';
   const orphanText = canReply ? '' : '<p class="board-reply-status error">Cannot reply: board id is missing.</p>';
   const trustLine = author ? `${trust} by ${author}` : `${trust} public post`;
-  const publicLine = trust === 'Unsigned' ? 'Unsigned public post' : 'Public board';
+  const officialLine = _officialDmiLine(atom);
+  const publicLine = officialLine || (trust === 'Unsigned' ? 'Unsigned public post' : 'Public board');
+  const sourceBadge = _officialDmiBadge(atom);
   // Future: reply threads may include "Reply to unknown atom" when parent is missing.
   const copyLinkBtn = atomId
     ? '<button class="main-card-reply ui-btn" data-action="copy-board-link" data-id="' + _escHtml(atomId) + '">Copy board link</button>'
@@ -350,11 +367,11 @@ function renderBoardDetail(atom) {
 ` +
     `  <button class="board-back ui-btn" data-action="board-back">${_escHtml(backLabel)}</button>
 ` +
-    `  <div class="main-card ui-card board-root">
+    `  <div class="main-card ui-card board-root${_isOfficialDmiAtom(atom) ? ' main-card--official-source' : ''}">
 ` +
-    `    <div class="main-card-badges"><span class="main-card-cat ui-badge ${_escHtml(cat.cls)}">${_escHtml(cat.code)} · ${_escHtml(cat.label)}</span><span class="main-card-type ui-badge">Public board</span></div>
+    `    <div class="main-card-badges"><span class="main-card-cat ui-badge ${_escHtml(cat.cls)}">${_escHtml(cat.code)} · ${_escHtml(cat.label)}</span><span class="main-card-type ui-badge">Public board</span>${sourceBadge}</div>
 ` +
-    `    <p class="main-card-disclaimer">Visible in this map view</p>
+    `    <p class="main-card-disclaimer">${_escHtml(officialLine ? 'Imported source data; not user-created content.' : 'Visible in this map view')}</p>
 ` +
     `    <h3 class="main-card-title">${title}</h3>
 ` +
@@ -474,15 +491,18 @@ export function renderTextFeed({ atoms = [], locationDenied = false, loadingVisi
       ? '<div class="main-card-meta"><span>' + _escHtml(rootTitle ? ('Reply to board: ' + rootTitle) : 'Reply to unknown board') + '</span></div>'
       : '';
     const replyCount = isReply ? '' : '<div class="main-card-meta"><span>' + _replyCount(atom, _mainFeedAtoms) + ' replies</span></div>';
-    return '<div class="main-card ui-card" data-atom-id="' + _escHtml(stableId) + `">
+    const officialLine = _officialDmiLine(atom);
+    const officialMeta = officialLine ? '<div class="main-card-meta main-card-source-line"><span>' + _escHtml(officialLine) + '</span></div>' : '';
+    return '<div class="main-card ui-card' + (_isOfficialDmiAtom(atom) ? ' main-card--official-source' : '') + '" data-atom-id="' + _escHtml(stableId) + `">
 ` +
-      '<div class="main-card-badges"><span class="main-card-type ui-badge">' + (isReply ? 'Reply activity' : 'Board') + '</span><span class="main-card-cat ui-badge ' + _escHtml(cat.cls) + '">' + _escHtml(cat.code) + ' · ' + _escHtml(cat.label) + `</span></div>
+      '<div class="main-card-badges"><span class="main-card-type ui-badge">' + (isReply ? 'Reply activity' : 'Board') + '</span><span class="main-card-cat ui-badge ' + _escHtml(cat.cls) + '">' + _escHtml(cat.code) + ' · ' + _escHtml(cat.label) + '</span>' + _officialDmiBadge(atom) + `</div>
 ` +
       '<h3 class="main-card-title">' + title + `</h3>
 ` +
       replyContext +
       (preview ? '<p class="main-card-preview">' + _escHtml(preview) + `</p>
 ` : '') +
+      officialMeta +
       (meta ? '<div class="main-card-meta"><span>' + _escHtml(meta) + `</span></div>
 ` : '') +
       '<div class="main-card-footer"><div class="main-card-meta-group"><div class="main-card-meta"><span>' + _escHtml(_authorLabel(atom)) + ' · ' + _escHtml(_trustLabel(atom)) + '</span></div>' + replyCount + '</div>' +
