@@ -164,15 +164,23 @@ An Author ID alone does **not** allow recovery of the public key. The public key
 
 Follows `punkto.sync.md` §3 (canonical atom bytes):
 
+**Signing workflow (order matters):**
+
 ```
-canonical_bytes = utf8(json_encode_canonical(atom_without_sig_field))
-signature       = ed25519_sign(private_key, canonical_bytes)
-atom["sig"]     = base64(signature)
+1. atom["pubkey"] = base64(public_key)   # add pubkey BEFORE computing canonical bytes
+2. canonical_bytes = utf8(json_encode_canonical(atom_without_sig_field))
+3. signature       = ed25519_sign(private_key, canonical_bytes)
+4. atom["sig"]     = base64(signature)
 ```
+
+> **Important:** `pubkey` must be added to the atom **before** computing canonical bytes.
+> The canonical bytes include `pubkey`. Only `sig` is excluded.
+> `canonical_bytes` for signing and for `atom_id` are identical.
 
 Where `json_encode_canonical` means:
 
 1. Remove the `sig` field if present (it is excluded from the signed bytes — it cannot sign itself).
+   **All other fields, including `pubkey`, are included.**
 2. Sort all keys lexicographically at every level of nesting.
 3. Emit minified JSON: no whitespace between tokens, separators `:` and `,`.
 4. Encode the result as UTF-8.

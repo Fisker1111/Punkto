@@ -241,7 +241,13 @@ def _load_priv_from_env_or_prompt() -> Ed25519PrivateKey:
 def cmd_sign(path: str) -> None:
     atom = json.loads(Path(path).read_text())
     priv = _load_priv_from_env_or_prompt()
-    msg = canonical_atom_bytes(atom)
+    import base64 as _b64
+    pub_raw = pubkey_bytes(priv.public_key())
+    pubkey_b64 = _b64.b64encode(pub_raw).decode("ascii")
+    # Spec: add pubkey to atom BEFORE computing canonical bytes
+    # canonical = sorted JSON without sig (pubkey IS included)
+    atom["pubkey"] = pubkey_b64
+    msg = canonical_atom_bytes(atom)  # excludes only sig
     atom["sig"] = sig_b64(priv, msg)
     print(json.dumps(atom, sort_keys=True, separators=(",", ":"), ensure_ascii=False))
 

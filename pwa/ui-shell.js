@@ -63,7 +63,18 @@ export function initShell({ onShowText, onShowMap, onAdd, onOpenSettings } = {})
     });
   }
 
-  // Close settings on outside click (matches legacy behavior)
+  const menu = document.getElementById('settings-menu');
+  const bd = document.getElementById('settings-backdrop');
+  if (menu) {
+    menu.addEventListener('click', (e) => e.stopPropagation());
+  }
+  if (bd) {
+    bd.addEventListener('click', () => {
+      if (_settingsOpen) closeSettings();
+    });
+  }
+
+  // Close settings on outside click.
   document.addEventListener('click', () => {
     if (_settingsOpen) closeSettings();
   });

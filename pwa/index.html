@@ -1059,6 +1059,22 @@
     }
     #settings-backdrop.open { display: block; }
 
+    #boot-error {
+      position: fixed;
+      left: 12px;
+      right: 12px;
+      top: 12px;
+      z-index: 1000;
+      padding: 12px 14px;
+      border-radius: 14px;
+      border: 1px solid rgba(255,120,120,0.45);
+      background: rgba(43,18,24,0.94);
+      color: var(--text);
+      box-shadow: 0 18px 40px rgba(0,0,0,0.35);
+      font-size: 14px;
+      line-height: 1.4;
+    }
+
     /* ── Modals (add atom, mnemonic, import, error) ─────────── */
     .modal-overlay {
       position: fixed;
@@ -1131,6 +1147,18 @@
     #modal-author-row { margin-bottom: 14px; }
     #modal-author { width: 100%; }
 
+    #ack-banner {
+      background: rgba(255,160,0,0.12);
+      border: 1px solid rgba(255,160,0,0.35);
+      border-radius: 10px;
+      padding: 14px 16px;
+      margin-bottom: 12px;
+      font-size: 13px;
+      line-height: 1.6;
+    }
+    #ack-banner p { margin: 0 0 8px; color: var(--text); }
+    #ack-banner p:last-of-type { margin-bottom: 12px; }
+    #ack-banner #ack-btn { width: 100%; }
     #modal-notice {
       background: rgba(255,85,102,0.08);
       border: 1px solid rgba(255,85,102,0.25);
@@ -1438,8 +1466,14 @@
     <div id="modal" class="modal-box">
       <h2 id="modal-title">Write Punkti</h2>
       <div id="modal-location">…</div>
+      <!-- First-use public-data acknowledgement banner (hidden after first ack) -->
+      <div id="ack-banner" style="display:none" role="alertdialog" aria-labelledby="ack-title" aria-describedby="ack-body">
+        <p id="ack-title"><strong>⚠ Public data notice</strong></p>
+        <p id="ack-body">Atoms are public and may be retained by other nodes. Do not post passwords, secrets, sensitive personal information, or anything you may need permanently deleted. Signing proves authorship and integrity; it does not encrypt the atom.</p>
+        <button id="ack-btn" class="btn btn-primary" type="button" aria-label="I understand — proceed to post">I understand</button>
+      </div>
       <div id="modal-notice">
-        <span class="icon">⚠</span>Public and permanent — this cannot be deleted.
+        <span class="icon">⚠</span>Public &amp; permanent — atoms may be retained by other nodes. Do not post secrets or sensitive personal information.
       </div>
       <div id="modal-category-row">
         <label for="modal-category"><strong>Category</strong></label>
@@ -1548,6 +1582,18 @@
        from `?debug=1` query (renders to DOM after 2s). */
     window.__earlyErrors = [];
     window.__earlyBoot = Date.now();
+    window.renderBootError = function(message) {
+      try {
+        var el = document.getElementById('boot-error');
+        if (!el) {
+          el = document.createElement('div');
+          el.id = 'boot-error';
+          el.setAttribute('role', 'alert');
+          document.body.appendChild(el);
+        }
+        el.textContent = message || 'Punkto could not start.';
+      } catch (_) {}
+    };
     function capture(type, detail) {
       try {
         var e = {
@@ -1563,6 +1609,15 @@
         console.error('[early-boot]', type, e);
       } catch (_) {}
     }
+    (function checkRequiredLibraries() {
+      var missing = [];
+      if (!window.maplibregl) missing.push('MapLibre');
+      if (!window.deck || !window.deck.MapboxOverlay) missing.push('deck.gl');
+      if (!window.Dexie) missing.push('Dexie');
+      if (missing.length) {
+        window.renderBootError('Punkto could not load required browser libraries: ' + missing.join(', ') + '.');
+      }
+    })();
     window.addEventListener('error', function(ev) {
       capture('error', {
         message: ev.message,
