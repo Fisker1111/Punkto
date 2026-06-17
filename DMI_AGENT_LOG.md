@@ -84,6 +84,7 @@ Verification evidence:
 - `node --check pwa/app.js && node --check pwa/ui-shell.js && node --check pwa/ui-text.js && node --check pwa/ui-map.js && node --check pwa/key-management.js && node --check pwa/sw.js` passed.
 - `python3 tools/test_dmi_station_atom.py` passed 2 tests.
 - `python3 relay/test_relay.py` passed 57/57 tests.
+- Manual browser verification on a fresh local PWA/relay proxy confirmed the Text card and board detail use generic `IMPORTED SOURCE` labels and `Imported source data`, with no public `Official DMI` feature label; artifact saved to `/opt/cursor/artifacts/operator_boundary_imported_source_walkthrough.mp4`.
 
 Decision: CONTINUE.
 
