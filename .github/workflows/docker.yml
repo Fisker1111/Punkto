@@ -44,6 +44,7 @@ jobs:
           node --check pwa/ui-shell.js
           node --check pwa/ui-text.js
           node --check pwa/ui-map.js
+          node --check pwa/ui-create.js
           node --check pwa/key-management.js
           node --check pwa/sw.js
 
