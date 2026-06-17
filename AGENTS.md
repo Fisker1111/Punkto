@@ -119,3 +119,30 @@ docker compose pull && docker compose up -d --force-recreate
 ```
 
 Run on **both** nodes. Always verify with hard marker and `docker compose ps`.
+
+---
+
+## Cursor Cloud specific instructions
+
+Two runnable services; no build step, no Docker needed for local dev. Python deps (`requests`, `PyYAML`, `cryptography`) are installed by the startup update script.
+
+### Relay (Python, `relay/relay.py`)
+- Standard run/test commands are in `relay/README.md`. The default bind is `127.0.0.1:8000`; tests run via `python3 test_relay.py` (no pytest required).
+- Non-obvious: besides the documented `PUNKTO_DATA_DIR`, the relay also defaults `PUNKTO_NODE_KEY` to `/data/node-key.json` and `PUNKTO_ATOM_LOG_PATH` to `/data/atoms.log.jsonl` (absolute `/data`, writable only inside the Docker image). For local dev these must be redirected to a writable dir, e.g.:
+  ```bash
+  PUNKTO_DATA_DIR=/tmp/punkto-data \
+  PUNKTO_NODE_KEY=/tmp/punkto-data/node-key.json \
+  PUNKTO_ATOM_LOG_PATH=/tmp/punkto-data/atoms.log.jsonl \
+  python3 relay.py
+  ```
+  The `node config missing at /config/punkto-node.yml; using safe defaults` log line is expected locally and harmless.
+- Acceptance window: `POST /atom` rejects timestamps older than 24h (`atom_too_old`). Use a current-millis `t` when posting test atoms.
+
+### PWA (vanilla JS static files, `pwa/`)
+- No bundler/npm; dependencies are vendored in `pwa/lib/` and `pwa/nacl.min.js`. Serve the directory statically (e.g. `python3 -m http.server 8080` from `pwa/`). Map tiles and the no-relay fallback (`app1/app2.punkto.xyz`) require internet.
+- Non-obvious: the PWA targets its relay at `window.location.origin` (`NODE_URL` in `app.js`), and **create-atom posts to the relay first and only stores locally on success** (`submitAtomFromModal`). A plain static server on `:8080` has no `/atom` endpoint, so the create flow silently falls back to the production seed nodes. To exercise create end-to-end against a *local* relay, serve the PWA behind a front that also reverse-proxies the relay API paths (`/atom`, `/latest`, `/feed`, `/info`, `/node`, `/health`, `/status`) to the relay on `:8000`, so they share one origin (this is what production Caddy does).
+
+### Quick checks
+- PWA JS syntax: the `node --check` list under "Required checks" above.
+- Relay: `python3 relay/test_relay.py` (56 tests).
+- Core lib/CLI: `python3 -m core.cli make <lat> <lon> <alt>` / `decode <p:...>`.
