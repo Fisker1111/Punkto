@@ -82,10 +82,12 @@ acceptance:
 """)
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import requests  # noqa: E402
 
 import relay  # noqa: E402
+from tools.dmi_station_atom import build_atom as build_dmi_station_atom  # noqa: E402
 
 
 _server = None
@@ -127,6 +129,10 @@ def _atom(punkto: str = "p:u07qsuustfsh", t: int | None = None, **extra: Any) ->
     return a
 
 
+def _current_rfc3339(offset_ms: int = 0) -> str:
+    return time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime((relay._now_ms() + offset_ms) / 1000))
+
+
 
 
 def _set_node_config_patch(patch: Dict[str, Any]) -> Dict[str, Any]:
@@ -155,7 +161,9 @@ def _jsonl_count(path: str, atom: Dict[str, Any] | None = None) -> int:
                 parsed = json.loads(line)
             except json.JSONDecodeError:
                 continue
-            if relay.compute_atom_id(parsed) == expected_id:
+            # PR #100 log format: {"log_seq": N, "atom_id": "...", "atom": {...}}
+            actual = parsed.get("atom", parsed) if isinstance(parsed, dict) else parsed
+            if relay.compute_atom_id(actual) == expected_id:
                 count += 1
     return count
 
@@ -503,6 +511,63 @@ def test_post_valid_atom() -> None:
     assert body["status"] == "accepted"
     assert body["atom_id"] == relay.compute_atom_id(a)
     assert body["punkto"] == a["punkto"]
+
+
+def test_dmi_station_atom_survives_local_relay_feed_and_latest() -> None:
+    observed = _current_rfc3339(-1000)
+    station_payload = {
+        "type": "FeatureCollection",
+        "features": [
+            {
+                "type": "Feature",
+                "id": "station-feature-id",
+                "geometry": {"type": "Point", "coordinates": [10.4398, 55.3088]},
+                "properties": {
+                    "stationId": "06126",
+                    "name": "Aarslev",
+                    "stationHeight": 49.2,
+                },
+            }
+        ],
+        "timeStamp": _current_rfc3339(),
+        "numberReturned": 1,
+        "links": [],
+    }
+    observation_payload = {
+        "type": "FeatureCollection",
+        "features": [
+            {
+                "type": "Feature",
+                "id": "observation-feature-id",
+                "geometry": {"type": "Point", "coordinates": [10.4398, 55.3088]},
+                "properties": {
+                    "stationId": "06126",
+                    "observed": observed,
+                    "parameterId": "temp_soil",
+                    "value": 15.11,
+                },
+            }
+        ],
+        "timeStamp": _current_rfc3339(),
+        "numberReturned": 1,
+        "links": [],
+    }
+    atom = build_dmi_station_atom(station_payload, observation_payload)
+    atom_id = relay.compute_atom_id(atom)
+
+    post = requests.post(f"{BASE_URL}/atom", json=atom, timeout=5)
+    assert post.status_code == 201, post.text
+    assert post.json()["atom_id"] == atom_id
+
+    feed = requests.get(f"{BASE_URL}/feed?since=0", timeout=5)
+    assert feed.status_code == 200, feed.text
+    feed_atoms = feed.json()["atoms"]
+    assert any(relay.compute_atom_id(a) == atom_id and a == atom for a in feed_atoms)
+
+    latest = requests.get(f"{BASE_URL}/latest", timeout=5)
+    assert latest.status_code == 200, latest.text
+    latest_atoms = latest.json()["atoms"]
+    assert any(relay.compute_atom_id(a) == atom_id and a == atom for a in latest_atoms)
 
 
 def test_post_duplicate_atom() -> None:
@@ -1092,6 +1157,7 @@ ALL_TESTS = [
     test_load_or_create_node_identity_invalid_fails,
     test_missing_config_uses_live_forward_defaults,
     test_post_valid_atom,
+    test_dmi_station_atom_survives_local_relay_feed_and_latest,
     test_post_old_atom_rejected_by_acceptance_policy,
     test_serving_excludes_old_non_pinned_atoms_from_feed_and_latest,
     test_pinned_old_atom_is_served_outside_recent_window,

@@ -55,6 +55,18 @@ function getCategoryMeta(atom) {
   const key = String(atom?.category || atom?.kind || '').trim().toUpperCase();
   return CATEGORY_META[key] || CATEGORY_META.TEXT;
 }
+function isOfficialDmiAtom(atom) {
+  const kind = String(atom?.kind || '').trim().toUpperCase();
+  const source = String(atom?.source || atom?.import_source || '').trim().toUpperCase();
+  return kind === 'DMI_STATION_OBSERVATION' || source === 'DMI' || source === 'OFFICIAL_DMI_METOBS';
+}
+function officialDmiLine(atom) {
+  if (!isOfficialDmiAtom(atom)) return '';
+  const station = String(atom?.source_station_name || '').trim();
+  const stationId = String(atom?.source_station_id || '').trim();
+  const stationPart = station || stationId ? ` · ${[station, stationId].filter(Boolean).join(' ')}` : '';
+  return `Official DMI import${stationPart}`;
+}
 let syncEngine = null;
 let lastSyncAtMs = null;
 let syncBootPromise = null;
@@ -476,8 +488,11 @@ function openAtomPopup(atomOrAtoms, lngLat) {
     const coordStr = loc ? fmtCoords(loc.lat, loc.lon, loc.alt) : '';
     const timeStr = fmtTime(a.t);
     const text = a.text || a.x || '';
+    const sourceLine = officialDmiLine(a);
     html = [
+      isOfficialDmiAtom(a) ? '<div class="popup-source-badge">Official DMI</div>' : '',
       text ? `<div class="popup-text">${escHtml(text)}</div>` : '',
+      sourceLine ? `<div class="popup-source-line">${escHtml(sourceLine)} · not user-created content</div>` : '',
       `<div class="popup-meta">${escHtml(a.f || 'anon')} · ${timeStr}</div>`,
       `<div class="popup-canon">${escHtml(a.punkto)}</div>`,
       coordStr ? `<div class="popup-coords">${coordStr}</div>` : '',
@@ -489,9 +504,12 @@ function openAtomPopup(atomOrAtoms, lngLat) {
     const items = sorted.map(a => {
       const text = a.text || a.x || '';
       const timeStr = fmtTime(a.t);
+      const sourceLine = officialDmiLine(a);
       return [
         '<div class="popup-atom" style="margin-top:8px;padding-top:6px;border-top:1px solid #333;">',
+        isOfficialDmiAtom(a) ? '<div class="popup-source-badge">Official DMI</div>' : '',
         text ? `<div class="popup-text">${escHtml(text)}</div>` : '',
+        sourceLine ? `<div class="popup-source-line">${escHtml(sourceLine)}</div>` : '',
         `<div class="popup-meta">${escHtml(a.f || 'anon')} · ${timeStr}</div>`,
         '</div>',
       ].filter(Boolean).join('');
@@ -534,6 +552,7 @@ async function renderAtoms(newAtomIds = null) {
     // the bubble sitting above. Falls back to altitude gradient when the
     // atom has no author (anon) or the hash returned null.
     color: (() => {
+      if (isOfficialDmiAtom(a)) return [255, 193, 7, 245];
       const h = hashAuthorHue(a.f);
       return h != null ? hueToRgba(h) : altToColor(a.alt);
     })(),
@@ -589,7 +608,7 @@ async function renderAtoms(newAtomIds = null) {
       .filter(a => (a.alt || 0) > 0)
       .map(a => {
         const h = hashAuthorHue(a.f);
-        const baseRgba = h != null ? hueToRgba(h) : altToColor(a.alt);
+        const baseRgba = isOfficialDmiAtom(a) ? [255, 193, 7, 245] : (h != null ? hueToRgba(h) : altToColor(a.alt));
         // Apply ~0.6 opacity by overriding the alpha channel.
         const color = [baseRgba[0], baseRgba[1], baseRgba[2], 153];
         return {
@@ -748,6 +767,7 @@ function updateBubbleElement(el, atom, count = 1, group = null) {
   const author = escHtml(atom.f || 'anon');
   const timeStr = escHtml(fmtRelativeTime(atom.t));
   const cat = getCategoryMeta(atom);
+  const isDmi = isOfficialDmiAtom(atom);
 
   // Phase 2: stash group on element so click handler (set once in
   // buildBubbleElement) always sees the freshest atom list.
@@ -768,7 +788,8 @@ function updateBubbleElement(el, atom, count = 1, group = null) {
   }
 
   el.innerHTML = `
-    <div class="atom-bubble-body">
+    <div class="atom-bubble-body${isDmi ? ' atom-bubble-body--official-dmi' : ''}">
+      ${isDmi ? '<div class="atom-bubble-source">Official DMI</div>' : ''}
       <div class="atom-bubble-text">${textHtml || '<span style="opacity:0.5">no text</span>'}</div>
       <div class="atom-bubble-cat ${cat.cls}">${escHtml(cat.code)} · ${escHtml(cat.label)}</div>
       <div class="atom-bubble-meta">
@@ -788,7 +809,7 @@ function updateBubbleElement(el, atom, count = 1, group = null) {
   const body = el.querySelector('.atom-bubble-body');
   if (body) {
     const hue = hashAuthorHue(atom.f);
-    if (hue != null) body.style.setProperty('--author-hue', String(hue));
+    if (!isDmi && hue != null) body.style.setProperty('--author-hue', String(hue));
     else body.style.removeProperty('--author-hue');
   }
 
