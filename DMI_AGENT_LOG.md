@@ -69,3 +69,28 @@ Unresolved risks:
 - Map popup DMI markup is implemented but manual verification focused on the visible DOM bubble because bubble click opens board detail by existing design.
 
 Recommended next atomic objective: add a repeatable local fixture or developer command that seeds one DMI station atom into Punkto for UI verification without relying on live DMI availability.
+
+## 2026-06-17 - run cursor-dmi-operator-boundary-review-6d08
+
+Objective: review the PR against the operator-only DMI boundary and remove or generalize public DMI-specific UI.
+
+Changes made:
+- Kept DMI-specific fetch/mapping in `tools/dmi_station_atom.py` as a separate operator script outside deployable runtime.
+- Changed the generated atom body line from `Official DMI import` to generic `Imported source data` while retaining DMI as source attribution.
+- Replaced PWA public UI detection/labels/classes from DMI-specific `Official DMI` wording to reusable imported-source handling based on `imported` / `import_source`.
+- Kept relay verification DMI-specific because it verifies the operator-created atom survives local relay paths, not a public import workflow.
+
+Verification evidence:
+- `node --check pwa/app.js && node --check pwa/ui-shell.js && node --check pwa/ui-text.js && node --check pwa/ui-map.js && node --check pwa/key-management.js && node --check pwa/sw.js` passed.
+- `python3 tools/test_dmi_station_atom.py` passed 2 tests.
+- `python3 relay/test_relay.py` passed 57/57 tests.
+- Fresh local UI server seeded station 06126 with body text `Imported source data`.
+- Manual browser verification confirmed Text card and board detail use generic `IMPORTED SOURCE` labels and no `Official DMI` public UI label; stable artifact saved to `/opt/cursor/artifacts/generic_imported_source_text_board_walkthrough.mp4`.
+
+Decision: CONTINUE.
+
+Unresolved risks:
+- Generic imported-source display is still advisory metadata until a stronger operator/trust path is defined.
+- Existing category display still shows `INFO · INFO` for INFO atoms; this predates the boundary correction and is not DMI-specific.
+
+Recommended next atomic objective: define the minimal operator-only injection command contract for one DMI atom without adding public controls, station browsing, scheduling, or production deployment.
