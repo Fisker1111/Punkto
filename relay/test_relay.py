@@ -161,7 +161,9 @@ def _jsonl_count(path: str, atom: Dict[str, Any] | None = None) -> int:
                 parsed = json.loads(line)
             except json.JSONDecodeError:
                 continue
-            if relay.compute_atom_id(parsed) == expected_id:
+            # PR #100 log format: {"log_seq": N, "atom_id": "...", "atom": {...}}
+            actual = parsed.get("atom", parsed) if isinstance(parsed, dict) else parsed
+            if relay.compute_atom_id(actual) == expected_id:
                 count += 1
     return count
 
