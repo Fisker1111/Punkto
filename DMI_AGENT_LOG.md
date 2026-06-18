@@ -93,3 +93,26 @@ Unresolved risks:
 - Existing category display still shows `INFO · INFO` for INFO atoms; this is not DMI-specific.
 
 Recommended next atomic objective: define the minimal operator-only injection command contract for one DMI atom without adding public controls, station browsing, scheduling, or production deployment.
+
+## 2026-06-18 - run cursor-dmi-operator-contract-6d08
+
+Objective: replace the closed duplicate PR with a minimal operator-only DMI injection command contract.
+
+Changes made:
+- Added `docs/dmi-operator-import.md`.
+- Defined the operator-only command shape for `tools/dmi_station_atom.py --station-id 06126`.
+- Documented non-goals: no public controls, station browsing, weather workflows, scheduling, automation, all-station import, credentials, or production deployment.
+- Documented required atom fields, posting contract through normal `POST /atom`, verification checklist, and boundary review checklist.
+
+Verification evidence:
+- `python3 tools/test_dmi_station_atom.py` passed 2 tests.
+- `python3 -m py_compile tools/dmi_station_atom.py tools/test_dmi_station_atom.py relay/test_relay.py` passed.
+- Markdown contract reviewed against the operator-only boundary.
+
+Decision: CONTINUE.
+
+Unresolved risks:
+- The contract documents operator posting but does not add a submit helper; this keeps the step non-invasive after deployment.
+- Imported-source display remains advisory metadata until a stronger operator/trust path is defined.
+
+Recommended next atomic objective: add a local-only operator dry-run example that saves the reviewed DMI atom JSON to a file without posting it.
