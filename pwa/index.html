@@ -1270,6 +1270,53 @@
     .popup-text { font-weight: 500; margin-bottom: 4px; }
     .popup-meta { font-size: 11px; color: var(--text-dim); }
     .popup-coords { font-size: 10px; color: var(--text-dim); margin-top: 2px; }
+    .punkto-popup--imported .maplibregl-popup-content {
+      padding: 13px 14px !important;
+      width: min(340px, calc(100vw - 36px));
+    }
+    .popup-imported-card {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-bottom: 7px;
+      line-height: 1.35;
+    }
+    .popup-imported-title {
+      font-size: 13px;
+      font-weight: 750;
+      color: var(--text);
+      letter-spacing: -0.01em;
+    }
+    .popup-imported-facts {
+      display: grid;
+      gap: 5px;
+      margin: 0;
+    }
+    .popup-imported-facts div {
+      display: grid;
+      grid-template-columns: 82px minmax(0, 1fr);
+      gap: 8px;
+      align-items: baseline;
+    }
+    .popup-imported-facts dt {
+      color: #ffd46b;
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: .05em;
+      margin: 0;
+      text-transform: uppercase;
+    }
+    .popup-imported-facts dd {
+      color: var(--text-mid);
+      font-size: 12px;
+      margin: 0;
+      min-width: 0;
+      overflow-wrap: anywhere;
+    }
+    .popup-imported-note {
+      color: var(--text-dim);
+      font-size: 11px;
+    }
     .popup-source-badge {
       display: inline-flex;
       align-items: center;

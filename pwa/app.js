@@ -76,6 +76,32 @@ function importedSourceLine(atom) {
   const details = [sourceName || 'Source data', [station, stationId].filter(Boolean).join(' ')].filter(Boolean);
   return `Imported source · ${details.join(' · ')}`;
 }
+function renderPopupText(atom, rawText) {
+  const text = String(rawText || '').trim();
+  if (!text) return '';
+  if (!isImportedSourceAtom(atom)) return `<div class="popup-text">${escHtml(text)}</div>`;
+
+  const lines = text.split(/\r?\n/).map((line) => line.trim()).filter(Boolean);
+  if (!lines.length) return '';
+  const title = lines.shift();
+  const rows = [];
+  const notes = [];
+  for (const line of lines.slice(0, 5)) {
+    const match = line.match(/^([^:]{2,32}):\s*(.+)$/);
+    if (match) rows.push({ key: match[1], value: match[2] });
+    else notes.push(line);
+  }
+
+  return [
+    '<div class="popup-imported-card">',
+    `<div class="popup-imported-title">${escHtml(title)}</div>`,
+    rows.length ? '<dl class="popup-imported-facts">' + rows.map((row) =>
+      `<div><dt>${escHtml(row.key)}</dt><dd>${escHtml(row.value)}</dd></div>`
+    ).join('') + '</dl>' : '',
+    notes.length ? `<div class="popup-imported-note">${escHtml(notes.join(' · '))}</div>` : '',
+    '</div>',
+  ].filter(Boolean).join('');
+}
 let syncEngine = null;
 let lastSyncAtMs = null;
 let syncBootPromise = null;
@@ -464,7 +490,7 @@ function openAtomPopup(atomOrAtoms, lngLat) {
     const sourceLine = importedSourceLine(a);
     html = [
       isImportedSourceAtom(a) ? '<div class="popup-source-badge">Imported source</div>' : '',
-      text ? `<div class="popup-text">${escHtml(text)}</div>` : '',
+      renderPopupText(a, text),
       sourceLine ? `<div class="popup-source-line">${escHtml(sourceLine)} · not user-created content</div>` : '',
       `<div class="popup-meta">${escHtml(a.f || 'anon')} · ${timeStr}</div>`,
       coordStr ? `<div class="popup-coords">${coordStr}</div>` : '',
@@ -480,7 +506,7 @@ function openAtomPopup(atomOrAtoms, lngLat) {
       return [
         '<div class="popup-atom" style="margin-top:8px;padding-top:6px;border-top:1px solid #333;">',
         isImportedSourceAtom(a) ? '<div class="popup-source-badge">Imported source</div>' : '',
-        text ? `<div class="popup-text">${escHtml(text)}</div>` : '',
+        renderPopupText(a, text),
         sourceLine ? `<div class="popup-source-line">${escHtml(sourceLine)}</div>` : '',
         `<div class="popup-meta">${escHtml(a.f || 'anon')} · ${timeStr}</div>`,
         '</div>',
@@ -492,7 +518,12 @@ function openAtomPopup(atomOrAtoms, lngLat) {
       (coordStr ? `<div class="popup-coords">${coordStr}</div>` : '');
   }
 
-  new maplibregl.Popup({ closeButton: true, maxWidth: '280px', className: 'punkto-popup' })
+  const hasImportedSource = atoms.some(isImportedSourceAtom);
+  new maplibregl.Popup({
+    closeButton: true,
+    maxWidth: hasImportedSource ? '340px' : '280px',
+    className: hasImportedSource ? 'punkto-popup punkto-popup--imported' : 'punkto-popup',
+  })
     .setLngLat(lngLat)
     .setHTML(html)
     .addTo(map);
