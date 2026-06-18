@@ -44,16 +44,26 @@ const SEED_NODES = [
 // Node registry + write round-robin (extracted sync ownership)
 const nodeRegistry = createNodeRegistry({ nodeUrl: NODE_URL, seedNodes: SEED_NODES });
 const CATEGORY_META = {
-  TEXT: { code: 'TEXT', label: 'Talk', cls: 'cat-talk' },
-  INFO: { code: 'INFO', label: 'Info', cls: 'cat-info' },
-  WARN: { code: 'WARN', label: 'Warning', cls: 'cat-warn' },
-  EMGC: { code: 'EMGC', label: 'Emergency', cls: 'cat-emgc' },
-  EVNT: { code: 'EVNT', label: 'Event', cls: 'cat-evnt' },
-  LOST: { code: 'LOST', label: 'Lost/Found', cls: 'cat-lost' },
+  TEXT: { code: 'TEXT', label: 'Talk', cls: 'cat-talk', color: [138, 160, 190] },
+  INFO: { code: 'INFO', label: 'Info', cls: 'cat-info', color: [11, 157, 255] },
+  WARN: { code: 'WARN', label: 'Warning', cls: 'cat-warn', color: [255, 179, 0] },
+  EMGC: { code: 'EMGC', label: 'Emergency', cls: 'cat-emgc', color: [255, 85, 102] },
+  EVNT: { code: 'EVNT', label: 'Event', cls: 'cat-evnt', color: [0, 210, 118] },
+  LOST: { code: 'LOST', label: 'Lost/Found', cls: 'cat-lost', color: [255, 132, 64] },
 };
+const IMPORTED_SOURCE_COLOR = [255, 193, 7];
+const DRAFT_COLOR = [255, 220, 80];
 function getCategoryMeta(atom) {
   const key = String(atom?.category || atom?.kind || '').trim().toUpperCase();
+  if (key === 'TALK') return CATEGORY_META.TEXT;
   return CATEGORY_META[key] || CATEGORY_META.TEXT;
+}
+function rgba(color, alpha = 245) {
+  return [color[0], color[1], color[2], alpha];
+}
+function mapColorForAtom(atom, alpha = 245) {
+  if (isImportedSourceAtom(atom)) return rgba(IMPORTED_SOURCE_COLOR, alpha);
+  return rgba(getCategoryMeta(atom).color, alpha);
 }
 function isImportedSourceAtom(atom) {
   return atom?.imported === true || Boolean(String(atom?.import_source || '').trim());
@@ -417,42 +427,6 @@ async function focusPunkto(id) {
 
 
 /**
- * Map altitude to RGBA color. Higher = brighter cyan.
- * alt range: -500 to 8500 → intensity 120–255
- */
-function altToColor(alt) {
-  const t = Math.max(0, Math.min(1, (alt + 500) / 9000));
-  const intensity = Math.round(120 + t * 135); // 120–255 (was 40–255)
-  return [0, intensity, 255, 240];
-}
-
-/**
- * Convert an integer hue (0–359) to an RGBA tuple using HSL(hue, 65%, 50%).
- * Used to tint ScatterplotLayer dots so each atom dot matches its bubble's
- * author hue, making the bubble ↔ dot pairing visually explicit.
- */
-function hueToRgba(hue, alpha = 240) {
-  const s = 0.65, l = 0.5;
-  const c = (1 - Math.abs(2 * l - 1)) * s;
-  const h = hue / 60;
-  const x = c * (1 - Math.abs((h % 2) - 1));
-  let r = 0, g = 0, b = 0;
-  if (h < 1)      [r, g, b] = [c, x, 0];
-  else if (h < 2) [r, g, b] = [x, c, 0];
-  else if (h < 3) [r, g, b] = [0, c, x];
-  else if (h < 4) [r, g, b] = [0, x, c];
-  else if (h < 5) [r, g, b] = [x, 0, c];
-  else            [r, g, b] = [c, 0, x];
-  const m = l - c / 2;
-  return [
-    Math.round((r + m) * 255),
-    Math.round((g + m) * 255),
-    Math.round((b + m) * 255),
-    alpha,
-  ];
-}
-
-/**
  * Phase 2: deterministic author → hue mapping for subtle bubble tinting.
  * Returns an integer hue 0–360, or null for anon/empty authors (keeps
  * the default neutral hue defined in CSS).
@@ -493,7 +467,6 @@ function openAtomPopup(atomOrAtoms, lngLat) {
       text ? `<div class="popup-text">${escHtml(text)}</div>` : '',
       sourceLine ? `<div class="popup-source-line">${escHtml(sourceLine)} · not user-created content</div>` : '',
       `<div class="popup-meta">${escHtml(a.f || 'anon')} · ${timeStr}</div>`,
-      `<div class="popup-canon">${escHtml(a.punkto)}</div>`,
       coordStr ? `<div class="popup-coords">${coordStr}</div>` : '',
     ].filter(Boolean).join('');
   } else {
@@ -513,11 +486,9 @@ function openAtomPopup(atomOrAtoms, lngLat) {
         '</div>',
       ].filter(Boolean).join('');
     }).join('');
-    const canon = sorted[0].punkto;
-    const loc = decodeAtomLocation(canon);
+    const loc = decodeAtomLocation(sorted[0].punkto);
     const coordStr = loc ? fmtCoords(loc.lat, loc.lon, loc.alt) : '';
     html = head + items +
-      `<div class="popup-canon" style="margin-top:8px;">${escHtml(canon)}</div>` +
       (coordStr ? `<div class="popup-coords">${coordStr}</div>` : '');
   }
 
@@ -547,14 +518,9 @@ async function renderAtoms(newAtomIds = null) {
 
   const scatterData = atoms.map(a => ({
     position: [a.lon, a.lat, a.alt],
-    // Tint each dot with its author hue so the leader line visually matches
-    // the bubble sitting above. Falls back to altitude gradient when the
-    // atom has no author (anon) or the hash returned null.
-    color: (() => {
-      if (isImportedSourceAtom(a)) return [255, 193, 7, 245];
-      const h = hashAuthorHue(a.f);
-      return h != null ? hueToRgba(h) : altToColor(a.alt);
-    })(),
+    color: mapColorForAtom(a, 245),
+    haloColor: mapColorForAtom(a, 70),
+    strokeColor: [8, 12, 20, 220],
     punkto: a.punkto,
     text: a.x,
     f: a.f,
@@ -564,7 +530,9 @@ async function renderAtoms(newAtomIds = null) {
   if (placementDraft) {
     scatterData.push({
       position: [placementDraft.lon, placementDraft.lat, placementDraft.altitude_m || 0],
-      color: [255, 220, 80, 255],
+      color: rgba(DRAFT_COLOR, 255),
+      haloColor: rgba(DRAFT_COLOR, 95),
+      strokeColor: [8, 12, 20, 230],
       punkto: 'draft',
       text: 'Placement preview',
       f: 'draft',
@@ -577,10 +545,25 @@ async function renderAtoms(newAtomIds = null) {
 
   const layers = [
     new ScatterplotLayer({
+      id: 'atom-category-halos',
+      data: scatterData,
+      getPosition: d => d.position,
+      getFillColor: d => d.haloColor,
+      getRadius: 18,
+      radiusUnits: 'pixels',
+      radiusMinPixels: 13,
+      radiusMaxPixels: 30,
+      pickable: false,
+    }),
+    new ScatterplotLayer({
       id: 'atoms',
       data: scatterData,
       getPosition: d => d.position,
       getFillColor: d => d.color,
+      stroked: true,
+      getLineColor: d => d.strokeColor,
+      getLineWidth: 2,
+      lineWidthUnits: 'pixels',
       getRadius: 12,
       radiusUnits: 'pixels',
       radiusMinPixels: 8,
@@ -599,15 +582,13 @@ async function renderAtoms(newAtomIds = null) {
 
   // Iteration 1b: lollipop sticks. For each atom with altitude > 0, draw a
   // vertical line from ground up to the atom's altitude. Color matches the
-  // author hue (same as the dot/bubble) so the stick visually extends the
-  // bubble's identity all the way down to the surface.
+  // category dot so altitude still reads as part of the same marker.
   const { LineLayer } = window.deck;
   if (LineLayer) {
     const lollipopData = atoms
       .filter(a => (a.alt || 0) > 0)
       .map(a => {
-        const h = hashAuthorHue(a.f);
-        const baseRgba = isImportedSourceAtom(a) ? [255, 193, 7, 245] : (h != null ? hueToRgba(h) : altToColor(a.alt));
+        const baseRgba = mapColorForAtom(a, 245);
         // Apply ~0.6 opacity by overriding the alpha channel.
         const color = [baseRgba[0], baseRgba[1], baseRgba[2], 153];
         return {
@@ -620,7 +601,7 @@ async function renderAtoms(newAtomIds = null) {
       lollipopData.push({
         source: [placementDraft.lon, placementDraft.lat, 0],
         target: [placementDraft.lon, placementDraft.lat, placementDraft.altitude_m || 0],
-        color: [255, 220, 80, 180],
+        color: rgba(DRAFT_COLOR, 180),
       });
     }
     layers.push(
@@ -883,8 +864,8 @@ function ensureLeaderOverlay() {
  * Per-frame cost: one bounding-rect read per bubble + map.project() per
  * atom. With the current LOD cap (< 200 bubbles) this stays well under 1ms.
  *
- * Colors: matches the bubble's author hue so the line visually extends the
- * bubble down to its dot. Anon/unknown authors use neutral hue 210.
+ * Colors: matches the category dot so the line visually connects the bubble
+ * to the same category marker on the map.
  */
 function drawLeaderLines() {
   if (!map || atomMarkers.size === 0) {
@@ -929,16 +910,14 @@ function drawLeaderLines() {
       bubbleY = cy + dy * t;
     }
 
-    // Author hue via the atom attached to the element, fallback 210.
     const group = el._punktoGroup;
     const atom = group && group.length ? group[0] : null;
-    const h = atom ? hashAuthorHue(atom.f) : null;
-    const hue = h != null ? h : 210;
+    const lineColor = atom ? mapColorForAtom(atom, 255) : rgba(CATEGORY_META.TEXT.color, 255);
 
     parts.push(
       `<line x1="${dotPt.x.toFixed(1)}" y1="${dotPt.y.toFixed(1)}"` +
       ` x2="${bubbleX.toFixed(1)}" y2="${bubbleY.toFixed(1)}"` +
-      ` stroke="hsl(${hue}, 55%, 55%)" stroke-width="1.5"` +
+      ` stroke="rgb(${lineColor[0]} ${lineColor[1]} ${lineColor[2]})" stroke-width="1.5"` +
       ` stroke-opacity="0.65" stroke-linecap="round" />`
     );
   }
