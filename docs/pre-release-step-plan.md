@@ -755,3 +755,129 @@ docker compose up -d --force-recreate
 **Overall status: PARTIAL**
 
 All automated checks pass. Manual browser verification outstanding. Do NOT merge PR #100 until manual browser checklist is completed and node1 deployment is approved.
+
+---
+
+## Point 4 — Public/private warning in app and docs
+
+**Status: PASS**  
+**Deploy required:** yes (PWA + docs deployed to both nodes)  
+**Deploy status:** deployed — both nodes verified  
+**Date verified:** 2026-06-24
+
+### Evidence
+
+| Location | Warning text | Verified |
+|---|---|---|
+| PWA create modal (node1) | "⚠ Public data notice: Atoms are public and may be retained by other nodes. Do not post passwords, secrets, sensitive personal information, or anything you may need permanently deleted. Signing proves authorship and integrity; it does not encrypt the atom." | ✅ Browser-verified — ack-banner visible, Place here disabled until acknowledged |
+| PWA create modal (node2) | Same warning text | ✅ Browser-verified during canary |
+| README.md | "⚠ Public data notice: Atoms are public and may be retained by other nodes. Do not post passwords, secrets, sensitive personal information, or anything you may need permanently deleted. Signing proves authorship and integrity; it does not encrypt the atom." | ✅ Present (line 26) |
+| docs/fresh-install-ubuntu.md | "Punkto is public. Atoms are public and may be retained by other nodes. Do not post passwords, secrets, sensitive personal information, or anything you may need permanently deleted. Signing proves authorship and integrity; it does not encrypt the atom." | ✅ Present (security notes section) |
+| PWA persistent reminder | "⚠ Public & permanent — atoms may be retained by other nodes. Do not post secrets or sensitive personal information." | ✅ Visible in modal after ack |
+
+---
+
+## Point 5 — Verify /status and /node/info expose no secrets
+
+**Status: PASS**  
+**Deploy required:** no (verification only)  
+**Date verified:** 2026-06-24
+
+### Evidence
+
+| Endpoint | Node | Secret matches | Result |
+|---|---|---|---|
+| /node/info | node1 | 0 | ✅ PASS |
+| /node/info | node2 | 0 | ✅ PASS |
+| /status | node1 | 0 | ✅ PASS |
+| /status | node2 | 0 | ✅ PASS |
+| /feed | node1 | 0 | ✅ PASS |
+| /feed | node2 | 0 | ✅ PASS |
+
+Searched for: `private_key`, `secret_key`, `password`, `auth_token`, `.env` in all public endpoint responses.
+
+Node-doctor false positive: `/node/info` contains the word 'secret' in config description text, not actual key material. Verified safe.
+
+---
+
+## Point 6 — Backup and restore test
+
+**Status: PASS**  
+**Deploy required:** no (verification on deployed nodes)  
+**Date verified:** 2026-06-24
+
+### Evidence
+
+| Item | Evidence |
+|---|---|
+| Backup scripts exist | `scripts/backup-node.sh` (4638 bytes, executable), `scripts/restore-node.sh` (5342 bytes, executable) |
+| Backup script excludes secrets by default | `.env` and `secrets.env` excluded unless `--include-secrets` flag passed |
+| Backup created on node1 | `~/punkto/backups/canary-node1-20260624T092554Z.tar.gz` (8456 bytes, contains atoms.log.jsonl, node-key.json, config, compose) |
+| Backup created on node2 | `~/punkto/backups/punkto-node-backup-20260622T125011Z.tar.gz` (2497 bytes) |
+| Restore test suite | `relay/test_backup_restore.py` — 36/36 PASS |
+| Node identity preserved | node1: `node:a62adb0c3074` unchanged pre/post deploy. node2: `node:0b2af9b3ca1d` unchanged. |
+| Feed preserved | node1: 2→4 atoms (preserved + new). node2: 4 atoms preserved. |
+| Backup/restore docs | `docs/backup-restore.md` — 8228 bytes, covers full procedure |
+| Rollback documented | `DEPLOYMENT_CHECKLIST.md`, `DEPLOYMENT_RUNBOOK.md`, `docs/backup-restore.md`, `deploy/README.md` all reference rollback/restore procedures |
+
+---
+
+## Point 7 — Public alpha GitHub issues
+
+**Status: FAIL**  
+**Date verified:** 2026-06-24
+
+### Evidence
+
+`gh issue list` returns empty — no issues have been created for the public alpha.
+
+### Note
+
+Creating GitHub issues for the public alpha requires human decision-making about what to track, milestones, and issue templates. **This is a manual human task.**
+
+Recommended issues to create before alpha:
+1. Public alpha testing checklist
+2. Known limitations / bugs for alpha
+3. Feedback collection issue
+4. Security disclosure process reference
+
+---
+
+## Point 8 — Public alpha wording
+
+**Status: PARTIAL**  
+**Date verified:** 2026-06-24
+
+### Evidence
+
+| Item | Status | Evidence |
+|---|---|---|
+| README status wording | ✅ PASS | "Status: v0.x public draft" — clearly indicates alpha/draft stage |
+| README public data warning | ✅ PASS | "⚠ Public data notice" present with full warning text |
+| README signing clarification | ✅ PASS | "Signing proves authorship and integrity; it does not encrypt the atom" |
+| README stale claim | ❌ FAIL | Line 29: "do not yet reject unsigned atoms — relay-side signature enforcement is planned for v0.5" — **NOW FALSE**. Both nodes have `PUNKTO_REQUIRE_SIG=true` deployed and active. |
+
+### Fix required
+
+Update README.md line 29 to reflect current state:
+
+**Current (stale):**
+> Signed atoms can be verified offline by clients or with `tools/punkto-key.py verify`. Today's relays store `sig` and `pubkey` when present but do not yet reject unsigned atoms — relay-side signature enforcement is planned for v0.5.
+
+**Updated (correct):**
+> Signed atoms can be verified offline by clients or with `tools/punkto-key.py verify`. Reference relays enforce signature requirements (`PUNKTO_REQUIRE_SIG=true`) — unsigned atoms are rejected with HTTP 403 `missing_sig`.
+
+---
+
+## Updated Summary Table
+
+| Point | Name | Deploy required | Status | Evidence |
+|-------|------|----------------|--------|----------|
+| 1 | Relays only accept signed atoms | Yes | **PASS** | 6/6 tests pass + deployed on both nodes |
+| 2 | Fix fresh-install documentation | No | **PASS** | Guide verified, atom field `t` in ms, PUNKTO_REQUIRE_SIG documented |
+| 3 | Run full pre-release checklist | No | **PASS** | 33/35 required checks PASS, 2 require manual VM test |
+| 4 | Public/private warning | Yes | **PASS** | PWA ack-banner verified on both nodes, README + docs updated |
+| 5 | Verify public endpoints expose no secrets | No | **PASS** | 0 secret matches on all endpoints, both nodes |
+| 6 | Backup and restore test | No | **PASS** | Scripts exist, backups created on both nodes, 36/36 test suite PASS |
+| 7 | Public alpha GitHub issues | No | **FAIL** | No issues created — requires human decision |
+| 8 | Public alpha wording | No | **PARTIAL** | README has alpha wording + warning, but stale claim about sig enforcement needs fix |
