@@ -194,3 +194,45 @@
 
 ### Rollback
 - See canary report rollback instructions (Option A: remove PUNKTO_REQUIRE_SIG, Option B: full restore from backup)
+
+---
+
+## Node1 Deployment Evidence (2026-06-24)
+
+### Commit: aadb286 — docs + 45a1602 fix(pwa): wire Ed25519 signing into atom create and reply flows
+
+### Pre-deploy state
+- Version: v107-desktop-bottom-gap-2026-06-09-1
+- Fingerprint: node:a62adb0c3074
+- PUNKTO_REQUIRE_SIG: not set
+- Atom count: 2 (synced from node2)
+- Backup: backups/canary-node1-20260624T092554Z.tar.gz
+
+### Verification Results
+
+| Check | Result | Evidence |
+|---|---|---|
+| /health 200 | ✅ PASS | HTTP 200 |
+| /status 200 | ✅ PASS | HTTP 200, no secrets |
+| /node/info config_loaded | ✅ PASS | config_loaded: True |
+| Hard marker v108 | ✅ PASS | PUNKTO_APP_VERSION = 'v108-pwa-signing-fix-2026-06-22-1' |
+| Node fingerprint unchanged | ✅ PASS | node:a62adb0c3074 (matches pre-deploy) |
+| Existing atoms preserved | ✅ PASS | 4 atoms in feed, all signed |
+| Unsigned atom rejected 403 | ✅ PASS | HTTP 403, missing_sig |
+| Valid signed atom accepted 201 | ✅ PASS | HTTP 201, atom_id returned |
+| PWA create flow (signed) | ✅ PASS | Browser create → 'Node1 deploy verify' in feed with sig=true |
+| First-use public warning | ✅ PASS | Ack-banner visible, Place here disabled until ack |
+| TLS valid | ✅ PASS | CN=node1.punkto.xyz, issuer=Let's Encrypt |
+| PUNKTO_REQUIRE_SIG in container | ✅ PASS | PUNKTO_REQUIRE_SIG=true |
+| Node-doctor | ✅ PASS | PASS (1 warning: false positive 'secret' pattern) |
+
+### Node1 vs Node2 Comparison
+
+| Item | Node1 | Node2 | Match |
+|---|---|---|---|
+| Version | v108-pwa-signing-fix-2026-06-22-1 | v108-pwa-signing-fix-2026-06-22-1 | ✅ |
+| PUNKTO_REQUIRE_SIG | true | true | ✅ |
+| Node-doctor | PASS | PASS | ✅ |
+| Fingerprint | node:a62adb0c3074 | node:0b2af9b3ca1d | ✅ (unique per node) |
+
+### Status: ✅ PASS — all 11 verification checks passed, both nodes aligned
