@@ -881,3 +881,21 @@ Update README.md line 29 to reflect current state:
 | 6 | Backup and restore test | No | **PASS** | Scripts exist, backups created on both nodes, 36/36 test suite PASS |
 | 7 | Public alpha GitHub issues | No | **FAIL** | No issues created — requires human decision |
 | 8 | Public alpha wording | No | **PARTIAL** | README has alpha wording + warning, but stale claim about sig enforcement needs fix |
+
+---
+
+## Point 8 Update — README stale claim FIXED (2026-06-24)
+
+**Status: PASS** (upgraded from PARTIAL)
+
+### Fix applied
+
+README.md line 29 updated:
+
+**Before (stale):**
+> Today's relays store `sig` and `pubkey` when present but do not yet reject unsigned atoms — relay-side signature enforcement is planned for v0.5.
+
+**After (correct):**
+> Reference relays enforce signature requirements (`PUNKTO_REQUIRE_SIG=true`) — unsigned atoms are rejected with HTTP 403 `missing_sig`.
+
+Point 8 is now **PASS**.

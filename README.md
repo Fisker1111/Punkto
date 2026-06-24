@@ -26,7 +26,7 @@ Every atom is addressable. Every ROOT atom is a board.
 
 > **⚠ Public data notice:** Atoms are public and may be retained by other nodes. Do not post passwords, secrets, sensitive personal information, or anything you may need permanently deleted. Signing proves authorship and integrity; it does not encrypt the atom.
 - Relays expose two read endpoints. `/feed?since=<cursor>` is a byte-offset stream — used by the PWA for resumable sync and by relay-to-relay replication. `/latest` returns the most recent N atoms in a single response — preferred for new clients and Flow-TV-style live displays. Both are first-class today; `/feed` may eventually be replaced by `/latest` for clients while staying for peer sync.
-- Signed atoms can be verified offline by clients or with `tools/punkto-key.py verify`. Today's relays store `sig` and `pubkey` when present but do not yet reject unsigned atoms — relay-side signature enforcement is planned for v0.5.
+- Signed atoms can be verified offline by clients or with `tools/punkto-key.py verify`. Reference relays enforce signature requirements (`PUNKTO_REQUIRE_SIG=true`) — unsigned atoms are rejected with HTTP 403 `missing_sig`.
 - The PWA shows atoms as 3D bubbles on a map (MapLibre + deck.gl)
 - Every atom is addressable by its canonical `atom_id`
 - A ROOT atom starts a board — a public conversation at one exact location
