@@ -2208,3 +2208,10 @@ function verifyAtom(atom) {
 }
 
 console.log('[Punkto] key-management.js loaded (corrected)');
+
+// Explicit window exposures for ES module interop (app.js is type=module)
+if (typeof window !== 'undefined') {
+  window.signAtom = signAtom;
+  window.verifyAtom = verifyAtom;
+  window.generateIdentity = generateIdentity;
+}

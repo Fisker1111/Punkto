@@ -63,6 +63,7 @@ services:
       PUNKTO_BUFFER_HOURS: ${PUNKTO_BUFFER_HOURS:-168}
       PUNKTO_SYNC_INTERVAL: ${PUNKTO_SYNC_INTERVAL:-30}
       PUNKTO_DATA_DIR: "/data"
+      PUNKTO_REQUIRE_SIG: ${PUNKTO_REQUIRE_SIG:-false}
     networks:
       - punkto_internal
     # relay is not exposed to the host — only the web service reaches it

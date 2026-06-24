@@ -1196,14 +1196,60 @@ async function submitBoardReply({ boardAtom, text }) {
   if (!reply.punkto) throw new Error('Cannot reply: board location is missing.');
 
   try {
-    const result = await postAtomToNetwork(reply, nodeRegistry);
-    if (result?.atom_id) reply.atom_id = result.atom_id;
-    await upsertAtom(reply);
+    const signedReply = await signAtomForSubmit(reply);
+    const result = await postAtomToNetwork(signedReply, nodeRegistry);
+    if (result?.atom_id) signedReply.atom_id = result.atom_id;
+    await upsertAtom(signedReply);
     await refreshUI();
     setSyncStatus('ok');
   } catch (err) {
     console.error('[replyAtom]', err);
     throw new Error(readableReplyError(err));
+  }
+}
+
+// Ensure an identity is available for signing. Loads from localStorage first,
+// then silently generates one (persisted) so signed-atom submission always works.
+async function ensureIdentity() {
+  if (currentIdentity) return currentIdentity;
+  const saved = localStorage.getItem('punkto-identity');
+  if (saved) {
+    try {
+      currentIdentity = JSON.parse(saved);
+      displayKeyInfo(currentIdentity);
+      return currentIdentity;
+    } catch (err) {
+      console.error('[identity] load failed:', err);
+    }
+  }
+  try {
+    if (typeof window.generateIdentity !== 'function') {
+      console.error('[identity] generateIdentity not loaded — atoms will be unsigned');
+      return null;
+    }
+    currentIdentity = await window.generateIdentity();
+    localStorage.setItem('punkto-identity', JSON.stringify(currentIdentity));
+    displayKeyInfo(currentIdentity);
+    return currentIdentity;
+  } catch (err) {
+    console.error('[identity] auto-generate failed:', err);
+    return null;
+  }
+}
+
+// Sign an atom before network submission. Falls back to unsigned if no identity
+// could be obtained (relay with require_sig will then reject with 403).
+async function signAtomForSubmit(atom) {
+  const identity = await ensureIdentity();
+  if (!identity || typeof window.signAtom !== 'function') {
+    console.warn('[sign] no identity or signAtom unavailable — submitting unsigned');
+    return atom;
+  }
+  try {
+    return await window.signAtom(atom, identity.secretKey, identity.pubkey);
+  } catch (err) {
+    console.error('[sign] signing failed:', err);
+    return atom;
   }
 }
 
@@ -1227,9 +1273,10 @@ async function submitAtomFromModal({ text, author, category, draft }) {
   setCreateError('');
   try {
     if (author) setStoredAuthorName(author);
-    const result = await postAtomToNetwork(atom, nodeRegistry);
-    if (result?.atom_id) atom.atom_id = result.atom_id;
-    await upsertAtom(atom);
+    const signedAtom = await signAtomForSubmit(atom);
+    const result = await postAtomToNetwork(signedAtom, nodeRegistry);
+    if (result?.atom_id) signedAtom.atom_id = result.atom_id;
+    await upsertAtom(signedAtom);
     closeCreateModal();
     await refreshUI();
     requestAnimationFrame(() => { if (map) map.resize(); });
@@ -1792,7 +1839,7 @@ function wireEvents() {
 
 async function boot() {
   console.log('PUNKTO APP.JS LOADED v106-create-stage-2026-06-09-1');
-  window.PUNKTO_APP_VERSION = 'v107-desktop-bottom-gap-2026-06-09-1';
+  window.PUNKTO_APP_VERSION = 'v108-pwa-signing-fix-2026-06-22-1';
 
   console.log('[punkto] booting...');
 
