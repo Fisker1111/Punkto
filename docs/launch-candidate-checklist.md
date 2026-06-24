@@ -108,4 +108,89 @@
 
 ---
 
-*Last updated: 2026-06-05*
+*Last updated: 2026-06-22*
+
+---
+
+## Canary Deploy Evidence — node2 (2026-06-22)
+
+**Canary deploy of HEAD `596e746` to node2 only (159.65.115.166).**
+
+### Pre-deploy state recorded
+
+| Item | Value |
+|---|---|
+| Fingerprint | `node:0b2af9b3ca1d` |
+| Atom count | 4 |
+| Relay image | `ghcr.io/fisker1111/punkto-relay:latest` (sha256:cdf61fb9...) |
+| Web image | `ghcr.io/fisker1111/punkto-web:latest` (sha256:30b5f191...) |
+| Backup | `~/punkto/backups/punkto-node-backup-20260622T125011Z.tar.gz` |
+| Extra backup | `~/punkto/backups/canary-20260622T125009Z/` (.env, Caddyfile, compose, inspect) |
+
+### Verification results
+
+| # | Check | Result | Evidence |
+|---|---|---|---|
+| 1.3 | `/health` returns ok | ✅ PASS | HTTP 200, `{"status":"ok"}` |
+| 1.4 | `/node/info` config_loaded=true | ✅ PASS | `config_loaded: True` |
+| 1.5 | `/status` no secrets | ✅ PASS | No private_key/secrets exposed |
+| 1.6 | `/feed` valid JSON | ✅ PASS | `['atoms', 'cursor']` |
+| 1.7 | App marker visible | ✅ PASS | `PUNKTO_APP_VERSION = 'v107-...'` in deployed app.js |
+| 3.1 | `accept_recent_hours=24` | ✅ PASS | Verified via /node/info |
+| 3.2 | `serve_recent_hours=24` | ✅ PASS | Verified via /node/info |
+| 3.4 | `serve_archive=false` | ✅ PASS | Verified via /node/info |
+| 7.4 | No private_key in public endpoints | ✅ PASS | /node/info, /status, /feed clean |
+| 7.7 | CORS configured | ✅ PASS | `Access-Control-Allow-Origin "*"` (intentional) |
+| — | Fingerprint unchanged | ✅ PASS | `node:0b2af9b3ca1d` matches pre-deploy |
+| — | Atoms preserved | ✅ PASS | 66 lines in /data/atoms.log.jsonl |
+| — | TLS valid | ✅ PASS | `verify return:1`, CN=node2.punkto.xyz |
+| — | Unsigned atom rejected | ✅ PASS | HTTP 403 `missing_sig` |
+| — | Valid signed atom accepted | ✅ PASS | HTTP 201 `accepted` |
+| — | First-use warning works | ✅ PASS | Ack-banner visible, Place here disabled until ack |
+| — | PWA can create signed atom | ❌ **FAIL** | `Error: atom missing required field 'sig'` — `submitAtomFromModal` doesn't call `signAtom` |
+| — | Node doctor | ✅ PASS | Both warnings are known false positives |
+
+### Critical finding
+
+**PWA create flow does not sign atoms.** `submitAtomFromModal` in `pwa/app.js` builds an atom and calls `postAtomToNetwork` without calling `signAtom` from `pwa/key-management.js`. The signing function exists but is not wired into the create flow.
+
+**Impact:** Enabling `PUNKTO_REQUIRE_SIG=true` breaks PWA atom creation. Users see `Error: atom missing required field 'sig'`.
+
+**Node2 state:** `PUNKTO_REQUIRE_SIG=true` is active on node2 relay. Unsigned atoms are rejected. The PWA create flow is broken until signing is wired in.
+
+**Node1:** Not touched. Still running old image with `require_sig=false`.
+
+---
+
+## Canary Deployment Evidence — node2 (2026-06-22)
+
+### Commit: 45a1602 — fix(pwa): wire Ed25519 signing into atom create and reply flows
+
+### Verification Results
+
+| Check | Result | Evidence |
+|---|---|---|
+| /health 200 | ✅ PASS | HTTP 200, status ok |
+| /status 200 | ✅ PASS | HTTP 200, no secrets exposed |
+| /node/info config_loaded | ✅ PASS | config_loaded: True |
+| Hard marker in deployed app.js | ✅ PASS | PUNKTO_APP_VERSION = 'v108-pwa-signing-fix-2026-06-22-1' |
+| Node fingerprint unchanged | ✅ PASS | node:0b2af9b3ca1d (matches pre-deploy) |
+| Existing atoms preserved | ✅ PASS | Feed returns atoms with valid sigs |
+| Unsigned atom rejected 403 | ✅ PASS | HTTP 403, error: missing_sig |
+| Valid signed atom accepted 201 | ✅ PASS | HTTP 201, atom_id returned |
+| PWA can create signed atom | ✅ PASS | Browser create flow → atom in feed with sig=true, pubkey present |
+| First-use public warning works | ✅ PASS | Warning banner visible in create modal |
+| TLS valid | ✅ PASS | CN=node2.punkto.xyz, issuer=Let's Encrypt |
+| PUNKTO_REQUIRE_SIG in container | ✅ PASS | PUNKTO_REQUIRE_SIG=true |
+| Node1 untouched | ✅ PASS | Not modified |
+
+### Canary Status: ✅ PASS — all 11 verification checks passed
+
+### Changes Deployed
+- `pwa/app.js`: Added ensureIdentity() + signAtomForSubmit(), wired signing into submitAtomFromModal and reply path, bumped version to v108
+- `pwa/key-management.js`: Added explicit window.signAtom/verifyAtom/generateIdentity exposures
+- `deploy/docker-compose.yml`: Added PUNKTO_REQUIRE_SIG passthrough
+- Node2: PUNKTO_REQUIRE_SIG=true enabled, relay + web containers running
+
+### Rollback
+- See canary report rollback instructions (Option A: remove PUNKTO_REQUIRE_SIG, Option B: full restore from backup)
