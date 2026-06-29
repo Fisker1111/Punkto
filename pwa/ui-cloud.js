@@ -14,8 +14,10 @@ const MIN_CAM_RADIUS = 20;
 const MAX_CAM_RADIUS = 2500;
 const ATOM_RADIUS = 2.4;
 const STEM_RADIUS = 0.35;
+const DEFAULT_ATOM_RGB = [138, 160, 190];
 
 let _decodeLocation = null;
+let _categoryColor = null;
 
 let _container = null;
 let _renderer = null;
@@ -31,6 +33,8 @@ let _animating = false;
 let _rafId = 0;
 
 let _origin = { lat: 0, lon: 0 };
+let _cachedOriginKeys = '';
+let _lastAtoms = [];
 let _atomsById = new Map();
 let _groupsById = new Map();
 let _selectedId = null;
@@ -103,6 +107,23 @@ function _computeOrigin(atoms) {
   return { lat, lon };
 }
 
+function _keysSignature(keys) {
+  return [...keys].sort().join('|');
+}
+
+function _getAtomRgb(atom) {
+  if (typeof _categoryColor === 'function') {
+    const rgb = _categoryColor(atom);
+    if (Array.isArray(rgb) && rgb.length >= 3) return rgb;
+  }
+  return DEFAULT_ATOM_RGB;
+}
+
+function _rgbToThreeColor(rgb) {
+  const [r, g, b] = Array.isArray(rgb) && rgb.length >= 3 ? rgb : DEFAULT_ATOM_RGB;
+  return new THREE.Color(r / 255, g / 255, b / 255);
+}
+
 function _updateCameraPosition() {
   if (!_camera) return;
   const sinPhi = Math.sin(_camPhi);
@@ -114,8 +135,8 @@ function _updateCameraPosition() {
   _camera.lookAt(_camTarget);
 }
 
-function _makeAtomMaterial(selected = false, hue = 195) {
-  const color = new THREE.Color().setHSL(hue / 360, 0.85, selected ? 0.72 : 0.58);
+function _makeAtomMaterial(selected = false, rgb = DEFAULT_ATOM_RGB) {
+  const color = _rgbToThreeColor(rgb);
   return new THREE.MeshStandardMaterial({
     color,
     emissive: color,
@@ -125,18 +146,39 @@ function _makeAtomMaterial(selected = false, hue = 195) {
   });
 }
 
-function _makeStemMaterial(selected = false) {
+function _makeStemMaterial(selected = false, rgb = DEFAULT_ATOM_RGB) {
+  const base = _rgbToThreeColor(rgb);
+  if (selected) {
+    return new THREE.MeshBasicMaterial({
+      color: base,
+      transparent: true,
+      opacity: 0.95,
+    });
+  }
   return new THREE.MeshBasicMaterial({
-    color: selected ? 0x66eeff : 0x2a4a66,
+    color: 0x2a4a66,
     transparent: true,
-    opacity: selected ? 0.95 : 0.55,
+    opacity: 0.55,
   });
+}
+
+function _positionAtomEntry(entry, atom) {
+  const loc = _resolveLocation(atom);
+  if (!loc || !entry) return;
+  const pos = _toLocalMeters(loc.lat, loc.lon, loc.alt);
+  entry.group.position.set(pos.x, 0, pos.z);
+  entry.sphere.position.y = pos.y;
+  entry.localY = pos.y;
+  entry.stem.scale.y = Math.max(pos.y, 0.01) / Math.max(entry.stem.geometry.parameters.height, 0.01);
+  entry.stem.position.y = pos.y / 2;
+  entry.atom = atom;
 }
 
 function _buildAtomGroup(atom, key) {
   const loc = _resolveLocation(atom);
   if (!loc) return null;
   const pos = _toLocalMeters(loc.lat, loc.lon, loc.alt);
+  const rgb = _getAtomRgb(atom);
 
   const group = new THREE.Group();
   group.position.set(pos.x, 0, pos.z);
@@ -144,7 +186,7 @@ function _buildAtomGroup(atom, key) {
 
   const sphere = new THREE.Mesh(
     new THREE.SphereGeometry(ATOM_RADIUS, 20, 20),
-    _makeAtomMaterial(false, 180 + (key.charCodeAt(0) % 80)),
+    _makeAtomMaterial(false, rgb),
   );
   sphere.position.y = pos.y;
   sphere.userData = { atomKey: key, pickTarget: true };
@@ -152,27 +194,23 @@ function _buildAtomGroup(atom, key) {
   const stemHeight = Math.max(pos.y, 0.01);
   const stem = new THREE.Mesh(
     new THREE.CylinderGeometry(STEM_RADIUS, STEM_RADIUS, stemHeight, 8),
-    _makeStemMaterial(false),
+    _makeStemMaterial(false, rgb),
   );
   stem.position.y = stemHeight / 2;
 
-  const glow = new THREE.PointLight(0x44ccff, 0.35, 40, 2);
-  glow.position.y = pos.y;
-
   group.add(stem);
   group.add(sphere);
-  group.add(glow);
 
-  return { group, sphere, stem, glow, localY: pos.y };
+  return { group, sphere, stem, localY: pos.y, atom };
 }
 
 function _applySelectionVisual(key) {
   for (const [id, entry] of _groupsById) {
     const selected = id === key;
-    entry.sphere.material = _makeAtomMaterial(selected, 180 + (id.charCodeAt(0) % 80));
+    const rgb = _getAtomRgb(entry.atom);
+    entry.sphere.material = _makeAtomMaterial(selected, rgb);
     entry.sphere.scale.setScalar(selected ? 1.45 : 1);
-    entry.stem.material = _makeStemMaterial(selected);
-    entry.glow.intensity = selected ? 0.9 : 0.35;
+    entry.stem.material = _makeStemMaterial(selected, rgb);
   }
 }
 
@@ -291,6 +329,41 @@ function _bindControls() {
   el.addEventListener('click', _onClick);
 }
 
+function _bindWebGLContextHandlers() {
+  if (!_renderer?.domElement || _renderer.domElement.dataset.contextBound === '1') return;
+  _renderer.domElement.dataset.contextBound = '1';
+  _renderer.domElement.addEventListener('webglcontextlost', (e) => {
+    e.preventDefault();
+    _stopAnimation();
+  });
+  _renderer.domElement.addEventListener('webglcontextrestored', () => {
+    _teardownScene(false);
+    _buildScene();
+    _syncAtomMeshes(_lastAtoms);
+    _startAnimation();
+  });
+}
+
+function _teardownScene(resetControls = true) {
+  _stopAnimation();
+  _clearAtoms();
+  if (_renderer) {
+    _renderer.dispose();
+    _renderer.domElement?.remove();
+  }
+  _renderer = null;
+  _scene = null;
+  _camera = null;
+  _grid = null;
+  _atomRoot = null;
+  _raycaster = null;
+  _initialized = false;
+  if (resetControls) {
+    const el = _getContainer();
+    if (el) delete el.dataset.cloudBound;
+  }
+}
+
 function _buildScene() {
   const el = _getContainer();
   if (!el) return false;
@@ -330,11 +403,14 @@ function _buildScene() {
   _scene.add(_atomRoot);
 
   _raycaster = new THREE.Raycaster();
-  _raycaster.params.Points = { threshold: 0.5 };
 
   _bindControls();
+  _bindWebGLContextHandlers();
   _resize();
-  window.addEventListener('resize', _resize);
+  if (!window.__punktoCloudResizeBound) {
+    window.__punktoCloudResizeBound = true;
+    window.addEventListener('resize', _resize);
+  }
 
   _initialized = true;
   return true;
@@ -357,7 +433,6 @@ function _animate() {
   for (const entry of _groupsById.values()) {
     const bob = Math.sin(t * 1.6 + entry.localY * 0.08) * 0.35;
     entry.sphere.position.y = entry.localY + bob;
-    entry.glow.position.y = entry.localY + bob;
   }
   if (_renderer && _scene && _camera) _renderer.render(_scene, _camera);
 }
@@ -390,7 +465,7 @@ function _clearAtoms() {
 function _syncAtomMeshes(atoms) {
   if (!_atomRoot) return;
   const list = Array.isArray(atoms) ? atoms : [];
-  _origin = _computeOrigin(list);
+  _lastAtoms = list;
 
   const nextKeys = new Set();
   for (const atom of list) {
@@ -399,18 +474,27 @@ function _syncAtomMeshes(atoms) {
     const loc = _resolveLocation(atom);
     if (!loc) continue;
     nextKeys.add(key);
+  }
+
+  const keySig = _keysSignature(nextKeys);
+  const originChanged = keySig !== _cachedOriginKeys;
+  if (originChanged) {
+    _origin = _computeOrigin(list);
+    _cachedOriginKeys = keySig;
+  }
+
+  for (const atom of list) {
+    const key = _atomKey(atom);
+    if (!key || !nextKeys.has(key)) continue;
 
     const existing = _groupsById.get(key);
     if (existing) {
-      const pos = _toLocalMeters(loc.lat, loc.lon, loc.alt);
-      existing.group.position.set(pos.x, 0, pos.z);
-      existing.sphere.position.y = pos.y;
-      existing.localY = pos.y;
-      existing.stem.scale.y = Math.max(pos.y, 0.01) / Math.max(existing.stem.geometry.parameters.height, 0.01);
-      existing.stem.position.y = pos.y / 2;
-      existing.glow.position.y = pos.y;
-      existing.atom = atom;
+      _positionAtomEntry(existing, atom);
       _atomsById.set(key, atom);
+      if (originChanged) continue;
+      const rgb = _getAtomRgb(atom);
+      existing.sphere.material = _makeAtomMaterial(_selectedId === key, rgb);
+      existing.stem.material = _makeStemMaterial(_selectedId === key, rgb);
       continue;
     }
 
@@ -419,6 +503,12 @@ function _syncAtomMeshes(atoms) {
     _atomRoot.add(built.group);
     _groupsById.set(key, built);
     _atomsById.set(key, atom);
+  }
+
+  if (originChanged) {
+    for (const entry of _groupsById.values()) {
+      _positionAtomEntry(entry, entry.atom);
+    }
   }
 
   for (const key of [..._groupsById.keys()]) {
@@ -440,9 +530,11 @@ function _syncAtomMeshes(atoms) {
 /**
  * @param {Object} opts
  * @param {(punkto:string)=>object|null} opts.decodeLocation
+ * @param {(atom:object)=>number[]|null} opts.categoryColor
  */
-export function initCloudView({ decodeLocation } = {}) {
+export function initCloudView({ decodeLocation, categoryColor } = {}) {
   _decodeLocation = typeof decodeLocation === 'function' ? decodeLocation : null;
+  _categoryColor = typeof categoryColor === 'function' ? categoryColor : null;
 }
 
 /**
