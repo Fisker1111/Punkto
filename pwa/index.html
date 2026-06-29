@@ -278,6 +278,7 @@
 
     /* ── View switching ─────────────────────────────────────── */
     body.page-text #map,
+    body.page-text #page-cloud,
     body.page-text #crosshair,
     body.page-text #toggle-3d,
     body.page-text #fab-panel,
@@ -285,8 +286,37 @@
     body.page-text #onboarding-hint,
     body.page-text #crosshair-readout,
     body.page-text #leader-lines       { display: none !important; }
-    body.page-map  #page-text          { display: none !important; }
-    body.page-text #topbar             { display: none !important; }
+    body.page-map  #page-text,
+    body.page-map  #page-cloud         { display: none !important; }
+    body.page-cloud #page-text,
+    body.page-cloud #map,
+    body.page-cloud #crosshair,
+    body.page-cloud #toggle-3d,
+    body.page-cloud #fab-panel,
+    body.page-cloud #panel,
+    body.page-cloud #onboarding-hint,
+    body.page-cloud #crosshair-readout,
+    body.page-cloud #leader-lines      { display: none !important; }
+    body.page-text #topbar,
+    body.page-cloud #topbar             { display: none !important; }
+
+    /* ── AtomCloud 3D page ──────────────────────────────────── */
+    #page-cloud {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: calc(var(--nav-h) + var(--safe-b));
+      z-index: 10;
+      background: #060810;
+      overflow: hidden;
+      touch-action: none;
+    }
+    #page-cloud canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
 
     /* ── Map (full screen behind nav+topbar) ────────────────── */
     #map {
@@ -1377,7 +1407,7 @@
   </style>
 </head>
 
-<body class="page-map">
+<body class="page-text">
 
   <!-- ── Top bar ──────────────────────────────────────────── -->
   <header id="topbar" role="banner">
@@ -1526,8 +1556,11 @@
     </div>
   </div>
 
-  <!-- ── Map container ────────────────────────────────────── -->
+  <!-- ── Map container (legacy; kept for safety, not in test1 nav) ── -->
   <main id="map" role="main" aria-label="Punkto map"></main>
+
+  <!-- ── AtomCloud 3D view (test1) ─────────────────────────── -->
+  <div id="page-cloud" role="main" aria-label="3D atom cloud"></div>
 
   <!-- Map overlay elements (hidden in text view by body.page-text rules) -->
   <div id="crosshair" aria-hidden="true"></div>
@@ -1654,15 +1687,15 @@
 
   <!-- ── Bottom navigation ────────────────────────────────── -->
   <nav id="bottom-nav" role="navigation" aria-label="Main navigation">
-    <button class="nav-btn nav-view" id="nav-text" data-nav-action="text" data-nav-page="text" aria-label="Text feed">Text</button>
-    <button class="nav-btn nav-view active" id="nav-map" data-nav-action="map" data-nav-page="map" aria-label="Map view">Map</button>
+    <button class="nav-btn nav-view active" id="nav-text" data-nav-action="text" data-nav-page="text" aria-label="Text feed">Text</button>
+    <button class="nav-btn nav-view" id="nav-cloud" data-nav-action="cloud" data-nav-page="cloud" aria-label="3D atom cloud">3D</button>
     <button class="nav-btn nav-add" id="nav-add" data-nav-action="add" aria-label="Write Punkti"></button>
     <button class="nav-btn nav-settings-btn" id="nav-settings" data-nav-action="settings" aria-label="Settings">Settings</button>
   </nav>
 
   <nav id="side-rail-nav" role="navigation" aria-label="Main navigation desktop">
-    <button class="nav-btn nav-view rail-btn" id="nav-rail-text" data-nav-action="text" data-nav-page="text" aria-label="Text feed">Text</button>
-    <button class="nav-btn nav-view rail-btn active" id="nav-rail-map" data-nav-action="map" data-nav-page="map" aria-label="Map view">Map</button>
+    <button class="nav-btn nav-view rail-btn active" id="nav-rail-text" data-nav-action="text" data-nav-page="text" aria-label="Text feed">Text</button>
+    <button class="nav-btn nav-view rail-btn" id="nav-rail-cloud" data-nav-action="cloud" data-nav-page="cloud" aria-label="3D atom cloud">3D</button>
     <button class="nav-btn nav-add rail-btn" id="nav-rail-add" data-nav-action="add" aria-label="Write Punkti"></button>
     <button class="nav-btn nav-settings-btn rail-btn" id="nav-rail-settings" data-nav-action="settings" aria-label="Settings">Settings</button>
   </nav>

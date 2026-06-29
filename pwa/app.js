@@ -13,6 +13,7 @@ import {
 } from './ui-shell.js';
 import { initTextView, renderTextFeed, openBoardById, isReplyAtom, isRootAtom, getAtomStableId } from './ui-text.js';
 import { initMapView, showMapView } from './ui-map.js';
+import { initCloudView, showCloudView, hideCloudView, updateCloudAtoms, focusAtomInCloud } from './ui-cloud.js';
 import { initCreateModal, openCreateModal, closeCreateModal, setCreateError, setCreateSubmitting, updateCreateCenter, isCreateModalOpen } from './ui-create.js';
 import { initSettingsView, renderSettingsView } from './ui-settings.js';
 import { decodeAtomLocation, encodeCurrentLocation, encodeLocation, haversineMeters, FLOOR_HEIGHT_M } from './core/location.js';
@@ -125,8 +126,9 @@ let deepLinkFocused = false;
 // ============================================================
 // Two-view shell — Text / Map
 // ============================================================
-let currentPage = 'text'; // 'text' | 'map'
+let currentPage = 'text'; // 'text' | 'map' | 'cloud'
 let _mainFeedAtoms  = [];       // last sorted atom batch for main feed
+let _allVisibleAtoms = [];      // full visible set for AtomCloud 3D view
 let _locationDenied = false;    // true when geolocation denied/unavailable
 let _mapScopedFeedReady = false;
 let _refreshUiTimer = null;
@@ -295,9 +297,9 @@ function ensureSyncEngine() {
 }
 
 async function focusDeepLinkIfReady() {
-  if (!deepLinkPunkto || deepLinkFocused || !initialSyncDone || !mapLoadComplete || !map) return;
+  if (!deepLinkPunkto || deepLinkFocused || !initialSyncDone) return;
   deepLinkFocused = true;
-  await focusPunkto(deepLinkPunkto);
+  await focusAtomInView(deepLinkPunkto);
 }
 
 async function startSyncBoot() {
@@ -391,8 +393,18 @@ function parseDeepLinkPunktoId() {
 }
 
 /**
+ * Focus an atom in the 3D cloud view (test1 primary spatial view).
+ */
+async function focusAtomInView(id) {
+  showPage('cloud');
+  showCloudView();
+  updateCloudAtoms(_allVisibleAtoms);
+  if (id) focusAtomInCloud(id);
+}
+
+/**
  * Focus a punkto by id: center map, open panel, highlight matching atom if cached.
- * Safe to call when no matching atom exists locally — we still center on the coords.
+ * Legacy map path — map remains available but is not in test1 nav.
  */
 async function focusPunkto(id) {
   // Switch to 3D page so the map is visible
@@ -965,6 +977,7 @@ async function refreshUI(newAtomIds = null) {
   // The full DB count is not exposed in the UI — users see only the clean subset.
   const allAtoms = await getAllAtomsNewestFirst();
   const visibleAtoms = allAtoms.filter(a => !isHiddenAtom(a));
+  _allVisibleAtoms = visibleAtoms;
   const total = visibleAtoms.length;
   elCountNum.textContent = total;
   // Keep settings info (if menu is open) in sync
@@ -1007,6 +1020,9 @@ async function refreshUI(newAtomIds = null) {
       : (initialSyncDone ? `${recent.length} cached` : 'Loading visible atoms…');
   }
   if (currentPage === 'text') renderMainFeed();
+  if (currentPage === 'cloud') {
+    updateCloudAtoms(visibleAtoms, { fit: false });
+  }
 
   if (recent.length === 0) {
     // Only show the empty placeholder AFTER the first sync has completed.
@@ -1839,7 +1855,7 @@ function wireEvents() {
 
 async function boot() {
   console.log('PUNKTO APP.JS LOADED v106-create-stage-2026-06-09-1');
-  window.PUNKTO_APP_VERSION = 'v108-pwa-signing-fix-2026-06-22-1';
+  window.PUNKTO_APP_VERSION = 'v109-test1-atomcloud-2026-06-29';
 
   console.log('[punkto] booting...');
 
@@ -1886,9 +1902,17 @@ async function boot() {
   // Wire UI modules (shell / text / map). Callbacks delegate back to app.js
   // so app.js still owns data and lifecycle; modules own DOM/markup/state.
   initShell({
-    onShowText: () => renderMainFeed(),
+    onShowText: () => {
+      hideCloudView();
+      renderMainFeed();
+    },
     onShowMap: () => {
+      hideCloudView();
       ensureMapInitialized();
+    },
+    onShowCloud: () => {
+      showCloudView();
+      updateCloudAtoms(_allVisibleAtoms, { fit: true });
     },
     onAdd: () => { dismissOnboarding(); openCreateModal(); },
     onOpenSettings: () => {
@@ -1898,7 +1922,7 @@ async function boot() {
     },
   });
   initTextView({
-    onShowOnMap: (id) => focusPunkto(id),
+    onShowOnMap: (id) => focusAtomInView(id),
     onOpenBoard: (id) => { showPage('text'); },
     onLeaveNote: () => { dismissOnboarding(); openCreateModal(); },
     onPostReply: submitBoardReply,
@@ -1911,13 +1935,15 @@ async function boot() {
     getMap: () => map,
     initMap: () => initMap(),
   });
+  initCloudView({
+    decodeLocation: decodeAtomLocation,
+  });
 
   startSyncBoot().catch((err) => {
     console.warn('[sync] boot promise failed:', err);
     setSyncStatus('error');
   });
-  showPage('map');
-  ensureMapInitialized();
+  showPage('text');
   if (deepLinkPunkto) {
     setPanelOpen(false); // panel managed by 3D view when deep-linking
   }
