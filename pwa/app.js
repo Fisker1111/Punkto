@@ -129,6 +129,7 @@ let currentPage = 'text'; // 'text' | 'map' | 'cloud'
 let _mainFeedAtoms  = [];       // last sorted atom batch for main feed
 let _allVisibleAtoms = [];      // full visible set for AtomCloud 3D view
 let _locationDenied = false;    // true when geolocation denied/unavailable
+let _userGeo = null;            // { lat, lon, alt } — cloud scene anchor
 let _mapScopedFeedReady = false;
 let _refreshUiTimer = null;
 
@@ -146,10 +147,41 @@ async function ensureCloudReady() {
     cloud.initCloudView({
       decodeLocation: decodeAtomLocation,
       categoryColor: (atom) => getCategoryMeta(atom).color,
+      getUserLocation: () => _userGeo,
     });
     _cloudReady = true;
   }
   return cloud;
+}
+
+function applyUserGeo(pos) {
+  if (!pos?.coords) return;
+  _userGeo = {
+    lat: pos.coords.latitude,
+    lon: pos.coords.longitude,
+    alt: Number.isFinite(pos.coords.altitude) ? pos.coords.altitude : 0,
+  };
+  _locationDenied = false;
+  if (currentPage === 'text') renderMainFeed();
+  if (currentPage === 'cloud') {
+    ensureCloudReady()
+      .then((cloud) => cloud.updateCloudAtoms(_allVisibleAtoms, { fit: true }))
+      .catch((err) => console.warn('[cloud] geo refresh failed:', err));
+  }
+}
+
+function requestUserGeo() {
+  return new Promise((resolve) => {
+    if (!navigator.geolocation || _locationDenied) {
+      resolve(_userGeo);
+      return;
+    }
+    navigator.geolocation.getCurrentPosition(
+      (pos) => { applyUserGeo(pos); resolve(_userGeo); },
+      () => { _locationDenied = true; resolve(null); },
+      { enableHighAccuracy: true, timeout: 12000, maximumAge: 30000 },
+    );
+  });
 }
 
 async function hideCloudViewApp() {
@@ -421,6 +453,7 @@ function parseDeepLinkPunktoId() {
  */
 async function focusAtomInView(id) {
   showPage('cloud');
+  await requestUserGeo();
   const cloud = await ensureCloudReady();
   cloud.showCloudView();
   cloud.updateCloudAtoms(_allVisibleAtoms);
@@ -1865,8 +1898,8 @@ function wireEvents() {
     if (e.target && e.target.id === 'main-location-btn') {
       if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(
-          () => { _locationDenied = false; renderMainFeed(); },
-          () => { _locationDenied = true;  renderMainFeed(); }
+          (pos) => { applyUserGeo(pos); },
+          () => { _locationDenied = true; renderMainFeed(); }
         );
       }
     }
@@ -1882,7 +1915,7 @@ function wireEvents() {
 
 async function boot() {
   console.log('PUNKTO APP.JS LOADED v106-create-stage-2026-06-09-1');
-  window.PUNKTO_APP_VERSION = 'v110-test1-atomcloud-seed-nodes-2026-06-29-1';
+  window.PUNKTO_APP_VERSION = 'v110-test1-atomcloud-user-anchor-2026-06-29-1';
 
   console.log('[punkto] booting...');
 
@@ -1938,6 +1971,7 @@ async function boot() {
       ensureMapInitialized();
     },
     onShowCloud: async () => {
+      await requestUserGeo();
       const cloud = await ensureCloudReady();
       cloud.showCloudView();
       cloud.updateCloudAtoms(_allVisibleAtoms, { fit: true });

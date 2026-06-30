@@ -18,6 +18,7 @@ const DEFAULT_ATOM_RGB = [138, 160, 190];
 
 let _decodeLocation = null;
 let _categoryColor = null;
+let _getUserLocation = null;
 
 let _container = null;
 let _renderer = null;
@@ -33,8 +34,11 @@ let _animating = false;
 let _rafId = 0;
 
 let _origin = { lat: 0, lon: 0 };
+let _originIsUser = false;
 let _cachedOriginKeys = '';
 let _lastAtoms = [];
+let _userMarker = null;
+let _northMarker = null;
 let _atomsById = new Map();
 let _groupsById = new Map();
 let _selectedId = null;
@@ -107,8 +111,24 @@ function _computeOrigin(atoms) {
   return { lat, lon };
 }
 
+function _pickOrigin(atoms, userLoc) {
+  if (userLoc && Number.isFinite(userLoc.lat) && Number.isFinite(userLoc.lon)) {
+    return { lat: userLoc.lat, lon: userLoc.lon };
+  }
+  return _computeOrigin(atoms);
+}
+
 function _keysSignature(keys) {
   return [...keys].sort().join('|');
+}
+
+function _userGeoSignature(userLoc) {
+  if (!userLoc || !Number.isFinite(userLoc.lat) || !Number.isFinite(userLoc.lon)) return 'none';
+  return `${userLoc.lat.toFixed(4)},${userLoc.lon.toFixed(4)}`;
+}
+
+function _originSignature(userLoc, keys) {
+  return `${_userGeoSignature(userLoc)}|${_keysSignature(keys)}`;
 }
 
 function _getAtomRgb(atom) {
@@ -215,7 +235,7 @@ function _applySelectionVisual(key) {
 }
 
 function _fitCameraToAtoms() {
-  if (!_groupsById.size) {
+  if (!_groupsById.size && !_originIsUser) {
     _camTarget.set(0, 40, 0);
     _camRadius = 320;
     _updateCameraPosition();
@@ -223,6 +243,7 @@ function _fitCameraToAtoms() {
   }
 
   const box = new THREE.Box3();
+  if (_originIsUser) box.expandByPoint(new THREE.Vector3(0, 0, 0));
   for (const entry of _groupsById.values()) {
     box.expandByObject(entry.group);
   }
@@ -233,6 +254,75 @@ function _fitCameraToAtoms() {
   const span = Math.max(size.x, size.z, size.y, 80);
   _camRadius = THREE.MathUtils.clamp(span * 1.35, MIN_CAM_RADIUS, MAX_CAM_RADIUS);
   _updateCameraPosition();
+}
+
+function _disposeMarker(marker) {
+  if (!marker) return null;
+  if (marker.parent) marker.parent.remove(marker);
+  marker.traverse((obj) => {
+    if (obj.geometry) obj.geometry.dispose();
+    if (obj.material) {
+      if (Array.isArray(obj.material)) obj.material.forEach((m) => m.dispose());
+      else obj.material.dispose();
+    }
+  });
+  return null;
+}
+
+function _ensureUserMarker(show) {
+  if (!_scene) return;
+  if (!show) {
+    _userMarker = _disposeMarker(_userMarker);
+    return;
+  }
+  if (_userMarker) return;
+  const ring = new THREE.Mesh(
+    new THREE.RingGeometry(2.5, 4.5, 32),
+    new THREE.MeshBasicMaterial({
+      color: 0x00d4ff,
+      transparent: true,
+      opacity: 0.85,
+      side: THREE.DoubleSide,
+    }),
+  );
+  ring.rotation.x = -Math.PI / 2;
+  ring.position.y = 0.12;
+  const dot = new THREE.Mesh(
+    new THREE.CircleGeometry(1.2, 24),
+    new THREE.MeshBasicMaterial({ color: 0x00d4ff, transparent: true, opacity: 0.55, side: THREE.DoubleSide }),
+  );
+  dot.rotation.x = -Math.PI / 2;
+  dot.position.y = 0.11;
+  const group = new THREE.Group();
+  group.add(ring);
+  group.add(dot);
+  _scene.add(group);
+  _userMarker = group;
+}
+
+function _ensureNorthMarker(show) {
+  if (!_scene) return;
+  if (!show) {
+    _northMarker = _disposeMarker(_northMarker);
+    return;
+  }
+  if (_northMarker) return;
+  const group = new THREE.Group();
+  const shaft = new THREE.Mesh(
+    new THREE.BoxGeometry(0.35, 0.35, 22),
+    new THREE.MeshBasicMaterial({ color: 0x3a5570, transparent: true, opacity: 0.65 }),
+  );
+  shaft.position.set(0, 0.2, 11);
+  const head = new THREE.Mesh(
+    new THREE.ConeGeometry(1.8, 5, 8),
+    new THREE.MeshBasicMaterial({ color: 0x557799, transparent: true, opacity: 0.75 }),
+  );
+  head.rotation.x = Math.PI / 2;
+  head.position.set(0, 0.2, 24);
+  group.add(shaft);
+  group.add(head);
+  _scene.add(group);
+  _northMarker = group;
 }
 
 function _onPointerDown(ev) {
@@ -347,6 +437,8 @@ function _bindWebGLContextHandlers() {
 function _teardownScene(resetControls = true) {
   _stopAnimation();
   _clearAtoms();
+  _userMarker = _disposeMarker(_userMarker);
+  _northMarker = _disposeMarker(_northMarker);
   if (_renderer) {
     _renderer.dispose();
     _renderer.domElement?.remove();
@@ -406,6 +498,7 @@ function _buildScene() {
 
   _bindControls();
   _bindWebGLContextHandlers();
+  _ensureNorthMarker(true);
   _resize();
   if (!window.__punktoCloudResizeBound) {
     window.__punktoCloudResizeBound = true;
@@ -476,12 +569,18 @@ function _syncAtomMeshes(atoms) {
     nextKeys.add(key);
   }
 
-  const keySig = _keysSignature(nextKeys);
+  const keySig = _originSignature(
+    typeof _getUserLocation === 'function' ? _getUserLocation() : null,
+    nextKeys,
+  );
   const originChanged = keySig !== _cachedOriginKeys;
   if (originChanged) {
-    _origin = _computeOrigin(list);
+    const userLoc = typeof _getUserLocation === 'function' ? _getUserLocation() : null;
+    _origin = _pickOrigin(list, userLoc);
+    _originIsUser = Boolean(userLoc && Number.isFinite(userLoc.lat) && Number.isFinite(userLoc.lon));
     _cachedOriginKeys = keySig;
   }
+  _ensureUserMarker(_originIsUser);
 
   for (const atom of list) {
     const key = _atomKey(atom);
@@ -531,10 +630,12 @@ function _syncAtomMeshes(atoms) {
  * @param {Object} opts
  * @param {(punkto:string)=>object|null} opts.decodeLocation
  * @param {(atom:object)=>number[]|null} opts.categoryColor
+ * @param {()=>{lat:number,lon:number,alt?:number}|null} opts.getUserLocation
  */
-export function initCloudView({ decodeLocation, categoryColor } = {}) {
+export function initCloudView({ decodeLocation, categoryColor, getUserLocation } = {}) {
   _decodeLocation = typeof decodeLocation === 'function' ? decodeLocation : null;
   _categoryColor = typeof categoryColor === 'function' ? categoryColor : null;
+  _getUserLocation = typeof getUserLocation === 'function' ? getUserLocation : null;
 }
 
 /**
