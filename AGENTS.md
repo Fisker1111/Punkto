@@ -16,6 +16,14 @@ Current accepted bottom navigation:
 Text | Map | + | Settings
 ```
 
+**test1-atomcloud branch** (test1.punkto.xyz prototype) uses:
+
+```
+Text | 3D | + | Settings
+```
+
+The **3D** entry opens the standalone Three.js AtomCloud view (`pwa/ui-cloud.js`). Legacy MapLibre map remains in the DOM but is not in test1 primary nav. AtomCloud may show silent world context (map floor, height ruler, compass) but no message UI in the 3D scene.
+
 Approximate nav weighting:
 - Text: 35%
 - Map: 35%

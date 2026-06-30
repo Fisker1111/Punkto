@@ -14,7 +14,6 @@ const GRID_DIVISIONS = 80;
 const MIN_CAM_RADIUS = 20;
 const MAX_CAM_RADIUS = 2500;
 const ATOM_RADIUS = 2.6;
-const STEM_RADIUS = 0.28;
 const RULER_MAX_M = 30;
 const MAP_ZOOM = 16;
 const MAP_FLOOR_OPACITY = 0.22;
@@ -289,11 +288,24 @@ function _makeAtomMaterial(selected = false, rgb = DEFAULT_ATOM_RGB) {
 
 function _makeStemMaterial(selected = false, rgb = DEFAULT_ATOM_RGB) {
   const base = _rgbToThreeColor(rgb);
-  return new THREE.MeshBasicMaterial({
-    color: selected ? base : new THREE.Color(0x3a5570),
+  return new THREE.LineDashedMaterial({
+    color: selected ? base : new THREE.Color(0x4a6888),
+    dashSize: 2.2,
+    gapSize: 1.6,
     transparent: true,
-    opacity: selected ? 0.92 : 0.62,
+    opacity: selected ? 0.95 : 0.68,
+    linewidth: 1,
   });
+}
+
+function _rebuildStemLine(stem, height, material) {
+  stem.geometry?.dispose();
+  stem.geometry = new THREE.BufferGeometry().setFromPoints([
+    new THREE.Vector3(0, 0, 0),
+    new THREE.Vector3(0, Math.max(height, 0.01), 0),
+  ]);
+  stem.material = material;
+  stem.computeLineDistances();
 }
 
 function _makeGroundContact(rgb, selected = false) {
@@ -335,9 +347,8 @@ function _positionAtomEntry(entry, atom) {
   entry.group.position.set(pos.x, 0, pos.z);
   entry.sphere.position.y = pos.y;
   entry.localY = pos.y;
-  const stemH = Math.max(pos.y, 0.01);
-  entry.stem.scale.y = stemH / Math.max(entry.stem.geometry.parameters.height, 0.01);
-  entry.stem.position.y = stemH / 2;
+  const key = _atomKey(atom);
+  _rebuildStemLine(entry.stem, pos.y, _makeStemMaterial(_selectedId === key, _getAtomRgb(atom)));
   entry.atom = atom;
 }
 
@@ -354,12 +365,11 @@ function _buildAtomGroup(atom, key) {
   const ground = _makeGroundContact(rgb, false);
   group.add(ground.group);
 
-  const stemHeight = Math.max(pos.y, 0.01);
-  const stem = new THREE.Mesh(
-    new THREE.CylinderGeometry(STEM_RADIUS, STEM_RADIUS * 0.7, stemHeight, 8),
+  const stem = new THREE.Line(
+    new THREE.BufferGeometry(),
     _makeStemMaterial(false, rgb),
   );
-  stem.position.y = stemHeight / 2;
+  _rebuildStemLine(stem, pos.y, stem.material);
 
   const sphere = new THREE.Mesh(
     new THREE.SphereGeometry(ATOM_RADIUS, 20, 20),
@@ -388,7 +398,8 @@ function _applySelectionVisual(key) {
     const rgb = _getAtomRgb(entry.atom);
     entry.sphere.material = _makeAtomMaterial(selected, rgb);
     entry.sphere.scale.setScalar(selected ? 1.45 : 1);
-    entry.stem.material = _makeStemMaterial(selected, rgb);
+    entry.stem.material.dispose();
+    _rebuildStemLine(entry.stem, entry.localY, _makeStemMaterial(selected, rgb));
     _updateGroundContactVisual(entry, selected);
   }
   _updateCloudHud();
@@ -821,7 +832,8 @@ function _syncAtomMeshes(atoms) {
       const rgb = _getAtomRgb(atom);
       const selected = _selectedId === key;
       existing.sphere.material = _makeAtomMaterial(selected, rgb);
-      existing.stem.material = _makeStemMaterial(selected, rgb);
+      existing.stem.material.dispose();
+      _rebuildStemLine(existing.stem, existing.localY, _makeStemMaterial(selected, rgb));
       _updateGroundContactVisual(existing, selected);
       continue;
     }
