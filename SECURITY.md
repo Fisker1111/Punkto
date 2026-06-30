@@ -28,7 +28,7 @@ If you do not receive a reply within a week, please feel free to nudge — email
 ### In scope
 
 - Vulnerabilities in any code in this repository (`pwa/`, `relay/`, `core/`, `tools/`)
-- Issues in the live reference deployment at `punkto.xyz`, `app1.punkto.xyz`, `app2.punkto.xyz`
+- Issues in the live reference deployment at `punkto.xyz`, `node1.punkto.xyz`, `node2.punkto.xyz`
 - Spec ambiguities or design flaws that could lead to security problems if implemented as written
 - Cryptographic weaknesses in `punkto.identity.md` (Ed25519 derivation, BIP39 mnemonic, canonical bytes for signing)
 

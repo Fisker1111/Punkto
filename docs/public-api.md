@@ -11,8 +11,8 @@
 
 - `https://node1.punkto.xyz` — Punkto Reference Node 1
 - `https://node2.punkto.xyz` — Punkto Reference Node 2
-- `https://app1.punkto.xyz` — Legacy alias for Node 1
-- `https://app2.punkto.xyz` — Legacy alias for Node 2
+- `https://node1.punkto.xyz` — Legacy alias for Node 1
+- `https://node2.punkto.xyz` — Legacy alias for Node 2
 - `https://punkto.xyz` — Primary domain (Punkto Reference Node 1)
 
 **Content-Type:** All JSON responses use `application/json`. The status page uses `text/html`.
@@ -81,7 +81,7 @@ Legacy node summary endpoint. Returns node identity, capabilities, and configura
 {
   "node": "Punkto Reference Node 1",
   "version": "v0.1",
-  "peers": ["https://app2.punkto.xyz"],
+  "peers": ["https://node2.punkto.xyz"],
   "buffer_size": 3,
   "buffer_oldest_t": 1748700000000,
   "buffer_atoms_max": 10000,
@@ -150,7 +150,7 @@ Full public-safe node configuration and identity. Returns identity, config statu
     "loaded": true,
     "source": "/config/punkto-node.yml"
   },
-  "peers": ["https://app2.punkto.xyz"],
+  "peers": ["https://node2.punkto.xyz"],
   "buffer": {
     "size": 3,
     "oldest_t": 1748700000000,
@@ -178,7 +178,7 @@ Full public-safe node configuration and identity. Returns identity, config statu
   },
   "capabilities": ["write", "latest", "feed", "sync"],
   "sync": {
-    "peers": ["https://app2.punkto.xyz"],
+    "peers": ["https://node2.punkto.xyz"],
     "interval": 30
   },
   "policy_stats": {

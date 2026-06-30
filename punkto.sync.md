@@ -87,11 +87,11 @@ Each node declares its known peers in the `/info` response.
 
 ```json
 {
-  "node": "app1.punkto.xyz",
+  "node": "node1.punkto.xyz",
   "version": "0.2",
   "capabilities": ["write", "sync"],
   "peers": [
-    "https://app2.punkto.xyz"
+    "https://node2.punkto.xyz"
   ]
 }
 ```
@@ -106,7 +106,7 @@ Each node declares its known peers in the `/info` response.
 **Environment variable:**
 
 ```
-PUNKTO_PEERS=https://app2.punkto.xyz,https://app3.punkto.xyz
+PUNKTO_PEERS=https://node2.punkto.xyz,https://app3.punkto.xyz
 ```
 
 ---
@@ -142,8 +142,8 @@ Clients are configured with a static seed list:
 
 ```
 SEED_NODES = [
-  "https://app1.§§secret(SERVER_ALIAS)",
-  "https://app2.§§secret(SERVER_ALIAS)"
+  "https://node1.§§secret(SERVER_ALIAS)",
+  "https://node2.§§secret(SERVER_ALIAS)"
 ]
 ```
 
@@ -228,7 +228,7 @@ Each node with `sync` capability periodically pulls from its configured peers.
 
 ```json
 {
-  "https://app2.punkto.xyz": 1024,
+  "https://node2.punkto.xyz": 1024,
   "https://app3.punkto.xyz": 512
 }
 ```
@@ -240,7 +240,7 @@ Cursors are stable because `atoms.ndjson` is append-only.
 
 ## 7. Loop Safety
 
-When two nodes peer with each other (app1 ↔ app2), atoms flow in both directions.
+When two nodes peer with each other (node1 ↔ node2), atoms flow in both directions.
 Without deduplication, atoms loop forever.
 
 **Prevention:**
@@ -287,7 +287,7 @@ There are no conflicts. Atoms are immutable and append-only.
 Peers form a manually configured mesh, not a tree or ring.
 
 ```
-app1 ──── app2
+node1 ──── node2
   \        /
    app3 ──
 ```

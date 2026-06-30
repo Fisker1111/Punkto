@@ -156,8 +156,8 @@ Replace `node.example.org` with your domain throughout.
 Copy the appropriate Caddyfile for your deployment model:
 
 ```bash
-# For a single-node setup, adapt from deploy/server1/
-cp deploy/server1/Caddyfile ./Caddyfile
+# For a single-node setup, adapt from deploy/node1/
+cp deploy/node1/Caddyfile ./Caddyfile
 ```
 
 The Caddyfile should reference your domain name. Caddy will automatically

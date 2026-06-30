@@ -89,8 +89,8 @@ Punkto/
 ├── deploy/               ← Docker deployment configs
 │   ├── docker-compose.yml ← Service definitions (web + relay)
 │   ├── .env.example      ← Shared environment template
-│   ├── server1/          ← Caddyfile for primary server
-│   ├── app2/             ← Caddyfile + env for secondary server
+│   ├── node1/          ← Caddyfile for primary server
+│   ├── node2/             ← Caddyfile + env for secondary server
 │   └── README.md         ← Deployment guide
 │
 ├── core/                 ← Pure-Python core library + CLI (stdlib only)
@@ -246,7 +246,7 @@ Relays are a public commons. Clients are user-owned. Archives are optional and m
 
 Active development — **v0.5**, dogfood stage.
 
-- **Live nodes**: two synced reference relays (`app1.punkto.xyz`, `app2.punkto.xyz`) — both running Docker (Caddy + Python relay), auto-HTTPS via Let's Encrypt, deployed via `docker compose`
+- **Live nodes**: two synced reference relays (`node1.punkto.xyz`, `node2.punkto.xyz`) — both running Docker (Caddy + Python relay), auto-HTTPS via Let's Encrypt, deployed via `docker compose`
 - **Atoms**: 20+ on the live feed, mostly seed/test content
 - **PWA**: at v53 — minimal two-view shell (Text / Map), 4-button bottom nav (Text | Map | + | ⚙), modular UI (ui-shell.js / ui-text.js / ui-map.js), Docker-deployed, no service worker, in-browser key generation, 3D altitude input, Open Graph deep links
 - **Relay**: v0.1 — rolling buffer (10 000 atoms or 7 days), `/latest`, peer sync, `/p/<id>` server-rendered cards

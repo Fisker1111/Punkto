@@ -78,7 +78,7 @@ Response:
   ],
 
   "served_at": 1745598400000,
-  "node": "app1.punkto.xyz",
+  "node": "node1.punkto.xyz",
   "buffer_size": 312,
   "buffer_oldest_t": 1744993600000
 }
@@ -233,7 +233,7 @@ The current `pwa/node.py` implementation:
 3. Replace `load_all_atom_ids()` full scan with an in-memory `set` populated at startup
 4. Document `PUNKTO_BUFFER_ATOMS` and `PUNKTO_BUFFER_HOURS` env vars
 
-Result: app1 and app2 become real relays with bounded resource usage. No protocol change.
+Result: node1 and node2 become real relays with bounded resource usage. No protocol change.
 
 ### 7.3 Phase 2 — client-side archive (medium change)
 

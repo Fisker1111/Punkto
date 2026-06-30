@@ -42,7 +42,7 @@ All config is via environment variables. See `.env.example` for a complete file 
 | `PUNKTO_PORT` | `8000` | Listen port. |
 | `PUNKTO_DATA_DIR` | `./data/` | Where `atoms.ndjson` and `sync_state.json` live. |
 | `PUNKTO_NODE_NAME` | `relay-${hostname}` | Identifier returned in `/info` and `/latest`. |
-| `PUNKTO_PEERS` | *(empty)* | Comma-separated peer URLs to pull from, e.g. `https://app2.example.com,https://app3.example.com`. |
+| `PUNKTO_PEERS` | *(empty)* | Comma-separated peer URLs to pull from, e.g. `https://node2.example.com,https://app3.example.com`. |
 | `PUNKTO_BUFFER_ATOMS` | `10000` | Hard cap on buffered atom count. |
 | `PUNKTO_BUFFER_HOURS` | `168` (7 days) | Atoms older than this are pruned. |
 | `PUNKTO_LATEST_LIMIT` | `100` | Max atoms returned by `GET /latest`. |

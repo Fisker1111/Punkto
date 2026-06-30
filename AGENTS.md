@@ -139,7 +139,7 @@ Two runnable services; no build step, no Docker needed for local dev. Python dep
 - Acceptance window: `POST /atom` rejects timestamps older than 24h (`atom_too_old`). Use a current-millis `t` when posting test atoms.
 
 ### PWA (vanilla JS static files, `pwa/`)
-- No bundler/npm; dependencies are vendored in `pwa/lib/` and `pwa/nacl.min.js`. Serve the directory statically (e.g. `python3 -m http.server 8080` from `pwa/`). Map tiles and the no-relay fallback (`app1/app2.punkto.xyz`) require internet.
+- No bundler/npm; dependencies are vendored in `pwa/lib/` and `pwa/nacl.min.js`. Serve the directory statically (e.g. `python3 -m http.server 8080` from `pwa/`). Map tiles and the no-relay fallback (`node1/node2.punkto.xyz`) require internet.
 - Non-obvious: the PWA targets its relay at `window.location.origin` (`NODE_URL` in `app.js`), and **create-atom posts to the relay first and only stores locally on success** (`submitAtomFromModal`). A plain static server on `:8080` has no `/atom` endpoint, so the create flow silently falls back to the production seed nodes. To exercise create end-to-end against a *local* relay, serve the PWA behind a front that also reverse-proxies the relay API paths (`/atom`, `/latest`, `/feed`, `/info`, `/node`, `/health`, `/status`) to the relay on `:8000`, so they share one origin (this is what production Caddy does).
 
 ### Quick checks

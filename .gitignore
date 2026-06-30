@@ -20,3 +20,4 @@ config/
 data/
 secrets.env
 *.secrets.env
+pwa/server.log

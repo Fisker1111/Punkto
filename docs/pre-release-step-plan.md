@@ -304,7 +304,7 @@ These checks require live deployed nodes and cannot be verified locally:
 | G2. atom persists after docker compose restart | Requires deployed node |
 | G3. YAML config loaded (config_loaded=true) | Requires deployed node |
 | G4. TLS/HTTPS endpoints reachable | Requires deployed node |
-| G5. PWA app marker visible on app1/app2 | Requires browser + deployed node |
+| G5. PWA app marker visible on node1/node2 | Requires browser + deployed node |
 | G6. Backup/restore scripts on deployed node | Requires deployed node |
 
 ### Launch candidate checklist status
@@ -611,7 +611,7 @@ node --check pwa/sw.js           OK
 
 ### Deployment
 
-**Target node:** node2 (159.65.115.166 / app2.punkto.xyz) — ONE node only, as required
+**Target node:** node2 (159.65.115.166 / node2.punkto.xyz) — ONE node only, as required
 **node1 (46.101.118.157): NOT deployed — unchanged**
 
 #### Pre-deploy state (node2)
@@ -674,7 +674,7 @@ docker compose up -d --force-recreate
 
 | Endpoint | Result | Notes |
 |----------|--------|-------|
-| `/health` HTTP 200 | ✅ PASS | `{"status":"ok","node":"app2.punkto.xyz","buffer_size":2}` |
+| `/health` HTTP 200 | ✅ PASS | `{"status":"ok","node":"node2.punkto.xyz","buffer_size":2}` |
 | `/status` HTTP 200 | ✅ PASS | |
 | `/node/info` HTTP 200 | ✅ PASS | Full JSON confirmed |
 | `/feed` HTTP 200 | ✅ PASS | |

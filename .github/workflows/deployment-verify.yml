@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       node_host:
-        description: 'Node hostname to verify (e.g., app1.punkto.xyz, app2.punkto.xyz)'
+        description: 'Node hostname to verify (e.g., node1.punkto.xyz, node2.punkto.xyz)'
         required: true
         type: string
       expected_marker:
