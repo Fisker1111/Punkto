@@ -1915,7 +1915,7 @@ function wireEvents() {
 
 async function boot() {
   console.log('PUNKTO APP.JS LOADED v106-create-stage-2026-06-09-1');
-  window.PUNKTO_APP_VERSION = 'v112-test1-atomcloud-dotted-stems-2026-06-29-1';
+  window.PUNKTO_APP_VERSION = 'v113-test1-atomcloud-map-floor-fix-2026-06-30-1';
 
   console.log('[punkto] booting...');
 

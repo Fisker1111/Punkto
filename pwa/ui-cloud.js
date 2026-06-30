@@ -16,7 +16,9 @@ const MAX_CAM_RADIUS = 2500;
 const ATOM_RADIUS = 2.6;
 const RULER_MAX_M = 30;
 const MAP_ZOOM = 16;
-const MAP_FLOOR_OPACITY = 0.22;
+const MAP_FLOOR_OPACITY = 0.88;
+const MAP_DARKEN_OVERLAY = 0.38;
+const MAP_TILE_HOSTS = ['a', 'b', 'c', 'd'];
 const DEFAULT_ATOM_RGB = [138, 160, 190];
 
 let _decodeLocation = null;
@@ -28,6 +30,7 @@ let _renderer = null;
 let _scene = null;
 let _camera = null;
 let _grid = null;
+let _darkFloor = null;
 let _mapFloor = null;
 let _mapFloorKey = '';
 let _mapFloorLoading = null;
@@ -161,7 +164,8 @@ function _loadOsmTile(tx, ty, zoom) {
     img.crossOrigin = 'anonymous';
     img.onload = () => resolve(img);
     img.onerror = () => reject(new Error(`tile ${zoom}/${tx}/${ty}`));
-    img.src = `https://tile.openstreetmap.org/${zoom}/${tx}/${ty}.png`;
+    const host = MAP_TILE_HOSTS[(tx + ty) % MAP_TILE_HOSTS.length];
+    img.src = `https://${host}.basemaps.cartocdn.com/dark_all/${zoom}/${tx}/${ty}.png`;
   });
 }
 
@@ -193,11 +197,13 @@ async function _buildMapTexture(lat, lon) {
   const tileMaxY = Math.floor((topLeftWorldY + canvasSize) / 256);
 
   const jobs = [];
+  let tilesOk = 0;
   for (let ty = tileMinY; ty <= tileMaxY; ty += 1) {
     for (let tx = tileMinX; tx <= tileMaxX; tx += 1) {
       jobs.push(
         _loadOsmTile(tx, ty, zoom)
           .then((img) => {
+            tilesOk += 1;
             const dx = tx * 256 - topLeftWorldX;
             const dy = ty * 256 - topLeftWorldY;
             ctx.drawImage(img, dx, dy);
@@ -208,12 +214,19 @@ async function _buildMapTexture(lat, lon) {
   }
   await Promise.all(jobs);
 
-  ctx.fillStyle = 'rgba(6, 8, 16, 0.76)';
+  if (tilesOk === 0) {
+    console.warn('[cloud] map floor: no raster tiles loaded');
+    return null;
+  }
+
+  ctx.fillStyle = `rgba(6, 8, 16, ${MAP_DARKEN_OVERLAY})`;
   ctx.fillRect(0, 0, canvasSize, canvasSize);
 
   const tex = new THREE.CanvasTexture(canvas);
   tex.colorSpace = THREE.SRGBColorSpace;
   tex.anisotropy = 4;
+  tex.needsUpdate = true;
+  console.log('[cloud] map floor texture ready:', tilesOk, 'tiles @', lat.toFixed(4), lon.toFixed(4));
   return tex;
 }
 
@@ -235,22 +248,25 @@ async function _loadMapFloor() {
   _mapFloorLoading = (async () => {
     try {
       if (!Number.isFinite(_origin.lat) || !Number.isFinite(_origin.lon)) return;
-      if (_origin.lat === 0 && _origin.lon === 0) return;
       const tex = await _buildMapTexture(_origin.lat, _origin.lon);
-      if (!_scene) return;
+      if (!tex || !_scene) return;
       _disposeMapFloor();
       const mat = new THREE.MeshBasicMaterial({
         map: tex,
         transparent: true,
         opacity: MAP_FLOOR_OPACITY,
-        depthWrite: false,
+        depthWrite: true,
       });
       _mapFloor = new THREE.Mesh(new THREE.PlaneGeometry(GRID_SIZE, GRID_SIZE), mat);
       _mapFloor.rotation.x = -Math.PI / 2;
-      _mapFloor.position.y = -0.06;
+      _mapFloor.position.y = 0.01;
+      _mapFloor.renderOrder = 0;
       _scene.add(_mapFloor);
+      if (_darkFloor?.material) {
+        _darkFloor.material.opacity = 0.25;
+      }
       if (_grid?.material) {
-        _grid.material.opacity = 0.24;
+        _grid.material.opacity = 0.16;
         _grid.material.transparent = true;
       }
       _mapFloorKey = key;
@@ -672,6 +688,7 @@ function _teardownScene(resetControls = true) {
   _scene = null;
   _camera = null;
   _grid = null;
+  _darkFloor = null;
   _atomRoot = null;
   _raycaster = null;
   _initialized = false;
@@ -702,13 +719,15 @@ function _buildScene() {
     new THREE.MeshBasicMaterial({ color: 0x04060c, transparent: true, opacity: 0.95 }),
   );
   floor.rotation.x = -Math.PI / 2;
-  floor.position.y = -0.1;
+  floor.position.y = -0.02;
   _scene.add(floor);
+  _darkFloor = floor;
 
   _grid = new THREE.GridHelper(GRID_SIZE, GRID_DIVISIONS, 0x1a3355, 0x0f1a28);
   _grid.material.opacity = 0.55;
   _grid.material.transparent = true;
-  _grid.position.y = 0.02;
+  _grid.position.y = 0.04;
+  _grid.renderOrder = 2;
   _scene.add(_grid);
 
   _scene.add(new THREE.AmbientLight(0x334466, 0.55));
@@ -733,7 +752,6 @@ function _buildScene() {
   }
 
   _initialized = true;
-  _loadMapFloor().catch(() => {});
   return true;
 }
 
@@ -863,6 +881,10 @@ function _syncAtomMeshes(atoms) {
 
   if (_selectedId && _groupsById.has(_selectedId)) _applySelectionVisual(_selectedId);
   else _updateCloudHud();
+
+  if (!_mapFloor && Number.isFinite(_origin.lat) && Number.isFinite(_origin.lon)) {
+    _loadMapFloor().catch(() => {});
+  }
 }
 
 export function initCloudView({ decodeLocation, categoryColor, getUserLocation } = {}) {
