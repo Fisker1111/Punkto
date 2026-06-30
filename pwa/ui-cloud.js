@@ -1,8 +1,9 @@
 /**
  * ui-cloud.js — Punkto AtomCloud 3D view (Three.js)
  *
- * Standalone immersive spatial view: glowing atoms at real-world height,
- * vertical stems, dark grid floor. No text/cards/popups in the scene.
+ * Context layer: faint map floor, grid, compass, scale, height ruler.
+ * Atom layer: glowing points, stems, ground contact rings.
+ * No message text/cards in the scene (height-only label on selection).
  */
 
 import * as THREE from './lib/three.module.min.js';
@@ -12,8 +13,11 @@ const GRID_SIZE = 2000;
 const GRID_DIVISIONS = 80;
 const MIN_CAM_RADIUS = 20;
 const MAX_CAM_RADIUS = 2500;
-const ATOM_RADIUS = 2.4;
-const STEM_RADIUS = 0.35;
+const ATOM_RADIUS = 2.6;
+const STEM_RADIUS = 0.28;
+const RULER_MAX_M = 30;
+const MAP_ZOOM = 16;
+const MAP_FLOOR_OPACITY = 0.22;
 const DEFAULT_ATOM_RGB = [138, 160, 190];
 
 let _decodeLocation = null;
@@ -25,9 +29,13 @@ let _renderer = null;
 let _scene = null;
 let _camera = null;
 let _grid = null;
+let _mapFloor = null;
+let _mapFloorKey = '';
+let _mapFloorLoading = null;
 let _atomRoot = null;
 let _raycaster = null;
 let _pointer = new THREE.Vector2();
+let _projVec = new THREE.Vector3();
 
 let _initialized = false;
 let _animating = false;
@@ -38,7 +46,6 @@ let _originIsUser = false;
 let _cachedOriginKeys = '';
 let _lastAtoms = [];
 let _userMarker = null;
-let _northMarker = null;
 let _atomsById = new Map();
 let _groupsById = new Map();
 let _selectedId = null;
@@ -144,6 +151,119 @@ function _rgbToThreeColor(rgb) {
   return new THREE.Color(r / 255, g / 255, b / 255);
 }
 
+function _metersPerPixel(lat, zoom) {
+  const latRad = (lat * Math.PI) / 180;
+  return (156543.03392 * Math.cos(latRad)) / Math.pow(2, zoom);
+}
+
+function _loadOsmTile(tx, ty, zoom) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => resolve(img);
+    img.onerror = () => reject(new Error(`tile ${zoom}/${tx}/${ty}`));
+    img.src = `https://tile.openstreetmap.org/${zoom}/${tx}/${ty}.png`;
+  });
+}
+
+async function _buildMapTexture(lat, lon) {
+  const zoom = MAP_ZOOM;
+  const latRad = (lat * Math.PI) / 180;
+  const mpp = _metersPerPixel(lat, zoom);
+  const canvasSize = Math.min(2048, Math.max(512, Math.ceil(GRID_SIZE / mpp)));
+  const halfM = GRID_SIZE / 2;
+  const pxPerMeter = 1 / mpp;
+  const n = 2 ** zoom;
+
+  const originWorldX = ((lon + 180) / 360) * n * 256;
+  const originWorldY = ((1 - Math.log(Math.tan(latRad) + 1 / Math.cos(latRad)) / Math.PI) / 2) * n * 256;
+
+  const topLeftWorldX = originWorldX - halfM * pxPerMeter;
+  const topLeftWorldY = originWorldY - halfM * pxPerMeter;
+
+  const canvas = document.createElement('canvas');
+  canvas.width = canvasSize;
+  canvas.height = canvasSize;
+  const ctx = canvas.getContext('2d');
+  ctx.fillStyle = '#060810';
+  ctx.fillRect(0, 0, canvasSize, canvasSize);
+
+  const tileMinX = Math.floor(topLeftWorldX / 256);
+  const tileMinY = Math.floor(topLeftWorldY / 256);
+  const tileMaxX = Math.floor((topLeftWorldX + canvasSize) / 256);
+  const tileMaxY = Math.floor((topLeftWorldY + canvasSize) / 256);
+
+  const jobs = [];
+  for (let ty = tileMinY; ty <= tileMaxY; ty += 1) {
+    for (let tx = tileMinX; tx <= tileMaxX; tx += 1) {
+      jobs.push(
+        _loadOsmTile(tx, ty, zoom)
+          .then((img) => {
+            const dx = tx * 256 - topLeftWorldX;
+            const dy = ty * 256 - topLeftWorldY;
+            ctx.drawImage(img, dx, dy);
+          })
+          .catch(() => {}),
+      );
+    }
+  }
+  await Promise.all(jobs);
+
+  ctx.fillStyle = 'rgba(6, 8, 16, 0.76)';
+  ctx.fillRect(0, 0, canvasSize, canvasSize);
+
+  const tex = new THREE.CanvasTexture(canvas);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  tex.anisotropy = 4;
+  return tex;
+}
+
+function _disposeMapFloor() {
+  if (!_mapFloor) return;
+  _scene?.remove(_mapFloor);
+  _mapFloor.geometry?.dispose();
+  _mapFloor.material?.map?.dispose();
+  _mapFloor.material?.dispose();
+  _mapFloor = null;
+}
+
+async function _loadMapFloor() {
+  if (!_scene) return;
+  const key = `${_origin.lat.toFixed(4)},${_origin.lon.toFixed(4)}`;
+  if (key === _mapFloorKey && _mapFloor) return;
+  if (_mapFloorLoading) return _mapFloorLoading;
+
+  _mapFloorLoading = (async () => {
+    try {
+      if (!Number.isFinite(_origin.lat) || !Number.isFinite(_origin.lon)) return;
+      if (_origin.lat === 0 && _origin.lon === 0) return;
+      const tex = await _buildMapTexture(_origin.lat, _origin.lon);
+      if (!_scene) return;
+      _disposeMapFloor();
+      const mat = new THREE.MeshBasicMaterial({
+        map: tex,
+        transparent: true,
+        opacity: MAP_FLOOR_OPACITY,
+        depthWrite: false,
+      });
+      _mapFloor = new THREE.Mesh(new THREE.PlaneGeometry(GRID_SIZE, GRID_SIZE), mat);
+      _mapFloor.rotation.x = -Math.PI / 2;
+      _mapFloor.position.y = -0.06;
+      _scene.add(_mapFloor);
+      if (_grid?.material) {
+        _grid.material.opacity = 0.24;
+        _grid.material.transparent = true;
+      }
+      _mapFloorKey = key;
+    } catch (err) {
+      console.warn('[cloud] map floor failed:', err);
+    } finally {
+      _mapFloorLoading = null;
+    }
+  })();
+  return _mapFloorLoading;
+}
+
 function _updateCameraPosition() {
   if (!_camera) return;
   const sinPhi = Math.sin(_camPhi);
@@ -153,6 +273,7 @@ function _updateCameraPosition() {
     _camTarget.z + _camRadius * sinPhi * Math.cos(_camTheta),
   );
   _camera.lookAt(_camTarget);
+  _updateCloudHud();
 }
 
 function _makeAtomMaterial(selected = false, rgb = DEFAULT_ATOM_RGB) {
@@ -160,26 +281,51 @@ function _makeAtomMaterial(selected = false, rgb = DEFAULT_ATOM_RGB) {
   return new THREE.MeshStandardMaterial({
     color,
     emissive: color,
-    emissiveIntensity: selected ? 1.4 : 0.85,
-    metalness: 0.15,
-    roughness: 0.35,
+    emissiveIntensity: selected ? 1.5 : 0.9,
+    metalness: 0.12,
+    roughness: 0.32,
   });
 }
 
 function _makeStemMaterial(selected = false, rgb = DEFAULT_ATOM_RGB) {
   const base = _rgbToThreeColor(rgb);
-  if (selected) {
-    return new THREE.MeshBasicMaterial({
-      color: base,
-      transparent: true,
-      opacity: 0.95,
-    });
-  }
   return new THREE.MeshBasicMaterial({
-    color: 0x2a4a66,
+    color: selected ? base : new THREE.Color(0x3a5570),
     transparent: true,
-    opacity: 0.55,
+    opacity: selected ? 0.92 : 0.62,
   });
+}
+
+function _makeGroundContact(rgb, selected = false) {
+  const color = _rgbToThreeColor(rgb);
+  const ring = new THREE.Mesh(
+    new THREE.RingGeometry(2.8, 4.8, 32),
+    new THREE.MeshBasicMaterial({
+      color,
+      transparent: true,
+      opacity: selected ? 0.72 : 0.42,
+      side: THREE.DoubleSide,
+      depthWrite: false,
+    }),
+  );
+  ring.rotation.x = -Math.PI / 2;
+  ring.position.y = 0.1;
+  const disc = new THREE.Mesh(
+    new THREE.CircleGeometry(2.8, 24),
+    new THREE.MeshBasicMaterial({
+      color,
+      transparent: true,
+      opacity: selected ? 0.22 : 0.12,
+      side: THREE.DoubleSide,
+      depthWrite: false,
+    }),
+  );
+  disc.rotation.x = -Math.PI / 2;
+  disc.position.y = 0.09;
+  const group = new THREE.Group();
+  group.add(disc);
+  group.add(ring);
+  return { group, ring, disc };
 }
 
 function _positionAtomEntry(entry, atom) {
@@ -189,8 +335,9 @@ function _positionAtomEntry(entry, atom) {
   entry.group.position.set(pos.x, 0, pos.z);
   entry.sphere.position.y = pos.y;
   entry.localY = pos.y;
-  entry.stem.scale.y = Math.max(pos.y, 0.01) / Math.max(entry.stem.geometry.parameters.height, 0.01);
-  entry.stem.position.y = pos.y / 2;
+  const stemH = Math.max(pos.y, 0.01);
+  entry.stem.scale.y = stemH / Math.max(entry.stem.geometry.parameters.height, 0.01);
+  entry.stem.position.y = stemH / 2;
   entry.atom = atom;
 }
 
@@ -204,6 +351,16 @@ function _buildAtomGroup(atom, key) {
   group.position.set(pos.x, 0, pos.z);
   group.userData = { atomKey: key, atom, localY: pos.y };
 
+  const ground = _makeGroundContact(rgb, false);
+  group.add(ground.group);
+
+  const stemHeight = Math.max(pos.y, 0.01);
+  const stem = new THREE.Mesh(
+    new THREE.CylinderGeometry(STEM_RADIUS, STEM_RADIUS * 0.7, stemHeight, 8),
+    _makeStemMaterial(false, rgb),
+  );
+  stem.position.y = stemHeight / 2;
+
   const sphere = new THREE.Mesh(
     new THREE.SphereGeometry(ATOM_RADIUS, 20, 20),
     _makeAtomMaterial(false, rgb),
@@ -211,17 +368,18 @@ function _buildAtomGroup(atom, key) {
   sphere.position.y = pos.y;
   sphere.userData = { atomKey: key, pickTarget: true };
 
-  const stemHeight = Math.max(pos.y, 0.01);
-  const stem = new THREE.Mesh(
-    new THREE.CylinderGeometry(STEM_RADIUS, STEM_RADIUS, stemHeight, 8),
-    _makeStemMaterial(false, rgb),
-  );
-  stem.position.y = stemHeight / 2;
-
   group.add(stem);
   group.add(sphere);
 
-  return { group, sphere, stem, localY: pos.y, atom };
+  return { group, sphere, stem, ground, localY: pos.y, atom };
+}
+
+function _updateGroundContactVisual(entry, selected) {
+  const color = _rgbToThreeColor(_getAtomRgb(entry.atom));
+  entry.ground.ring.material.color.copy(color);
+  entry.ground.ring.material.opacity = selected ? 0.72 : 0.42;
+  entry.ground.disc.material.color.copy(color);
+  entry.ground.disc.material.opacity = selected ? 0.22 : 0.12;
 }
 
 function _applySelectionVisual(key) {
@@ -231,7 +389,9 @@ function _applySelectionVisual(key) {
     entry.sphere.material = _makeAtomMaterial(selected, rgb);
     entry.sphere.scale.setScalar(selected ? 1.45 : 1);
     entry.stem.material = _makeStemMaterial(selected, rgb);
+    _updateGroundContactVisual(entry, selected);
   }
+  _updateCloudHud();
 }
 
 function _fitCameraToAtoms() {
@@ -283,6 +443,7 @@ function _ensureUserMarker(show) {
       transparent: true,
       opacity: 0.85,
       side: THREE.DoubleSide,
+      depthWrite: false,
     }),
   );
   ring.rotation.x = -Math.PI / 2;
@@ -300,29 +461,80 @@ function _ensureUserMarker(show) {
   _userMarker = group;
 }
 
-function _ensureNorthMarker(show) {
-  if (!_scene) return;
-  if (!show) {
-    _northMarker = _disposeMarker(_northMarker);
-    return;
+function _pickScaleMeters(visibleW) {
+  const targets = [20, 50, 100, 200, 500, 1000];
+  const goal = visibleW * 0.28;
+  let best = targets[0];
+  for (const t of targets) {
+    if (Math.abs(t - goal) < Math.abs(best - goal)) best = t;
   }
-  if (_northMarker) return;
-  const group = new THREE.Group();
-  const shaft = new THREE.Mesh(
-    new THREE.BoxGeometry(0.35, 0.35, 22),
-    new THREE.MeshBasicMaterial({ color: 0x3a5570, transparent: true, opacity: 0.65 }),
-  );
-  shaft.position.set(0, 0.2, 11);
-  const head = new THREE.Mesh(
-    new THREE.ConeGeometry(1.8, 5, 8),
-    new THREE.MeshBasicMaterial({ color: 0x557799, transparent: true, opacity: 0.75 }),
-  );
-  head.rotation.x = Math.PI / 2;
-  head.position.set(0, 0.2, 24);
-  group.add(shaft);
-  group.add(head);
-  _scene.add(group);
-  _northMarker = group;
+  return best;
+}
+
+function _updateCloudHud() {
+  const hud = document.getElementById('cloud-hud');
+  if (!hud || !_container || _container.offsetParent === null) return;
+
+  const rulerMarker = document.getElementById('cloud-ruler-marker');
+  const scaleBar = document.getElementById('cloud-scale-bar');
+  const compassDial = document.getElementById('cloud-compass-dial');
+  const altLabel = document.getElementById('cloud-alt-label');
+
+  if (rulerMarker) {
+    const entry = _selectedId ? _groupsById.get(_selectedId) : null;
+    if (entry) {
+      const pct = THREE.MathUtils.clamp((entry.localY / RULER_MAX_M) * 100, 0, 100);
+      rulerMarker.style.bottom = `${pct}%`;
+      rulerMarker.classList.add('visible');
+    } else {
+      rulerMarker.classList.remove('visible');
+    }
+  }
+
+  if (scaleBar && _camera) {
+    const fovRad = (_camera.fov * Math.PI) / 180;
+    const visibleW = 2 * _camRadius * Math.tan(fovRad / 2) * _camera.aspect * Math.sin(_camPhi);
+    const scaleM = _pickScaleMeters(visibleW);
+    const barPx = Math.round((_container.clientWidth || 320) * 0.18);
+    scaleBar.textContent = `${scaleM} m`;
+    scaleBar.style.setProperty('--cloud-scale-w', `${barPx}px`);
+  }
+
+  if (compassDial) {
+    compassDial.style.transform = `rotate(${-_camTheta * (180 / Math.PI)}deg)`;
+  }
+
+  if (altLabel && _renderer && _camera) {
+    const entry = _selectedId ? _groupsById.get(_selectedId) : null;
+    if (!entry) {
+      altLabel.hidden = true;
+    } else {
+      const bobY = entry.sphere.position.y;
+      _projVec.set(entry.group.position.x, bobY, entry.group.position.z);
+      _projVec.project(_camera);
+      if (_projVec.z > 1) {
+        altLabel.hidden = true;
+      } else {
+        const rect = _renderer.domElement.getBoundingClientRect();
+        const sx = (_projVec.x * 0.5 + 0.5) * rect.width;
+        const sy = (-_projVec.y * 0.5 + 0.5) * rect.height;
+        altLabel.textContent = `+${Math.round(entry.localY)}m`;
+        altLabel.style.left = `${sx}px`;
+        altLabel.style.top = `${sy}px`;
+        altLabel.hidden = false;
+      }
+    }
+  }
+}
+
+function _bindHudControls() {
+  const btn = document.getElementById('cloud-recenter-btn');
+  if (!btn || btn.dataset.cloudHudBound === '1') return;
+  btn.dataset.cloudHudBound = '1';
+  btn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    _fitCameraToAtoms();
+  });
 }
 
 function _onPointerDown(ev) {
@@ -417,6 +629,7 @@ function _bindControls() {
   el.addEventListener('touchstart', _onTouchStart, { passive: true });
   el.addEventListener('touchmove', _onTouchMove, { passive: false });
   el.addEventListener('click', _onClick);
+  _bindHudControls();
 }
 
 function _bindWebGLContextHandlers() {
@@ -438,7 +651,8 @@ function _teardownScene(resetControls = true) {
   _stopAnimation();
   _clearAtoms();
   _userMarker = _disposeMarker(_userMarker);
-  _northMarker = _disposeMarker(_northMarker);
+  _disposeMapFloor();
+  _mapFloorKey = '';
   if (_renderer) {
     _renderer.dispose();
     _renderer.domElement?.remove();
@@ -462,7 +676,7 @@ function _buildScene() {
 
   _scene = new THREE.Scene();
   _scene.background = new THREE.Color(SCENE_BG);
-  _scene.fog = new THREE.FogExp2(SCENE_BG, 0.00045);
+  _scene.fog = new THREE.FogExp2(SCENE_BG, 0.00035);
 
   _camera = new THREE.PerspectiveCamera(55, 1, 0.5, 12000);
   _updateCameraPosition();
@@ -470,21 +684,21 @@ function _buildScene() {
   _renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
   _renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
   _renderer.setClearColor(SCENE_BG, 1);
-  el.appendChild(_renderer.domElement);
+  el.insertBefore(_renderer.domElement, el.firstChild);
+
+  const floor = new THREE.Mesh(
+    new THREE.PlaneGeometry(GRID_SIZE, GRID_SIZE),
+    new THREE.MeshBasicMaterial({ color: 0x04060c, transparent: true, opacity: 0.95 }),
+  );
+  floor.rotation.x = -Math.PI / 2;
+  floor.position.y = -0.1;
+  _scene.add(floor);
 
   _grid = new THREE.GridHelper(GRID_SIZE, GRID_DIVISIONS, 0x1a3355, 0x0f1a28);
   _grid.material.opacity = 0.55;
   _grid.material.transparent = true;
-  _grid.position.y = 0;
+  _grid.position.y = 0.02;
   _scene.add(_grid);
-
-  const floor = new THREE.Mesh(
-    new THREE.PlaneGeometry(GRID_SIZE, GRID_SIZE),
-    new THREE.MeshBasicMaterial({ color: 0x04060c, transparent: true, opacity: 0.92 }),
-  );
-  floor.rotation.x = -Math.PI / 2;
-  floor.position.y = -0.05;
-  _scene.add(floor);
 
   _scene.add(new THREE.AmbientLight(0x334466, 0.55));
   const keyLight = new THREE.DirectionalLight(0xaaccff, 0.65);
@@ -498,14 +712,17 @@ function _buildScene() {
 
   _bindControls();
   _bindWebGLContextHandlers();
-  _ensureNorthMarker(true);
   _resize();
   if (!window.__punktoCloudResizeBound) {
     window.__punktoCloudResizeBound = true;
-    window.addEventListener('resize', _resize);
+    window.addEventListener('resize', () => {
+      _resize();
+      _updateCloudHud();
+    });
   }
 
   _initialized = true;
+  _loadMapFloor().catch(() => {});
   return true;
 }
 
@@ -528,6 +745,7 @@ function _animate() {
     entry.sphere.position.y = entry.localY + bob;
   }
   if (_renderer && _scene && _camera) _renderer.render(_scene, _camera);
+  _updateCloudHud();
 }
 
 function _startAnimation() {
@@ -542,14 +760,22 @@ function _stopAnimation() {
   _rafId = 0;
 }
 
+function _disposeAtomEntry(entry) {
+  entry.sphere.geometry.dispose();
+  entry.stem.geometry.dispose();
+  entry.sphere.material.dispose();
+  entry.stem.material.dispose();
+  entry.ground.ring.geometry.dispose();
+  entry.ground.disc.geometry.dispose();
+  entry.ground.ring.material.dispose();
+  entry.ground.disc.material.dispose();
+}
+
 function _clearAtoms() {
   if (!_atomRoot) return;
   for (const entry of _groupsById.values()) {
     _atomRoot.remove(entry.group);
-    entry.sphere.geometry.dispose();
-    entry.stem.geometry.dispose();
-    entry.sphere.material.dispose();
-    entry.stem.material.dispose();
+    _disposeAtomEntry(entry);
   }
   _groupsById.clear();
   _atomsById.clear();
@@ -579,6 +805,7 @@ function _syncAtomMeshes(atoms) {
     _origin = _pickOrigin(list, userLoc);
     _originIsUser = Boolean(userLoc && Number.isFinite(userLoc.lat) && Number.isFinite(userLoc.lon));
     _cachedOriginKeys = keySig;
+    _loadMapFloor().catch(() => {});
   }
   _ensureUserMarker(_originIsUser);
 
@@ -592,8 +819,10 @@ function _syncAtomMeshes(atoms) {
       _atomsById.set(key, atom);
       if (originChanged) continue;
       const rgb = _getAtomRgb(atom);
-      existing.sphere.material = _makeAtomMaterial(_selectedId === key, rgb);
-      existing.stem.material = _makeStemMaterial(_selectedId === key, rgb);
+      const selected = _selectedId === key;
+      existing.sphere.material = _makeAtomMaterial(selected, rgb);
+      existing.stem.material = _makeStemMaterial(selected, rgb);
+      _updateGroundContactVisual(existing, selected);
       continue;
     }
 
@@ -614,51 +843,33 @@ function _syncAtomMeshes(atoms) {
     if (nextKeys.has(key)) continue;
     const entry = _groupsById.get(key);
     _atomRoot.remove(entry.group);
-    entry.sphere.geometry.dispose();
-    entry.stem.geometry.dispose();
-    entry.sphere.material.dispose();
-    entry.stem.material.dispose();
+    _disposeAtomEntry(entry);
     _groupsById.delete(key);
     _atomsById.delete(key);
     if (_selectedId === key) _selectedId = null;
   }
 
   if (_selectedId && _groupsById.has(_selectedId)) _applySelectionVisual(_selectedId);
+  else _updateCloudHud();
 }
 
-/**
- * @param {Object} opts
- * @param {(punkto:string)=>object|null} opts.decodeLocation
- * @param {(atom:object)=>number[]|null} opts.categoryColor
- * @param {()=>{lat:number,lon:number,alt?:number}|null} opts.getUserLocation
- */
 export function initCloudView({ decodeLocation, categoryColor, getUserLocation } = {}) {
   _decodeLocation = typeof decodeLocation === 'function' ? decodeLocation : null;
   _categoryColor = typeof categoryColor === 'function' ? categoryColor : null;
   _getUserLocation = typeof getUserLocation === 'function' ? getUserLocation : null;
 }
 
-/**
- * Show the cloud view: lazy-init scene, resize, start render loop.
- */
 export function showCloudView() {
   if (!_initialized) _buildScene();
   _resize();
   _startAnimation();
+  _updateCloudHud();
 }
 
-/**
- * Hide cloud view and pause rendering (optional power save).
- */
 export function hideCloudView() {
   _stopAnimation();
 }
 
-/**
- * Replace atoms in the scene from the current feed/cache list.
- * @param {Array<object>} atoms
- * @param {{ fit?: boolean }} opts
- */
 export function updateCloudAtoms(atoms, { fit = false } = {}) {
   if (!_initialized) _buildScene();
   if (!_initialized) return;
@@ -668,10 +879,6 @@ export function updateCloudAtoms(atoms, { fit = false } = {}) {
   if (_animating) _animate();
 }
 
-/**
- * Focus camera on a specific atom by punkto id (without 'p:' prefix).
- * @param {string} punktoId
- */
 export function focusAtomInCloud(punktoId) {
   if (!_initialized) _buildScene();
   const key = String(punktoId || '').replace(/^p:/, '').trim();
