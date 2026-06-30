@@ -37,8 +37,8 @@ const MAP_STYLE = 'https://tiles.openfreemap.org/styles/liberty';
 
 // Seed nodes for protocol-native load balancing (punkto.sync.md §5b)
 const SEED_NODES = [
-  'https://app1.punkto.xyz',
-  'https://app2.punkto.xyz',
+  'https://node1.punkto.xyz',
+  'https://node2.punkto.xyz',
 ];
 
 // Node registry + write round-robin (extracted sync ownership)
@@ -1839,7 +1839,7 @@ function wireEvents() {
 
 async function boot() {
   console.log('PUNKTO APP.JS LOADED v106-create-stage-2026-06-09-1');
-  window.PUNKTO_APP_VERSION = 'v108-pwa-signing-fix-2026-06-22-1';
+  window.PUNKTO_APP_VERSION = 'v110-seed-node-migration-2026-06-29-1';
 
   console.log('[punkto] booting...');
 
