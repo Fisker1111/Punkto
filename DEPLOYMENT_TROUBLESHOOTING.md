@@ -68,7 +68,7 @@ docker compose up -d --force-recreate
 
 **Diagnosis:**
 ```bash
-curl -sI "https://app1.punkto.xyz/app.js" | grep -i cache-control
+curl -sI "https://node1.punkto.xyz/app.js" | grep -i cache-control
 ```
 
 Expected: `no-cache, no-store, must-revalidate`.

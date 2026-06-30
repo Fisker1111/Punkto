@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Punkto post-deploy smoke-test script.
 # Usage: bash deploy/verify.sh <node-host> <expected-hard-marker>
-# Example: bash deploy/verify.sh app1.punkto.xyz "v86-hard-marker-2026-05-25-1"
+# Example: bash deploy/verify.sh node1.punkto.xyz "v86-hard-marker-2026-05-25-1"
 
 set -euo pipefail
 

@@ -156,7 +156,7 @@ def main():
 Examples:
   %(prog)s https://node1.punkto.xyz --expect-ip 46.101.118.157 --expect-name "Punkto Reference Node 1"
   %(prog)s https://node2.punkto.xyz --expect-ip 159.65.115.166 --expect-name "Punkto Reference Node 2"
-  %(prog)s https://app1.punkto.xyz --expect-ip 46.101.118.157
+  %(prog)s https://node1.punkto.xyz --expect-ip 46.101.118.157
   %(prog)s https://punkto.xyz
   %(prog)s https://node1.punkto.xyz --local /home/user/punkto
 """

@@ -15,11 +15,11 @@ Punkto is the reference app built on Punkti. Punkto.xyz is the first public refe
 
 ## Phase 8 — Public Node Hardening
 
-- [ ] 8.0 Define public-readiness checklist
-- [~] 8.1 Design durable storage model — in progress; see `docs/sync-fast-forward.md`
-- [~] 8.2 Implement append-only atom log — durable log live; rate/size limits remain follow-up
+- [x] 8.0 Define public-readiness checklist (docs/launch-candidate-checklist.md)
+- [x] 8.1 Design durable storage model (see `docs/sync-fast-forward.md`
+- [x] 8.2 Implement append-only atom log — durable log live; rate/size limits remain follow-up
 - [x] 8.3 Add node doctor script (`scripts/node-doctor.py`)
-- [~] 8.4 Add live-forward acceptance/serving policy — implemented config policy; rate/size limits remain follow-up
+- [x] 8.4 Add live-forward acceptance/serving policy — implemented config policy; rate/size limits remain follow-up
 - [x] 8.5 Define cache / Cloudflare policy
 - [x] 8.6 Document public API
 - [x] 8.7 Add backup and restore scripts
@@ -68,9 +68,9 @@ Next implementation tasks:
 - [ ] Backup/restore tested
 - [ ] Node doctor passes node1/node2
 - [x] Rate limits active — per-IP POST /atom rate limit (default 30/60s, configurable)
-- [ ] Cache policy active
-- [ ] API docs complete
-- [ ] Fresh install works
+- [x] Cache policy active (docs/cache-cloudflare.md)
+- [x] API docs complete (docs/public-api.md)
+- [x] Fresh install works (docs/fresh-install-ubuntu.md)
 - [ ] No secrets exposed in /status or /node/info
 - [ ] node1/node2 healthy
 - [ ] Public launch note drafted

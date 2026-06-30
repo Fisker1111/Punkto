@@ -114,7 +114,7 @@ can explain the node; SSH controls the node.
 ### Reference deployment names
 
 Use `node1` and `node2` as preferred reference names in public examples and new
-operator docs. The older names `app1` and `app2` may still appear as
+operator docs. The older names `app1` and `app2` (now `node1` and `node2`) may still appear as
 legacy/reference aliases in existing deployment history, DNS, scripts, or live
 ops notes; avoid introducing them as the primary model for new documentation.
 

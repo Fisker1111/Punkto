@@ -206,7 +206,7 @@ Example response:
   "node": "punkto-node-01",
   "version": "0.2",
   "capabilities": ["write", "sync"],
-  "peers": ["https://app2.example.com"]
+  "peers": ["https://node2.example.com"]
 }
 ```
 

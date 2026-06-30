@@ -1,6 +1,6 @@
 # Deployment Runbook
 
-> Step-by-step procedure for deploying a new Punkto release to `server1` and `app2`.
+> Step-by-step procedure for deploying a new Punkto release to `node1` and `node2`.
 
 ---
 
@@ -14,12 +14,12 @@
 
 ---
 
-## Deploy: server1 (app1.punkto.xyz)
+## Deploy: node1 (node1.punkto.xyz)
 
 ```bash
-# SSH to server1
+# SSH to node1
 ssh root@web1.punkti.net
-cd /path/to/punkto/deploy/server1
+cd /path/to/punkto/deploy/node1
 
 # Pull latest images
 docker compose pull
@@ -32,25 +32,25 @@ docker compose logs -f --tail=200 web relay
 # Ctrl+C once stable
 
 # Run smoke tests locally on node (or from AZ)
-bash /path/to/punkto/deploy/verify.sh app1.punkto.xyz "<HARD_MARKER>"
+bash /path/to/punkto/deploy/verify.sh node1.punkto.xyz "<HARD_MARKER>"
 ```
 
 Expected: all 6 smoke tests green.
 
 ---
 
-## Deploy: app2 (app2.punkto.xyz)
+## Deploy: node2 (node2.punkto.xyz)
 
 ```bash
-# SSH to app2
+# SSH to node2
 ssh root@web1.punkti.net -p <port_if_different>
-cd /path/to/punkto/deploy/app2
+cd /path/to/punkto/deploy/node2
 
 docker compose pull
 docker compose up -d --force-recreate
 docker compose logs -f --tail=200 web relay
 
-bash /path/to/punkto/deploy/verify.sh app2.punkto.xyz "<HARD_MARKER>"
+bash /path/to/punkto/deploy/verify.sh node2.punkto.xyz "<HARD_MARKER>"
 ```
 
 Expected: all 6 smoke tests green.
@@ -61,7 +61,7 @@ Expected: all 6 smoke tests green.
 
 ```bash
 # Run from Agent Zero (or any internet-connected machine)
-for NODE in app1.punkto.xyz app2.punkto.xyz; do
+for NODE in node1.punkto.xyz node2.punkto.xyz; do
   echo "=== $NODE ==="
   bash /a0/usr/projects/punkto/deploy/verify.sh "$NODE" "<HARD_MARKER>"
   echo
@@ -83,7 +83,7 @@ Both nodes must report identical hard markers and green status.
 ### How to Rollback
 
 ```bash
-NODE=app1   # or app2
+NODE=node1   # or node2
 cd /path/to/punkto/deploy/$NODE
 
 # Pin previous known-good tag

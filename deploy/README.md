@@ -19,8 +19,8 @@ Punkto separates common software from node-local operation:
 `punkto.xyz` is the reference deployment, not the whole system. The production
 configuration for `punkto.xyz` is maintained on the nodes by the operator. Public
 examples in Git should use documentation-safe placeholders such as
-`example.org`. Prefer `node1` and `node2` for new reference node names; `app1`
-and `app2` may appear as legacy/reference aliases in existing deploy history.
+`example.org`. Prefer `node1` and `node2` for new reference node names; `node1`
+and `node2` may appear as legacy/reference aliases in existing deploy history.
 
 See [`docs/punkto-node.md`](../docs/punkto-node.md) and
 [`docs/examples/punkto-node.example.yml`](../docs/examples/punkto-node.example.yml)
@@ -32,7 +32,7 @@ Once a node is running, these documents describe how to ship updates safely:
 
 | Document | Purpose |
 |---|---|
-| [`DEPLOYMENT_RUNBOOK.md`](../DEPLOYMENT_RUNBOOK.md) | Step-by-step deploy procedure for server1 + app2, including rollback |
+| [`DEPLOYMENT_RUNBOOK.md`](../DEPLOYMENT_RUNBOOK.md) | Step-by-step deploy procedure for node1 + node2, including rollback |
 | [`DEPLOYMENT_SMOKE_TESTS.md`](../DEPLOYMENT_SMOKE_TESTS.md) | Manual + scripted post-deploy checks with pass/fail criteria |
 | [`DEPLOYMENT_TROUBLESHOOTING.md`](../DEPLOYMENT_TROUBLESHOOTING.md) | Decision tree for common deployment failures |
 | [`verify.sh`](./verify.sh) | Executable smoke-test script for CI/CD and manual post-deploy verification |
@@ -45,11 +45,11 @@ Once a node is running, these documents describe how to ship updates safely:
 deploy/
   docker-compose.yml     — service definitions (web + relay)
   .env.example           — shared environment variable template
-  server1/
-    Caddyfile            — Caddy config for server1 (punkto.xyz, app1, www)
-  app2/
-    Caddyfile            — Caddy config for app2 (app2.punkto.xyz)
-    .env.example         — app2-specific env template
+  node1/
+    Caddyfile            — Caddy config for node1 (punkto.xyz, node1, www)
+  node2/
+    Caddyfile            — Caddy config for node2 (node2.punkto.xyz)
+    .env.example         — node2-specific env template
 ```
 
 ## How it works
@@ -72,7 +72,7 @@ Each node runs two containers:
 | node1 | `punkto.xyz`, `www.punkto.xyz` | Reference primary node |
 | node2 | operator-managed secondary hostname | Reference secondary node |
 
-`server1`, `app1`, and `app2` are legacy/reference aliases that may remain in
+`node1`, `node1`, and `node2` are legacy/reference aliases that may remain in
 existing files or DNS history. Prefer `node1`/`node2` in new docs and examples.
 
 ## First deploy on a new node
@@ -84,7 +84,7 @@ curl -fsSL https://get.docker.com | sh
 # 2. Create project folder and copy deploy files
 mkdir -p ~/punkto
 scp deploy/docker-compose.yml user@your-server:~/punkto/
-scp deploy/server1/Caddyfile user@your-server:~/punkto/Caddyfile  # or app2/Caddyfile
+scp deploy/node1/Caddyfile user@your-server:~/punkto/Caddyfile  # or node2/Caddyfile
 
 # 3. SSH in and create .env
 ssh user@your-server

@@ -14,7 +14,7 @@ Operational maturation: automated smoke-test verification, comprehensive runbook
 
 #### Added
 - **`deploy/verify.sh`** — Executable smoke-test script for post-deploy verification (hard marker, cache headers, PWA icons, relay health/feed)
-- **`DEPLOYMENT_RUNBOOK.md`** — Step-by-step deploy procedure for server1 + app2, including rollback and troubleshooting
+- **`DEPLOYMENT_RUNBOOK.md`** — Step-by-step deploy procedure for node1 + node2, including rollback and troubleshooting
 - **`DEPLOYMENT_SMOKE_TESTS.md`** — Manual + scripted post-deploy checks with pass/fail criteria and decision tree
 - **`DEPLOYMENT_TROUBLESHOOTING.md`** — Common deployment failure scenarios and resolution steps
 - **`.github/workflows/deployment-verify.yml`** — `workflow_dispatch` workflow to manually trigger post-deploy smoke tests against a node
@@ -75,8 +75,8 @@ Iterative improvements applied after the v0.4 public launch. PWA is now at v46.
   - `pwa/Dockerfile` — Caddy serving static PWA files
   - `relay/Dockerfile` — Python relay service
   - `deploy/docker-compose.yml` — single compose file for all nodes
-  - `deploy/server1/Caddyfile` — auto-TLS for `punkto.xyz`, `app1.punkto.xyz`, `www`
-  - `deploy/app2/Caddyfile` — auto-TLS for `app2.punkto.xyz`
+  - `deploy/node1/Caddyfile` — auto-TLS for `punkto.xyz`, `node1.punkto.xyz`, `www`
+  - `deploy/node2/Caddyfile` — auto-TLS for `node2.punkto.xyz`
   - GitHub Actions workflow (`.github/workflows/docker.yml`) — build + push to `ghcr.io/fisker1111/` on push/tag
 - **Four-page UI shell** — app now has four distinct top-level views navigated by bottom bar
   - **Text** (default) — text-first atom feed, nearby atoms, proximity sort
@@ -126,7 +126,7 @@ First public release. Repository goes from private to MIT-licensed open source.
 - README polish: Roadmap, Known issues, Philosophy, License sections
 
 ### Changed
-- Live reference deployment (`app1.punkto.xyz`, `app2.punkto.xyz`) migrated from `pwa/node.py` to `relay/relay.py`
+- Live reference deployment (`node1.punkto.xyz`, `node2.punkto.xyz`) migrated from `pwa/node.py` to `relay/relay.py`
 - nginx configuration on both reference nodes proxies `/latest`, `/stream`, `/llms.txt` (in addition to `/atom`, `/feed`, `/health`, `/info`)
 - Default relay buffer policy: 10 000 atoms or 7 days, whichever fills first (Flow TV semantics)
 

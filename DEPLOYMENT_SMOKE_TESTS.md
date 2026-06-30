@@ -1,6 +1,6 @@
 # Deployment Smoke Tests
 
-> Automated checks to run immediately after every deploy to both `server1` (app1) and `app2` nodes.
+> Automated checks to run immediately after every deploy to both `node1` (node1) and `node2` nodes.
 
 ## When to Run
 
@@ -13,7 +13,7 @@
 ## Manual Quick Checks
 
 ```bash
-NODE=app1.punkto.xyz   # or app2.punkto.xyz
+NODE=node1.punkto.xyz   # or node2.punkto.xyz
 EXPECTED_MARKER="v86-hard-marker-2026-05-25-1"   # fill in from PR
 
 # 1. Hard marker present in deployed JS

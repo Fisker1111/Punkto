@@ -122,10 +122,10 @@ GET /info
 Returns:
 ```json
 {
-  "node": "app1.example.com",
+  "node": "node1.example.com",
   "version": "0.3",
   "capabilities": ["write", "sync"],
-  "peers": ["https://app2.example.com"]
+  "peers": ["https://node2.example.com"]
 }
 ```
 

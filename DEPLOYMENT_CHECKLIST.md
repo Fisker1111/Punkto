@@ -9,7 +9,7 @@
 
 ## Standard deploy — after GitHub Actions build completes
 
-Run on **each node** (server1 and app2):
+Run on **each node** (node1 and node2):
 
 ```bash
 docker compose pull
@@ -27,8 +27,8 @@ All services must show `Up` or `running` in `docker compose ps`.
 
 | Node | Host | Directory |
 |---|---|---|
-| server1 | `punkto.xyz` | `~/punkto` |
-| app2 | `app2.punkto.xyz` | `~/punkto` |
+| node1 | `punkto.xyz` | `~/punkto` |
+| node2 | `node2.punkto.xyz` | `~/punkto` |
 
 Both nodes must be deployed on every release. Never leave one node on an older image.
 
@@ -40,7 +40,7 @@ Both nodes must be deployed on every release. Never leave one node on an older i
 
 ```bash
 curl -s https://punkto.xyz/ | grep 'hard-marker'
-curl -s https://app2.punkto.xyz/ | grep 'hard-marker'
+curl -s https://node2.punkto.xyz/ | grep 'hard-marker'
 ```
 
 Expected: the hard marker string from the current `pwa/app.js` (e.g. `v53-hard-marker-2026-05-16-2`)
@@ -97,8 +97,8 @@ Expected: `200` for each.
 Caddyfile is NOT inside the Docker image. It lives on the host at:
 
 ```
-~/punkto/Caddyfile   (server1)
-~/punkto/Caddyfile   (app2)
+~/punkto/Caddyfile   (node1)
+~/punkto/Caddyfile   (node2)
 ```
 
 After editing Caddyfile on the host:

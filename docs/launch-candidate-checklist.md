@@ -16,7 +16,7 @@
 | 1.4 | `/node/info` shows `config_loaded=true` | `curl https://node1.punkto.xyz/node/info` → verify key fields | Required | ⬜ |
 | 1.5 | `/status` public, no secrets | Browse `/status` — no private_key, no secrets.env, no internals | Required | ⬜ |
 | 1.6 | `/feed` returns valid atom list | `curl https://node1.punkto.xyz/feed` → valid JSON array | Required | ⬜ |
-| 1.7 | App marker visible | Browse `app1.punkto.xyz` and `app2.punkto.xyz` — console shows version marker | Required | ⬜ |
+| 1.7 | App marker visible | Browse `node1.punkto.xyz` and `node2.punkto.xyz` — console shows version marker | Required | ⬜ |
 
 ## 2. Storage
 
