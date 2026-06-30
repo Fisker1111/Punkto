@@ -16,9 +16,11 @@ const MAX_CAM_RADIUS = 2500;
 const ATOM_RADIUS = 2.6;
 const RULER_MAX_M = 30;
 const MAP_ZOOM = 16;
-const MAP_FLOOR_OPACITY = 0.88;
-const MAP_DARKEN_OVERLAY = 0.38;
+const MAP_FLOOR_OPACITY = 1;
+const MAP_DARKEN_OVERLAY = 0.55;
+const MAP_TILE_STYLE = 'rastertiles/voyager';
 const MAP_TILE_HOSTS = ['a', 'b', 'c', 'd'];
+const MIN_DISPLAY_ALT_M = 3;
 const DEFAULT_ATOM_RGB = [138, 160, 190];
 
 let _decodeLocation = null;
@@ -165,7 +167,7 @@ function _loadOsmTile(tx, ty, zoom) {
     img.onload = () => resolve(img);
     img.onerror = () => reject(new Error(`tile ${zoom}/${tx}/${ty}`));
     const host = MAP_TILE_HOSTS[(tx + ty) % MAP_TILE_HOSTS.length];
-    img.src = `https://${host}.basemaps.cartocdn.com/dark_all/${zoom}/${tx}/${ty}.png`;
+    img.src = `https://${host}.basemaps.cartocdn.com/${MAP_TILE_STYLE}/${zoom}/${tx}/${ty}.png`;
   });
 }
 
@@ -224,6 +226,7 @@ async function _buildMapTexture(lat, lon) {
 
   const tex = new THREE.CanvasTexture(canvas);
   tex.colorSpace = THREE.SRGBColorSpace;
+  tex.flipY = true;
   tex.anisotropy = 4;
   tex.needsUpdate = true;
   console.log('[cloud] map floor texture ready:', tilesOk, 'tiles @', lat.toFixed(4), lon.toFixed(4));
@@ -253,23 +256,22 @@ async function _loadMapFloor() {
       _disposeMapFloor();
       const mat = new THREE.MeshBasicMaterial({
         map: tex,
-        transparent: true,
-        opacity: MAP_FLOOR_OPACITY,
+        transparent: false,
         depthWrite: true,
       });
       _mapFloor = new THREE.Mesh(new THREE.PlaneGeometry(GRID_SIZE, GRID_SIZE), mat);
       _mapFloor.rotation.x = -Math.PI / 2;
-      _mapFloor.position.y = 0.01;
+      _mapFloor.position.y = 0;
       _mapFloor.renderOrder = 0;
       _scene.add(_mapFloor);
-      if (_darkFloor?.material) {
-        _darkFloor.material.opacity = 0.25;
-      }
+      if (_darkFloor) _darkFloor.visible = false;
       if (_grid?.material) {
-        _grid.material.opacity = 0.16;
+        _grid.material.opacity = 0.28;
         _grid.material.transparent = true;
       }
       _mapFloorKey = key;
+      _fitCameraToAtoms();
+      if (_renderer && _scene && _camera) _renderer.render(_scene, _camera);
     } catch (err) {
       console.warn('[cloud] map floor failed:', err);
     } finally {
@@ -356,15 +358,20 @@ function _makeGroundContact(rgb, selected = false) {
   return { group, ring, disc };
 }
 
+function _displayAltitude(altM) {
+  return Math.max(Number(altM) || 0, MIN_DISPLAY_ALT_M);
+}
+
 function _positionAtomEntry(entry, atom) {
   const loc = _resolveLocation(atom);
   if (!loc || !entry) return;
   const pos = _toLocalMeters(loc.lat, loc.lon, loc.alt);
   entry.group.position.set(pos.x, 0, pos.z);
-  entry.sphere.position.y = pos.y;
   entry.localY = pos.y;
+  entry.displayY = _displayAltitude(pos.y);
+  entry.sphere.position.y = entry.displayY;
   const key = _atomKey(atom);
-  _rebuildStemLine(entry.stem, pos.y, _makeStemMaterial(_selectedId === key, _getAtomRgb(atom)));
+  _rebuildStemLine(entry.stem, entry.displayY, _makeStemMaterial(_selectedId === key, _getAtomRgb(atom)));
   entry.atom = atom;
 }
 
@@ -373,6 +380,7 @@ function _buildAtomGroup(atom, key) {
   if (!loc) return null;
   const pos = _toLocalMeters(loc.lat, loc.lon, loc.alt);
   const rgb = _getAtomRgb(atom);
+  const displayY = _displayAltitude(pos.y);
 
   const group = new THREE.Group();
   group.position.set(pos.x, 0, pos.z);
@@ -385,19 +393,20 @@ function _buildAtomGroup(atom, key) {
     new THREE.BufferGeometry(),
     _makeStemMaterial(false, rgb),
   );
-  _rebuildStemLine(stem, pos.y, stem.material);
+  _rebuildStemLine(stem, displayY, stem.material);
 
   const sphere = new THREE.Mesh(
     new THREE.SphereGeometry(ATOM_RADIUS, 20, 20),
     _makeAtomMaterial(false, rgb),
   );
-  sphere.position.y = pos.y;
+  sphere.position.y = displayY;
+  sphere.renderOrder = 10;
   sphere.userData = { atomKey: key, pickTarget: true };
 
   group.add(stem);
   group.add(sphere);
 
-  return { group, sphere, stem, ground, localY: pos.y, atom };
+  return { group, sphere, stem, ground, localY: pos.y, displayY, atom };
 }
 
 function _updateGroundContactVisual(entry, selected) {
@@ -415,7 +424,7 @@ function _applySelectionVisual(key) {
     entry.sphere.material = _makeAtomMaterial(selected, rgb);
     entry.sphere.scale.setScalar(selected ? 1.45 : 1);
     entry.stem.material.dispose();
-    _rebuildStemLine(entry.stem, entry.localY, _makeStemMaterial(selected, rgb));
+    _rebuildStemLine(entry.stem, entry.displayY, _makeStemMaterial(selected, rgb));
     _updateGroundContactVisual(entry, selected);
   }
   _updateCloudHud();
@@ -704,7 +713,7 @@ function _buildScene() {
 
   _scene = new THREE.Scene();
   _scene.background = new THREE.Color(SCENE_BG);
-  _scene.fog = new THREE.FogExp2(SCENE_BG, 0.00035);
+  _scene.fog = new THREE.FogExp2(SCENE_BG, 0.00012);
 
   _camera = new THREE.PerspectiveCamera(55, 1, 0.5, 12000);
   _updateCameraPosition();
@@ -736,6 +745,7 @@ function _buildScene() {
   _scene.add(keyLight);
 
   _atomRoot = new THREE.Group();
+  _atomRoot.renderOrder = 10;
   _scene.add(_atomRoot);
 
   _raycaster = new THREE.Raycaster();
@@ -771,7 +781,7 @@ function _animate() {
   const t = performance.now() * 0.001;
   for (const entry of _groupsById.values()) {
     const bob = Math.sin(t * 1.6 + entry.localY * 0.08) * 0.35;
-    entry.sphere.position.y = entry.localY + bob;
+    entry.sphere.position.y = entry.displayY + bob;
   }
   if (_renderer && _scene && _camera) _renderer.render(_scene, _camera);
   _updateCloudHud();
@@ -851,7 +861,7 @@ function _syncAtomMeshes(atoms) {
       const selected = _selectedId === key;
       existing.sphere.material = _makeAtomMaterial(selected, rgb);
       existing.stem.material.dispose();
-      _rebuildStemLine(existing.stem, existing.localY, _makeStemMaterial(selected, rgb));
+      _rebuildStemLine(existing.stem, existing.displayY, _makeStemMaterial(selected, rgb));
       _updateGroundContactVisual(existing, selected);
       continue;
     }
