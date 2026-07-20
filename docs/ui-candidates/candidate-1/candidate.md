@@ -146,10 +146,12 @@ This candidate is a strong fit for the current PWA and Three.js direction.
 4. How does this visual language extend to world and city scale?
 5. What does the Text view counterpart look like?
 
-## Mockups
+## Review plates
 
-- [`candidate-1-01-concept.png`](candidate-1-01-concept.png) — initial warm spatial concept
-- [`candidate-1-02-revision.png`](candidate-1-02-revision.png) — spec-aligned benchmark revision
+- [`candidate-1-01-concept.svg`](candidate-1-01-concept.svg) — initial warm spatial concept
+- [`candidate-1-02-revision.svg`](candidate-1-02-revision.svg) — spec-aligned benchmark revision
+
+These SVG plates are lightweight, editable repository versions intended for shared review. High-resolution raster mockups can be added alongside them later.
 
 ## Evaluation
 
