@@ -215,10 +215,12 @@ It is ambitious but plausible because the entire planet is not rendered in detai
 5. How should sparse regions be presented without appearing dead?
 6. How does the system distinguish urgent, useful, and ordinary social content without editorial overreach?
 
-## Mockups
+## Review plates
 
-- [`candidate-3-01-overview.png`](candidate-3-01-overview.png) — wide architecture and semantic-zoom concept
-- [`candidate-3-02-mobile.png`](candidate-3-02-mobile.png) — mobile live-world concept
+- [`candidate-3-01-overview.svg`](candidate-3-01-overview.svg) — wide architecture and semantic-zoom concept
+- [`candidate-3-02-mobile.svg`](candidate-3-02-mobile.svg) — mobile live-world concept
+
+These SVG plates are lightweight, editable repository versions intended for shared review. High-resolution raster mockups can be added alongside them later.
 
 ## Evaluation
 
