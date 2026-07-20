@@ -165,9 +165,11 @@ This can remain a PWA only if Punkto designs the illusion of a living world rath
 4. Does the miniature remain mature enough for warnings and infrastructure reports?
 5. Should this be a full product architecture or primarily a visual influence on another candidate?
 
-## Mockup
+## Review plate
 
-- [`candidate-2-01-mobile.png`](candidate-2-01-mobile.png) — warm miniature neighborhood concept
+- [`candidate-2-01-mobile.svg`](candidate-2-01-mobile.svg) — warm miniature neighborhood concept
+
+This SVG plate is a lightweight, editable repository version intended for shared review. A high-resolution raster mockup can be added alongside it later.
 
 ## Evaluation
 
