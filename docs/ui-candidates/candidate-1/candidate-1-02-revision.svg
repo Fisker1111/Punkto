@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="326" height="685" viewBox="0 0 326 685" role="img" aria-labelledby="title desc">
+  <title id="title">Candidate 1 revised mobile screen</title>
+  <desc id="desc">A spec-aligned dark map with a fully visible beacon, a board card, and Text Map plus Settings navigation.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#06101c"/><stop offset="1" stop-color="#02070d"/></linearGradient>
+    <linearGradient id="panel" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#121d2e"/><stop offset="1" stop-color="#09111d"/></linearGradient>
+    <filter id="g"><feGaussianBlur stdDeviation="3" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+  </defs>
+  <rect width="326" height="685" rx="24" fill="url(#bg)"/>
+  <g opacity=".45" fill="#0b1727" stroke="#163150">
+    <rect x="18" y="54" width="290" height="544"/>
+    <path d="M18 118H308M18 191H308M18 266H308M18 347H308M18 431H308M18 516H308"/>
+    <path d="M61 54V598M117 54V598M184 54V598M252 54V598"/>
+    <rect x="28" y="70" width="76" height="42"/><rect x="131" y="65" width="86" height="58"/><rect x="241" y="72" width="52" height="49"/>
+    <rect x="36" y="207" width="82" height="52"/><rect x="146" y="207" width="64" height="79"/><rect x="241" y="215" width="48" height="65"/>
+    <rect x="35" y="379" width="83" height="68"/><rect x="145" y="382" width="93" height="54"/><rect x="260" y="370" width="31" height="73"/>
+  </g>
+  <text x="163" y="31" text-anchor="middle" fill="#f2f6fa" font-family="system-ui" font-size="14" font-weight="700" letter-spacing="5">Punkto</text>
+  <g fill="#f6a33c"><circle cx="49" cy="87" r="1.8"/><circle cx="271" cy="107" r="1.8"/><circle cx="85" cy="233" r="1.8"/><circle cx="279" cy="471" r="1.8"/></g>
+  <g filter="url(#g)"><ellipse cx="94" cy="512" rx="30" ry="9" fill="none" stroke="#72d8ff"/><line x1="94" y1="512" x2="94" y2="350" stroke="#7fdcff" stroke-width="3"/><circle cx="94" cy="512" r="5" fill="#e9fbff"/><circle cx="94" cy="441" r="4" fill="#b7efff"/><circle cx="94" cy="409" r="4" fill="#b7efff"/></g>
+  <g filter="url(#g)" opacity=".75"><line x1="254" y1="444" x2="254" y2="408" stroke="#6ed5ff"/><circle cx="254" cy="408" r="3" fill="#b7efff"/></g>
+  <rect x="69" y="118" width="230" height="252" rx="17" fill="url(#panel)" stroke="#284360"/>
+  <text x="84" y="143" fill="#62c9ff" font-family="system-ui" font-size="10">● Canal Walk · 32 m away</text><text x="284" y="143" text-anchor="end" fill="#8fa2b6" font-family="system-ui" font-size="10">↕ 2 m</text>
+  <text x="84" y="173" fill="#f3f6fa" font-family="system-ui" font-size="17" font-weight="650">Bench by the canal has sun</text><text x="84" y="194" fill="#f3f6fa" font-family="system-ui" font-size="17" font-weight="650">until 7 pm</text>
+  <text x="84" y="213" fill="#9aabba" font-family="system-ui" font-size="10">Lena · 2 h ago · Board</text>
+  <rect x="84" y="226" width="83" height="28" rx="14" fill="#2f8cff"/><text x="126" y="245" text-anchor="middle" fill="white" font-family="system-ui" font-size="10" font-weight="650">Open board</text>
+  <rect x="174" y="226" width="84" height="28" rx="14" fill="#172130" stroke="#34465a"/><text x="216" y="245" text-anchor="middle" fill="#cbd4de" font-family="system-ui" font-size="10">Focus atom</text>
+  <line x1="84" y1="270" x2="282" y2="270" stroke="#26394e"/>
+  <text x="84" y="293" fill="#e8edf4" font-family="system-ui" font-size="10" font-weight="650">Kai</text><text x="128" y="293" fill="#b8c4d0" font-family="system-ui" font-size="10">Still true right now</text>
+  <text x="84" y="316" fill="#e8edf4" font-family="system-ui" font-size="10" font-weight="650">Maya</text><text x="128" y="316" fill="#b8c4d0" font-family="system-ui" font-size="10">Nice spot for lunch</text>
+  <rect x="82" y="330" width="201" height="26" rx="13" fill="none" stroke="#3b4d61" stroke-dasharray="3 3"/><text x="94" y="347" fill="#7c90a5" font-family="system-ui" font-size="9">Add a note…</text>
+  <rect x="25" y="611" width="276" height="49" rx="24" fill="#08111e" stroke="#1b2b3e"/>
+  <text x="67" y="642" text-anchor="middle" fill="#9ca9b8" font-family="system-ui" font-size="10">Text</text>
+  <rect x="106" y="618" width="79" height="35" rx="18" fill="#1e2a3d"/><text x="146" y="641" text-anchor="middle" fill="#f1f5f9" font-family="system-ui" font-size="10">Map</text>
+  <circle cx="220" cy="636" r="14" fill="#318cff" filter="url(#g)"/><text x="220" y="641" text-anchor="middle" fill="white" font-family="system-ui" font-size="17">+</text>
+  <text x="276" y="642" text-anchor="middle" fill="#9ca9b8" font-family="system-ui" font-size="9">Settings</text>
+</svg>
