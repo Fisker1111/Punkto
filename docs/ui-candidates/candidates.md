@@ -4,7 +4,7 @@
 
 This folder is the shared design room for humans and AI reviewers evaluating the next high-level Punkto PWA interface.
 
-The work is intentionally focused on product design rather than implementation details:
+The work focuses on:
 
 - visual identity
 - spatial interaction
@@ -13,8 +13,6 @@ The work is intentionally focused on product design rather than implementation d
 - message and thread presentation
 - mobile usability
 - engineering feasibility
-
-The candidates are explorations, not approved implementation specifications.
 
 ## Core product definition
 
@@ -29,95 +27,184 @@ The message is the primary social object. The author is secondary. Punkto does n
 3. **Warm and social** — inviting and slightly game-like, not cold cyberpunk infrastructure.
 4. **Calm** — activity feels alive without becoming noisy or addictive.
 5. **Public-board model** — replies are public notes attached to a root atom.
-6. **No silent merging** — independent atoms remain independent; replies stack only when they belong to the same root.
-7. **Progressive complexity** — advanced identity, node, altitude, and technical controls stay out of the first-use experience.
+6. **No silent merging** — independent atoms remain independent.
+7. **Progressive complexity** — advanced identity, node, altitude, and technical controls stay out of first use.
 8. **Mobile-first feasibility** — the design must remain plausible on ordinary mobile hardware and in a PWA.
+9. **Vertical means altitude** — reply order never uses geographic height.
+10. **No engagement ranking** — proximity, recency, urgency, chosen categories, and official sources may guide visibility; popularity machinery may not.
 
-## Candidates
+---
 
-### [Candidate 1 — Calm Spatial Board](candidate-1/candidate.md)
+# Leading direction
 
-A dark, calm spatial world where each message appears as a precise light-pillar beacon. Selecting a beacon opens a compact public board while preserving geographic context.
+## [Candidate 4 — The Living Public World](candidate-4/candidate.md)
 
-**Signature:** exact anchor, vertical beacon, floating board.
+> **Punkto opens by helping someone understand the world; contribution remains one obvious action away.**
 
-### [Candidate 2 — The Living Miniature](candidate-2/candidate.md)
+Candidate 4 is now the leading product direction. It is not a loose visual blend; it has one coherent architecture:
 
-A warm, game-like miniature of the real world. Simplified buildings, streets, trees, and water make the neighborhood immediately understandable and invite exploration.
+- **Candidate 3** supplies semantic zoom from region to atom.
+- **Candidate 1** supplies the invariant beacon and selected-board interaction.
+- **Candidate 2** supplies a tightly bounded warmth and environmental-readability budget.
 
-**Signature:** a lived-in miniature world containing glowing public stories.
+### Core Candidate 4 decisions
 
-### [Candidate 3 — Flow World](candidate-3/candidate.md)
+- nearby-first opening
+- viewer-first interface, likely author-first launch strategy
+- one authoritative map camera and projection
+- local 3D rendered inside the same spatial context
+- true 3D mainly at street scale
+- replies in flat bottom-sheet board UI
+- vertical world axis reserved for physical altitude
+- independent atoms remain independent at every scale
+- no synthetic stories or engagement-ranked Flow feed
+- Candidate 1-shaped local MVP before full regional Flow behavior
 
-A viewer-first live world channel using semantic zoom: 2D global patterns become city situations, local 3D beacons, and finally exact atoms and threads.
+### Signature
 
-**Signature:** continuous movement from global awareness to one real message.
+**A warm public world where zoom reveals patterns, concentrations, individual beacons, and finally one exact public conversation.**
 
-## Current comparison hypothesis
+The full multi-model fusion is preserved in [`candidate-4/reviews/openrouter-candidate-4-fusion.md`](candidate-4/reviews/openrouter-candidate-4-fusion.md).
 
-| Dimension | Candidate 1 | Candidate 2 | Candidate 3 |
-|---|---:|---:|---:|
-| Distinctive Punkto identity | Strong | Medium | Very strong |
-| Immediate comprehension | Medium | Very strong | Strong |
-| Social warmth | Medium | Very strong | Strong |
-| Large-scale usefulness | Weak | Medium | Very strong |
-| Mobile feasibility | Strong | Medium | Medium |
-| Engineering risk | Low | High | Medium |
-| Long-term potential | Strong | Strong | Very strong |
+---
 
-These are hypotheses to test, not final scores.
+# Source candidates
 
-## Real-world evaluation scenarios
+The original candidates remain important as source explorations and fallback references.
 
-Every candidate should eventually demonstrate the same three scenarios:
+## [Candidate 1 — Calm Spatial Board](candidate-1/candidate.md)
 
-### Everyday social
+A calm spatial world where each message appears as a precise light-pillar beacon. Selecting a beacon opens a compact public board while preserving geographic context.
+
+**Retained contribution:** exact atom, beacon language, board interaction, feasible local MVP.
+
+**Rejected as full direction:** cold/abstract world and vertical reply stacks.
+
+## [Candidate 2 — The Living Miniature](candidate-2/candidate.md)
+
+A warm, game-like miniature of the real world. Simplified buildings, streets, trees, and water make the neighborhood understandable and invite exploration.
+
+**Retained contribution:** warmth, environmental readability, light game-like curiosity.
+
+**Rejected as full direction:** handcrafted global miniature world, excessive scenery, high rendering and asset cost.
+
+## [Candidate 3 — Flow World](candidate-3/candidate.md)
+
+A viewer-first live world channel using semantic zoom: broad patterns become city concentrations, local beacons, and finally exact atoms and threads.
+
+**Retained contribution:** region-to-atom semantic architecture and ambient awareness.
+
+**Rejected as full direction:** engagement-ranked television framing, synthetic events, and world-first opening.
+
+---
+
+# Current comparison
+
+| Dimension | Candidate 1 | Candidate 2 | Candidate 3 | Candidate 4 |
+|---|---:|---:|---:|---:|
+| Distinctive Punkto identity | Strong | Medium | Very strong | **Very strong** |
+| Immediate comprehension | Medium | Very strong | Strong | **Strong** |
+| Social warmth | Medium | Very strong | Strong | **Strong** |
+| Large-scale usefulness | Weak | Medium | Very strong | **Very strong** |
+| Mobile feasibility | Strong | Weak–medium | Medium | **Strong if phased** |
+| Engineering risk | Low | High | Medium–high | **Medium** |
+| Long-term potential | Strong | Strong | Very strong | **Very strong** |
+| Current status | Source/MVP facet | Styling source | Architecture source | **Leading direction** |
+
+These are still hypotheses to validate through prototype testing.
+
+---
+
+# Shared real-world scenarios
+
+Every specification and prototype should demonstrate:
+
+## Everyday social
 
 > Bench by the canal has sun until 7 pm.
 
-### Useful infrastructure thread
+## Infrastructure thread
 
 > Fire hydrant not working.
 >
-> I confirm, it has not been working for a week. County is informed.
+> I confirm, it has not been working for a week.
+>
+> County has been informed.
 
-### Urgent local information
+## Urgent local information
 
 > Flooding here — road blocked.
 
-## Required views for each candidate
+---
 
-Before selection, each candidate should show:
+# Required Candidate 4 states
 
-1. first five seconds after opening Punkto
-2. world or city overview
-3. neighborhood exploration
-4. selected atom and thread
-5. writing and placing a Punkti
-6. weak-device or reduced-detail fallback
+The next connected design iteration should show:
 
-## Evaluation process
+1. nearby opening—the first five seconds
+2. sparse or completely empty neighborhood
+3. street view containing several beacons
+4. selected atom and threaded board
+5. fast `Flooding here` writing flow
+6. region → district → street → atom semantic-zoom storyboard
+7. weak-device flat 2D fallback
 
-1. Strengthen each candidate without blending them prematurely.
-2. Ask independent human and AI reviewers to use [`evaluation-prompt.md`](evaluation-prompt.md).
-3. Test the same scenarios and scales across all candidates.
-4. Review engineering feasibility and mobile performance.
-5. Select separately:
-   - primary product architecture
-   - visual language
-   - atom/thread interaction model
-6. Record the final decision and rejected alternatives here.
+---
 
-## Current working hypothesis
+# Validation process
 
-A possible final direction may combine:
+## Immediate prototype
 
-- **Candidate 3** for world-to-street architecture
-- **Candidate 1** for precise atom and board interaction
-- selected warmth and readability from **Candidate 2**
+Build one seeded real-neighborhood prototype with approximately 30 atoms, including:
 
-This combination is not yet approved. The candidates must first be evaluated independently.
+- everyday canal/bench note
+- broken hydrant thread
+- urgent flooding atom(s)
+- one altitude/floor example
+- one dense concentration
+- one empty area
 
-## Decision log
+Test on ordinary 2–3-year-old Android and iPhone devices.
 
-_No final decision yet._
+Measure:
+
+1. Can users explain Punkto after five seconds?
+2. Do they understand that a beacon is a public message attached to a place?
+3. Can they distinguish the root, replies, and physical altitude?
+4. Does urgent content read as serious?
+5. How quickly can they post `Flooding here`?
+6. Is map interaction smooth and battery behavior acceptable?
+7. Does an empty area feel inviting rather than broken?
+
+## Engineering proof
+
+Before committing to the full redesign, prove:
+
+- one authoritative MapLibre camera/projection
+- custom-layer beacon rendering
+- close-scale extrusion and beacon performance
+- smooth semantic transitions
+- weak-device fallback
+- reduced-motion behavior
+
+---
+
+# Decision log
+
+## 2026-07 — Candidate 4 promoted
+
+The OpenRouter multi-model evaluation concluded that a disciplined synthesis is stronger than any pure candidate:
+
+> **Candidate 3 architecture, Candidate 1 atom interaction, and a restrained amount of Candidate 2 warmth.**
+
+Candidate 4 — The Living Public World — is now the leading design specification.
+
+Candidates 1–3 remain documented as source directions and fallback references rather than active competing winners.
+
+## Remaining human product decision
+
+The UI remains viewer-first. The launch strategy should likely be author-first.
+
+The unresolved decision is:
+
+> **Which real communities, official sources, campaigns, and local use cases will create enough honest initial density for the viewer-first world to deliver value without fake activity?**
