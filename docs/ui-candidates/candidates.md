@@ -96,20 +96,28 @@ A viewer-first live world channel using semantic zoom: broad patterns become cit
 
 **Rejected as full direction:** engagement-ranked television framing, synthetic events, and world-first opening.
 
+## [Candidate 5 — The Craigslist (Light 3D)](candidate-5/candidate.md)
+
+The complete Punkto product — spatial world, beacons, altitude, boards, live atoms — under a Craigslist doctrine: very light, simple, fast, cheap to serve from one's own hardware. Ship the kernel; the open-source community builds richer graphics on a frozen grammar later.
+
+**Claim:** for a federated, self-hosted protocol, the first app must be the one anyone can run, anyone can fork, and any phone can render. The ability to serve a community outweighs heavy graphics.
+
+**Proposed status (2026-07-25, human):** launch candidate — the v1 constitution, with Candidate 4 retained as the north star. Not yet promoted; pending review against its own spec.
+
 ---
 
 # Current comparison
 
-| Dimension | Candidate 1 | Candidate 2 | Candidate 3 | Candidate 4 |
-|---|---:|---:|---:|---:|
-| Distinctive Punkto identity | Strong | Medium | Very strong | **Very strong** |
-| Immediate comprehension | Medium | Very strong | Strong | **Strong** |
-| Social warmth | Medium | Very strong | Strong | **Strong** |
-| Large-scale usefulness | Weak | Medium | Very strong | **Very strong** |
-| Mobile feasibility | Strong | Weak–medium | Medium | **Strong if phased** |
-| Engineering risk | Low | High | Medium–high | **Medium** |
-| Long-term potential | Strong | Strong | Very strong | **Very strong** |
-| Current status | Source/MVP facet | Styling source | Architecture source | **Leading direction** |
+| Dimension | Candidate 1 | Candidate 2 | Candidate 3 | Candidate 4 | Candidate 5 |
+|---|---:|---:|---:|---:|---:|
+| Distinctive Punkto identity | Strong | Medium | Very strong | **Very strong** | Strong |
+| Immediate comprehension | Medium | Very strong | Strong | **Strong** | **Very strong** |
+| Social warmth | Medium | Very strong | Strong | **Strong** | Medium |
+| Large-scale usefulness | Weak | Medium | Very strong | **Very strong** | Strong |
+| Mobile feasibility | Strong | Weak–medium | Medium | **Strong if phased** | **Very strong** |
+| Engineering risk | Low | High | Medium–high | **Medium** | **Very low** |
+| Long-term potential | Strong | Strong | Very strong | **Very strong** | **Very strong (as kernel others extend)** |
+| Current status | Source/MVP facet | Styling source | Architecture source | **Leading direction** | Proposed launch candidate |
 
 These are still hypotheses to validate through prototype testing.
 
@@ -190,6 +198,18 @@ Before committing to the full redesign, prove:
 ---
 
 # Decision log
+
+## 2026-07-25 — Candidate 5 proposed (human)
+
+Candidate 5 — The Craigslist (Light 3D) — was proposed directly by the human product owner and documented in [`candidate-5/candidate.md`](candidate-5/candidate.md).
+
+Core claim: many operators will run the Docker node on their own hardware, so **the ability to serve a community outweighs heavy graphics**. The first app should ship the complete product at the lightest honest rendering budget, freeze the visual grammar, and delegate richness to the open-source community.
+
+Candidate 5 does not replace Candidate 4 in this log entry: Candidate 4 remains the leading design specification (north star), while Candidate 5 is proposed as the **launch candidate** (v1 constitution). The open decision:
+
+> **Does v1 ship Candidate 5 as the constitution with Candidate 4 as deferred community ambition, or does the core team build toward Candidate 4's richness before launch?**
+
+Reviews of Candidate 5 should be placed in [`candidate-5/reviews/`](candidate-5/reviews/README.md).
 
 ## 2026-07 — Candidate 4 promoted
 
