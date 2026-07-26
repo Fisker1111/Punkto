@@ -12,11 +12,11 @@ These five decisions unblock all work. Each has a recommended default; changing 
 
 | # | Decision | Recommended default | Status |
 |---|---|---|---|
-| D1 | **One-camera architecture** (Candidate 0 gap #6 — the big fork) | **Adapt, not rebuild.** Port the AtomCloud beacon rendering (dotted stems, ground rings, height ruler, category colors) into a MapLibre **custom layer** — Three.js may render, but with MapLibre's projection matrix, no independently controlled second camera. The test1 `ui-cloud.js` work survives as grammar; the independent scene does not. Evaluation task (WP-6a) decides final shape before any visual build. | ⬜ confirm |
-| D2 | **Basemap** | **Yes, with a provider-neutral contract.** Keep current tiles at launch; write the basemap contract (attribution, privacy/viewport leakage, caching, degraded mode, self-host path) without building self-hosted tiles now. "The bench is meaningless without the canal." | ⬜ confirm |
-| D3 | **Urgency governance** | **Ship per the fused position.** Urgency kind with mandatory expiry + provenance + kernel-level moderation tools (delist, precision-blur) with removal propagation. Expiry is the v1 abuse resistance; governance proof remains owed and is explicitly tracked. | ⬜ confirm |
-| D4 | **Reference device** | **One physical mid-2019 Android** (Moto G7 / Galaxy A50 class or older), named and owned by the human, used for every gate measurement. No emulator substitutes. `[HUMAN: name the actual unit]` | ⬜ confirm |
-| D5 | **Pilot town & seeding** | **The human's own local area.** Human writes the honest everyday atoms; AZ script-seeds the scenario set (hydrant thread, flooding report, floor atom, cluster) via the relay. Target ~30 atoms per the MVP validation brief. `[HUMAN: name the town]` | ⬜ confirm |
+| D1 | **One-camera architecture** (Candidate 0 gap #6 — the big fork) | **Adapt, not rebuild.** Port the AtomCloud beacon rendering (dotted stems, ground rings, height ruler, category colors) into a MapLibre **custom layer** — Three.js may render, but with MapLibre's projection matrix, no independently controlled second camera. The test1 `ui-cloud.js` work survives as grammar; the independent scene does not. Evaluation task (WP-6a) decides final shape before any visual build. | ✅ confirmed 2026-07-26 |
+| D2 | **Basemap** | **Yes, with a provider-neutral contract.** Keep current tiles at launch; write the basemap contract (attribution, privacy/viewport leakage, caching, degraded mode, self-host path) without building self-hosted tiles now. "The bench is meaningless without the canal." | ✅ confirmed 2026-07-26 |
+| D3 | **Urgency governance** | **Ship per the fused position.** Urgency kind with mandatory expiry + provenance + kernel-level moderation tools (delist, precision-blur) with removal propagation. Expiry is the v1 abuse resistance; governance proof remains owed and is explicitly tracked. | ✅ confirmed 2026-07-26 |
+| D4 | **Reference device** | **One physical mid-2019 Android** (Moto G7 / Galaxy A50 class or older), named and owned by the human, used for every gate measurement. No emulator substitutes. `[HUMAN: name the actual unit]` | ✅ confirmed 2026-07-26 |
+| D5 | **Pilot town & seeding** | **The human's own local area.** Human writes the honest everyday atoms; AZ script-seeds the scenario set (hydrant thread, flooding report, floor atom, cluster) via the relay. Target ~30 atoms per the MVP validation brief. `[HUMAN: name the town]` | ✅ confirmed 2026-07-26 |
 
 ---
 
@@ -154,4 +154,4 @@ Pilot verdict: ⬜ proceed to Phase 2 · ⬜ redesign cheap-warmth grammar · �
 
 ---
 
-*Pilot 1 defined 2026-07-26, per human direction following the Candidate 5 merge. Decisions D1–D5 await human confirmation; work starts on confirmation.*
+*Pilot 1 defined 2026-07-26, per human direction following the Candidate 5 merge. **D1–D5 confirmed by the human 2026-07-26** (D4 device unit and D5 town name still to be named by the human when ready). Work may start.*
