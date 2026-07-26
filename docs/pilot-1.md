@@ -32,7 +32,7 @@ These five decisions unblock all work. Each has a recommended default; changing 
 
 # 3. Work packages (dependency order)
 
-Owners per `AGENTS.md`: **ChatGPT** = specs/review text · **Codex** = code/tests/PRs · **AZ** = deploy/Docker/verify/ops · **Human** = decisions and manual testing. Every Codex package is a PR using `CODEX_TASK_TEMPLATE.md`.
+Owners per `AGENTS.md` (workflow updated 2026-07-26, human-approved): **AZ** = primary builder — specs, code, tests, PRs (`az/*` branches), deploy/verify · **ChatGPT** = the second mind — spec review before code, PR review after · **Codex** = optional overflow for independent mechanical packages · **Human** = decisions and manual testing. Every work package is a PR using `CODEX_TASK_TEMPLATE.md`.
 
 ## Phase P — Protocol (Candidate 0 gaps 1–4; do first — retrofitting protocol is the painful path)
 
