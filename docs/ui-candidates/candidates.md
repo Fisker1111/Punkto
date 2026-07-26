@@ -68,6 +68,14 @@ The full multi-model fusion is preserved in [`candidate-4/reviews/openrouter-can
 
 ---
 
+# Baseline
+
+## [Candidate 0 — The Baseline (What Ships Today)](candidate-0/candidate.md)
+
+Not a design candidate — the running product on `node1`/`node2`, documented honestly and diffed against the merged specification. Contains the 15-row gap table (merged spec → current reality) that implementation planning executes against, in the agreed order: protocol gaps first, then client architecture (including the one-camera decision), then render/query, then governance artifacts, then pilot validation.
+
+---
+
 # Source candidates
 
 The original candidates remain important as source explorations and fallback references.
