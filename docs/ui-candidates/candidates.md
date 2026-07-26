@@ -207,6 +207,10 @@ Before committing to the full redesign, prove:
 
 # Decision log
 
+## 2026-07-26 — Pilot 1 implementation plan defined
+
+The first execution plan against the merged specification is defined in [`../pilot-1.md`](../pilot-1.md): five human decisions (D1–D5, defaults recommended), work packages in dependency order (protocol → client architecture → render/query → governance artifacts → validation), the four v1 gates with measurement methods, and an explicit out-of-scope list. Work starts on human confirmation of D1–D5.
+
 ## 2026-07-26 — Candidate 5 merge applied to Candidate 4 (human approved)
 
 The human product owner approved the fusion recommendation. Candidate 5 is merged into [`candidate-4/candidate.md`](candidate-4/candidate.md) as its phasing and shipping doctrine — posture (b), one document, one identity:
