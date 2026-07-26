@@ -102,7 +102,7 @@ The complete Punkto product — spatial world, beacons, altitude, boards, live a
 
 **Claim:** for a federated, self-hosted protocol, the first app must be the one anyone can run, anyone can fork, and any phone can render. The ability to serve a community outweighs heavy graphics.
 
-**Proposed status (2026-07-25, human):** launch candidate — the v1 constitution, with Candidate 4 retained as the north star. Not yet promoted; pending review against its own spec.
+**Status (2026-07-26):** merged into Candidate 4 as its phasing and shipping doctrine, per the unanimous COMBINE verdict of the [OpenRouter fusion review](candidate-5/reviews/openrouter-candidate-5-fusion.md) and human approval. This document remains as the source doctrine and review record.
 
 ---
 
@@ -117,7 +117,7 @@ The complete Punkto product — spatial world, beacons, altitude, boards, live a
 | Mobile feasibility | Strong | Weak–medium | Medium | **Strong if phased** | **Very strong** |
 | Engineering risk | Low | High | Medium–high | **Medium** | **Very low** |
 | Long-term potential | Strong | Strong | Very strong | **Very strong** | **Very strong (as kernel others extend)** |
-| Current status | Source/MVP facet | Styling source | Architecture source | **Leading direction** | Reviewed: COMBINE into C4 recommended (pending human decision) |
+| Current status | Source/MVP facet | Styling source | Architecture source | **Leading direction** | Merged into C4 as shipping doctrine (2026-07-26) |
 
 These are still hypotheses to validate through prototype testing.
 
@@ -198,6 +198,20 @@ Before committing to the full redesign, prove:
 ---
 
 # Decision log
+
+## 2026-07-26 — Candidate 5 merge applied to Candidate 4 (human approved)
+
+The human product owner approved the fusion recommendation. Candidate 5 is merged into [`candidate-4/candidate.md`](candidate-4/candidate.md) as its phasing and shipping doctrine — posture (b), one document, one identity:
+
+- C4's Status section records the merge and its three conditions.
+- New **Kernel contracts** chapter: the 27-item freeze list (protocol hard freeze; spatial grammar frozen semantically, unfrozen rendering; extension/delegation contracts; operations/governance).
+- New **Shipping doctrine** chapter: the three lights amended per the review (procedural warmth is free; no server-side content/asset dependencies; delegation engineered via theming prohibitions, reference rich theme, conformance suite, reference-device budget).
+- **Visual warmth** gains the v1 warmth floor (procedural glow, timestamp-derived pulse, authored empty states — zero assets).
+- **Weak-device fallback** becomes one build with bounded presentational reduction — no second grammar.
+- **MVP phase** gains v1 acceptance gates (first-glance comprehension, urgent-post p95 < 20 s, urgency recognition, unprompted return visits) and the delegation scaffolding as first-party deliverables.
+- Build/Postpone/Reject aligned; basemap existence and urgency governance recorded as explicitly open questions.
+
+Candidate 5 remains documented as a source direction and review record; it is no longer a separate competing candidate.
 
 ## 2026-07-26 — Candidate 5 fusion review: COMBINE into Candidate 4 (pending human decision)
 
