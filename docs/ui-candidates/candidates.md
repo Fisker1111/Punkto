@@ -117,7 +117,7 @@ The complete Punkto product — spatial world, beacons, altitude, boards, live a
 | Mobile feasibility | Strong | Weak–medium | Medium | **Strong if phased** | **Very strong** |
 | Engineering risk | Low | High | Medium–high | **Medium** | **Very low** |
 | Long-term potential | Strong | Strong | Very strong | **Very strong** | **Very strong (as kernel others extend)** |
-| Current status | Source/MVP facet | Styling source | Architecture source | **Leading direction** | Proposed launch candidate |
+| Current status | Source/MVP facet | Styling source | Architecture source | **Leading direction** | Reviewed: COMBINE into C4 recommended (pending human decision) |
 
 These are still hypotheses to validate through prototype testing.
 
@@ -198,6 +198,22 @@ Before committing to the full redesign, prove:
 ---
 
 # Decision log
+
+## 2026-07-26 — Candidate 5 fusion review: COMBINE into Candidate 4 (pending human decision)
+
+The OpenRouter multi-model fusion review of Candidate 5 as a child of Candidate 4 is filed at [`candidate-5/reviews/openrouter-candidate-5-fusion.md`](candidate-5/reviews/openrouter-candidate-5-fusion.md).
+
+**Verdict: COMBINE (unanimous, 4 of 4).** Recommended posture **(b) — merge Candidate 5 into Candidate 4 as a strengthened phasing/shipping section** (majority 3 of 4, held strongly; minority 1 of 4 held posture (a), C5 as standalone v1 constitution, recorded not resolved). "Ship C4 as specified" was rejected unanimously.
+
+The recommended merge is conditional on three amendments:
+
+1. **Freeze semantics, not surfaces** — wire format, p: addressing, altitude datum + mandatory positional uncertainty, validity/expiry, closed relation vocabulary (reply/confirms/disputes/supersedes), kernel urgency kind with expiry and non-suppressible signalling, chronological-and-spatial-only ordering, one camera with vertical = altitude, aggregate bbox+zoom query contract; visual grammar versioned and provisional for 6–12 months.
+2. **Cheap warmth ships in v1** as frozen liveness grammar (procedural glow, recency pulse, authored empty states, human microcopy — zero assets); in a system with no likes or counts, liveness cues are the only channel that says "people were here."
+3. **Delegation is engineered, not hoped** — theming contract stated as prohibitions, kernel-shipped reference rich theme, published conformance suite, reference-device performance budget.
+
+Noted for backlog: basemap/media policy — not rendering — is what breaks a home server first; the panel genuinely disagrees on whether Punkto should have a basemap at all.
+
+The merge itself (rewriting `candidate-4/candidate.md`) has **not** been applied; it awaits the human product decision. First validation test if approved: single-operator pilot on home hardware, three-atom village, named mid-2019 Android over throttled 4G — gated on urgent-post p95 < 20 s, urgency recognition, first-glance comprehension, and unprompted return visits.
 
 ## 2026-07-25 — Candidate 5 proposed (human)
 
