@@ -230,8 +230,16 @@ function queueRefreshUI(newAtomIds = null, delayMs = 120) {
 
 // DOM bubble markers: punkto_id -> maplibregl.Marker
 const atomMarkers = new Map();
+// Pilot_1 Slice 2: cache of the last rendered real atoms (post hidden-filter).
+// Used by updateBubbleVisibility() to check viewport presence without DOM
+// bubbles, so the empty-map hint reflects atoms even though large permanent
+// chat bubbles are no longer the primary map representation.
+let _lastRenderedAtoms = [];
 // Currently focused punkto id (without 'p:') for atom-bubble--focus class
 let focusedPunktoId = null;
+// Pilot_1 Slice 2: selected beacon state (tied to a real atom punkto id).
+// When set, the matching beacon gets a stronger visual state in renderAtoms.
+let selectedPunkto = null;
 // Phase 2: first-render fit-to-atoms flag. True after the first successful
 // boot fit (or boot where there were no atoms). Subsequent renders never
 // re-fit to avoid jarring viewport changes.
@@ -418,6 +426,9 @@ async function focusPunkto(id) {
     if (prev) prev.getElement().classList.remove('atom-bubble--focus');
   }
   focusedPunktoId = id;
+  // Pilot_1 Slice 2: deep-link focus also selects the beacon so it gets the
+  // stronger visual state in the deck.gl beacon layers.
+  selectedPunkto = punkto;
   const cur = atomMarkers.get(punkto);
   if (cur) cur.getElement().classList.add('atom-bubble--focus');
 
@@ -537,6 +548,11 @@ async function renderAtoms(newAtomIds = null) {
   const atoms = (await getAllAtomsNewestFirst())
     .filter(a => !isHiddenAtom(a));
 
+  // Pilot_1 Slice 2: cache the rendered atom set so updateBubbleVisibility()
+  // can check viewport presence from the real atoms (beacons) instead of the
+  // old DOM bubble markers, which are no longer the primary representation.
+  _lastRenderedAtoms = atoms;
+
   // Phase 2: per-punkto aggregation for count badges and multi-atom popups.
   // atomsByPunkto maps a canonical punkto id → array of atoms (newest first,
   // preserving the orderBy('t').reverse() ordering above).
@@ -548,17 +564,24 @@ async function renderAtoms(newAtomIds = null) {
     else atomsByPunkto.set(a.punkto, [a]);
   }
 
-  const scatterData = atoms.map(a => ({
-    position: [a.lon, a.lat, a.alt],
-    color: mapColorForAtom(a, 245),
-    haloColor: mapColorForAtom(a, 70),
-    strokeColor: [8, 12, 20, 220],
-    punkto: a.punkto,
-    text: a.x,
-    f: a.f,
-    t: a.t,
-    label: (a.x || a.f || '').slice(0, 40),
-  }));
+  const scatterData = atoms.map(a => {
+    const isSel = selectedPunkto && a.punkto === selectedPunkto;
+    return {
+      position: [a.lon, a.lat, a.alt],
+      ground: [a.lon, a.lat, 0],
+      color: mapColorForAtom(a, isSel ? 255 : 245),
+      haloColor: mapColorForAtom(a, isSel ? 120 : 70),
+      strokeColor: isSel ? [255, 255, 100, 255] : [8, 12, 20, 220],
+      ringColor: mapColorForAtom(a, isSel ? 200 : 90),
+      stemColor: mapColorForAtom(a, isSel ? 220 : 153),
+      selected: isSel,
+      punkto: a.punkto,
+      text: a.x,
+      f: a.f,
+      t: a.t,
+      label: (a.x || a.f || '').slice(0, 40),
+    };
+  });
   if (placementDraft) {
     scatterData.push({
       position: [placementDraft.lon, placementDraft.lat, placementDraft.altitude_m || 0],
@@ -575,16 +598,37 @@ async function renderAtoms(newAtomIds = null) {
 
   const { ScatterplotLayer, MapboxOverlay } = window.deck;
 
+  // Pilot_1 Slice 2: beacon layer composition (deck.gl, in MapLibre context).
+  //   ground-rings  — ground contact at [lon,lat,0]
+  //   stems         — altitude line from ground to atom point (only when alt>0)
+  //   halos         — luminous halo at the atom's true altitude
+  //   atoms         — the atom point itself (pickable → selection)
+  // Vertical means physical altitude only; ground-level atoms have no stem.
   const layers = [
+    new ScatterplotLayer({
+      id: 'atom-ground-rings',
+      data: scatterData,
+      getPosition: d => d.ground,
+      getFillColor: d => d.ringColor,
+      stroked: true,
+      getLineColor: d => d.ringColor,
+      getLineWidth: d => d.selected ? 2 : 1,
+      lineWidthUnits: 'pixels',
+      getRadius: d => d.selected ? 16 : 12,
+      radiusUnits: 'pixels',
+      radiusMinPixels: 8,
+      radiusMaxPixels: 28,
+      pickable: false,
+    }),
     new ScatterplotLayer({
       id: 'atom-category-halos',
       data: scatterData,
       getPosition: d => d.position,
       getFillColor: d => d.haloColor,
-      getRadius: 18,
+      getRadius: d => d.selected ? 26 : 18,
       radiusUnits: 'pixels',
       radiusMinPixels: 13,
-      radiusMaxPixels: 30,
+      radiusMaxPixels: 36,
       pickable: false,
     }),
     new ScatterplotLayer({
@@ -594,20 +638,23 @@ async function renderAtoms(newAtomIds = null) {
       getFillColor: d => d.color,
       stroked: true,
       getLineColor: d => d.strokeColor,
-      getLineWidth: 2,
+      getLineWidth: d => d.selected ? 3 : 2,
       lineWidthUnits: 'pixels',
-      getRadius: 12,
+      getRadius: d => d.selected ? 16 : 12,
       radiusUnits: 'pixels',
       radiusMinPixels: 8,
-      radiusMaxPixels: 20,
+      radiusMaxPixels: 26,
       pickable: true,
       autoHighlight: true,
       highlightColor: [255, 255, 100, 255],
       onClick: info => {
         if (!info.object || !map) return;
         const a = info.object;
+        // Pilot_1 Slice 2: selection is deterministic, tied to a real atom punkto.
+        selectedPunkto = a.punkto;
         const group = atomsByPunkto.get(a.punkto) || [a];
         openAtomPopup(group.length > 1 ? group : group[0], info.coordinate.slice(0, 2));
+        renderAtoms();
       },
     }),
   ];
@@ -615,18 +662,21 @@ async function renderAtoms(newAtomIds = null) {
   // Iteration 1b: lollipop sticks. For each atom with altitude > 0, draw a
   // vertical line from ground up to the atom's altitude. Color matches the
   // category dot so altitude still reads as part of the same marker.
+  // Pilot_1 Slice 2: stem only represents real physical altitude (alt>0).
+  // No fake minimum display altitude. Selected beacon gets a stronger stem.
   const { LineLayer } = window.deck;
   if (LineLayer) {
     const lollipopData = atoms
       .filter(a => (a.alt || 0) > 0)
       .map(a => {
         const baseRgba = mapColorForAtom(a, 245);
-        // Apply ~0.6 opacity by overriding the alpha channel.
-        const color = [baseRgba[0], baseRgba[1], baseRgba[2], 153];
+        const isSel = selectedPunkto && a.punkto === selectedPunkto;
+        const color = [baseRgba[0], baseRgba[1], baseRgba[2], isSel ? 230 : 153];
         return {
           source: [a.lon, a.lat, 0],
           target: [a.lon, a.lat, a.alt],
           color,
+          width: isSel ? 3 : 2,
         };
       });
     if (placementDraft && (placementDraft.altitude_m || 0) > 0) {
@@ -634,6 +684,7 @@ async function renderAtoms(newAtomIds = null) {
         source: [placementDraft.lon, placementDraft.lat, 0],
         target: [placementDraft.lon, placementDraft.lat, placementDraft.altitude_m || 0],
         color: rgba(DRAFT_COLOR, 180),
+        width: 2,
       });
     }
     layers.push(
@@ -643,7 +694,7 @@ async function renderAtoms(newAtomIds = null) {
         getSourcePosition: d => d.source,
         getTargetPosition: d => d.target,
         getColor: d => d.color,
-        getWidth: 2,
+        getWidth: d => d.width,
         widthUnits: 'pixels',
         pickable: false,
       })
@@ -653,10 +704,13 @@ async function renderAtoms(newAtomIds = null) {
   deckOverlay.setProps({ layers });
 
   // --- DOM bubble markers (MapLibre) ------------------------------------
-  // Reconcile atomMarkers map with current atom set. For Phase 1 we render
-  // ALL markers at once; LOD is done via updateBubbleVisibility. With only
-  // ~tens of atoms this is fine. Viewport culling = TODO Phase 2.
-  if (map) {
+  // Pilot_1 Slice 2: large permanent chat bubbles are no longer the primary
+  // map representation — beacons (deck.gl layers above) are. The bubble code
+  // is retained behind a disabled flag so it can be re-enabled for temporary
+  // debugging without a revert; in normal Pilot_1 presentation it must not
+  // render full message cards over every atom.
+  const PILOT1_SLICE2_BUBBLES_ENABLED = false;
+  if (map && PILOT1_SLICE2_BUBBLES_ENABLED) {
     const seen = new Set();
     // Iterate unique punktos; render the latest atom as the visible bubble
     // (atoms array is already newest-first, so the first entry in each
@@ -700,10 +754,16 @@ async function renderAtoms(newAtomIds = null) {
         atomMarkers.delete(pid);
       }
     }
-    updateBubbleVisibility();
-    // Re-draw leader lines so newly-added or removed bubbles sync immediately,
-    // even before the next MapLibre `render` event fires.
-    drawLeaderLines();
+  } else if (atomMarkers.size > 0) {
+    // Bubble path disabled: clear any leftover markers from prior runs so
+    // they do not linger on the map after Slice 2 is enabled.
+    for (const [, marker] of atomMarkers) marker.remove();
+    atomMarkers.clear();
+  }
+  updateBubbleVisibility();
+  // Leader lines only make sense with DOM bubbles; with bubbles disabled in
+  // Pilot_1 Slice 2, clear the SVG overlay so stale lines do not linger.
+  if (svgLeaderOverlay) svgLeaderOverlay.innerHTML = '';
 
     // Pilot_1 Slice 1 Review Fix 1: nearby-first.
     // On ordinary opens do NOT auto-fit the full atom set — that would
@@ -831,13 +891,14 @@ function updateBubbleElement(el, atom, count = 1, group = null) {
 function updateBubbleVisibility() {
   if (!map) return;
   const z = map.getZoom();
-  // Pilot_1 Slice 1 Review Fix 2: determine whether any real atom/marker
-  // lies in the current viewport independently of the bubble-LOD display
-  // rule (z < 10 hides DOM chat bubbles, but deck.gl atom dots can still
-  // be visible at low zoom). This prevents a false empty-state message
-  // while real atoms are visibly present.
+  // Pilot_1 Slice 2: beacons replace DOM bubbles as the primary map
+  // representation. The empty-map hint now reads from the cached rendered
+  // atom set (_lastRenderedAtoms) instead of the bubble markers, so it
+  // reflects real atoms in the viewport regardless of bubble state.
   let anyAtomInViewport = false;
   const bounds = (typeof map.getBounds === 'function') ? map.getBounds() : null;
+  // Keep any legacy DOM bubble LOD in sync if the bubble path is ever
+  // re-enabled (debug). In normal Slice 2 this loop is a no-op.
   for (const [, marker] of atomMarkers) {
     const el = marker.getElement();
     if (z < 10) {
@@ -846,9 +907,10 @@ function updateBubbleVisibility() {
       el.style.display = '';
       el.classList.toggle('atom-bubble--compact', z < 14);
     }
-    if (!anyAtomInViewport && bounds) {
-      const ll = marker.getLngLat();
-      if (bounds.contains([ll.lng, ll.lat])) anyAtomInViewport = true;
+  }
+  if (bounds) {
+    for (const a of _lastRenderedAtoms) {
+      if (bounds.contains([a.lon, a.lat])) { anyAtomInViewport = true; break; }
     }
   }
   // Pilot_1 Slice 1: humane empty-map invitation.
@@ -1870,8 +1932,8 @@ function wireEvents() {
 // ---------------------------------------------------------------------------
 
 async function boot() {
-  console.log('PUNKTO APP.JS LOADED pilot1-slice1-nearby-map-2026-08-19-2');
-  window.PUNKTO_APP_VERSION = 'pilot1-slice1-nearby-map-2026-08-19-2';
+  console.log('PUNKTO APP.JS LOADED pilot1-slice2-beacon-2026-08-19-1');
+  window.PUNKTO_APP_VERSION = 'pilot1-slice2-beacon-2026-08-19-1';
 
   console.log('[punkto] booting...');
 
