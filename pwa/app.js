@@ -705,32 +705,13 @@ async function renderAtoms(newAtomIds = null) {
     // even before the next MapLibre `render` event fires.
     drawLeaderLines();
 
-    // Phase 2: fit-to-atoms on first render only. Deep-link flyTo wins.
+    // Pilot_1 Slice 1 Review Fix 1: nearby-first.
+    // On ordinary opens do NOT auto-fit the full atom set — that would
+    // override the nearby camera context (user location or fallback center).
+    // Deep-link focus is handled separately by focusPunkto().
     if (!hasBootFit) {
       hasBootFit = true;
-      if (!deepLinkPunkto && atoms.length > 0) {
-        try {
-          let minLon = Infinity, minLat = Infinity, maxLon = -Infinity, maxLat = -Infinity;
-          for (const a of atoms) {
-            if (a.lon < minLon) minLon = a.lon;
-            if (a.lon > maxLon) maxLon = a.lon;
-            if (a.lat < minLat) minLat = a.lat;
-            if (a.lat > maxLat) maxLat = a.lat;
-          }
-          if (isFinite(minLon) && isFinite(minLat)) {
-            map.fitBounds(
-              [[minLon, minLat], [maxLon, maxLat]],
-              {
-                padding: { top: 80, bottom: 200, left: 40, right: 40 },
-                maxZoom: 14,
-                duration: 0,
-              }
-            );
-          }
-        } catch (e) {
-          console.warn('[renderAtoms] fitBounds failed:', e);
-        }
-      }
+      // Intentionally no fitBounds here. Nearby context wins.
     }
   }
 }
@@ -850,7 +831,12 @@ function updateBubbleElement(el, atom, count = 1, group = null) {
 function updateBubbleVisibility() {
   if (!map) return;
   const z = map.getZoom();
-  let anyVisibleInViewport = false;
+  // Pilot_1 Slice 1 Review Fix 2: determine whether any real atom/marker
+  // lies in the current viewport independently of the bubble-LOD display
+  // rule (z < 10 hides DOM chat bubbles, but deck.gl atom dots can still
+  // be visible at low zoom). This prevents a false empty-state message
+  // while real atoms are visibly present.
+  let anyAtomInViewport = false;
   const bounds = (typeof map.getBounds === 'function') ? map.getBounds() : null;
   for (const [, marker] of atomMarkers) {
     const el = marker.getElement();
@@ -859,17 +845,18 @@ function updateBubbleVisibility() {
     } else {
       el.style.display = '';
       el.classList.toggle('atom-bubble--compact', z < 14);
-      if (!anyVisibleInViewport && bounds) {
-        const ll = marker.getLngLat();
-        if (bounds.contains([ll.lng, ll.lat])) anyVisibleInViewport = true;
-      }
+    }
+    if (!anyAtomInViewport && bounds) {
+      const ll = marker.getLngLat();
+      if (bounds.contains([ll.lng, ll.lat])) anyAtomInViewport = true;
     }
   }
   // Pilot_1 Slice 1: humane empty-map invitation.
-  // Show only on Map page when no real atom is visible in the current viewport.
-  // Never covers the map or competes with `+`; pointer-events: none in CSS.
+  // Show only on Map page when no real atom is represented in the current
+  // viewport. Never covers the map or competes with `+`;
+  // pointer-events: none in CSS.
   if (elMapEmptyHint) {
-    const showEmpty = currentPage === 'map' && !anyVisibleInViewport;
+    const showEmpty = currentPage === 'map' && !anyAtomInViewport;
     elMapEmptyHint.classList.toggle('open', showEmpty);
     elMapEmptyHint.setAttribute('aria-hidden', showEmpty ? 'false' : 'true');
   }
@@ -1412,6 +1399,36 @@ function initMap() {
       }
     });
 
+    // Pilot_1 Slice 1 Review Fix 1b: nearby-first centering.
+    // On an ordinary (non-deep-link) open, attempt a one-shot browser
+    // geolocation request. If it succeeds, center the Pilot_1 map on the
+    // user's location at a local/street scale. Non-blocking: denied,
+    // unavailable, or timeout keeps the existing fallback center. Deep
+    // links remain higher priority and are not overridden.
+    if (!deepLinkPunkto && navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          try {
+            map.jumpTo({
+              center: [pos.coords.longitude, pos.coords.latitude],
+              zoom: 14,
+              pitch: 45,
+              bearing: -10,
+            });
+            updateBubbleVisibility();
+            drawLeaderLines();
+            queueRefreshUI();
+          } catch (e) {
+            console.warn('[punkto] nearby-center jumpTo failed:', e);
+          }
+        },
+        (err) => {
+          console.log('[punkto] nearby geolocation unavailable:', err?.message || err);
+        },
+        { enableHighAccuracy: true, timeout: 8000, maximumAge: 60000 }
+      );
+    }
+
     // Add 3D building extrusion layer (OpenFreeMap has openmaptiles source)
     try {
       map.addLayer({
@@ -1853,8 +1870,8 @@ function wireEvents() {
 // ---------------------------------------------------------------------------
 
 async function boot() {
-  console.log('PUNKTO APP.JS LOADED pilot1-slice1-nearby-map-2026-08-19-1');
-  window.PUNKTO_APP_VERSION = 'pilot1-slice1-nearby-map-2026-08-19-1';
+  console.log('PUNKTO APP.JS LOADED pilot1-slice1-nearby-map-2026-08-19-2');
+  window.PUNKTO_APP_VERSION = 'pilot1-slice1-nearby-map-2026-08-19-2';
 
   console.log('[punkto] booting...');
 
