@@ -326,7 +326,7 @@ function renderOrphanReplyDetail(reply) {
 ` : '') +
     `    <div class="main-card-meta"><span>${_escHtml(author)} · ${_escHtml(time)} · ${_escHtml(trust)}</span></div>
 ` +
-    `    <div class="main-card-actions"><button class="main-card-show3d ui-btn" data-action="show-in-3d" data-id="${_escHtml(atomId)}">Show in map</button></div>
+    `    <div class="main-card-actions"><button class="main-card-show3d ui-btn" data-action="show-in-3d" data-id="${_escHtml(atomId)}">Show in 3D</button></div>
 ` +
     `  </div>
 ` +
@@ -383,7 +383,7 @@ function renderBoardDetail(atom) {
 ` +
     (meta ? `    <div class="main-card-meta"><span>${_escHtml(meta)}</span></div>
 ` : '') +
-    `    <div class="main-card-actions"><button class="main-card-show3d ui-btn" data-action="show-in-3d" data-id="${_escHtml(atomId)}">Show on map</button>${copyLinkBtn}</div>
+    `    <div class="main-card-actions"><button class="main-card-show3d ui-btn" data-action="show-in-3d" data-id="${_escHtml(atomId)}">Show in 3D</button>${copyLinkBtn}</div>
 ` +
     `  </div>
 ` +
@@ -505,7 +505,7 @@ export function renderTextFeed({ atoms = [], locationDenied = false, loadingVisi
       (meta ? '<div class="main-card-meta"><span>' + _escHtml(meta) + `</span></div>
 ` : '') +
       '<div class="main-card-footer"><div class="main-card-meta-group"><div class="main-card-meta"><span>' + _escHtml(_authorLabel(atom)) + ' · ' + _escHtml(_trustLabel(atom)) + '</span></div>' + replyCount + '</div>' +
-      '<div class="main-card-actions"><button class="main-card-show3d ui-btn" data-action="open-board" data-id="' + _escHtml(stableId) + '">Open board</button><button class="main-card-reply ui-btn" data-action="show-in-3d" data-id="' + _escHtml(atomId) + '">Show on map</button></div></div></div>';
+      '<div class="main-card-actions"><button class="main-card-show3d ui-btn" data-action="open-board" data-id="' + _escHtml(stableId) + '">Open board</button><button class="main-card-reply ui-btn" data-action="show-in-3d" data-id="' + _escHtml(atomId) + '">Show in 3D</button></div></div></div>';
   }).join(`
 `);
 }

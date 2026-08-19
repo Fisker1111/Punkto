@@ -2,10 +2,10 @@
  * ui-shell.js — Punkto PWA app shell
  *
  * Owns:
- *  - showPage(page) view toggle ('text' | 'map')
+ *  - showPage(page) view toggle ('text' | 'map' | 'cloud')
  *  - shared nav wiring (bottom dock + desktop rail)
  *  - settings panel open/close/toggle
- *  - body class management (page-text, page-map)
+ *  - body class management (page-text, page-map, page-cloud)
  *  - active state on nav buttons
  *  - setCounts() for nearby/atom display
  *
@@ -14,6 +14,7 @@
 
 let _onShowText   = null;
 let _onShowMap    = null;
+let _onShowCloud  = null;
 let _onAdd        = null;
 let _onOpenSettings = null;
 
@@ -24,9 +25,10 @@ let _settingsOpen = false;
  * Wire the bottom navigation and settings panel.
  * Callbacks fire *after* shell state has been updated.
  */
-export function initShell({ onShowText, onShowMap, onAdd, onOpenSettings } = {}) {
+export function initShell({ onShowText, onShowMap, onShowCloud, onAdd, onOpenSettings } = {}) {
   _onShowText     = typeof onShowText     === 'function' ? onShowText     : null;
   _onShowMap      = typeof onShowMap      === 'function' ? onShowMap      : null;
+  _onShowCloud    = typeof onShowCloud    === 'function' ? onShowCloud    : null;
   _onAdd          = typeof onAdd          === 'function' ? onAdd          : null;
   _onOpenSettings = typeof onOpenSettings === 'function' ? onOpenSettings : null;
 
@@ -39,6 +41,10 @@ export function initShell({ onShowText, onShowMap, onAdd, onOpenSettings } = {})
     }
     if (action === 'map') {
       btn.addEventListener('click', () => showPage('map'));
+      return;
+    }
+    if (action === 'cloud') {
+      btn.addEventListener('click', () => showPage('cloud'));
       return;
     }
     if (action === 'add') {
@@ -89,23 +95,24 @@ export function initShell({ onShowText, onShowMap, onAdd, onOpenSettings } = {})
 }
 
 /**
- * Toggle between 'text' and 'map' pages.
+ * Toggle between 'text', 'map', and 'cloud' pages.
  * Updates body classes, nav active state, then fires the matching callback
  * so app.js can run page-specific renderers (feed render, map resize, etc.).
  */
 export function showPage(page) {
-  if (page !== 'text' && page !== 'map') return;
+  if (page !== 'text' && page !== 'map' && page !== 'cloud') return;
   _currentPage = page;
 
-  document.body.classList.remove('page-text', 'page-map');
+  document.body.classList.remove('page-text', 'page-map', 'page-cloud');
   document.body.classList.add('page-' + page);
 
   document.querySelectorAll('[data-nav-page]').forEach((btn) => {
     btn.classList.toggle('active', btn.getAttribute('data-nav-page') === page);
   });
 
-  if (page === 'text' && _onShowText) _onShowText();
-  if (page === 'map'  && _onShowMap)  _onShowMap();
+  if (page === 'text'  && _onShowText)  _onShowText();
+  if (page === 'map'   && _onShowMap)   _onShowMap();
+  if (page === 'cloud' && _onShowCloud) _onShowCloud();
 }
 
 export function getCurrentPage() {
