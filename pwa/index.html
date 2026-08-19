@@ -889,6 +889,29 @@
     .hint-plus { color: var(--accent); font-weight: 700; font-size: 14px; }
     @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
 
+    /* ── Pilot_1 Slice 1: empty-map invitation ─────────────── */
+    /* Lightweight screen-space overlay. Never covers the map or competes
+       with `+`. Hidden on Text page via the view-switch rules below. */
+    #map-empty-hint {
+      position: fixed;
+      left: 50%;
+      bottom: calc(var(--nav-h) + var(--safe-b) + 18px);
+      transform: translateX(-50%);
+      background: var(--surface);
+      border: 1px solid var(--border2);
+      border-radius: 999px;
+      padding: 8px 18px;
+      font-size: 13px;
+      color: var(--text-mid);
+      z-index: 55;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+      white-space: nowrap;
+    }
+    #map-empty-hint.open { opacity: 1; }
+    body.page-text #map-empty-hint { display: none !important; }
+
     /* ── Settings panel (slide up) ──────────────────────────── */
     /* Reusable component tokens */
     .ui-card { border: 1px solid var(--border2); border-radius: var(--radius-lg); background: linear-gradient(180deg, var(--surface-strong), var(--surface-soft)); box-shadow: var(--shadow-soft); }
@@ -1541,6 +1564,11 @@
   <!-- ── Onboarding hint ──────────────────────────────────── -->
   <div id="onboarding-hint" aria-hidden="true">
     <div class="hint-text">Move the map, choose a place, then tap <span class="hint-plus">+</span> to write a Punkti.</div>
+  </div>
+
+  <!-- ── Pilot_1 Slice 1: empty-map invitation (screen-space, non-covering) -->
+  <div id="map-empty-hint" aria-hidden="true">
+    <div class="map-empty-text">Leave the first note here.</div>
   </div>
 
   <!-- ── Nearby panel ─────────────────────────────────────── -->

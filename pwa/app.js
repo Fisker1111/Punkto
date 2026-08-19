@@ -125,7 +125,7 @@ let deepLinkFocused = false;
 // ============================================================
 // Two-view shell — Text / Map
 // ============================================================
-let currentPage = 'text'; // 'text' | 'map'
+let currentPage = 'map'; // 'text' | 'map' — Pilot_1 Slice 1: open into nearby map
 let _mainFeedAtoms  = [];       // last sorted atom batch for main feed
 let _locationDenied = false;    // true when geolocation denied/unavailable
 let _mapScopedFeedReady = false;
@@ -259,6 +259,7 @@ const elSettingsNode = document.getElementById('settings-node');
 const elSettingsPeers = document.getElementById('settings-peers');
 const elSettingsCount = document.getElementById('settings-count');
 const elOnboardingHint = document.getElementById('onboarding-hint');
+const elMapEmptyHint = document.getElementById('map-empty-hint');
 const elCrosshairReadout = document.getElementById('crosshair-readout');
 
 // ---------------------------------------------------------------------------
@@ -849,6 +850,8 @@ function updateBubbleElement(el, atom, count = 1, group = null) {
 function updateBubbleVisibility() {
   if (!map) return;
   const z = map.getZoom();
+  let anyVisibleInViewport = false;
+  const bounds = (typeof map.getBounds === 'function') ? map.getBounds() : null;
   for (const [, marker] of atomMarkers) {
     const el = marker.getElement();
     if (z < 10) {
@@ -856,7 +859,19 @@ function updateBubbleVisibility() {
     } else {
       el.style.display = '';
       el.classList.toggle('atom-bubble--compact', z < 14);
+      if (!anyVisibleInViewport && bounds) {
+        const ll = marker.getLngLat();
+        if (bounds.contains([ll.lng, ll.lat])) anyVisibleInViewport = true;
+      }
     }
+  }
+  // Pilot_1 Slice 1: humane empty-map invitation.
+  // Show only on Map page when no real atom is visible in the current viewport.
+  // Never covers the map or competes with `+`; pointer-events: none in CSS.
+  if (elMapEmptyHint) {
+    const showEmpty = currentPage === 'map' && !anyVisibleInViewport;
+    elMapEmptyHint.classList.toggle('open', showEmpty);
+    elMapEmptyHint.setAttribute('aria-hidden', showEmpty ? 'false' : 'true');
   }
 }
 
@@ -1838,8 +1853,8 @@ function wireEvents() {
 // ---------------------------------------------------------------------------
 
 async function boot() {
-  console.log('PUNKTO APP.JS LOADED v106-create-stage-2026-06-09-1');
-  window.PUNKTO_APP_VERSION = 'v110-seed-node-migration-2026-06-29-1';
+  console.log('PUNKTO APP.JS LOADED pilot1-slice1-nearby-map-2026-08-19-1');
+  window.PUNKTO_APP_VERSION = 'pilot1-slice1-nearby-map-2026-08-19-1';
 
   console.log('[punkto] booting...');
 
