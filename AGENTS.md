@@ -31,10 +31,12 @@ Approximate nav weighting:
 
 | Role | Owns |
 |---|---|
-| **ChatGPT** | Product direction, architecture specs, PR specs, review text |
-| **Codex** | Code implementation, tests, commits, PRs |
-| **AZ (Agent Zero)** | Deploy, Docker, Caddy, live-node verification, logs, OPS, security — **not product scope** |
+| **ChatGPT** | Product direction, architecture review, spec review, PR review text — the second mind; reviews before code and after |
+| **AZ (Agent Zero)** | **Primary builder for Pilot 1** — specs, code implementation, tests, commits, PRs (`az/*` branches), deploy, Docker, Caddy, live-node verification, logs, OPS, security |
+| **Codex** | Optional overflow — independent, mechanical work packages only, when parallel capacity is wanted |
 | **Human** | Final decisions, direction overrides, manual testing |
+
+> Workflow change 2026-07-26 (human-approved): the builder and deployer roles are unified in AZ to eliminate handoff loss; the quality mechanism is preserved by moving review from "writer ≠ coder" to "builder (AZ) ≠ reviewer (ChatGPT)". The goal is a working and verified PWA. Same discipline as before: one PR per work package, task receipt in each PR, all checks green, canary before both nodes. If the review loop stops finding anything, that is a signal about the loop, not proof of perfection — keep the loop.
 
 ---
 

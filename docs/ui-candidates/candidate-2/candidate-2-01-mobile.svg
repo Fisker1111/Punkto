@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="390" height="844" viewBox="0 0 390 844" role="img" aria-labelledby="title desc">
+  <title id="title">Candidate 2 — The Living Miniature</title>
+  <desc id="desc">A warm isometric miniature neighborhood with simplified buildings and glowing Punkti beacons.</desc>
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#173143"/><stop offset=".55" stop-color="#0c1c28"/><stop offset="1" stop-color="#071018"/></linearGradient>
+    <linearGradient id="panel" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#171d21" stop-opacity=".96"/><stop offset="1" stop-color="#0b1015" stop-opacity=".98"/></linearGradient>
+    <filter id="glow"><feGaussianBlur stdDeviation="4" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+  </defs>
+  <rect width="390" height="844" rx="34" fill="url(#sky)"/>
+  <text x="24" y="43" fill="#f7f4ec" font-family="system-ui" font-size="18" font-weight="700">Punkto</text>
+  <text x="365" y="42" text-anchor="end" fill="#d7d9d8" font-family="system-ui" font-size="13">Østerbro · dusk</text>
+  <path d="M0 240L195 138L390 240L195 342Z" fill="#1d3540"/>
+  <path d="M0 430L195 328L390 430L195 532Z" fill="#183039"/>
+  <path d="M0 620L195 518L390 620L195 722Z" fill="#142a32"/>
+  <g stroke="#37505a" stroke-width="5" opacity=".8">
+    <path d="M20 305L370 489"/><path d="M20 495L370 679"/><path d="M35 565L350 400"/><path d="M35 375L350 210"/>
+  </g>
+  <g fill="#20444b" stroke="#2c5961">
+    <path d="M14 543L102 498L151 524L61 571Z"/><path d="M240 600L318 558L370 585L292 627Z"/>
+  </g>
+  <g stroke="#72583d">
+    <g><path d="M52 270L102 244L144 266L93 293Z" fill="#5c4b3d"/><path d="M52 270V330L93 354V293Z" fill="#3a332f"/><path d="M144 266V326L93 354V293Z" fill="#4b3d35"/></g>
+    <g><path d="M190 215L246 187L292 211L236 240Z" fill="#66513f"/><path d="M190 215V287L236 315V240Z" fill="#3e3530"/><path d="M292 211V282L236 315V240Z" fill="#503f36"/></g>
+    <g><path d="M252 356L311 326L358 351L298 381Z" fill="#664d3a"/><path d="M252 356V423L298 450V381Z" fill="#41342d"/><path d="M358 351V418L298 450V381Z" fill="#533d31"/></g>
+    <g><path d="M63 454L121 424L169 449L110 479Z" fill="#5b4c3d"/><path d="M63 454V520L110 547V479Z" fill="#3c3530"/><path d="M169 449V515L110 547V479Z" fill="#4e4036"/></g>
+    <g><path d="M167 510L224 480L272 505L214 535Z" fill="#64503c"/><path d="M167 510V579L214 606V535Z" fill="#40362f"/><path d="M272 505V574L214 606V535Z" fill="#514034"/></g>
+  </g>
+  <g fill="#ffd47a"><circle cx="72" cy="298" r="2"/><circle cx="88" cy="307" r="2"/><circle cx="221" cy="245" r="2"/><circle cx="247" cy="235" r="2"/><circle cx="286" cy="390" r="2"/><circle cx="310" cy="377" r="2"/><circle cx="101" cy="484" r="2"/><circle cx="130" cy="471" r="2"/><circle cx="204" cy="548" r="2"/><circle cx="231" cy="535" r="2"/></g>
+  <g fill="#315f4d"><circle cx="39" cy="353" r="11"/><circle cx="169" cy="335" r="10"/><circle cx="337" cy="282" r="12"/><circle cx="31" cy="584" r="12"/><circle cx="344" cy="541" r="10"/></g>
+  <g filter="url(#glow)"><line x1="225" y1="536" x2="225" y2="397" stroke="#ff9e32" stroke-width="3"/><circle cx="225" cy="536" r="6" fill="#fff2cf"/><circle cx="225" cy="397" r="13" fill="#ff9e32"/><text x="225" y="402" text-anchor="middle" fill="white" font-family="system-ui" font-size="12">●</text></g>
+  <g filter="url(#glow)" opacity=".9"><line x1="89" y1="354" x2="89" y2="292" stroke="#6bd7ff" stroke-width="2"/><circle cx="89" cy="292" r="8" fill="#38aaf0"/><line x1="307" y1="450" x2="307" y2="380" stroke="#af78ff" stroke-width="2"/><circle cx="307" cy="380" r="8" fill="#9b5df4"/></g>
+  <rect x="41" y="84" width="308" height="50" rx="22" fill="#0b1218" fill-opacity=".82" stroke="#34434a"/>
+  <text x="62" y="114" fill="#f7f4ec" font-family="system-ui" font-size="15">Copenhagen · Østerbro</text><text x="329" y="114" text-anchor="end" fill="#d1d4d4" font-family="system-ui" font-size="12">18°C · 21:37</text>
+  <rect x="44" y="565" width="302" height="198" rx="24" fill="url(#panel)" stroke="#4a5053"/>
+  <text x="66" y="596" fill="#ffa63b" font-family="system-ui" font-size="11" font-weight="700">PUNKTI · 1 H AGO</text>
+  <text x="66" y="628" fill="#f5f3ee" font-family="system-ui" font-size="21" font-weight="650">Sunset from the rooftop</text>
+  <text x="66" y="653" fill="#f5f3ee" font-family="system-ui" font-size="21" font-weight="650">is unreal tonight</text>
+  <text x="66" y="680" fill="#aeb5b8" font-family="system-ui" font-size="12">Nordre Frihavnsgade 54 · 5th floor</text>
+  <text x="66" y="701" fill="#aeb5b8" font-family="system-ui" font-size="12">14 m above ground · 3 public notes</text>
+  <rect x="66" y="718" width="134" height="32" rx="16" fill="#f29a2e"/><text x="133" y="739" text-anchor="middle" fill="#11171a" font-family="system-ui" font-size="12" font-weight="700">Open board</text>
+  <rect x="208" y="718" width="116" height="32" rx="16" fill="none" stroke="#777f82"/><text x="266" y="739" text-anchor="middle" fill="#e3e5e4" font-family="system-ui" font-size="12">Focus place</text>
+  <rect x="26" y="778" width="338" height="48" rx="24" fill="#0a1116" stroke="#29343a"/>
+  <text x="71" y="808" text-anchor="middle" fill="#a7afb3" font-family="system-ui" font-size="10">Text</text><text x="150" y="808" text-anchor="middle" fill="#f0a443" font-family="system-ui" font-size="10">Map</text><circle cx="235" cy="802" r="16" fill="#f29a2e"/><text x="235" y="808" text-anchor="middle" fill="#111" font-family="system-ui" font-size="20">+</text><text x="315" y="808" text-anchor="middle" fill="#a7afb3" font-family="system-ui" font-size="10">Settings</text>
+</svg>

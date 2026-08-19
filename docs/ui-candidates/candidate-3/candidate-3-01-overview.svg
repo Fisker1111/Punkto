@@ -1,0 +1,53 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="760" viewBox="0 0 1200 760" role="img" aria-labelledby="title desc">
+  <title id="title">Candidate 3 — Flow World overview</title>
+  <desc id="desc">A wide concept plate showing a live world view and semantic zoom from global map to exact spatial atom and thread.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#04101a"/><stop offset="1" stop-color="#02060a"/></linearGradient>
+    <radialGradient id="earth" cx="50%" cy="35%" r="70%"><stop stop-color="#173a55"/><stop offset=".7" stop-color="#071a2a"/><stop offset="1" stop-color="#02070c"/></radialGradient>
+    <linearGradient id="panel" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#151c24" stop-opacity=".96"/><stop offset="1" stop-color="#080d13" stop-opacity=".98"/></linearGradient>
+    <filter id="g"><feGaussianBlur stdDeviation="5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+  </defs>
+  <rect width="1200" height="760" rx="28" fill="url(#bg)"/>
+  <text x="34" y="48" fill="#ffa033" font-family="system-ui" font-size="15" font-weight="700">CANDIDATE 3</text>
+  <text x="34" y="90" fill="#f2f5f7" font-family="system-ui" font-size="39" font-weight="650">Flow World</text>
+  <text x="34" y="122" fill="#a9b5bf" font-family="system-ui" font-size="14">A live spatial channel of what the public world is saying now.</text>
+  <g transform="translate(270 24)">
+    <rect width="900" height="450" rx="24" fill="#06101a" stroke="#263848"/>
+    <text x="28" y="38" fill="#f3f6f8" font-family="system-ui" font-size="19" font-weight="700">● Punkto</text><text x="133" y="38" fill="#ff9d32" font-family="system-ui" font-size="12" font-weight="700">LIVE</text>
+    <rect x="306" y="14" width="292" height="38" rx="19" fill="#091522" stroke="#213348"/>
+    <text x="351" y="38" fill="#ffae43" font-family="system-ui" font-size="12">Live</text><text x="423" y="38" fill="#b3bdc6" font-family="system-ui" font-size="12">Nearby</text><text x="506" y="38" fill="#b3bdc6" font-family="system-ui" font-size="12">Explore</text><text x="572" y="38" fill="#b3bdc6" font-family="system-ui" font-size="12">Write</text>
+    <path d="M90 323C161 96 739 70 821 323C697 397 213 397 90 323Z" fill="url(#earth)" stroke="#284660"/>
+    <g fill="none" stroke="#22425a" opacity=".9"><path d="M111 290C289 226 624 226 800 290"/><path d="M159 207C325 164 589 164 754 207"/><path d="M286 112C343 253 343 334 286 379"/><path d="M470 87C486 230 486 344 470 397"/><path d="M654 112C594 253 594 334 654 379"/></g>
+    <g fill="#ffb23f" filter="url(#g)"><circle cx="256" cy="220" r="4"/><circle cx="391" cy="164" r="5"/><circle cx="530" cy="178" r="4"/><circle cx="677" cy="238" r="5"/><circle cx="734" cy="301" r="4"/></g>
+    <g fill="#b25cff" filter="url(#g)"><circle cx="317" cy="312" r="5"/><circle cx="619" cy="283" r="5"/></g>
+    <g filter="url(#g)"><circle cx="509" cy="292" r="24" fill="#ff7f2d" fill-opacity=".22"/><circle cx="509" cy="292" r="9" fill="#ff962f"/><line x1="509" y1="292" x2="509" y2="354" stroke="#ff962f" stroke-width="2"/></g>
+    <rect x="345" y="140" width="340" height="100" rx="18" fill="url(#panel)" stroke="#8b5724"/>
+    <text x="365" y="166" fill="#ffad42" font-family="system-ui" font-size="10" font-weight="700">NAIROBI, KENYA · INFO</text>
+    <text x="365" y="195" fill="#f5f6f7" font-family="system-ui" font-size="21" font-weight="650">Flooding here — road blocked</text>
+    <text x="365" y="220" fill="#aeb8c2" font-family="system-ui" font-size="12">Ngong Road · 1.8 km away · updated 2 min ago</text>
+    <rect x="25" y="74" width="98" height="206" rx="15" fill="#07131f" stroke="#20364a"/>
+    <text x="49" y="108" fill="#62bfff" font-family="system-ui" font-size="12">World</text><text x="49" y="150" fill="#aab7c3" font-family="system-ui" font-size="12">Nearby</text><text x="49" y="192" fill="#ff9d32" font-family="system-ui" font-size="12">Warnings</text><text x="49" y="234" fill="#aab7c3" font-family="system-ui" font-size="12">Events</text>
+    <rect x="24" y="397" width="852" height="38" rx="14" fill="#07111b" stroke="#1f3141"/>
+    <text x="44" y="421" fill="#ff9f35" font-family="system-ui" font-size="10" font-weight="700">NOW PLAYING</text><text x="142" y="421" fill="#e5e9ed" font-family="system-ui" font-size="12">Nairobi · Flooding here — road blocked</text><text x="845" y="421" text-anchor="end" fill="#8f9ba7" font-family="system-ui" font-size="11">Next: Lagos · power outage</text>
+  </g>
+  <g transform="translate(28 174)">
+    <text x="0" y="0" fill="#f2f4f6" font-family="system-ui" font-size="16" font-weight="650">Old flow</text><text x="0" y="25" fill="#9eabb7" font-family="system-ui" font-size="13">Shared attention. One clear item at a time.</text>
+    <text x="0" y="74" fill="#f2f4f6" font-family="system-ui" font-size="16" font-weight="650">New flow</text><text x="0" y="99" fill="#9eabb7" font-family="system-ui" font-size="13">Public messages, exact locations, direct inspection.</text>
+    <text x="0" y="148" fill="#f2f4f6" font-family="system-ui" font-size="16" font-weight="650">Viewer first</text><text x="0" y="173" fill="#9eabb7" font-family="system-ui" font-size="13">Watch calmly or interrupt and explore at any time.</text>
+  </g>
+  <g transform="translate(28 515)">
+    <text x="0" y="0" fill="#f4f6f8" font-family="system-ui" font-size="14" font-weight="700">SEMANTIC ZOOM</text>
+    <g transform="translate(0 28)">
+      <rect width="210" height="176" rx="18" fill="#09131d" stroke="#26394a"/><text x="17" y="28" fill="#ad72ff" font-family="system-ui" font-size="11" font-weight="700">1 · WORLD 2D</text><circle cx="105" cy="91" r="52" fill="#0f2b40"/><g fill="#ffad3e"><circle cx="78" cy="75" r="3"/><circle cx="124" cy="65" r="4"/><circle cx="134" cy="105" r="3"/></g><text x="17" y="155" fill="#aab5bf" font-family="system-ui" font-size="11">Patterns and activity regions</text>
+    </g>
+    <g transform="translate(222 28)">
+      <rect width="210" height="176" rx="18" fill="#09131d" stroke="#26394a"/><text x="17" y="28" fill="#ff7e3d" font-family="system-ui" font-size="11" font-weight="700">2 · CITY 2.5D</text><g stroke="#2c4a5e"><path d="M25 65H185M25 95H185M25 125H185M65 45V140M110 45V140M155 45V140"/></g><circle cx="123" cy="94" r="15" fill="#ff8f31" filter="url(#g)"/><text x="17" y="155" fill="#aab5bf" font-family="system-ui" font-size="11">Situations and districts</text>
+    </g>
+    <g transform="translate(444 28)">
+      <rect width="210" height="176" rx="18" fill="#09131d" stroke="#26394a"/><text x="17" y="28" fill="#ff8f36" font-family="system-ui" font-size="11" font-weight="700">3 · NEIGHBORHOOD 3D</text><g fill="#24343d" stroke="#354c58"><rect x="31" y="71" width="51" height="50"/><rect x="94" y="52" width="44" height="69"/><rect x="150" y="77" width="35" height="44"/></g><g filter="url(#g)"><line x1="118" y1="118" x2="118" y2="63" stroke="#ff9b36" stroke-width="2"/><circle cx="118" cy="63" r="6" fill="#ff9b36"/></g><text x="17" y="155" fill="#aab5bf" font-family="system-ui" font-size="11">Messages become anchored beacons</text>
+    </g>
+    <g transform="translate(666 28)">
+      <rect width="210" height="176" rx="18" fill="#09131d" stroke="#26394a"/><text x="17" y="28" fill="#50c9ff" font-family="system-ui" font-size="11" font-weight="700">4 · ATOM / THREAD</text><g filter="url(#g)"><line x1="48" y1="132" x2="48" y2="55" stroke="#59d3ff" stroke-width="2"/><circle cx="48" cy="55" r="6" fill="#8ae4ff"/><circle cx="48" cy="80" r="4" fill="#8ae4ff"/><circle cx="48" cy="104" r="4" fill="#8ae4ff"/></g><rect x="77" y="48" width="111" height="86" rx="12" fill="#121c27"/><text x="90" y="70" fill="#ffb046" font-family="system-ui" font-size="9">INFO</text><text x="90" y="88" fill="#f1f4f6" font-family="system-ui" font-size="11" font-weight="650">Fire hydrant</text><text x="90" y="102" fill="#f1f4f6" font-family="system-ui" font-size="11" font-weight="650">not working</text><text x="90" y="121" fill="#92a0ad" font-family="system-ui" font-size="9">2 public notes</text><text x="17" y="155" fill="#aab5bf" font-family="system-ui" font-size="11">Exact record and conversation</text>
+    </g>
+  </g>
+</svg>
