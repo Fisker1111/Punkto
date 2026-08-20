@@ -13,20 +13,37 @@ if (-not (Test-Path (Join-Path $RepoRoot '.git'))) {
     throw "Not a Git checkout: $RepoRoot"
 }
 
-# Resolve Codex robustly on Windows. Depending on how Codex was installed,
-# PowerShell may be able to launch `codex` interactively while Get-Command
-# inside a script does not resolve the same shim/app alias. Prefer the normal
-# command resolution, then fall back to known standalone/npm locations and
-# finally `where.exe`.
+# Prefer the real standalone package binary on Windows rather than the PATH
+# shim under AppData\Local\Programs\OpenAI\Codex\bin. Some Codex Windows
+# builds can launch the shim successfully but then fail to discover the bundled
+# sandbox helpers (codex-windows-sandbox-setup.exe / codex-command-runner.exe).
+# The package binary has its matching codex-resources directory alongside it.
 $CodexExe = $null
-$CodexCommand = Get-Command codex -ErrorAction SilentlyContinue | Select-Object -First 1
-if ($CodexCommand) {
-    if ($CodexCommand.Path) {
-        $CodexExe = $CodexCommand.Path
-    } elseif ($CodexCommand.Source) {
-        $CodexExe = $CodexCommand.Source
-    } elseif ($CodexCommand.Definition) {
-        $CodexExe = $CodexCommand.Definition
+$StandaloneRoot = Join-Path $env:USERPROFILE '.codex\packages\standalone\current'
+$StandaloneExe = Join-Path $StandaloneRoot 'bin\codex.exe'
+$StandaloneResources = Join-Path $StandaloneRoot 'codex-resources'
+
+if (Test-Path $StandaloneExe) {
+    $CodexExe = $StandaloneExe
+    if (Test-Path $StandaloneResources) {
+        # Also make the bundled helpers directly discoverable for setup paths
+        # that still resolve them by filename.
+        $env:PATH = "$StandaloneResources;$env:PATH"
+    }
+}
+
+# Fall back to normal PowerShell command resolution / known install locations
+# only if the real standalone runtime is unavailable.
+if (-not $CodexExe) {
+    $CodexCommand = Get-Command codex -ErrorAction SilentlyContinue | Select-Object -First 1
+    if ($CodexCommand) {
+        if ($CodexCommand.Path) {
+            $CodexExe = $CodexCommand.Path
+        } elseif ($CodexCommand.Source) {
+            $CodexExe = $CodexCommand.Source
+        } elseif ($CodexCommand.Definition) {
+            $CodexExe = $CodexCommand.Definition
+        }
     }
 }
 
@@ -56,6 +73,9 @@ if (-not $CodexExe) {
 }
 
 Write-Host "Using Codex: $CodexExe" -ForegroundColor DarkGray
+if (Test-Path $StandaloneResources) {
+    Write-Host "Codex resources: $StandaloneResources" -ForegroundColor DarkGray
+}
 
 # Never overwrite or mix with uncommitted human/agent work.
 $dirtyBefore = git status --porcelain
