@@ -11,11 +11,28 @@ import {
   isSettingsOpen as shellIsSettingsOpen,
   setCounts as shellSetCounts,
 } from './ui-shell.js';
-import { initTextView, renderTextFeed, openBoardById, isReplyAtom, isRootAtom, getAtomStableId, resolveBoardAtom, renderBoardSheetHtml } from './ui-text.js';
-import { initMapView, showMapView } from './ui-map.js';
+import { initTextView, renderTextFeed, openBoardById, getAtomStableId, resolveBoardAtom } from './ui-text.js';
+import {
+  initMapView,
+  ensureMapInitialized,
+  getMapInstance,
+  isMapLoaded,
+  missingMapLibraries,
+  renderAtoms,
+  focusPunktoOnMap,
+  detectBuildingAtCenter,
+  toggle3D,
+} from './ui-map.js';
+import {
+  initBoardView,
+  closeMapBoard,
+  openMapBoardForAtom,
+  refreshMapBoardAtoms,
+  hasOpenBoard,
+} from './ui-board.js';
 import { initCreateModal, openCreateModal, closeCreateModal, setCreateError, setCreateSubmitting, updateCreateCenter, isCreateModalOpen } from './ui-create.js';
 import { initSettingsView, renderSettingsView } from './ui-settings.js';
-import { decodeAtomLocation, encodeCurrentLocation, encodeLocation, haversineMeters, FLOOR_HEIGHT_M } from './core/location.js';
+import { decodeAtomLocation, encodeLocation, haversineMeters } from './core/location.js';
 import { db } from './storage/db.js';
 import { upsertAtom, getAllAtomsNewestFirst, getAllAtoms } from './storage/atom-store.js';
 import { ensureNode } from './storage/node-store.js';
@@ -43,65 +60,6 @@ const SEED_NODES = [
 
 // Node registry + write round-robin (extracted sync ownership)
 const nodeRegistry = createNodeRegistry({ nodeUrl: NODE_URL, seedNodes: SEED_NODES });
-const CATEGORY_META = {
-  TEXT: { code: 'TEXT', label: 'Talk', cls: 'cat-talk', color: [138, 160, 190] },
-  INFO: { code: 'INFO', label: 'Info', cls: 'cat-info', color: [11, 157, 255] },
-  WARN: { code: 'WARN', label: 'Warning', cls: 'cat-warn', color: [255, 179, 0] },
-  EMGC: { code: 'EMGC', label: 'Emergency', cls: 'cat-emgc', color: [255, 85, 102] },
-  EVNT: { code: 'EVNT', label: 'Event', cls: 'cat-evnt', color: [0, 210, 118] },
-  LOST: { code: 'LOST', label: 'Lost/Found', cls: 'cat-lost', color: [255, 132, 64] },
-};
-const IMPORTED_SOURCE_COLOR = [255, 193, 7];
-const DRAFT_COLOR = [255, 220, 80];
-function getCategoryMeta(atom) {
-  const key = String(atom?.category || atom?.kind || '').trim().toUpperCase();
-  if (key === 'TALK') return CATEGORY_META.TEXT;
-  return CATEGORY_META[key] || CATEGORY_META.TEXT;
-}
-function rgba(color, alpha = 245) {
-  return [color[0], color[1], color[2], alpha];
-}
-function mapColorForAtom(atom, alpha = 245) {
-  if (isImportedSourceAtom(atom)) return rgba(IMPORTED_SOURCE_COLOR, alpha);
-  return rgba(getCategoryMeta(atom).color, alpha);
-}
-function isImportedSourceAtom(atom) {
-  return atom?.imported === true || Boolean(String(atom?.import_source || '').trim());
-}
-function importedSourceLine(atom) {
-  if (!isImportedSourceAtom(atom)) return '';
-  const sourceName = String(atom?.source_name || atom?.source || '').trim();
-  const station = String(atom?.source_station_name || '').trim();
-  const stationId = String(atom?.source_station_id || '').trim();
-  const details = [sourceName || 'Source data', [station, stationId].filter(Boolean).join(' ')].filter(Boolean);
-  return `Imported source · ${details.join(' · ')}`;
-}
-function renderPopupText(atom, rawText) {
-  const text = String(rawText || '').trim();
-  if (!text) return '';
-  if (!isImportedSourceAtom(atom)) return `<div class="popup-text">${escHtml(text)}</div>`;
-
-  const lines = text.split(/\r?\n/).map((line) => line.trim()).filter(Boolean);
-  if (!lines.length) return '';
-  const title = lines.shift();
-  const rows = [];
-  const notes = [];
-  for (const line of lines.slice(0, 5)) {
-    const match = line.match(/^([^:]{2,32}):\s*(.+)$/);
-    if (match) rows.push({ key: match[1], value: match[2] });
-    else notes.push(line);
-  }
-
-  return [
-    '<div class="popup-imported-card">',
-    `<div class="popup-imported-title">${escHtml(title)}</div>`,
-    rows.length ? '<dl class="popup-imported-facts">' + rows.map((row) =>
-      `<div><dt>${escHtml(row.key)}</dt><dd>${escHtml(row.value)}</dd></div>`
-    ).join('') + '</dl>' : '',
-    notes.length ? `<div class="popup-imported-note">${escHtml(notes.join(' · '))}</div>` : '',
-    '</div>',
-  ].filter(Boolean).join('');
-}
 let syncEngine = null;
 let lastSyncAtMs = null;
 let syncBootPromise = null;
@@ -114,11 +72,6 @@ let syncBootPromise = null;
 // State
 // ---------------------------------------------------------------------------
 
-let map = null;
-let mapInitStarted = false;
-let mapLoadComplete = false;
-let deckOverlay = null;
-let is3D = true;
 let initialSyncDone = false;
 let deepLinkPunkto = null; // captured at boot, consumed after first refreshUI
 let deepLinkFocused = false;
@@ -130,6 +83,7 @@ let _mainFeedAtoms  = [];       // last sorted atom batch for main feed
 let _locationDenied = false;    // true when geolocation denied/unavailable
 let _mapScopedFeedReady = false;
 let _refreshUiTimer = null;
+let selectedAtomId = null;
 
 // ── App shell: two views (Text / Map) ─────────────────────────────────────────
 // showPage — thin wrapper. Body/nav state + page lifecycle live in ui-shell.js.
@@ -139,32 +93,6 @@ function showPage(page) {
   currentPage = page;
   if (page !== 'map') closeMapBoard({ clearSelection: true });
   shellShowPage(page);
-}
-
-function replyBelongsToRoot(reply, root) {
-  if (!isReplyAtom(reply) || !root) return false;
-  const rootIds = [getAtomStableId(root), root.atom_id, root.id, root.punkto, stripPunktoPrefix(root.punkto || '')]
-    .map((value) => String(value || '').trim())
-    .filter(Boolean);
-  const rootIdSet = new Set(rootIds);
-  return [reply.parent_id, reply.root_id]
-    .map((value) => String(value || '').trim())
-    .filter(Boolean)
-    .some((id) => rootIdSet.has(id) || rootIdSet.has(stripPunktoPrefix(id)));
-}
-
-function findRootForReply(reply, atoms = _mainFeedAtoms) {
-  return (Array.isArray(atoms) ? atoms : []).find((candidate) => isRootAtom(candidate) && replyBelongsToRoot(reply, candidate)) || null;
-}
-
-function openBoardForAtom(atom, atoms = _mainFeedAtoms) {
-  if (!atom || !atom.punkto) return;
-  const localAtoms = Array.isArray(atoms) && atoms.length ? atoms : _mainFeedAtoms;
-  const boardAtom = isReplyAtom(atom) ? (findRootForReply(atom, localAtoms) || findRootForReply(atom) || atom) : atom;
-  const boardId = getAtomStableId(boardAtom) || stripPunktoPrefix(boardAtom.punkto);
-  if (!boardId) return;
-  showPage('text');
-  openBoardById(boardId, { atom: boardAtom, atoms: _mainFeedAtoms });
 }
 
 async function getAtomSelectionId(atom) {
@@ -177,73 +105,14 @@ async function getAtomSelectionId(atom) {
   return getAtomStableId(atom) || stripPunktoPrefix(atom?.punkto || '');
 }
 
-async function buildSelectionIds(atoms) {
-  const pairs = await Promise.all((Array.isArray(atoms) ? atoms : []).map(async (atom) => [atom, await getAtomSelectionId(atom)]));
-  return new Map(pairs);
-}
-
-function closeMapBoard({ clearSelection = true } = {}) {
-  if (elMapBoardSheet) {
-    elMapBoardSheet.classList.remove('open');
-    elMapBoardSheet.setAttribute('aria-hidden', 'true');
-    elMapBoardSheet.innerHTML = '';
-  }
-  selectedBoardAtom = null;
-  selectedBoardAtoms = [];
-  mapBoardReplyStatus = null;
-  mapBoardReplyDraft = '';
-  if (clearSelection) {
-    selectedAtomId = null;
-    selectedMapAtom = null;
-    renderAtoms().catch((err) => console.warn('[map-board] selection refresh failed:', err));
-  }
-}
-
-function renderMapBoardSheet() {
-  if (!elMapBoardSheet || !selectedBoardAtom) return;
-  elMapBoardSheet.innerHTML = renderBoardSheetHtml({
-    atom: selectedBoardAtom,
-    atoms: selectedBoardAtoms.length ? selectedBoardAtoms : _mainFeedAtoms,
-    replyStatus: mapBoardReplyStatus,
-    replyDraft: mapBoardReplyDraft,
-    backLabel: 'Close board',
-    backAction: 'map-board-close',
-  });
-  elMapBoardSheet.classList.add('open');
-  elMapBoardSheet.setAttribute('aria-hidden', 'false');
-}
-
-async function openMapBoardForAtom(atom, atoms = _mainFeedAtoms) {
+function openTextBoardForAtom(atom, atoms = _mainFeedAtoms) {
   if (!atom || !atom.punkto) return;
   const localAtoms = Array.isArray(atoms) && atoms.length ? atoms : _mainFeedAtoms;
-  selectedMapAtom = atom;
-  selectedAtomId = await getAtomSelectionId(atom);
-  selectedBoardAtoms = localAtoms;
-  selectedBoardAtom = resolveBoardAtom(atom, selectedBoardAtoms) || atom;
-  mapBoardReplyStatus = null;
-  mapBoardReplyDraft = '';
-  setPanelOpen(false);
-  showPage('map');
-  renderMapBoardSheet();
-  await renderAtoms();
-}
-
-function ensureMapInitialized() {
-  console.log('[map] ensure init');
-  const missing = missingMapLibraries();
-  if (missing.length) {
-    showBootError(`Map unavailable: missing ${missing.join(', ')}.`);
-    return null;
-  }
-  if (map) {
-    console.log('[map] init skipped existing');
-    requestAnimationFrame(() => {
-      if (map && typeof map.resize === 'function') map.resize();
-    });
-    return map;
-  }
-  console.log('[map] init start');
-  return initMap();
+  const boardAtom = resolveBoardAtom(atom, localAtoms) || atom;
+  const boardId = getAtomStableId(boardAtom) || stripPunktoPrefix(boardAtom.punkto);
+  if (!boardId) return;
+  showPage('text');
+  openBoardById(boardId, { atom: boardAtom, atoms: _mainFeedAtoms });
 }
 
 // renderMainFeed — thin wrapper that delegates to ui-text.js renderTextFeed.
@@ -255,13 +124,6 @@ function renderMainFeed() {
     locationDenied: _locationDenied,
     loadingVisibleAtoms: !_mapScopedFeedReady,
   });
-}
-
-function missingMapLibraries() {
-  const missing = [];
-  if (!window.maplibregl) missing.push('MapLibre');
-  if (!window.deck || !window.deck.MapboxOverlay) missing.push('deck.gl');
-  return missing;
 }
 
 function showBootError(message) {
@@ -290,28 +152,6 @@ function queueRefreshUI(newAtomIds = null, delayMs = 120) {
 }
 
 
-// DOM bubble markers: punkto_id -> maplibregl.Marker
-const atomMarkers = new Map();
-// Pilot_1 Slice 2: cache of the last rendered real atoms (post hidden-filter).
-// Used by updateBubbleVisibility() to check viewport presence without DOM
-// bubbles, so the empty-map hint reflects atoms even though large permanent
-// chat bubbles are no longer the primary map representation.
-let _lastRenderedAtoms = [];
-// Currently focused punkto id (without 'p:') for atom-bubble--focus class
-let focusedPunktoId = null;
-// Pilot_1 Slice 3: selected beacon state is tied to one real atom identity.
-// Punkto/location can be shared by independent atoms, so visual selection
-// must not group by location.
-let selectedAtomId = null;
-let selectedMapAtom = null;
-let selectedBoardAtom = null;
-let selectedBoardAtoms = [];
-let mapBoardReplyStatus = null;
-let mapBoardReplyDraft = '';
-// Phase 2: first-render fit-to-atoms flag. True after the first successful
-// boot fit (or boot where there were no atoms). Subsequent renders never
-// re-fit to avoid jarring viewport changes.
-let hasBootFit = false;
 // Phase 2: track which DB primary keys belong to atoms seen before the most
 // recent syncFeed() run, so we can detect fresh arrivals and pulse them.
 // ---------------------------------------------------------------------------
@@ -373,7 +213,7 @@ function ensureSyncEngine() {
 }
 
 async function focusDeepLinkIfReady() {
-  if (!deepLinkPunkto || deepLinkFocused || !initialSyncDone || !mapLoadComplete || !map) return;
+  if (!deepLinkPunkto || deepLinkFocused || !initialSyncDone || !isMapLoaded() || !getMapInstance()) return;
   deepLinkFocused = true;
   await focusPunkto(deepLinkPunkto);
 }
@@ -473,51 +313,12 @@ function parseDeepLinkPunktoId() {
  * Safe to call when no matching atom exists locally — we still center on the coords.
  */
 async function focusPunkto(id) {
-  // Switch to 3D page so the map is visible
   showPage('map');
   if (!id) return;
   const punkto = ensurePunktoPrefix(id);
-  const loc = decodeAtomLocation(punkto);
-  if (!loc || !map) return;
+  await focusPunktoOnMap(id);
 
-  // Center + zoom
-  map.flyTo({ center: [loc.lon, loc.lat], zoom: 16, duration: 1200 });
-
-  // Open panel so user sees atom list
-  setPanelOpen(true);
-
-  // Update title for shareability
-  document.title = `Punkto · ${punkto}`;
-
-  // Mark this atom's bubble as focused (amber border). Clear any prior focus.
-  if (focusedPunktoId && focusedPunktoId !== id) {
-    const prev = atomMarkers.get(`p:${focusedPunktoId}`);
-    if (prev) prev.getElement().classList.remove('atom-bubble--focus');
-  }
-  focusedPunktoId = id;
-  // Pilot_1 Slice 3: deep-link focus opens the same board path when the
-  // matching real atom is available locally. If only the location id is
-  // available, the camera focus still works.
-  const focusAtoms = (await getAllAtomsNewestFirst()).filter(a => !isHiddenAtom(a));
-  const focusedAtom = focusAtoms.find((atom) => {
-    const pid = String(atom?.punkto || '').trim();
-    const stable = getAtomStableId(atom);
-    return pid === punkto || stripPunktoPrefix(pid) === id || stable === id;
-  }) || null;
-  if (focusedAtom) {
-    await openMapBoardForAtom(focusedAtom, focusAtoms);
-  } else {
-    selectedAtomId = null;
-    selectedMapAtom = null;
-  }
-  const cur = atomMarkers.get(punkto);
-  if (cur) cur.getElement().classList.add('atom-bubble--focus');
-
-  // Highlight matching atom item if present in the list (after refreshUI)
-  // refreshUI repopulates children; we search on next tick.
-  // NOTE: if the targeted punkto's atoms are all filtered (hidden test/system
-  // handles), they won't be in the rendered list and the loop simply exits
-  // without highlighting — the fly-to still works, which is the desired UX.
+  // Highlight matching atom item if present in the list (after refreshUI).
   requestAnimationFrame(() => {
     const items = elAtomList.querySelectorAll('.atom-item');
     for (const item of items) {
@@ -541,575 +342,6 @@ async function focusPunkto(id) {
 // ---------------------------------------------------------------------------
 
 // ---------------------------------------------------------------------------
-// deck.gl rendering
-// ---------------------------------------------------------------------------
-
-
-/**
- * Phase 2: deterministic author → hue mapping for subtle bubble tinting.
- * Returns an integer hue 0–360, or null for anon/empty authors (keeps
- * the default neutral hue defined in CSS).
- * Simple djb2-style hash — stable across reloads and devices.
- */
-function hashAuthorHue(author) {
-  if (!author) return null;
-  const s = String(author).trim().toLowerCase();
-  if (!s || s === 'anon') return null;
-  let h = 5381;
-  for (let i = 0; i < s.length; i++) {
-    h = ((h << 5) + h + s.charCodeAt(i)) | 0;
-  }
-  return Math.abs(h) % 360;
-}
-
-/**
- * Phase 2: build and show a MapLibre popup for one or more atoms at a
- * given lngLat. If `atomOrAtoms` is an array with length > 1, renders a
- * 'N Punkti at this place' heading followed by a list. Otherwise renders
- * the single-atom popup (same markup the ScatterplotLayer produced).
- */
-function openAtomPopup(atomOrAtoms, lngLat) {
-  if (!map) return;
-  const atoms = Array.isArray(atomOrAtoms) ? atomOrAtoms : [atomOrAtoms];
-  if (atoms.length === 0) return;
-
-  let html = '';
-  if (atoms.length === 1) {
-    const a = atoms[0];
-    const loc = decodeAtomLocation(a.punkto);
-    const coordStr = loc ? fmtCoords(loc.lat, loc.lon, loc.alt) : '';
-    const timeStr = fmtTime(a.t);
-    const text = a.text || a.x || '';
-    const sourceLine = importedSourceLine(a);
-    html = [
-      isImportedSourceAtom(a) ? '<div class="popup-source-badge">Imported source</div>' : '',
-      renderPopupText(a, text),
-      sourceLine ? `<div class="popup-source-line">${escHtml(sourceLine)} · not user-created content</div>` : '',
-      `<div class="popup-meta">${escHtml(a.f || 'anon')} · ${timeStr}</div>`,
-      coordStr ? `<div class="popup-coords">${coordStr}</div>` : '',
-    ].filter(Boolean).join('');
-  } else {
-    // Multi-atom: sort newest first, show all
-    const sorted = atoms.slice().sort((a, b) => (b.t || 0) - (a.t || 0));
-    const head = `<div class="popup-meta" style="font-weight:600;">${sorted.length} Punkti at this place</div>`;
-    const items = sorted.map(a => {
-      const text = a.text || a.x || '';
-      const timeStr = fmtTime(a.t);
-      const sourceLine = importedSourceLine(a);
-      return [
-        '<div class="popup-atom" style="margin-top:8px;padding-top:6px;border-top:1px solid #333;">',
-        isImportedSourceAtom(a) ? '<div class="popup-source-badge">Imported source</div>' : '',
-        renderPopupText(a, text),
-        sourceLine ? `<div class="popup-source-line">${escHtml(sourceLine)}</div>` : '',
-        `<div class="popup-meta">${escHtml(a.f || 'anon')} · ${timeStr}</div>`,
-        '</div>',
-      ].filter(Boolean).join('');
-    }).join('');
-    const loc = decodeAtomLocation(sorted[0].punkto);
-    const coordStr = loc ? fmtCoords(loc.lat, loc.lon, loc.alt) : '';
-    html = head + items +
-      (coordStr ? `<div class="popup-coords">${coordStr}</div>` : '');
-  }
-
-  const hasImportedSource = atoms.some(isImportedSourceAtom);
-  new maplibregl.Popup({
-    closeButton: true,
-    maxWidth: hasImportedSource ? '340px' : '280px',
-    className: hasImportedSource ? 'punkto-popup punkto-popup--imported' : 'punkto-popup',
-  })
-    .setLngLat(lngLat)
-    .setHTML(html)
-    .addTo(map);
-}
-
-async function renderAtoms(newAtomIds = null) {
-  if (!deckOverlay) return;
-
-  // Filter out hidden system/test atoms so they never appear on the map either.
-  const atoms = (await getAllAtomsNewestFirst())
-    .filter(a => !isHiddenAtom(a));
-
-  // Pilot_1 Slice 2: cache the rendered atom set so updateBubbleVisibility()
-  // can check viewport presence from the real atoms (beacons) instead of the
-  // old DOM bubble markers, which are no longer the primary representation.
-  _lastRenderedAtoms = atoms;
-  if (selectedBoardAtom) selectedBoardAtoms = atoms;
-
-  // Phase 2: per-punkto aggregation for count badges and multi-atom popups.
-  // atomsByPunkto maps a canonical punkto id → array of atoms (newest first,
-  // preserving the orderBy('t').reverse() ordering above).
-  const atomsByPunkto = new Map();
-  for (const a of atoms) {
-    if (!a.punkto) continue;
-    const arr = atomsByPunkto.get(a.punkto);
-    if (arr) arr.push(a);
-    else atomsByPunkto.set(a.punkto, [a]);
-  }
-
-  const selectionIds = await buildSelectionIds(atoms);
-  const scatterData = atoms.map(a => {
-    const selectionId = selectionIds.get(a) || getAtomStableId(a) || stripPunktoPrefix(a.punkto || '');
-    const isSel = selectedAtomId && selectionId === selectedAtomId;
-    return {
-      atom: a,
-      selectionId,
-      position: [a.lon, a.lat, a.alt],
-      ground: [a.lon, a.lat, 0],
-      color: mapColorForAtom(a, isSel ? 255 : 245),
-      haloColor: mapColorForAtom(a, isSel ? 120 : 70),
-      strokeColor: isSel ? [255, 255, 100, 255] : [8, 12, 20, 220],
-      ringColor: mapColorForAtom(a, isSel ? 200 : 90),
-      stemColor: mapColorForAtom(a, isSel ? 220 : 153),
-      selected: isSel,
-      punkto: a.punkto,
-      text: a.x,
-      f: a.f,
-      t: a.t,
-      label: (a.x || a.f || '').slice(0, 40),
-    };
-  });
-  if (placementDraft) {
-    const draftAlt = placementDraft.altitude_m || 0;
-    scatterData.push({
-      position: [placementDraft.lon, placementDraft.lat, draftAlt],
-      ground: [placementDraft.lon, placementDraft.lat, 0],
-      color: rgba(DRAFT_COLOR, 255),
-      haloColor: rgba(DRAFT_COLOR, 95),
-      strokeColor: [8, 12, 20, 230],
-      ringColor: rgba(DRAFT_COLOR, 120),
-      stemColor: rgba(DRAFT_COLOR, 180),
-      selected: false,
-      selectionId: 'draft',
-      punkto: 'draft',
-      text: 'Placement preview',
-      f: 'draft',
-      t: Date.now(),
-      label: 'draft',
-    });
-  }
-
-  const { ScatterplotLayer, MapboxOverlay } = window.deck;
-
-  // Pilot_1 Slice 2: beacon layer composition (deck.gl, in MapLibre context).
-  //   ground-rings  — ground contact at [lon,lat,0]
-  //   stems         — altitude line from ground to atom point (only when alt>0)
-  //   halos         — luminous halo at the atom's true altitude
-  //   atoms         — the atom point itself (pickable → selection)
-  // Vertical means physical altitude only; ground-level atoms have no stem.
-  const layers = [
-    new ScatterplotLayer({
-      id: 'atom-ground-rings',
-      data: scatterData,
-      getPosition: d => d.ground,
-      getFillColor: d => d.ringColor,
-      stroked: true,
-      getLineColor: d => d.ringColor,
-      getLineWidth: d => d.selected ? 2 : 1,
-      lineWidthUnits: 'pixels',
-      getRadius: d => d.selected ? 16 : 12,
-      radiusUnits: 'pixels',
-      radiusMinPixels: 8,
-      radiusMaxPixels: 28,
-      pickable: false,
-    }),
-    new ScatterplotLayer({
-      id: 'atom-category-halos',
-      data: scatterData,
-      getPosition: d => d.position,
-      getFillColor: d => d.haloColor,
-      getRadius: d => d.selected ? 26 : 18,
-      radiusUnits: 'pixels',
-      radiusMinPixels: 13,
-      radiusMaxPixels: 36,
-      pickable: false,
-    }),
-    new ScatterplotLayer({
-      id: 'atoms',
-      data: scatterData,
-      getPosition: d => d.position,
-      getFillColor: d => d.color,
-      stroked: true,
-      getLineColor: d => d.strokeColor,
-      getLineWidth: d => d.selected ? 3 : 2,
-      lineWidthUnits: 'pixels',
-      getRadius: d => d.selected ? 16 : 12,
-      radiusUnits: 'pixels',
-      radiusMinPixels: 8,
-      radiusMaxPixels: 26,
-      pickable: true,
-      autoHighlight: true,
-      highlightColor: [255, 255, 100, 255],
-      onClick: info => {
-        if (!info.object || !map) return;
-        const a = info.object;
-        // Pilot_1 Slice 3: select exactly the clicked real atom and show its
-        // board sheet. Do not group same-location atoms into a synthetic board.
-        openMapBoardForAtom(a.atom || a, atoms).catch((err) => console.warn('[map-board] open failed:', err));
-      },
-    }),
-  ];
-
-  // Iteration 1b: lollipop sticks. For each atom with altitude > 0, draw a
-  // vertical line from ground up to the atom's altitude. Color matches the
-  // category dot so altitude still reads as part of the same marker.
-  // Pilot_1 Slice 2: stem only represents real physical altitude (alt>0).
-  // No fake minimum display altitude. Selected beacon gets a stronger stem.
-  const { LineLayer } = window.deck;
-  if (LineLayer) {
-    const lollipopData = atoms
-      .filter(a => (a.alt || 0) > 0)
-      .map(a => {
-        const baseRgba = mapColorForAtom(a, 245);
-        const isSel = selectedAtomId && (selectionIds.get(a) || getAtomStableId(a) || stripPunktoPrefix(a.punkto || '')) === selectedAtomId;
-        const color = [baseRgba[0], baseRgba[1], baseRgba[2], isSel ? 230 : 153];
-        return {
-          source: [a.lon, a.lat, 0],
-          target: [a.lon, a.lat, a.alt],
-          color,
-          width: isSel ? 3 : 2,
-        };
-      });
-    if (placementDraft && (placementDraft.altitude_m || 0) > 0) {
-      lollipopData.push({
-        source: [placementDraft.lon, placementDraft.lat, 0],
-        target: [placementDraft.lon, placementDraft.lat, placementDraft.altitude_m || 0],
-        color: rgba(DRAFT_COLOR, 180),
-        width: 2,
-      });
-    }
-    layers.push(
-      new LineLayer({
-        id: 'atom-lollipops',
-        data: lollipopData,
-        getSourcePosition: d => d.source,
-        getTargetPosition: d => d.target,
-        getColor: d => d.color,
-        getWidth: d => d.width,
-        widthUnits: 'pixels',
-        pickable: false,
-      })
-    );
-  }
-
-  deckOverlay.setProps({ layers });
-
-  // --- DOM bubble markers (MapLibre) ------------------------------------
-  // Pilot_1 Slice 2: large permanent chat bubbles are no longer the primary
-  // map representation — beacons (deck.gl layers above) are. The bubble code
-  // is retained behind a disabled flag so it can be re-enabled for temporary
-  // debugging without a revert; in normal Pilot_1 presentation it must not
-  // render full message cards over every atom.
-  const PILOT1_SLICE2_BUBBLES_ENABLED = false;
-  if (map && PILOT1_SLICE2_BUBBLES_ENABLED) {
-    const seen = new Set();
-    // Iterate unique punktos; render the latest atom as the visible bubble
-    // (atoms array is already newest-first, so the first entry in each
-    // atomsByPunkto bucket is the latest). Count badge reflects total.
-    for (const [pid, group] of atomsByPunkto) {
-      const a = group[0];
-      seen.add(pid);
-      const count = group.length;
-      let marker = atomMarkers.get(pid);
-      let el;
-      let justCreated = false;
-      if (!marker) {
-        el = buildBubbleElement(a, count, group);
-        // Offset pulls the bubble 16px upward so the atom dot stays visible
-        // beneath it and the SVG leader line has room to connect them.
-        marker = new maplibregl.Marker({ element: el, anchor: 'bottom', offset: [0, -16] })
-          .setLngLat([a.lon, a.lat])
-          .addTo(map);
-        atomMarkers.set(pid, marker);
-        justCreated = true;
-      } else {
-        // Update content in place so edits (t changes, etc.) refresh without
-        // a DOM flicker. Position is stable per punkto so no setLngLat needed.
-        el = marker.getElement();
-        updateBubbleElement(el, a, count, group);
-      }
-      // New-atom pulse: if any atom in this group is in newAtomIds, pulse.
-      if (newAtomIds && newAtomIds.size > 0 && group.some(x => newAtomIds.has(x.id))) {
-        el.classList.remove('atom-bubble--new'); // restart animation if still lingering
-        // Force reflow so re-adding the class replays the keyframes
-        // eslint-disable-next-line no-unused-expressions
-        void el.offsetWidth;
-        el.classList.add('atom-bubble--new');
-        setTimeout(() => el.classList.remove('atom-bubble--new'), 700);
-      }
-    }
-    // Remove markers for atoms that disappeared (e.g. after hide-handle change)
-    for (const [pid, marker] of atomMarkers) {
-      if (!seen.has(pid)) {
-        marker.remove();
-        atomMarkers.delete(pid);
-      }
-    }
-  } else if (atomMarkers.size > 0) {
-    // Bubble path disabled: clear any leftover markers from prior runs so
-    // they do not linger on the map after Slice 2 is enabled.
-    for (const [, marker] of atomMarkers) marker.remove();
-    atomMarkers.clear();
-  }
-  updateBubbleVisibility();
-  // Leader lines only make sense with DOM bubbles; with bubbles disabled in
-  // Pilot_1 Slice 2, clear the SVG overlay so stale lines do not linger.
-  if (svgLeaderOverlay) svgLeaderOverlay.innerHTML = '';
-
-    // Pilot_1 Slice 1 Review Fix 1: nearby-first.
-    // On ordinary opens do NOT auto-fit the full atom set — that would
-    // override the nearby camera context (user location or fallback center).
-    // Deep-link focus is handled separately by focusPunkto().
-  if (!hasBootFit) {
-    hasBootFit = true;
-    // Intentionally no fitBounds here. Nearby context wins.
-  }
-}
-
-/**
- * Build a fresh DOM element for an atom bubble. Used when a new marker is
- * created. Structure matches ui.md spec:
- *   .atom-bubble > .atom-bubble-body ( .atom-bubble-text + .atom-bubble-meta )
- *                + .atom-bubble-tail
- */
-function buildBubbleElement(atom, count = 1, group = null) {
-  const el = document.createElement('div');
-  el.className = 'atom-bubble';
-  el.dataset.punkto = atom.punkto || '';
-  // Mark the focused atom if applicable (e.g. deep-link target)
-  if (focusedPunktoId && atom.punkto === `p:${focusedPunktoId}`) {
-    el.classList.add('atom-bubble--focus');
-  }
-  updateBubbleElement(el, atom, count, group);
-
-  // Phase 2: bubble-body click → open popup. Badge click and anchor
-  // clicks are handled separately (stopPropagation / early-return).
-  el.addEventListener('click', (ev) => {
-    ev.stopPropagation();
-    // Let anchors inside markdown-rendered text behave normally.
-    if (ev.target.closest('a')) return;
-    // Badge has its own handler attached in updateBubbleElement.
-    if (ev.target.closest('.atom-bubble-count')) return;
-    const loc = decodeAtomLocation(atom.punkto);
-    if (!loc) return;
-    // Read the current group from the element's stashed reference so
-    // re-renders (which may update the group) stay in sync.
-    const currentGroup = el._punktoGroup || [atom];
-    const selectedAtom = currentGroup[0] || atom;
-    openBoardForAtom(selectedAtom, currentGroup);
-  });
-
-  return el;
-}
-
-/**
- * (Re)render the inner HTML of a bubble element from an atom record.
- */
-function updateBubbleElement(el, atom, count = 1, group = null) {
-  const textHtml = renderAtomText(atom.x || '');
-  const author = escHtml(atom.f || 'anon');
-  const timeStr = escHtml(fmtRelativeTime(atom.t));
-  const cat = getCategoryMeta(atom);
-  const isImportedSource = isImportedSourceAtom(atom);
-
-  // Phase 2: stash group on element so click handler (set once in
-  // buildBubbleElement) always sees the freshest atom list.
-  el._punktoGroup = group || [atom];
-
-  const badgeHtml = count > 1
-    ? `<span class="atom-bubble-count" title="${count} Punkti at this place">+${count - 1}</span>`
-    : '';
-
-  // Iteration 1b: altitude badge for atoms above ground.
-  // Decoded from the canonical punkto string so it matches the lollipop stick
-  // and the dot's 3D position. Hidden when alt === 0 (ground level).
-  let altBadgeHtml = '';
-  const _loc = atom.punkto ? decodeAtomLocation(atom.punkto) : null;
-  if (_loc && _loc.alt > 0) {
-    const altRounded = Math.round(_loc.alt);
-    altBadgeHtml = `<span class="atom-bubble-alt" title="altitude: ${altRounded} m">+${altRounded}m</span>`;
-  }
-
-  el.innerHTML = `
-    <div class="atom-bubble-body${isImportedSource ? ' atom-bubble-body--imported-source' : ''}">
-      ${isImportedSource ? '<div class="atom-bubble-source">Imported source</div>' : ''}
-      <div class="atom-bubble-text">${textHtml || '<span style="opacity:0.5">no text</span>'}</div>
-      <div class="atom-bubble-cat ${cat.cls}">${escHtml(cat.code)} · ${escHtml(cat.label)}</div>
-      <div class="atom-bubble-meta">
-        <span class="atom-bubble-author">${author}</span>
-        <span class="atom-bubble-dot">·</span>
-        <span class="atom-bubble-time">${timeStr}</span>
-      </div>
-      ${altBadgeHtml}
-    </div>
-    ${badgeHtml}
-  `;
-
-  // Phase 2: per-author hue tint. Set on the inner body element (NOT on el)
-  // because MapLibre rewrites the outer element's style.cssText on every
-  // pan/zoom, which would wipe the CSS custom property. The inner element
-  // is untouched by MapLibre so the tint persists.
-  const body = el.querySelector('.atom-bubble-body');
-  if (body) {
-    const hue = hashAuthorHue(atom.f);
-    if (!isImportedSource && hue != null) body.style.setProperty('--author-hue', String(hue));
-    else body.style.removeProperty('--author-hue');
-  }
-
-  // Wire badge click → popup with all atoms at this punkto.
-  if (count > 1) {
-    const badge = el.querySelector('.atom-bubble-count');
-    if (badge) {
-      badge.addEventListener('click', (ev) => {
-        ev.stopPropagation();
-        const loc = decodeAtomLocation(atom.punkto);
-        if (!loc) return;
-        const currentGroup = el._punktoGroup || [atom];
-        openAtomPopup(currentGroup, [loc.lon, loc.lat]);
-      });
-    }
-  }
-}
-
-/**
- * Zoom-based LOD for bubbles:
- *   zoom < 12  → hide (dots only)
- *   12 ≤ z <16 → compact (clamped 2 lines, 160px)
- *   z ≥ 16     → full (240px)
- * Called after renderAtoms and from map zoomend/moveend handlers.
- */
-function updateBubbleVisibility() {
-  if (!map) return;
-  const z = map.getZoom();
-  // Pilot_1 Slice 2: beacons replace DOM bubbles as the primary map
-  // representation. The empty-map hint now reads from the cached rendered
-  // atom set (_lastRenderedAtoms) instead of the bubble markers, so it
-  // reflects real atoms in the viewport regardless of bubble state.
-  let anyAtomInViewport = false;
-  const bounds = (typeof map.getBounds === 'function') ? map.getBounds() : null;
-  // Keep any legacy DOM bubble LOD in sync if the bubble path is ever
-  // re-enabled (debug). In normal Slice 2 this loop is a no-op.
-  for (const [, marker] of atomMarkers) {
-    const el = marker.getElement();
-    if (z < 10) {
-      el.style.display = 'none';
-    } else {
-      el.style.display = '';
-      el.classList.toggle('atom-bubble--compact', z < 14);
-    }
-  }
-  if (bounds) {
-    for (const a of _lastRenderedAtoms) {
-      if (bounds.contains([a.lon, a.lat])) { anyAtomInViewport = true; break; }
-    }
-  }
-  // Pilot_1 Slice 1: humane empty-map invitation.
-  // Show only on Map page when no real atom is represented in the current
-  // viewport. Never covers the map or competes with `+`;
-  // pointer-events: none in CSS.
-  if (elMapEmptyHint) {
-    const showEmpty = currentPage === 'map' && !anyAtomInViewport;
-    elMapEmptyHint.classList.toggle('open', showEmpty);
-    elMapEmptyHint.setAttribute('aria-hidden', showEmpty ? 'false' : 'true');
-  }
-}
-
-// ---------------------------------------------------------------------------
-// Leader lines (SVG overlay) — connect each bubble to its atom dot
-// ---------------------------------------------------------------------------
-
-let svgLeaderOverlay = null;
-
-/**
- * Ensure the SVG overlay exists inside the map container. Called once from
- * initMap() and safe to call again (idempotent) in case the container is
- * rebuilt.
- */
-function ensureLeaderOverlay() {
-  if (!map) return null;
-  if (svgLeaderOverlay && svgLeaderOverlay.isConnected) return svgLeaderOverlay;
-  const container = map.getContainer();
-  let svg = container.querySelector('#leader-lines');
-  if (!svg) {
-    svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-    svg.setAttribute('id', 'leader-lines');
-    // Keep the SVG non-interactive so clicks pass through to the map/dots.
-    svg.setAttribute('aria-hidden', 'true');
-    container.appendChild(svg);
-  }
-  svgLeaderOverlay = svg;
-  return svg;
-}
-
-/**
- * Draw one <line> per visible bubble from the atom dot (map-projected
- * [lon,lat]) up to the bottom-center of the bubble DOM.
- *
- * Performance: called on every map `render` event (~60 fps during pan/zoom).
- * Per-frame cost: one bounding-rect read per bubble + map.project() per
- * atom. With the current LOD cap (< 200 bubbles) this stays well under 1ms.
- *
- * Colors: matches the category dot so the line visually connects the bubble
- * to the same category marker on the map.
- */
-function drawLeaderLines() {
-  if (!map || atomMarkers.size === 0) {
-    if (svgLeaderOverlay) svgLeaderOverlay.innerHTML = '';
-    return;
-  }
-  const svg = ensureLeaderOverlay();
-  if (!svg) return;
-
-  const containerRect = map.getContainer().getBoundingClientRect();
-  const parts = [];
-
-  for (const [pid, marker] of atomMarkers) {
-    const el = marker.getElement();
-    // Skip hidden-by-LOD bubbles so lines disappear in lockstep with them.
-    if (!el || el.style.display === 'none') continue;
-
-    // Atom dot position: project the marker's lngLat into screen space.
-    const lngLat = marker.getLngLat();
-    const dotPt = map.project([lngLat.lng, lngLat.lat]);
-    if (!dotPt || !isFinite(dotPt.x) || !isFinite(dotPt.y)) continue;
-
-    // Iteration 1b fix: instead of anchoring the line at the bubble's
-    // bottom-center (which makes the line visibly cross the bubble body),
-    // compute the bubble's rectangle edge facing the dot via a standard
-    // line-rectangle intersection from the bubble center toward the dot.
-    const bubbleRect = el.getBoundingClientRect();
-    if (bubbleRect.width === 0 && bubbleRect.height === 0) continue;
-    const cx = bubbleRect.left + bubbleRect.width / 2 - containerRect.left;
-    const cy = bubbleRect.top + bubbleRect.height / 2 - containerRect.top;
-    const dx = dotPt.x - cx;
-    const dy = dotPt.y - cy;
-    let bubbleX = cx;
-    let bubbleY = cy;
-    if (dx !== 0 || dy !== 0) {
-      const hw = bubbleRect.width / 2;
-      const hh = bubbleRect.height / 2;
-      const tx = dx !== 0 ? hw / Math.abs(dx) : Infinity;
-      const ty = dy !== 0 ? hh / Math.abs(dy) : Infinity;
-      const t = Math.min(tx, ty);
-      bubbleX = cx + dx * t;
-      bubbleY = cy + dy * t;
-    }
-
-    const group = el._punktoGroup;
-    const atom = group && group.length ? group[0] : null;
-    const lineColor = atom ? mapColorForAtom(atom, 255) : rgba(CATEGORY_META.TEXT.color, 255);
-
-    parts.push(
-      `<line x1="${dotPt.x.toFixed(1)}" y1="${dotPt.y.toFixed(1)}"` +
-      ` x2="${bubbleX.toFixed(1)}" y2="${bubbleY.toFixed(1)}"` +
-      ` stroke="rgb(${lineColor[0]} ${lineColor[1]} ${lineColor[2]})" stroke-width="1.5"` +
-      ` stroke-opacity="0.65" stroke-linecap="round" />`
-    );
-  }
-
-  svg.innerHTML = parts.join('');
-}
-
-// ---------------------------------------------------------------------------
 // Panel / atom list UI
 // ---------------------------------------------------------------------------
 
@@ -1124,6 +356,7 @@ async function refreshUI(newAtomIds = null) {
   if (elSettingsCount) elSettingsCount.textContent = String(total);
 
   // Render recent 50 visible atoms in panel, prioritizing nearby notes
+  const map = getMapInstance();
   const center = map ? map.getCenter() : null;
   const enriched = visibleAtoms.map(a => ({
     ...a,
@@ -1154,17 +387,7 @@ async function refreshUI(newAtomIds = null) {
   }
   // Expose to main-view feed
   _mainFeedAtoms = recent;
-  if (selectedBoardAtom && currentPage === 'map') {
-    const selectedId = selectedAtomId;
-    if (selectedId) {
-      selectedBoardAtoms = visibleAtoms;
-      const selectionIds = await buildSelectionIds(selectedBoardAtoms);
-      const refreshedSelected = selectedBoardAtoms.find((atom) => selectionIds.get(atom) === selectedId) || selectedMapAtom;
-      selectedMapAtom = refreshedSelected;
-      selectedBoardAtom = resolveBoardAtom(refreshedSelected, selectedBoardAtoms) || refreshedSelected || selectedBoardAtom;
-    }
-    renderMapBoardSheet();
-  }
+  if (hasOpenBoard() && currentPage === 'map') await refreshMapBoardAtoms(visibleAtoms);
   if (elMainStatusCount) {
     elMainStatusCount.textContent = mapReadyForScope
       ? `${recent.length} visible`
@@ -1263,6 +486,7 @@ function setPanelOpen(open) {
   elMapEl.classList.toggle('panel-open', open);
   elFabAdd.classList.toggle('panel-open', open);
   elFabPanel.classList.toggle('panel-open', open);
+  const map = getMapInstance();
   if (map) map.resize();
 }
 
@@ -1271,46 +495,6 @@ function setPanelOpen(open) {
 // ---------------------------------------------------------------------------
 
 let placementDraft = null;
-
-function updateCrosshairReadout() {
-  if (!elCrosshairReadout) return;
-  const { building } = detectBuildingAtCenter();
-  if (!building) {
-    elCrosshairReadout.textContent = '';
-    return;
-  }
-  const h = Math.round(building.height);
-  const parts = [];
-  if (building.name) parts.push(building.name);
-  parts.push(`${building.maxFloor}F`);
-  parts.push(`${h}m`);
-  elCrosshairReadout.textContent = parts.join(' · ');
-}
-
-function detectBuildingAtCenter() {
-  if (!map) return { building: null };
-  try {
-    const center = map.getCenter();
-    const screenPt = map.project(center);
-    const layers = (map.getStyle().layers || []).filter(l => l.type === 'fill-extrusion' || (l.id && l.id.toLowerCase().includes('building'))).map(l => l.id);
-    if (layers.length === 0) return { building: null };
-    const R = 30;
-    const box = [[screenPt.x - R, screenPt.y - R],[screenPt.x + R, screenPt.y + R]];
-    const features = map.queryRenderedFeatures(box, { layers });
-    if (!features || features.length === 0) return { building: null };
-    const heightOf = (props) => { let h = Number(props.render_height); if (!Number.isFinite(h) || h <= 0) h = Number(props.height); if (!Number.isFinite(h) || h <= 0) { const levels = Number(props['building:levels']); if (Number.isFinite(levels) && levels > 0) h = levels * FLOOR_HEIGHT_M; } return Number.isFinite(h) && h > 0 ? h : 0; };
-    let best = null; let bestHeight = 0;
-    for (const f of features) { const h = heightOf(f.properties || {}); if (h > bestHeight) { best = f; bestHeight = h; } }
-    if (!best || bestHeight < FLOOR_HEIGHT_M) return { building: null };
-    const props = best.properties || {};
-    const name = (props.name && String(props.name).trim()) || null;
-    const maxFloor = Math.max(1, Math.floor(bestHeight / FLOOR_HEIGHT_M));
-    return { building: { name, height: bestHeight, maxFloor } };
-  } catch (e) {
-    console.warn('[modal] detectBuildingAtCenter failed:', e);
-    return { building: null };
-  }
-}
 
 
 function selectedBoardStableId(atom) {
@@ -1418,6 +602,7 @@ async function signAtomForSubmit(atom) {
 }
 
 async function submitAtomFromModal({ text, author, category, draft }) {
+  const map = getMapInstance();
   const center = draft ? { lat: draft.lat, lng: draft.lon } : map.getCenter();
   const altMeters = draft?.altitude_m || 0;
   const punkto = encodeLocation(center.lat, center.lng, altMeters);
@@ -1464,193 +649,9 @@ function updateCreateLocationDisplay(draft) {
     : punkto;
 }
 
-// ---------------------------------------------------------------------------
-// Map initialisation
-// ---------------------------------------------------------------------------
-
-function initMap() {
-  if (map) {
-    console.log('[map] init skipped existing');
-    requestAnimationFrame(() => { if (map) map.resize(); });
-    return map;
-  }
-  if (mapInitStarted) {
-    console.log('[map] init skipped existing');
-    return null;
-  }
-
-  const container = document.getElementById('map');
-  if (!container) {
-    console.error('[map] initMap aborted: #map element not found');
-    return;
-  }
-  mapInitStarted = true;
-  const rect = elMapEl ? elMapEl.getBoundingClientRect() : null;
-  if (rect) console.log('[map] container size before init', Math.round(rect.width), Math.round(rect.height));
-  const { MapboxOverlay } = window.deck;
-
-  try {
-    map = new maplibregl.Map({
-      container: 'map',
-      style: MAP_STYLE,
-      center: [12.5, 55.7],
-      zoom: 9,
-      pitch: 45,
-      bearing: -10,
-      antialias: true,
-    });
-
-    map.on('error', e => {
-      console.error('[map] error:', e?.error?.message || e);
-    });
-  } catch (err) {
-    console.error('[map] initMap failed:', err.message, err.stack);
-    mapInitStarted = false;
-    map = null;
-    return;
-  }
-
-  // Add navigation controls
-  map.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'bottom-right');
-
-  // Try to geolocate
-  map.addControl(
-    new maplibregl.GeolocateControl({
-      positionOptions: { enableHighAccuracy: true },
-      trackUserLocation: false,
-      showUserLocation: true,
-      showAccuracyCircle: false,
-    }),
-    'bottom-right'
-  );
-
-  // deck.gl overlay
-  deckOverlay = new MapboxOverlay({
-    interleaved: false,
-    layers: [],
-  });
-  map.addControl(deckOverlay);
-
-  map.on('load', async () => {
-    console.log('[map] loaded');
-    mapLoadComplete = true;
-
-    // Update DOM bubble LOD whenever zoom or pan changes.
-    map.on('zoomend', () => {
-      updateBubbleVisibility();
-      drawLeaderLines();
-      updateCrosshairReadout();
-      queueRefreshUI();
-    });
-    map.on('moveend', () => {
-      updateBubbleVisibility();
-      drawLeaderLines();
-      updateCrosshairReadout();
-      queueRefreshUI();
-    });
-
-    // Ensure the SVG overlay exists and is redrawn on every map render event
-    // so leader lines track pan/zoom/pitch/bearing smoothly.
-    ensureLeaderOverlay();
-    map.on('render', drawLeaderLines);
-    map.on('click', (e) => {
-      if (isCreateModalOpen() && placementDraft) {
-        placementDraft.lat = e.lngLat.lat;
-        placementDraft.lon = e.lngLat.lng;
-        updateCreateCenter(e.lngLat.lat, e.lngLat.lng);
-      }
-    });
-
-    // Pilot_1 Slice 1 Review Fix 1b: nearby-first centering.
-    // On an ordinary (non-deep-link) open, attempt a one-shot browser
-    // geolocation request. If it succeeds, center the Pilot_1 map on the
-    // user's location at a local/street scale. Non-blocking: denied,
-    // unavailable, or timeout keeps the existing fallback center. Deep
-    // links remain higher priority and are not overridden.
-    if (!deepLinkPunkto && navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (pos) => {
-          try {
-            map.jumpTo({
-              center: [pos.coords.longitude, pos.coords.latitude],
-              zoom: 14,
-              pitch: 45,
-              bearing: -10,
-            });
-            updateBubbleVisibility();
-            drawLeaderLines();
-            queueRefreshUI();
-          } catch (e) {
-            console.warn('[punkto] nearby-center jumpTo failed:', e);
-          }
-        },
-        (err) => {
-          console.log('[punkto] nearby geolocation unavailable:', err?.message || err);
-        },
-        { enableHighAccuracy: true, timeout: 8000, maximumAge: 60000 }
-      );
-    }
-
-    // Add 3D building extrusion layer (OpenFreeMap has openmaptiles source)
-    try {
-      map.addLayer({
-        id: 'buildings-3d',
-        type: 'fill-extrusion',
-        source: 'openmaptiles',
-        'source-layer': 'building',
-        minzoom: 12,
-        paint: {
-          'fill-extrusion-color': '#8f9fb7',
-          'fill-extrusion-height': ['coalesce', ['get', 'render_height'], ['get', 'height'], 5],
-          'fill-extrusion-base': ['coalesce', ['get', 'render_min_height'], 0],
-          'fill-extrusion-opacity': 0.58,
-        },
-      });
-    } catch (e) {
-      console.warn('[map] 3D buildings layer failed:', e);
-    }
-
-    await refreshUI();
-    requestAnimationFrame(() => { if (map) map.resize(); });
-
-    // If the user opened a /p/<id> deep-link, focus it now that atoms are loaded
-    await focusDeepLinkIfReady();
-
-    // Show first-visit onboarding hint (skipped for deep-link visitors and repeat users)
-    showOnboarding();
-  });
-  return map;
-}
-
-// ---------------------------------------------------------------------------
-// 3D toggle
-// ---------------------------------------------------------------------------
-
-function toggle3D() {
-  is3D = !is3D;
-  if (is3D) {
-    map.easeTo({ pitch: 45, bearing: -10, duration: 800 });
-    elToggle3D.textContent = '2D';
-    elToggle3D.title = 'Switch to 2D view';
-  } else {
-    map.easeTo({ pitch: 0, bearing: 0, duration: 800 });
-    elToggle3D.textContent = '3D';
-    elToggle3D.title = 'Switch to 3D view';
-  }
-}
-
-// ---------------------------------------------------------------------------
-// Event wiring
-// ---------------------------------------------------------------------------
-
-
-// ---------------------------------------------------------------------------
-// Cache reset
-// ---------------------------------------------------------------------------
-
 async function resetCache() {
   if (!confirm('This will delete all locally cached atoms and reload the app. Continue?')) return;
-  try { await db.delete(); } catch(e) {}
+  try { await db.delete(); } catch {}
   if ('serviceWorker' in navigator) {
     const regs = await navigator.serviceWorker.getRegistrations();
     for (const r of regs) await r.unregister();
@@ -1695,6 +696,7 @@ function dismissOnboarding() {
     const { onInteract, onMapMove } = onboardingDismissHandlers;
     document.removeEventListener('pointerdown', onInteract, true);
     document.removeEventListener('keydown', onInteract, true);
+    const map = getMapInstance();
     if (map) {
       map.off('movestart', onMapMove);
       map.off('zoomstart', onMapMove);
@@ -1719,6 +721,7 @@ function showOnboarding() {
   onboardingDismissHandlers = { onInteract, onMapMove };
   document.addEventListener('pointerdown', onInteract, true);
   document.addEventListener('keydown', onInteract, true);
+  const map = getMapInstance();
   if (map) {
     map.on('movestart', onMapMove);
     map.on('zoomstart', onMapMove);
@@ -1973,7 +976,10 @@ function toggleSettingsMenu() {
 
 function wireEvents() {
   initCreateModal({
-    getInitialContext: () => ({ center: map ? map.getCenter() : { lat: 0, lng: 0 }, building: detectBuildingAtCenter().building }),
+    getInitialContext: () => {
+      const map = getMapInstance();
+      return { center: map ? map.getCenter() : { lat: 0, lng: 0 }, building: detectBuildingAtCenter().building };
+    },
     onPreviewChanged: (draft) => { placementDraft = draft; updateCreateLocationDisplay(draft); renderAtoms(); },
     onSubmitCreate: submitAtomFromModal,
     onClosed: () => { placementDraft = null; renderAtoms(); },
@@ -1991,65 +997,6 @@ function wireEvents() {
     dismissOnboarding();
     openCreateModal();
   });
-
-  if (elMapBoardSheet) {
-    elMapBoardSheet.addEventListener('click', (e) => {
-      const closeBtn = e.target.closest('[data-action="map-board-close"]');
-      if (closeBtn) {
-        e.preventDefault();
-        closeMapBoard({ clearSelection: true });
-        return;
-      }
-
-      const copyBtn = e.target.closest('[data-action="copy-board-link"]');
-      if (copyBtn) {
-        e.preventDefault();
-        const id = copyBtn.dataset.id || '';
-        if (!id) return;
-        const link = (window.location.origin || '') + '/p/' + encodeURIComponent(id);
-        navigator.clipboard?.writeText(link).then(() => {
-          copyBtn.textContent = 'Copied';
-          window.setTimeout(() => { copyBtn.textContent = 'Copy board link'; }, 1400);
-        }).catch(() => {
-          copyBtn.textContent = 'Copy failed';
-          window.setTimeout(() => { copyBtn.textContent = 'Copy board link'; }, 1400);
-        });
-        return;
-      }
-
-      const showBtn = e.target.closest('[data-action="show-in-3d"]');
-      if (showBtn) {
-        e.preventDefault();
-        const id = showBtn.dataset.id || '';
-        if (id) focusPunkto(id);
-        return;
-      }
-    });
-
-    elMapBoardSheet.addEventListener('submit', async (e) => {
-      const form = e.target.closest('[data-action="board-reply-form"]');
-      if (!form || !selectedBoardAtom) return;
-      e.preventDefault();
-      const textarea = form.querySelector('#board-reply-text');
-      const button = form.querySelector('#board-reply-submit');
-      const text = String(textarea?.value || '').trim();
-      if (!text) return;
-      if (button) button.disabled = true;
-      try {
-        await submitBoardReply({ boardAtom: selectedBoardAtom, text });
-        mapBoardReplyDraft = '';
-        mapBoardReplyStatus = { type: 'success', message: 'Public reply posted.' };
-        if (textarea) textarea.value = '';
-        await refreshUI();
-      } catch (err) {
-        mapBoardReplyDraft = text;
-        mapBoardReplyStatus = { type: 'error', message: err?.message || 'Could not post public reply.' };
-      } finally {
-        if (button) button.disabled = false;
-        renderMapBoardSheet();
-      }
-    });
-  }
 
   // Handle keyboard escape
   document.addEventListener('keydown', e => {
@@ -2169,8 +1116,36 @@ async function boot() {
     },
   });
   initMapView({
-    getMap: () => map,
-    initMap: () => initMap(),
+    mapStyle: MAP_STYLE,
+    getAllAtomsNewestFirst,
+    isHiddenAtom,
+    getAtomSelectionId,
+    getSelectedAtomId: () => selectedAtomId,
+    getPlacementDraft: () => placementDraft,
+    setPlacementDraftPosition: updateCreateCenter,
+    isCreateModalOpen,
+    onOpenMapBoardForAtom: openMapBoardForAtom,
+    onOpenTextBoardForAtom: openTextBoardForAtom,
+    onClearSelection: () => closeMapBoard({ clearSelection: true }),
+    onRefreshUI: refreshUI,
+    onQueueRefreshUI: queueRefreshUI,
+    onFocusDeepLinkIfReady: focusDeepLinkIfReady,
+    onShowOnboarding: showOnboarding,
+    hasDeepLink: () => Boolean(deepLinkPunkto),
+    getCurrentPage: () => currentPage,
+  });
+  initBoardView({
+    sheet: elMapBoardSheet,
+    getAtoms: () => _mainFeedAtoms,
+    getAtomSelectionId,
+    onSelectionChanged: ({ selectedAtomId: nextSelectedAtomId }) => {
+      selectedAtomId = nextSelectedAtomId || null;
+    },
+    onSetPanelOpen: setPanelOpen,
+    onShowMap: () => showPage('map'),
+    onRenderMap: renderAtoms,
+    onSubmitReply: submitBoardReply,
+    onFocusMap: focusPunkto,
   });
 
   startSyncBoot().catch((err) => {
