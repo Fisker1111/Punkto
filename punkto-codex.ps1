@@ -82,12 +82,25 @@ if (-not (Test-Path $TaskFile)) {
 
 $Task = Get-Content -Raw -Path $TaskFile
 
-# HOLD is an intentional safety state between implementation tasks.
-if ($Task -match 'Status:\s*\*\*HOLD') {
+# Read only the canonical top-level Status line. The task body may mention the
+# future HOLD status as part of its commit instructions, so scanning the whole
+# file for the word HOLD would produce a false positive.
+$StatusLine = ($Task -split "`r?`n" | Where-Object { $_ -match '^\s*Status:' } | Select-Object -First 1)
+if (-not $StatusLine) {
+    throw 'CODEX_CURRENT_TASK.md has no Status line. Refusing to launch Codex.'
+}
+
+if ($StatusLine -match '^\s*Status:\s*\*\*HOLD\b') {
     Write-Host 'CODEX_CURRENT_TASK.md is on HOLD. No Codex task was launched.' -ForegroundColor Yellow
     Write-Host 'Ask ChatGPT to activate the next implementation task, then run this script again.'
     exit 0
 }
+
+if ($StatusLine -notmatch '^\s*Status:\s*\*\*ACTIVE\b') {
+    throw "Unrecognized task status: $StatusLine"
+}
+
+Write-Host $StatusLine -ForegroundColor Green
 
 $Head = git rev-parse HEAD
 if ($LASTEXITCODE -ne 0) { throw 'git rev-parse HEAD failed' }
