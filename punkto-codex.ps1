@@ -13,9 +13,49 @@ if (-not (Test-Path (Join-Path $RepoRoot '.git'))) {
     throw "Not a Git checkout: $RepoRoot"
 }
 
-if (-not (Get-Command codex -ErrorAction SilentlyContinue)) {
-    throw "Codex CLI was not found in PATH. Run 'codex' once from PowerShell to verify the installation."
+# Resolve Codex robustly on Windows. Depending on how Codex was installed,
+# PowerShell may be able to launch `codex` interactively while Get-Command
+# inside a script does not resolve the same shim/app alias. Prefer the normal
+# command resolution, then fall back to known standalone/npm locations and
+# finally `where.exe`.
+$CodexExe = $null
+$CodexCommand = Get-Command codex -ErrorAction SilentlyContinue | Select-Object -First 1
+if ($CodexCommand) {
+    if ($CodexCommand.Path) {
+        $CodexExe = $CodexCommand.Path
+    } elseif ($CodexCommand.Source) {
+        $CodexExe = $CodexCommand.Source
+    } elseif ($CodexCommand.Definition) {
+        $CodexExe = $CodexCommand.Definition
+    }
 }
+
+if (-not $CodexExe) {
+    $Candidates = @(
+        (Join-Path $env:LOCALAPPDATA 'Programs\OpenAI\Codex\bin\codex.exe'),
+        (Join-Path $env:USERPROFILE '.codex\bin\codex.exe'),
+        (Join-Path $env:APPDATA 'npm\codex.cmd')
+    )
+    foreach ($Candidate in $Candidates) {
+        if (Test-Path $Candidate) {
+            $CodexExe = $Candidate
+            break
+        }
+    }
+}
+
+if (-not $CodexExe) {
+    $WhereResult = & where.exe codex 2>$null
+    if ($LASTEXITCODE -eq 0 -and $WhereResult) {
+        $CodexExe = @($WhereResult)[0]
+    }
+}
+
+if (-not $CodexExe) {
+    throw "Codex CLI was not found. Try: Get-Command codex | Format-List *  and  where.exe codex"
+}
+
+Write-Host "Using Codex: $CodexExe" -ForegroundColor DarkGray
 
 # Never overwrite or mix with uncommitted human/agent work.
 $dirtyBefore = git status --porcelain
@@ -56,7 +96,7 @@ Write-Host "Task: $TaskFile" -ForegroundColor DarkGray
 
 # Pass the task as one positional prompt rather than piping stdin. This keeps
 # the launcher simple and avoids stdin/TTY edge cases in non-interactive Codex.
-& codex exec $Task
+& $CodexExe exec $Task
 $CodexExit = $LASTEXITCODE
 
 Write-Host ''
