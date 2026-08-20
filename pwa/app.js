@@ -11,7 +11,7 @@ import {
   isSettingsOpen as shellIsSettingsOpen,
   setCounts as shellSetCounts,
 } from './ui-shell.js';
-import { initTextView, renderTextFeed, openBoardById, isReplyAtom, isRootAtom, getAtomStableId } from './ui-text.js';
+import { initTextView, renderTextFeed, openBoardById, isReplyAtom, isRootAtom, getAtomStableId, resolveBoardAtom, renderBoardSheetHtml } from './ui-text.js';
 import { initMapView, showMapView } from './ui-map.js';
 import { initCreateModal, openCreateModal, closeCreateModal, setCreateError, setCreateSubmitting, updateCreateCenter, isCreateModalOpen } from './ui-create.js';
 import { initSettingsView, renderSettingsView } from './ui-settings.js';
@@ -137,6 +137,7 @@ let _refreshUiTimer = null;
 // via initShell({ onShowText, onShowMap }) in boot().
 function showPage(page) {
   currentPage = page;
+  if (page !== 'map') closeMapBoard({ clearSelection: true });
   shellShowPage(page);
 }
 
@@ -164,6 +165,67 @@ function openBoardForAtom(atom, atoms = _mainFeedAtoms) {
   if (!boardId) return;
   showPage('text');
   openBoardById(boardId, { atom: boardAtom, atoms: _mainFeedAtoms });
+}
+
+async function getAtomSelectionId(atom) {
+  const direct = String(atom?.atom_id || atom?.id || '').trim();
+  if (direct) return direct;
+  try {
+    const computed = await computeAtomId(atom);
+    if (computed) return computed;
+  } catch {}
+  return getAtomStableId(atom) || stripPunktoPrefix(atom?.punkto || '');
+}
+
+async function buildSelectionIds(atoms) {
+  const pairs = await Promise.all((Array.isArray(atoms) ? atoms : []).map(async (atom) => [atom, await getAtomSelectionId(atom)]));
+  return new Map(pairs);
+}
+
+function closeMapBoard({ clearSelection = true } = {}) {
+  if (elMapBoardSheet) {
+    elMapBoardSheet.classList.remove('open');
+    elMapBoardSheet.setAttribute('aria-hidden', 'true');
+    elMapBoardSheet.innerHTML = '';
+  }
+  selectedBoardAtom = null;
+  selectedBoardAtoms = [];
+  mapBoardReplyStatus = null;
+  mapBoardReplyDraft = '';
+  if (clearSelection) {
+    selectedAtomId = null;
+    selectedMapAtom = null;
+    renderAtoms().catch((err) => console.warn('[map-board] selection refresh failed:', err));
+  }
+}
+
+function renderMapBoardSheet() {
+  if (!elMapBoardSheet || !selectedBoardAtom) return;
+  elMapBoardSheet.innerHTML = renderBoardSheetHtml({
+    atom: selectedBoardAtom,
+    atoms: selectedBoardAtoms.length ? selectedBoardAtoms : _mainFeedAtoms,
+    replyStatus: mapBoardReplyStatus,
+    replyDraft: mapBoardReplyDraft,
+    backLabel: 'Close board',
+    backAction: 'map-board-close',
+  });
+  elMapBoardSheet.classList.add('open');
+  elMapBoardSheet.setAttribute('aria-hidden', 'false');
+}
+
+async function openMapBoardForAtom(atom, atoms = _mainFeedAtoms) {
+  if (!atom || !atom.punkto) return;
+  const localAtoms = Array.isArray(atoms) && atoms.length ? atoms : _mainFeedAtoms;
+  selectedMapAtom = atom;
+  selectedAtomId = await getAtomSelectionId(atom);
+  selectedBoardAtoms = localAtoms;
+  selectedBoardAtom = resolveBoardAtom(atom, selectedBoardAtoms) || atom;
+  mapBoardReplyStatus = null;
+  mapBoardReplyDraft = '';
+  setPanelOpen(false);
+  showPage('map');
+  renderMapBoardSheet();
+  await renderAtoms();
 }
 
 function ensureMapInitialized() {
@@ -237,9 +299,15 @@ const atomMarkers = new Map();
 let _lastRenderedAtoms = [];
 // Currently focused punkto id (without 'p:') for atom-bubble--focus class
 let focusedPunktoId = null;
-// Pilot_1 Slice 2: selected beacon state (tied to a real atom punkto id).
-// When set, the matching beacon gets a stronger visual state in renderAtoms.
-let selectedPunkto = null;
+// Pilot_1 Slice 3: selected beacon state is tied to one real atom identity.
+// Punkto/location can be shared by independent atoms, so visual selection
+// must not group by location.
+let selectedAtomId = null;
+let selectedMapAtom = null;
+let selectedBoardAtom = null;
+let selectedBoardAtoms = [];
+let mapBoardReplyStatus = null;
+let mapBoardReplyDraft = '';
 // Phase 2: first-render fit-to-atoms flag. True after the first successful
 // boot fit (or boot where there were no atoms). Subsequent renders never
 // re-fit to avoid jarring viewport changes.
@@ -261,6 +329,7 @@ const elPanelClose  = document.getElementById('panel-close');
 const elAtomList    = document.getElementById('atom-list');
 const elAtomEmpty   = document.getElementById('atom-list-empty');
 const elMapEl       = document.getElementById('map');
+const elMapBoardSheet = document.getElementById('map-board-sheet');
 const elModalLocation = document.getElementById('modal-location');
 const elToggle3D    = document.getElementById('toggle-3d');
 const elSettingsNode = document.getElementById('settings-node');
@@ -426,9 +495,21 @@ async function focusPunkto(id) {
     if (prev) prev.getElement().classList.remove('atom-bubble--focus');
   }
   focusedPunktoId = id;
-  // Pilot_1 Slice 2: deep-link focus also selects the beacon so it gets the
-  // stronger visual state in the deck.gl beacon layers.
-  selectedPunkto = punkto;
+  // Pilot_1 Slice 3: deep-link focus opens the same board path when the
+  // matching real atom is available locally. If only the location id is
+  // available, the camera focus still works.
+  const focusAtoms = (await getAllAtomsNewestFirst()).filter(a => !isHiddenAtom(a));
+  const focusedAtom = focusAtoms.find((atom) => {
+    const pid = String(atom?.punkto || '').trim();
+    const stable = getAtomStableId(atom);
+    return pid === punkto || stripPunktoPrefix(pid) === id || stable === id;
+  }) || null;
+  if (focusedAtom) {
+    await openMapBoardForAtom(focusedAtom, focusAtoms);
+  } else {
+    selectedAtomId = null;
+    selectedMapAtom = null;
+  }
   const cur = atomMarkers.get(punkto);
   if (cur) cur.getElement().classList.add('atom-bubble--focus');
 
@@ -552,6 +633,7 @@ async function renderAtoms(newAtomIds = null) {
   // can check viewport presence from the real atoms (beacons) instead of the
   // old DOM bubble markers, which are no longer the primary representation.
   _lastRenderedAtoms = atoms;
+  if (selectedBoardAtom) selectedBoardAtoms = atoms;
 
   // Phase 2: per-punkto aggregation for count badges and multi-atom popups.
   // atomsByPunkto maps a canonical punkto id → array of atoms (newest first,
@@ -564,9 +646,13 @@ async function renderAtoms(newAtomIds = null) {
     else atomsByPunkto.set(a.punkto, [a]);
   }
 
+  const selectionIds = await buildSelectionIds(atoms);
   const scatterData = atoms.map(a => {
-    const isSel = selectedPunkto && a.punkto === selectedPunkto;
+    const selectionId = selectionIds.get(a) || getAtomStableId(a) || stripPunktoPrefix(a.punkto || '');
+    const isSel = selectedAtomId && selectionId === selectedAtomId;
     return {
+      atom: a,
+      selectionId,
       position: [a.lon, a.lat, a.alt],
       ground: [a.lon, a.lat, 0],
       color: mapColorForAtom(a, isSel ? 255 : 245),
@@ -593,6 +679,7 @@ async function renderAtoms(newAtomIds = null) {
       ringColor: rgba(DRAFT_COLOR, 120),
       stemColor: rgba(DRAFT_COLOR, 180),
       selected: false,
+      selectionId: 'draft',
       punkto: 'draft',
       text: 'Placement preview',
       f: 'draft',
@@ -655,11 +742,9 @@ async function renderAtoms(newAtomIds = null) {
       onClick: info => {
         if (!info.object || !map) return;
         const a = info.object;
-        // Pilot_1 Slice 2: selection is deterministic, tied to a real atom punkto.
-        selectedPunkto = a.punkto;
-        const group = atomsByPunkto.get(a.punkto) || [a];
-        openAtomPopup(group.length > 1 ? group : group[0], info.coordinate.slice(0, 2));
-        renderAtoms();
+        // Pilot_1 Slice 3: select exactly the clicked real atom and show its
+        // board sheet. Do not group same-location atoms into a synthetic board.
+        openMapBoardForAtom(a.atom || a, atoms).catch((err) => console.warn('[map-board] open failed:', err));
       },
     }),
   ];
@@ -675,7 +760,7 @@ async function renderAtoms(newAtomIds = null) {
       .filter(a => (a.alt || 0) > 0)
       .map(a => {
         const baseRgba = mapColorForAtom(a, 245);
-        const isSel = selectedPunkto && a.punkto === selectedPunkto;
+        const isSel = selectedAtomId && (selectionIds.get(a) || getAtomStableId(a) || stripPunktoPrefix(a.punkto || '')) === selectedAtomId;
         const color = [baseRgba[0], baseRgba[1], baseRgba[2], isSel ? 230 : 153];
         return {
           source: [a.lon, a.lat, 0],
@@ -1069,6 +1154,17 @@ async function refreshUI(newAtomIds = null) {
   }
   // Expose to main-view feed
   _mainFeedAtoms = recent;
+  if (selectedBoardAtom && currentPage === 'map') {
+    const selectedId = selectedAtomId;
+    if (selectedId) {
+      selectedBoardAtoms = visibleAtoms;
+      const selectionIds = await buildSelectionIds(selectedBoardAtoms);
+      const refreshedSelected = selectedBoardAtoms.find((atom) => selectionIds.get(atom) === selectedId) || selectedMapAtom;
+      selectedMapAtom = refreshedSelected;
+      selectedBoardAtom = resolveBoardAtom(refreshedSelected, selectedBoardAtoms) || refreshedSelected || selectedBoardAtom;
+    }
+    renderMapBoardSheet();
+  }
   if (elMainStatusCount) {
     elMainStatusCount.textContent = mapReadyForScope
       ? `${recent.length} visible`
@@ -1891,13 +1987,74 @@ function wireEvents() {
 
   // Add atom
   elFabAdd.addEventListener('click', () => {
+    closeMapBoard({ clearSelection: true });
     dismissOnboarding();
     openCreateModal();
   });
 
+  if (elMapBoardSheet) {
+    elMapBoardSheet.addEventListener('click', (e) => {
+      const closeBtn = e.target.closest('[data-action="map-board-close"]');
+      if (closeBtn) {
+        e.preventDefault();
+        closeMapBoard({ clearSelection: true });
+        return;
+      }
+
+      const copyBtn = e.target.closest('[data-action="copy-board-link"]');
+      if (copyBtn) {
+        e.preventDefault();
+        const id = copyBtn.dataset.id || '';
+        if (!id) return;
+        const link = (window.location.origin || '') + '/p/' + encodeURIComponent(id);
+        navigator.clipboard?.writeText(link).then(() => {
+          copyBtn.textContent = 'Copied';
+          window.setTimeout(() => { copyBtn.textContent = 'Copy board link'; }, 1400);
+        }).catch(() => {
+          copyBtn.textContent = 'Copy failed';
+          window.setTimeout(() => { copyBtn.textContent = 'Copy board link'; }, 1400);
+        });
+        return;
+      }
+
+      const showBtn = e.target.closest('[data-action="show-in-3d"]');
+      if (showBtn) {
+        e.preventDefault();
+        const id = showBtn.dataset.id || '';
+        if (id) focusPunkto(id);
+        return;
+      }
+    });
+
+    elMapBoardSheet.addEventListener('submit', async (e) => {
+      const form = e.target.closest('[data-action="board-reply-form"]');
+      if (!form || !selectedBoardAtom) return;
+      e.preventDefault();
+      const textarea = form.querySelector('#board-reply-text');
+      const button = form.querySelector('#board-reply-submit');
+      const text = String(textarea?.value || '').trim();
+      if (!text) return;
+      if (button) button.disabled = true;
+      try {
+        await submitBoardReply({ boardAtom: selectedBoardAtom, text });
+        mapBoardReplyDraft = '';
+        mapBoardReplyStatus = { type: 'success', message: 'Public reply posted.' };
+        if (textarea) textarea.value = '';
+        await refreshUI();
+      } catch (err) {
+        mapBoardReplyDraft = text;
+        mapBoardReplyStatus = { type: 'error', message: err?.message || 'Could not post public reply.' };
+      } finally {
+        if (button) button.disabled = false;
+        renderMapBoardSheet();
+      }
+    });
+  }
+
   // Handle keyboard escape
   document.addEventListener('keydown', e => {
     if (e.key === 'Escape') {
+      closeMapBoard({ clearSelection: true });
       closeCreateModal();
       setPanelOpen(false);
     }
@@ -1936,8 +2093,8 @@ function wireEvents() {
 // ---------------------------------------------------------------------------
 
 async function boot() {
-  console.log('PUNKTO APP.JS LOADED pilot1-slice2-beacon-2026-08-19-1');
-  window.PUNKTO_APP_VERSION = 'pilot1-slice2-beacon-2026-08-19-1';
+  console.log('PUNKTO APP.JS LOADED pilot1-slice3-board-2026-08-20-1');
+  window.PUNKTO_APP_VERSION = 'pilot1-slice3-board-2026-08-20-1';
 
   console.log('[punkto] booting...');
 
@@ -1984,12 +2141,18 @@ async function boot() {
   // Wire UI modules (shell / text / map). Callbacks delegate back to app.js
   // so app.js still owns data and lifecycle; modules own DOM/markup/state.
   initShell({
-    onShowText: () => renderMainFeed(),
+    onShowText: () => {
+      currentPage = 'text';
+      closeMapBoard({ clearSelection: true });
+      renderMainFeed();
+    },
     onShowMap: () => {
+      currentPage = 'map';
       ensureMapInitialized();
     },
-    onAdd: () => { dismissOnboarding(); openCreateModal(); },
+    onAdd: () => { closeMapBoard({ clearSelection: true }); dismissOnboarding(); openCreateModal(); },
     onOpenSettings: () => {
+      closeMapBoard({ clearSelection: true });
       renderNetworkPage();
       renderMePage();
       toggleSettingsMenu();

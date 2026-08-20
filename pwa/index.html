@@ -606,6 +606,54 @@
     .board-reply-status.error { color:#9f2d24; font-weight:700; }
     .reply-toast span { font-size: 12px; color: var(--text-mid); line-height: 1.35; }
 
+    #map-board-sheet {
+      position: fixed;
+      left: 0;
+      right: 0;
+      bottom: calc(var(--nav-h) + var(--safe-b) + 8px);
+      z-index: 140;
+      display: none;
+      max-height: min(58vh, 560px);
+      padding: 0 12px;
+      pointer-events: none;
+    }
+    #map-board-sheet.open { display: block; }
+    #map-board-sheet .board-detail {
+      width: min(100%, 760px);
+      max-height: min(58vh, 560px);
+      margin: 0 auto;
+      padding: 12px;
+      overflow-y: auto;
+      pointer-events: auto;
+      border: 1px solid rgba(120,150,190,0.28);
+      border-radius: 18px 18px 12px 12px;
+      background: rgba(12, 18, 28, 0.88);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+      box-shadow: var(--shadow-panel);
+    }
+    #map-board-sheet .board-root .main-card-title { font-size: 20px; line-height: 1.25; }
+    #map-board-sheet .board-root .board-body { font-size: 16px; line-height: 1.65; }
+    #map-board-sheet .main-card { box-shadow: none; }
+    #map-board-sheet .board-back { position: sticky; top: 0; z-index: 1; }
+    body.page-text #map-board-sheet { display: none !important; }
+
+    @media (min-width: 900px) {
+      #map-board-sheet {
+        left: 116px;
+        right: 20px;
+        bottom: 20px;
+        padding: 0;
+      }
+      #map-board-sheet .board-detail {
+        margin-left: auto;
+        margin-right: 0;
+        width: min(540px, calc(100vw - 156px));
+        max-height: min(72vh, 680px);
+        border-radius: 14px;
+      }
+    }
+
     /* Phase 2 token-aligned aliases */
     .ui-card { background: linear-gradient(180deg, var(--surface-strong), var(--surface)); border: 1px solid var(--border2); border-radius: 16px; }
     .ui-btn { appearance:none; font-family: inherit; cursor:pointer; }
@@ -1570,6 +1618,9 @@
   <div id="map-empty-hint" aria-hidden="true">
     <div class="map-empty-text">Leave the first note here.</div>
   </div>
+
+  <!-- Pilot_1 Slice 3: selected map atom board sheet -->
+  <section id="map-board-sheet" aria-live="polite" aria-hidden="true"></section>
 
   <!-- ── Nearby panel ─────────────────────────────────────── -->
   <div id="panel" role="complementary" aria-label="Nearby Punkti">

@@ -1,6 +1,6 @@
 # Codex Current Task
 
-Status: **ACTIVE — Pilot_1 Slice 3: map bottom-sheet board**
+Status: **HOLD — Slice 3 implemented, awaiting CI/review**
 
 Repository: `Fisker1111/Punkto`
 Branch: `pilot-1`
