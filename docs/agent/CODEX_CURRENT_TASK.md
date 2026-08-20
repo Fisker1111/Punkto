@@ -1,6 +1,6 @@
 # Codex Current Task
 
-Status: **HOLD — Slice 3 implemented, awaiting CI/review**
+Status: **ACTIVE — Pilot_1 Slice 3.6: PWA module boundary cleanup**
 
 Repository: `Fisker1111/Punkto`
 Branch: `pilot-1`
@@ -8,170 +8,190 @@ PR: `#110`
 
 ## Goal
 
-Implement Pilot_1 Slice 3 from `docs/PILOT_1_IMPLEMENTATION.md`:
+Refactor the proven Pilot_1 Slice 1–3 frontend so `pwa/app.js` returns to its intended role as the app coordinator rather than continuing to accumulate Map and board implementation detail.
 
-> Selecting a real atom/beacon on Map opens a calm bottom-sheet/public board. The selected world position remains visible behind it. The root message is primary and replies are sequential 2D content. No reply ordering or conversation state may be represented as 3D height.
+This is a **behavior-preserving architecture slice**.
 
-This slice replaces the temporary map popup/detail behavior with the Pilot_1 board treatment. It must reuse existing real atom/root/reply semantics rather than inventing synthetic objects.
+> No new product behavior. No visual redesign. No protocol/storage/sync changes. Move existing proven behavior behind clearer module boundaries so later Pilot work can iterate safely.
+
+The desired direction is already documented in `pwa/ARCHITECTURE.md`: UI modules own UI surfaces/interaction, core/storage/sync modules keep their existing responsibilities, and `app.js` coordinates data/lifecycle across them.
 
 ## Starting state
 
-The launcher has already switched to and fast-forwarded `pilot-1` from `origin/pilot-1` before invoking Codex.
-
 Before editing:
 
-1. Read `AGENTS.md` and `docs/PILOT_1_IMPLEMENTATION.md`.
-2. Confirm the working tree is clean.
-3. Record `git rev-parse HEAD` in your final report.
-4. Inspect the current Slice 2 beacon selection path in `pwa/app.js` and the existing root/reply board implementation in `pwa/ui-text.js` before choosing the smallest implementation.
+1. Read `AGENTS.md`, `docs/PILOT_1_IMPLEMENTATION.md`, and `pwa/ARCHITECTURE.md`.
+2. Confirm the working tree is clean and branch is `pilot-1`.
+3. Inspect the current Slice 3 implementation in `pwa/app.js`, `pwa/ui-map.js`, and `pwa/ui-text.js` before moving code.
+4. Preserve all current Slice 1–3 semantics exactly.
+5. Do not touch test1/node1/node2 operations. Slice 3.5 is an ops/federation state, not a product-code dependency for this refactor.
 
-Do not reset or discard the workflow/CI commits already on `pilot-1`.
+## Architecture target
 
-## Product invariants for this task
+### `pwa/app.js` — coordinator
 
-- Every selected beacon still resolves to a real atom.
-- Independent atoms stay independent; do not merge same-place atoms into a synthetic board.
-- Selection must be exact enough that same-place/same-punkto atoms do not all become selected merely because they share a location/punkto string. Prefer the existing stable atom identity (`atom_id` / `id` / equivalent helper) for selected visual state.
-- If a selected atom is a reply, resolve and display its real root board when the root is available; the clicked atom itself remains a real atom, not a fabricated aggregate.
-- Root message is the primary object in the board.
-- Replies are chronological/sequential 2D UI only.
-- Author/time/source/trust metadata is secondary.
-- Imported-source rendering must remain recognizable and must not lose its source badge/line.
-- The selected map anchor/beacon must not move when the board opens.
+After this slice, `app.js` should primarily:
+
+- boot and wire modules;
+- own cross-layer lifecycle/state that genuinely spans storage, sync, create, settings, Text and Map;
+- obtain/store atom data and pass display-ready data into UI modules;
+- coordinate callbacks between modules;
+- retain protocol/network/storage orchestration already assigned to it.
+
+It should **not** remain the main home for board-sheet DOM/event behavior or low-level MapLibre/deck.gl layer construction.
+
+### `pwa/ui-map.js` — real map UI ownership
+
+Expand `ui-map.js` from its current thin wrapper into the owner of Map presentation concerns that are currently in `app.js`, using explicit dependency injection/callbacks where app-level services are needed.
+
+Prefer moving, where practical and low-risk:
+
+- MapLibre/deck.gl initialization and map instance lifecycle;
+- map show/resize handling;
+- beacon/ground-ring/halo/stem layer construction;
+- selected-beacon visual state;
+- map click/tap delegation for exact real-atom selection;
+- map-only focus/fly-to presentation behavior;
+- map-only rendering state such as deck overlay / map loaded state / visual selection state.
+
+The module may accept callbacks/helpers from `app.js` for things that remain cross-layer, such as obtaining atoms, stable atom IDs, opening a board, geolocation/create placement coordination, or notifying app state.
+
+**MapLibre remains the single authoritative camera. Do not introduce another renderer/camera.**
+
+### `pwa/ui-board.js` — selected map board ownership
+
+Create `pwa/ui-board.js` if it remains the cleanest boundary.
+
+It should own the selected-map-board UI behavior introduced in Slice 3, including as much of the following as can be cleanly isolated without changing behavior:
+
+- selected board atom / board atom list / reply-status / reply-draft UI state;
+- opening/closing/re-rendering `#map-board-sheet`;
+- board click delegation (`close`, `copy link`, `show in 3D`);
+- board reply form event handling;
+- deterministic cleanup when navigating away;
+- reuse of `resolveBoardAtom()` / `renderBoardSheetHtml()` from `ui-text.js` rather than duplicating thread semantics.
+
+Cross-layer actions such as actually submitting a reply, refreshing stored atoms, focusing the map, or calculating a stable atom identity should be supplied as callbacks from `app.js`/`ui-map.js` rather than reimplemented.
+
+### `pwa/ui-text.js`
+
+Keep Text/thread semantics centralized here:
+
+- root/reply resolution;
+- chronological 2D replies;
+- imported-source presentation;
+- shared board/thread markup helpers.
+
+Do not split thread semantics into incompatible Text-vs-Map models.
+
+## Product invariants — must remain unchanged
+
+- Every displayed beacon resolves to one real atom.
+- Independent atoms remain independent; never merge same-place atoms into a synthetic story/board.
+- Selected visual state remains exact enough that same-place/same-punkto atoms do not all become selected together.
+- Selecting a reply resolves to its real root board when the root is available.
+- Root is primary; replies remain chronological/sequential 2D content.
+- The Z-axis still means **physical altitude only**.
 - MapLibre remains the only authoritative map/camera.
-- `+` remains obvious and usable while/after closing the board.
-- Text remains an equivalent representation of the same atoms.
+- Imported-source treatment remains intact.
+- `Text | Map | + | Settings` behavior remains intact.
+- `+` remains obvious and usable.
+- Closing a board returns to the same map context.
+- Old permanent DOM chat bubbles remain disabled.
+- No fake atoms, aggregates, popularity/ranking semantics, or visual redesign.
 
-## Required behavior
+## Refactor rules
 
-### Map selection
+1. **Move, do not redesign.** Prefer mechanical extraction plus narrow interfaces.
+2. Avoid creating a generic framework/state-management system. Vanilla ES modules are enough.
+3. Avoid circular imports. Prefer callbacks/dependency injection from `app.js` into UI modules.
+4. Keep public/module APIs small and explicit.
+5. Do not duplicate existing logic just to move it later.
+6. Do not change storage schema, relay protocol, network endpoints, sync cadence, signing, atom identity semantics, or create-flow product behavior.
+7. Do not change CSS/markup unless a tiny non-visual adjustment is strictly required by the extraction.
+8. Update `pwa/ARCHITECTURE.md` so it describes the **actual post-refactor ownership**, especially `ui-map.js` and `ui-board.js`.
 
-On clicking/tapping a Slice 2 beacon:
+## Expected scope
 
-1. select that exact real atom using stable identity rather than `selectedPunkto`-style broad grouping;
-2. visually strengthen only the selected beacon where possible;
-3. open the board sheet;
-4. keep the map/world visible behind the sheet;
-5. do not show the old temporary popup as the primary detail surface.
-
-Deep-link focus should use the same selected-board path when practical. Do not redesign routing.
-
-### Board sheet
-
-Use a lightweight HTML/CSS sheet. On mobile it should read clearly as a bottom sheet, not a full-screen replacement. Desktop may use a constrained bottom/side treatment if that is the smallest responsive solution.
-
-The board must provide:
-
-- clear close/back control;
-- root message/body as the dominant content;
-- category and public-message context;
-- secondary author/time/trust/altitude/source metadata;
-- imported-source indication when applicable;
-- sequential replies below the root;
-- empty reply state when there are no replies;
-- scrolling inside the board for long threads so the map does not become conversation geometry;
-- existing public reply action if it can be reused without protocol/storage changes.
-
-Prefer reusing/extracting the existing `ui-text.js` root/reply formatting and semantics rather than creating a second incompatible thread model. Keep refactoring narrow; do not redesign the entire Text view.
-
-### Closing / switching
-
-Closing the sheet returns to the map without losing the current spatial context. Switching to Text/Settings/+ must not leave stale board overlays or block navigation. Reopening the same atom should be deterministic.
-
-## Allowed scope
-
-Use the smallest set of files needed. Expected candidates are:
+Expected files:
 
 - `pwa/app.js`
-- `pwa/ui-text.js`
 - `pwa/ui-map.js`
-- `pwa/ui-shell.js`
-- `pwa/index.html`
-- optionally one small new `pwa/ui-board.js` module if that materially reduces duplication/risk
+- `pwa/ui-text.js` only if a small shared export/interface adjustment is needed
+- new `pwa/ui-board.js`
+- `pwa/ARCHITECTURE.md`
+- `docs/agent/CODEX_CURRENT_TASK.md`
 
-If styling is colocated elsewhere in the current PWA, make only the board-related CSS changes required for this slice.
-
-## Explicit exclusions
-
-Do **not**:
-
-- change relay/protocol/sync/storage/signing behavior;
-- change the create-flow product design (Slice 4 owns that);
-- add likes/follows/ranking/trending;
-- add new reply protocol semantics;
-- merge independent atoms;
-- introduce Three.js or a second camera;
-- redesign beacon visuals except what is required for exact selected-state identity;
-- start clustering/semantic zoom work;
-- deploy anywhere;
-- touch node1/node2/test1 operations.
-
-If a required board behavior appears to need protocol or storage changes, stop and report the blocker instead of expanding scope.
+Only touch `pwa/index.html`, `pwa/ui-shell.js`, or another PWA file if the refactor cannot be completed safely without a small mechanical change. Do not broaden scope into product work.
 
 ## Acceptance criteria
 
-Implementation is acceptable when, from real stored atoms:
+The refactor is acceptable when all of the following hold:
 
-1. tapping a root beacon opens a board sheet for that root;
-2. exactly one selected atom/beacon gets selected emphasis even when another real atom shares its punkto/location;
-3. tapping/deep-linking a reply resolves to its real root board when possible;
-4. root content is visually primary;
-5. replies display in chronological 2D order and do not affect world altitude;
-6. no-reply board has an honest empty reply state;
-7. imported-source root content retains imported-source treatment;
-8. long reply lists scroll in the sheet while map remains visible;
-9. close returns to the same map context;
-10. Text, Map, +, Settings still switch cleanly;
-11. old permanent DOM chat bubbles remain disabled;
-12. no synthetic atom/board object is created.
+1. `app.js` is materially slimmer and no longer owns the board-sheet DOM/event implementation.
+2. `ui-map.js` owns substantially more of the actual MapLibre/deck.gl presentation instead of being only a thin wrapper.
+3. Map board behavior is isolated behind `ui-board.js` (or an equally clear dedicated module if you find a better minimal boundary).
+4. No duplicate root/reply/thread model is introduced; map board reuses `ui-text.js` semantics.
+5. Root beacon selection still selects exactly one real atom.
+6. Reply/deep-link root resolution behavior remains unchanged.
+7. Selected beacon styling, altitude stems, imported-source colors/treatment, and map camera behavior remain unchanged.
+8. Board open/close, reply form, copy link, Show in 3D, Escape, Text/Map/+ /Settings cleanup remain unchanged.
+9. Create flow, sync, storage, settings and key behavior remain unchanged.
+10. `pwa/ARCHITECTURE.md` accurately documents the resulting boundaries.
+11. No new feature or visual behavior is introduced.
+12. No deployment or ops files are changed.
 
 ## Automated checks
 
-Run all of these before committing:
+Run:
 
 ```bash
 node --check pwa/app.js
 node --check pwa/ui-shell.js
 node --check pwa/ui-text.js
 node --check pwa/ui-map.js
+node --check pwa/ui-board.js
 node --check pwa/ui-create.js
+node --check pwa/ui-settings.js
 node --check pwa/key-management.js
 node --check pwa/sw.js
 python3 relay/test_relay.py
+
+git diff --check
 ```
 
-Also parse the exact final `pwa/app.js` as an ES module using the same approach as `.github/workflows/pilot-ci.yml`, or otherwise run an equivalent local module-parse check.
+Also parse the final `pwa/app.js` and the new/changed ES modules as ES modules using the same approach as `.github/workflows/pilot-ci.yml` or an equivalent local module parse check.
 
-Relay result may show the repository's known baseline failures; do not modify relay files to make this slice green. Report the exact result.
+Do not modify relay files to influence the relay result. Report the exact relay test result.
 
-## Manual/local checks where practical
+## Manual/local parity checks where practical
 
-Serve the exact final PWA tree locally and verify at minimum:
+Serve the final PWA tree locally and verify there are no uncaught module/runtime errors. If usable local atoms exist, verify:
 
-- map initializes with no uncaught module/JS error;
-- open/close board does not blank the map;
-- nav remains usable;
-- if local real atom data is unavailable, clearly state which board interactions could only be structurally verified and must be checked on test1 after review/deploy.
+- Map opens and renders beacons;
+- exact beacon selection still opens the same bottom-sheet board;
+- close keeps the map context;
+- navigation clears stale board state;
+- `+` still opens create;
+- Text still renders the same atoms/boards.
 
-Do not fabricate fake live activity merely to satisfy the check.
+If no real local atoms are available, report that honestly. Do not fabricate data just to satisfy this refactor check.
 
 ## Commit / push contract
 
 Make one focused implementation commit with message:
 
-`feat(pilot1): add map bottom-sheet board`
+`refactor(pilot1): modularize map and board UI`
 
-Before committing, change this task file status to:
+Before committing, change this task status to exactly:
 
-`Status: **HOLD — Slice 3 implemented, awaiting CI/review**`
-
-Keep the task details below it intact for traceability.
+`Status: **HOLD — Slice 3.6 implemented, awaiting CI/review**`
 
 Then:
 
-1. commit only the scoped Slice 3 + task-status changes;
+1. commit only the scoped refactor + architecture/task-status changes;
 2. push to `origin/pilot-1`;
-3. report the exact commit SHA, files changed, automated results, manual verification, and any visual uncertainties;
+3. report exact SHA, files changed, app.js before/after size or line count, automated results, and any parity checks/uncertainties;
 4. stop.
 
-Do not deploy. Do not start Slice 4. ChatGPT will inspect the pushed SHA and GitHub CI before any AZ deployment authorization.
+Do **not** deploy. Do **not** start Slice 4. ChatGPT will inspect the pushed SHA and exact-SHA Pilot CI before any deployment authorization.
