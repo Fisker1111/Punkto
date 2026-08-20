@@ -583,11 +583,16 @@ async function renderAtoms(newAtomIds = null) {
     };
   });
   if (placementDraft) {
+    const draftAlt = placementDraft.altitude_m || 0;
     scatterData.push({
-      position: [placementDraft.lon, placementDraft.lat, placementDraft.altitude_m || 0],
+      position: [placementDraft.lon, placementDraft.lat, draftAlt],
+      ground: [placementDraft.lon, placementDraft.lat, 0],
       color: rgba(DRAFT_COLOR, 255),
       haloColor: rgba(DRAFT_COLOR, 95),
       strokeColor: [8, 12, 20, 230],
+      ringColor: rgba(DRAFT_COLOR, 120),
+      stemColor: rgba(DRAFT_COLOR, 180),
+      selected: false,
       punkto: 'draft',
       text: 'Placement preview',
       f: 'draft',
