@@ -1,55 +1,33 @@
 # AZ Current Task
 
-Status: **ACTIVE — Pilot_1 Slice 3.6: deploy modularized PWA to test1**
+Status: **ACTIVE — Pilot_1 Slice 3.6 live-atom acceptance gate**
 
 Repository: `Fisker1111/Punkto`
 Branch: `pilot-1`
 PR: `#110`
-Owner: **AZ (deployment / operations)**
+Owner: **AZ (operations / live verification)**
 
 ## Goal
 
-Deploy the reviewed Pilot_1 Slice 3.6 PWA refactor to **test1 only**, while preserving the independent test1 relay/federation state created in Slice 3.5.
+Verify the first real atom created by the human on test1 after the Slice 3.6 deployment.
 
-This is a deployment/verification task only. Do not change Punkto product/application code.
+The human has just published a real public atom with text:
 
-## Exact approved application SHA
+`Test atom`
 
-Deploy exactly:
+This is a **verification-only gate**. Do not edit or deploy product code. Do not create additional test/public atoms. Do not start Slice 4.
+
+## Current approved/deployed application
+
+Exact deployed application SHA:
 
 `51c499a2a2812945eb94d32fa3d34b8275c6b85e`
 
-Commit:
-
-`fix(pilot1): repair slice 3.6 runtime parity`
-
-Pilot CI run `32387860327` / run #42 is green for this exact SHA:
-
-- PWA validation: PASS
-- explicit ES-module parsing for `app.js`, `ui-map.js`, `ui-board.js`: PASS
-- relay regression suite: PASS
-
-**Do not deploy the moving `pilot-1` branch tip by name.** The branch may contain later task/control commits. Export/deploy the PWA tree from the exact SHA above.
-
-## Important context
-
-Slice 3.6 is behavior-preserving architecture cleanup:
-
-- `app.js` is materially slimmer and acts more as coordinator;
-- MapLibre/deck.gl presentation now lives primarily in `pwa/ui-map.js`;
-- selected Map board state/events live in new `pwa/ui-board.js`;
-- shared thread/root/reply semantics remain in `pwa/ui-text.js`;
-- the review repair restored `getCategoryMeta()` through `pwa/core/display.js` and strengthened Pilot CI coverage.
-
-The visible version marker intentionally remains:
+Expected marker:
 
 `pilot1-slice3-board-2026-08-20-1`
 
-Therefore **the marker alone is not sufficient proof of the deployed SHA**. Verify served file bytes against the exact Git SHA as described below.
-
-## Preserve Slice 3.5 federation topology
-
-Do not alter or replace the test1 relay topology established by Slice 3.5:
+Slice 3.5 topology must remain unchanged:
 
 ```text
 test1 PWA
@@ -59,72 +37,69 @@ test1 local relay + isolated persistent volume + own node identity
 node1 + node2
 ```
 
-Requirements:
+## Verification steps
 
-- keep `punkto-relay-test1` running;
-- preserve the isolated `punkto-test1_relay_data` volume and node identity;
-- preserve normal node1/node2 peer configuration;
-- do not share or copy production relay volumes;
-- do not modify, restart, or deploy node1/node2;
-- do not start Slice 4.
+1. **Find the real atom on test1's own relay/store.**
+   - Locate the atom whose text is exactly `Test atom` (or clearly the newly posted human atom if normalization adds surrounding fields).
+   - Record its atom ID/stable ID, punkto/location ID, timestamp, author/signature presence, and category if present.
+   - Do not expose private key/secret material.
 
-## Deployment approach
+2. **Verify local relay acceptance and serving.**
+   - Confirm it is present in test1's persistent append-only store.
+   - Confirm it is returned by the normal public same-origin relay API (`/feed`, `/latest`, or the appropriate existing endpoint).
+   - Confirm `/health` remains healthy and `/node/info` still identifies the same test1 node identity.
 
-1. Inspect current test1 PWA + relay health before changing files.
-2. Back up the currently served test1 PWA tree/config if the existing deployment procedure does not already provide a safe rollback.
-3. Export **only `pwa/` from exact SHA `51c499a2...`** using a Git-object-based method such as `git archive`, not the moving branch working tree.
-4. Replace only the test1 static PWA files. Preserve test1 Caddy relay reverse-proxy behavior and the test1 relay/container/volume.
-5. Restart/reload only what is necessary for test1 static serving/cache invalidation. Do not touch node1/node2.
+3. **Verify browser/runtime behavior with this real atom.**
+   In a fresh browser/session on test1:
+   - confirm the atom appears in the UI / visible count becomes non-zero when in scope;
+   - confirm its beacon renders on the Map without runtime/module/deck.gl errors;
+   - select the beacon and confirm **exactly that real atom** opens the Slice 3 bottom-sheet board;
+   - confirm the root message is primary and reads `Test atom`;
+   - close the board and confirm the map camera/context does not jump/reset;
+   - open Text view and confirm the same real atom is represented there;
+   - return to Map and confirm the UI remains usable.
 
-## Exact-SHA served-file verification
+4. **Verify the Slice 3.6 runtime regression is actually closed.**
+   - With the real atom rendered, confirm there is no `getCategoryMeta is not defined` or equivalent runtime error.
+   - Confirm `ui-board.js` is loaded and board interaction works.
 
-Because the app version marker did not change, prove the deployed PWA matches the approved Git object.
+5. **Verify federation state without modifying production.**
+   - Report whether test1's peer sync state remains healthy.
+   - Check whether the new atom has propagated through the normal Punkto peer mechanism to node1 and/or node2 **only through their public APIs/logically observable peer state**.
+   - Do not access production filesystems/databases and do not change/restart node1/node2.
+   - If propagation has not occurred yet, report that honestly; do not force it with config changes.
 
-For at least these files, compare the bytes from Git SHA `51c499a2...` with the bytes served from test1 (for example using SHA-256 on `git show <sha>:pwa/<file>` and on `curl` output):
+6. **Preserve deployment proof.**
+   - Confirm test1 still serves the approved Slice 3.6 application and marker.
+   - No app file replacement is required for this task.
 
-- `app.js`
-- `ui-map.js`
-- `ui-board.js`
-- `core/display.js`
+## Acceptance criteria
 
-All comparisons must match exactly after accounting for no server-side transformation. Also confirm `/ui-board.js` returns HTTP 200.
+PASS when all of the following are true:
 
-## Live acceptance checks
+- the human-created `Test atom` exists in test1's own persistent relay store;
+- the atom is served through the normal test1 public API;
+- the real atom renders without the Slice 3.6 runtime regression;
+- beacon selection opens the correct real bottom-sheet board;
+- board close preserves map context;
+- Text and Map both represent the same real atom;
+- test1 relay/node identity and peer sync remain healthy;
+- node1/node2 remain untouched;
+- no additional fabricated atom was created.
 
-Verify and report:
-
-1. test1 loads in a fresh/private browser with no uncaught module/runtime errors.
-2. Map renders and `Text | Map | + | Settings` remains usable.
-3. `window.PUNKTO_APP_VERSION` / console marker remains `pilot1-slice3-board-2026-08-20-1`.
-4. `ui-board.js` loads successfully as a module.
-5. `test1/health` still comes from the local test1 relay and reports healthy.
-6. `test1/node/info` still identifies the existing test1 node identity, not node1/node2.
-7. Peer sync with node1/node2 remains healthy (`last_error` null or equivalent).
-8. Existing test1 relay atom/data count is preserved; do not fabricate public atoms.
-9. If a real synced atom is available, verify beacon → bottom-sheet board → close behavior. If still zero real atoms, report that honestly; do not create fake network activity merely for this check.
-10. node1/node2 application versions remain unchanged.
-
-## Safety
-
-- test1 only.
-- no product-code edits.
-- no relay/protocol/schema changes.
-- no node1/node2 deployment/config/restart.
-- no fake public atoms.
-- preserve rollback path and Slice 3.5 relay data/identity.
-- stop if the exact Git SHA cannot be exported or served-file hashes do not match.
+Peer propagation to node1/node2 is useful evidence but is **not a blocker** if the normal sync mechanism is healthy and propagation timing/serving policy explains a delay.
 
 ## Completion report
 
-Return a concise report containing:
+Return a concise report with:
 
-- exact deployed SHA;
-- backup/rollback location;
-- served-file hash comparison results;
-- browser/module result;
-- test1 relay health + node identity + peer-sync result;
-- atom count and real-atom board verification if possible;
+- discovered atom ID + punkto ID + timestamp + signature/category summary;
+- local store/API proof;
+- browser beacon/board/Text verification;
+- confirmation the `getCategoryMeta` runtime regression is absent with a real atom;
+- peer-sync/propagation observation;
+- test1 health/node identity;
 - node1/node2 untouched verification;
-- any limitation/blocker.
+- any blocker or unexpected behavior.
 
-Stop after test1 verification. Do **not** deploy node1/node2 and do **not** start Slice 4.
+Stop after verification. Do not deploy anything and do not start Slice 4.
