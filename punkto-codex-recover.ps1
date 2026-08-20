@@ -28,7 +28,7 @@ if ($Branch -ne 'pilot-1') {
     Fail "Recovery must run on pilot-1. Current branch: $Branch"
 }
 
-# Resolve the real standalone Codex release and its Windows sandbox helpers.
+# Resolve the real standalone Codex release and its Windows helper resources.
 $CodexExe = $null
 $CodexResources = $null
 $StandaloneBase = Join-Path $env:USERPROFILE '.codex\packages\standalone'
@@ -72,8 +72,8 @@ if ($CodexResources) {
     Write-Host "Codex resources: $CodexResources" -ForegroundColor DarkGray
 }
 
-# Recovery is intentionally the inverse of the normal launcher: it REQUIRES
-# an existing dirty tree, but only in the known Slice 3 recovery paths.
+# Recovery intentionally REQUIRES an existing dirty tree, but only in the
+# known Slice 3 recovery paths.
 $StatusLines = @(git status --porcelain)
 if ($LASTEXITCODE -ne 0) { Fail 'git status failed' }
 if ($StatusLines.Count -eq 0) {
@@ -107,7 +107,7 @@ if ($Unexpected.Count -gt 0) {
 Write-Host 'Recovering these existing scoped edits:' -ForegroundColor Yellow
 $DirtyPaths | ForEach-Object { Write-Host "  $_" }
 
-# Fetch only. Do NOT pull/rebase/reset over the dirty recovery tree.
+# Fetch only. Never pull/rebase/reset over the dirty recovery tree.
 git fetch origin
 if ($LASTEXITCODE -ne 0) { Fail 'git fetch origin failed' }
 
@@ -115,7 +115,7 @@ $HeadBefore = (git rev-parse HEAD).Trim()
 $OriginBefore = (git rev-parse origin/pilot-1).Trim()
 if ($LASTEXITCODE -ne 0) { Fail 'git rev-parse failed' }
 if ($HeadBefore -ne $OriginBefore) {
-    Fail "Local HEAD must equal origin/pilot-1 before recovery. Local=$HeadBefore Origin=$OriginBefore`nBecause the tree is dirty, do not merge/rebase inside recovery. Pull the workflow-only commit first, then rerun recovery." 4
+    Fail "Local HEAD must equal origin/pilot-1 before recovery. Local=$HeadBefore Origin=$OriginBefore`nBecause the tree is dirty, do not merge/rebase inside recovery. Pull workflow-only commits first, then rerun recovery." 4
 }
 
 # Always use the canonical task from Git, not the locally modified task file.
@@ -129,38 +129,43 @@ if (-not $CanonicalStatus -or $CanonicalStatus -notmatch '^\s*Status:\s*\*\*ACTI
 
 $RecoveryInstruction = @'
 
-## RECOVERY MODE — preserve existing partial implementation
+## RECOVERY MODE — preserve and finish the existing partial implementation
 
-A previous Codex attempt on this exact task was interrupted after making local edits.
-The working tree is intentionally dirty and those edits are the partial Slice 3 implementation to recover.
+A previous Codex attempt on this exact task already made local edits. The working tree is intentionally dirty. Those edits are your own partial Slice 3 implementation and MUST be preserved.
 
-Mandatory recovery rules:
+Mandatory rules:
 
 - DO NOT reset, checkout, restore, revert, stash, clean, or discard the existing modifications.
-- First inspect `git status`, `git diff`, and the modified files.
-- Treat the existing edits as your own previous partial work.
-- Review them against the canonical task above, then continue/fix/finish the implementation.
-- Stay within the original Slice 3 scope. Do not start Slice 4.
-- Do not deploy.
+- Inspect `git status`, `git diff`, and every modified file first.
+- Continue/review/fix the existing implementation against the canonical Slice 3 contract above.
+- Stay inside Slice 3. Do not start Slice 4. Do not deploy.
+- You have permission to edit files, run tests, commit, and push this scoped task.
 
-Before completion:
+Completion contract:
 
-1. run every automated check required by the canonical task;
-2. perform the practical local/manual checks requested by the canonical task;
-3. change the first canonical task Status line to exactly:
+1. Run every automated check required by the canonical task.
+2. Perform the practical local/manual checks requested by the canonical task.
+3. Change the FIRST canonical task Status line to exactly:
    `Status: **HOLD — Slice 3 implemented, awaiting CI/review**`
-4. commit the completed scoped work with exactly:
+4. Commit the completed scoped work with exactly:
    `feat(pilot1): add map bottom-sheet board`
-5. push the commit to `origin/pilot-1`;
-6. stop.
+5. Push the commit to `origin/pilot-1`.
+6. Stop. Do not deploy and do not start Slice 4.
 
-Do not merely report success. The recovery is complete only when the commit is pushed and the task status is HOLD.
+Do not merely report what you would do. Execute the edits/tests/commit/push. Recovery is complete only when the commit is pushed and the task status is HOLD.
 '@
 
 $Prompt = $CanonicalTaskText + $RecoveryInstruction
 
 Write-Host "Launching recovery from exact HEAD $HeadBefore" -ForegroundColor Green
-& $CodexExe exec $Prompt
+Write-Host 'Native Windows Codex sandbox write mode is bypassed for this recovery run.' -ForegroundColor Yellow
+Write-Host 'Safety is enforced after the run by branch, single-commit, commit-message, file-scope, HOLD-state, clean-tree, and pushed-SHA checks.' -ForegroundColor DarkGray
+
+# Native Windows Codex 0.148 has a sandbox regression where non-interactive
+# workspace-write runs can return success while writes are effectively blocked.
+# For this local recovery runner we therefore bypass Codex's own sandbox and
+# approvals, then strictly validate the resulting Git state below.
+& $CodexExe exec --dangerously-bypass-approvals-and-sandbox --cd $RepoRoot $Prompt
 $CodexExit = $LASTEXITCODE
 
 Write-Host ''
@@ -178,28 +183,52 @@ if ($HeadAfter -eq $HeadBefore) {
     Fail 'Codex returned without creating the required recovery commit.' 6
 }
 
+# Require exactly one focused implementation commit.
+$CommitCountText = (git rev-list --count "$HeadBefore..$HeadAfter").Trim()
+if ($LASTEXITCODE -ne 0) { Fail 'git rev-list failed after recovery' 7 }
+$CommitCount = [int]$CommitCountText
+if ($CommitCount -ne 1) {
+    Fail "Recovery must create exactly one commit; found $CommitCount." 8
+}
+
+$CommitSubject = (git log -1 --pretty=%s).Trim()
+if ($CommitSubject -ne 'feat(pilot1): add map bottom-sheet board') {
+    Fail "Unexpected recovery commit message: $CommitSubject" 9
+}
+
+# Full-access Codex is permitted only because we post-validate the exact commit
+# scope. Any unexpected committed path blocks the handoff.
+$CommittedPaths = @(git diff --name-only "$HeadBefore..$HeadAfter")
+if ($LASTEXITCODE -ne 0) { Fail 'git diff --name-only failed after recovery' 10 }
+$UnexpectedCommitted = @($CommittedPaths | Where-Object { $_ -notin $AllowedDirtyPaths })
+if ($UnexpectedCommitted.Count -gt 0) {
+    Write-Host 'Recovery commit contains unexpected files; refusing handoff:' -ForegroundColor Red
+    $UnexpectedCommitted | ForEach-Object { Write-Host "  $_" -ForegroundColor Red }
+    exit 11
+}
+
 if (-not (Test-Path $TaskFile)) {
-    Fail 'Task file disappeared during recovery.' 7
+    Fail 'Task file disappeared during recovery.' 12
 }
 $TaskAfter = Get-Content -Raw -Path $TaskFile
 $StatusAfter = Get-CanonicalTaskStatus $TaskAfter
 if (-not $StatusAfter -or $StatusAfter -notmatch '^\s*Status:\s*\*\*HOLD\b') {
-    Fail "Recovery commit exists, but task did not return to HOLD: $StatusAfter" 8
+    Fail "Recovery commit exists, but task did not return to HOLD: $StatusAfter" 13
 }
 
 $DirtyAfter = @(git status --porcelain)
-if ($LASTEXITCODE -ne 0) { Fail 'final git status failed' }
+if ($LASTEXITCODE -ne 0) { Fail 'final git status failed' 14 }
 if ($DirtyAfter.Count -gt 0) {
     Write-Host 'Recovery commit exists, but working tree is still dirty:' -ForegroundColor Red
     git status --short
-    exit 9
+    exit 15
 }
 
 git fetch origin
-if ($LASTEXITCODE -ne 0) { Fail 'final git fetch origin failed' }
+if ($LASTEXITCODE -ne 0) { Fail 'final git fetch origin failed' 16 }
 $OriginAfter = (git rev-parse origin/pilot-1).Trim()
 if ($OriginAfter -ne $HeadAfter) {
-    Fail "Recovery commit was not pushed to origin/pilot-1. Local=$HeadAfter Origin=$OriginAfter" 10
+    Fail "Recovery commit was not pushed to origin/pilot-1. Local=$HeadAfter Origin=$OriginAfter" 17
 }
 
 Write-Host "Codex recovery completed and pushed: $HeadAfter" -ForegroundColor Green
