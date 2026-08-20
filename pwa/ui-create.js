@@ -8,6 +8,9 @@ const elModalCancel = document.getElementById('modal-cancel');
 const elModalError = document.getElementById('modal-error');
 const elAckBanner = document.getElementById('ack-banner');
 const elAckBtn = document.getElementById('ack-btn');
+const elModalOptions = document.getElementById('modal-options');
+const elModalOptionsLabel = document.querySelector('#modal-options .modal-adjust-label');
+const elModalOptionsHint = document.querySelector('#modal-options .modal-adjust-hint');
 
 const ACK_KEY = 'punkto-public-ack';
 
@@ -15,7 +18,7 @@ if (elAckBtn) {
   elAckBtn.addEventListener('click', () => {
     localStorage.setItem(ACK_KEY, '1');
     if (elAckBanner) elAckBanner.style.display = 'none';
-    if (elModalSubmit) elModalSubmit.disabled = false;
+    updateSubmitState();
     setTimeout(() => elModalText?.focus(), 40);
   });
 }
@@ -36,6 +39,30 @@ const elModalEmergencyHint = document.getElementById('modal-emergency-hint');
 let callbacks = null;
 let modalAltitudeState = { mode: 'meter', building: null };
 let draft = null;
+let isSubmitting = false;
+
+function isAcked() {
+  return !!localStorage.getItem(ACK_KEY);
+}
+
+function hasPublishableText() {
+  return !!elModalText?.value.trim();
+}
+
+function canPublish() {
+  return isAcked() && hasPublishableText() && !isSubmitting;
+}
+
+function updateSubmitState() {
+  if (!elModalSubmit) return;
+  elModalSubmit.disabled = !canPublish();
+}
+
+function submitIfEligible() {
+  updateSubmitState();
+  if (!canPublish()) return;
+  callbacks?.onSubmitCreate?.(readCreateFormState());
+}
 
 function altitudeMeters() {
   const raw = Number(elModalAltitudeSlider?.value);
@@ -90,26 +117,36 @@ function setAltitudeMeters(meters, mode = 'manual') {
 
 function requestDeviceAltitude() {
   if (!navigator.geolocation || !elModalDeviceAltBtn) return;
+  elModalDeviceAltBtn.disabled = true;
+  elModalDeviceAltBtn.textContent = 'Finding altitude...';
   navigator.geolocation.getCurrentPosition((pos) => {
     const alt = pos?.coords?.altitude;
     if (alt == null || !Number.isFinite(alt)) {
-      elModalDeviceAltBtn.style.display = 'none';
+      elModalDeviceAltBtn.textContent = 'Altitude unavailable';
       return;
     }
-    elModalDeviceAltBtn.style.display = '';
+    setAltitudeMeters(Math.round(alt), 'device');
+    elModalDeviceAltBtn.textContent = 'Use my altitude';
     elModalDeviceAltBtn.disabled = false;
-    elModalDeviceAltBtn.dataset.altitude = String(Math.round(alt));
   }, () => {
-    elModalDeviceAltBtn.style.display = 'none';
+    elModalDeviceAltBtn.textContent = 'Altitude unavailable';
   }, { enableHighAccuracy: true, timeout: 5000 });
 }
 
 export function initCreateModal(opts) {
   callbacks = opts;
+  if (elModalOptionsLabel) elModalOptionsLabel.textContent = 'Location & options';
+  if (elModalOptionsHint) elModalOptionsHint.textContent = 'ground by default';
   elModalCancel?.addEventListener('click', closeCreateModal);
   elModalOverlay?.addEventListener('click', (e) => { if (e.target === elModalOverlay) closeCreateModal(); });
-  elModalSubmit?.addEventListener('click', () => callbacks?.onSubmitCreate?.(readCreateFormState()));
-  elModalText?.addEventListener('keydown', (e) => { if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) callbacks?.onSubmitCreate?.(readCreateFormState()); });
+  elModalSubmit?.addEventListener('click', submitIfEligible);
+  elModalText?.addEventListener('input', updateSubmitState);
+  elModalText?.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+      e.preventDefault();
+      submitIfEligible();
+    }
+  });
   elModalAltitudeSlider?.addEventListener('input', updateAltitudeLabels);
   elModalAltitudeSlider?.addEventListener('change', updateAltitudeLabels);
   elModalGroundBtn?.addEventListener('click', () => setAltitudeMeters(0, 'ground'));
@@ -118,10 +155,7 @@ export function initCreateModal(opts) {
   elModalFloorPlus?.addEventListener('click', () => setAltitudeMeters(((Number(elModalFloorValue?.value) || 0) + 1) * FLOOR_HEIGHT_M, 'manual'));
   elModalFloorValue?.addEventListener('input', () => setAltitudeMeters((Math.max(0, Number(elModalFloorValue.value) || 0)) * FLOOR_HEIGHT_M, 'manual'));
   elModalManualAltitude?.addEventListener('input', () => setAltitudeMeters(Number(elModalManualAltitude.value) || 0, 'manual'));
-  elModalDeviceAltBtn?.addEventListener('click', () => {
-    const alt = Number(elModalDeviceAltBtn.dataset.altitude);
-    if (Number.isFinite(alt)) setAltitudeMeters(alt, 'device');
-  });
+  elModalDeviceAltBtn?.addEventListener('click', requestDeviceAltitude);
   elModalCategory?.addEventListener('change', () => {
     const isEmergency = elModalCategory.value === 'EMGC';
     if (elModalEmergencyHint) elModalEmergencyHint.style.display = isEmergency ? '' : 'none';
@@ -134,6 +168,7 @@ export function openCreateModal() {
   elModalError.textContent = '';
   elModalText.value = '';
   elModalAuthor.value = localStorage.getItem('punkto-name') || localStorage.getItem('punkto-author') || '';
+  if (elModalOptions) elModalOptions.open = false;
   const building = context.building || null;
   modalAltitudeState = building ? { mode: 'floor', building } : { mode: 'meter', building: null };
   elModalAltitudeSlider.min = '0';
@@ -141,17 +176,19 @@ export function openCreateModal() {
   elModalAltitudeSlider.step = '1';
   elModalAltitudeSlider.value = '0';
   if (elModalRoofBtn) elModalRoofBtn.disabled = !building;
-  if (elModalDeviceAltBtn) elModalDeviceAltBtn.disabled = true;
+  if (elModalDeviceAltBtn) {
+    elModalDeviceAltBtn.disabled = !navigator.geolocation;
+    elModalDeviceAltBtn.textContent = navigator.geolocation ? 'Use my altitude' : 'Altitude unavailable';
+  }
   if (elModalCategory) elModalCategory.value = 'TEXT';
   if (elModalEmergencyHint) elModalEmergencyHint.style.display = 'none';
   draft = { lat: context.center?.lat ?? 0, lon: context.center?.lng ?? 0, altitude_m: 0, floor_hint: 0, placement_mode: 'ground' };
   updateAltitudeLabels();
-  requestDeviceAltitude();
   elModalOverlay.classList.add('open');
   // First-use public-data acknowledgement
-  const acked = !!localStorage.getItem(ACK_KEY);
+  const acked = isAcked();
   if (elAckBanner) elAckBanner.style.display = acked ? 'none' : 'block';
-  if (elModalSubmit) elModalSubmit.disabled = !acked;
+  updateSubmitState();
   setTimeout(() => {
     if (!acked && elAckBtn) elAckBtn.focus();
     else elModalText?.focus();
@@ -174,6 +211,6 @@ export function readCreateFormState() {
 }
 
 export function setCreateError(message) { elModalError.textContent = message || ''; }
-export function setCreateSubmitting(isSubmitting) { if (elModalSubmit) elModalSubmit.disabled = !!isSubmitting; }
+export function setCreateSubmitting(submitting) { isSubmitting = !!submitting; updateSubmitState(); }
 export function updateCreateCenter(lat, lon) { if (!draft) return; draft.lat = lat; draft.lon = lon; emitPreview(); }
 export function isCreateModalOpen() { return !!elModalOverlay?.classList.contains('open'); }

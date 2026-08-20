@@ -1222,7 +1222,7 @@
 
     .modal-box textarea {
       width: 100%;
-      min-height: 88px;
+      min-height: 118px;
       background: var(--surface2);
       border: 1px solid var(--border2);
       border-radius: 10px;
@@ -1247,8 +1247,9 @@
     .modal-box input[type="text"]:focus, .modal-box input[type="number"]:focus, .modal-box select:focus {
       outline: none; border-color: var(--accent-dim);
     }
-    #modal-category-row { margin: 10px 0 12px; display: flex; flex-direction: column; gap: 6px; }
-    #modal-author-row { margin-bottom: 14px; }
+    #modal-category-row { margin: 0 0 12px; display: flex; flex-direction: column; gap: 6px; }
+    #modal-category-row label { font-size: 12px; color: var(--text-mid); }
+    #modal-author-row { margin-top: 12px; }
     #modal-author { width: 100%; }
 
     #ack-banner {
@@ -1270,29 +1271,31 @@
       padding: 10px 14px;
       font-size: 12px;
       color: #ff8888;
-      margin-bottom: 14px;
+      margin-bottom: 12px;
       display: flex;
       gap: 8px;
       align-items: flex-start;
     }
     #modal-notice .icon { flex-shrink: 0; }
 
-    #modal-altitude {
+    #modal-options {
       margin-bottom: 14px;
       padding: 14px;
       background: var(--surface2);
       border-radius: 10px;
     }
+    #modal-options[open] { border: 1px solid var(--border2); }
+    #modal-altitude { margin-top: 12px; }
     #modal-altitude > div strong { font-size: 12px; color: var(--text-dim); }
     #modal-altitude-primary { font-size: 14px; font-weight: 600; color: var(--accent); margin: 4px 0; }
     #modal-altitude-secondary { font-size: 11px; color: var(--text-dim); margin-bottom: 8px; }
     #modal-altitude-hint { font-size: 10px; color: var(--text-dim); }
     #modal-altitude-slider { width: 100%; margin: 8px 0; accent-color: var(--accent); }
-    details#modal-altitude > summary { cursor: pointer; list-style: none; display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 13px; font-weight: 600; color: var(--text); }
-    details#modal-altitude > summary::-webkit-details-marker { display: none; }
-    details#modal-altitude > summary::after { content: '\25B8'; color: var(--text-dim); transition: transform .15s ease; }
-    details#modal-altitude[open] > summary::after { transform: rotate(90deg); }
-    details#modal-altitude[open] > summary { margin-bottom: 8px; }
+    details#modal-options > summary { cursor: pointer; list-style: none; display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 13px; font-weight: 600; color: var(--text); }
+    details#modal-options > summary::-webkit-details-marker { display: none; }
+    details#modal-options > summary::after { content: '\25B8'; color: var(--text-dim); transition: transform .15s ease; }
+    details#modal-options[open] > summary::after { transform: rotate(90deg); }
+    details#modal-options[open] > summary { margin-bottom: 8px; }
     .modal-adjust-hint { font-size: 11px; font-weight: 400; color: var(--text-dim); }
 
     #modal-placement-modes { display: flex; gap: 6px; flex-wrap: wrap; margin: 8px 0; }
@@ -1319,6 +1322,11 @@
       color: #ffffff;
       border-color: var(--accent);
       font-weight: 600;
+    }
+    .btn:disabled {
+      cursor: not-allowed;
+      opacity: 0.48;
+      transform: none;
     }
     .btn-secondary:hover { border-color: var(--text-dim); color: var(--text); }
 
@@ -1648,6 +1656,7 @@
       <div id="modal-notice">
         <span class="icon">⚠</span>Public &amp; permanent — atoms may be retained by other nodes. Do not post secrets or sensitive personal information.
       </div>
+      <textarea id="modal-text" placeholder="What should people know here?"></textarea>
       <div id="modal-category-row">
         <label for="modal-category"><strong>Category</strong></label>
         <select id="modal-category">
@@ -1660,12 +1669,17 @@
         </select>
         <div id="modal-emergency-hint" style="display:none;font-size:12px;color:var(--text-dim);margin-top:6px;">Public urgent post — not a replacement for calling emergency services.</div>
       </div>
-      <details id="modal-altitude" class="modal-adjust">
-        <summary><span class="modal-adjust-label">Adjust height</span><span class="modal-adjust-hint">optional · defaults to ground</span></summary>
-        <div id="modal-altitude-primary">Ground level</div>
-        <input id="modal-altitude-slider" type="range" min="0" max="100" step="1" value="0" />
-        <div id="modal-altitude-secondary">+0 m above ground</div>
-        <div id="modal-altitude-hint"></div>
+      <details id="modal-options" class="modal-adjust">
+        <summary><span class="modal-adjust-label">Location &amp; options</span><span class="modal-adjust-hint">ground by default</span></summary>
+        <div id="modal-author-row">
+          <input id="modal-author" type="text" placeholder="your name / handle (optional)" />
+        </div>
+        <div id="modal-altitude">
+          <div id="modal-altitude-primary">Ground level</div>
+          <input id="modal-altitude-slider" type="range" min="0" max="100" step="1" value="0" />
+          <div id="modal-altitude-secondary">+0 m above ground</div>
+          <div id="modal-altitude-hint"></div>
+        </div>
         <div id="modal-placement-controls">
           <div id="modal-placement-modes">
             <button class="btn btn-secondary" id="modal-ground-btn" type="button">Ground</button>
@@ -1684,14 +1698,10 @@
           </div>
         </div>
       </details>
-      <textarea id="modal-text" placeholder="Write a note for this place (optional)"></textarea>
-      <div id="modal-author-row">
-        <input id="modal-author" type="text" placeholder="your name / handle (optional)" />
-      </div>
       <div id="modal-error"></div>
       <div id="modal-actions">
         <button class="btn btn-secondary" id="modal-cancel">Cancel</button>
-        <button class="btn btn-primary" id="modal-submit">Place here</button>
+        <button class="btn btn-primary" id="modal-submit">Publish</button>
       </div>
     </div>
   </div>

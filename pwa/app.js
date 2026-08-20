@@ -602,6 +602,11 @@ async function signAtomForSubmit(atom) {
 }
 
 async function submitAtomFromModal({ text, author, category, draft }) {
+  if (!String(text || '').trim()) {
+    setCreateError('Write a message before publishing.');
+    setCreateSubmitting(false);
+    return;
+  }
   const map = getMapInstance();
   const center = draft ? { lat: draft.lat, lng: draft.lon } : map.getCenter();
   const altMeters = draft?.altitude_m || 0;
@@ -1040,8 +1045,8 @@ function wireEvents() {
 // ---------------------------------------------------------------------------
 
 async function boot() {
-  console.log('PUNKTO APP.JS LOADED pilot1-slice3-board-2026-08-20-1');
-  window.PUNKTO_APP_VERSION = 'pilot1-slice3-board-2026-08-20-1';
+  console.log('PUNKTO APP.JS LOADED pilot1-slice4-fast-create-2026-08-20-1');
+  window.PUNKTO_APP_VERSION = 'pilot1-slice4-fast-create-2026-08-20-1';
 
   console.log('[punkto] booting...');
 
