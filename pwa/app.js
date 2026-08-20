@@ -774,10 +774,9 @@ async function renderAtoms(newAtomIds = null) {
     // On ordinary opens do NOT auto-fit the full atom set — that would
     // override the nearby camera context (user location or fallback center).
     // Deep-link focus is handled separately by focusPunkto().
-    if (!hasBootFit) {
-      hasBootFit = true;
-      // Intentionally no fitBounds here. Nearby context wins.
-    }
+  if (!hasBootFit) {
+    hasBootFit = true;
+    // Intentionally no fitBounds here. Nearby context wins.
   }
 }
 
