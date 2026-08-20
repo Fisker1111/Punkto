@@ -36,7 +36,7 @@ import { decodeAtomLocation, encodeLocation, haversineMeters } from './core/loca
 import { db } from './storage/db.js';
 import { upsertAtom, getAllAtomsNewestFirst, getAllAtoms } from './storage/atom-store.js';
 import { ensureNode } from './storage/node-store.js';
-import { fmtTime, fmtRelativeTime, fmtCoords, fmtDistance, fmtAltitudeLabel, deriveTitle, deriveCategory, escHtml, renderAtomText } from './core/display.js';
+import { fmtTime, fmtRelativeTime, fmtCoords, fmtDistance, fmtAltitudeLabel, deriveTitle, deriveCategory, getCategoryMeta, escHtml, renderAtomText } from './core/display.js';
 import { isHiddenAtom, isVerifiedAtom } from './core/atoms.js';
 import { ensurePunktoPrefix, stripPunktoPrefix, parseDeepLinkPunktoId as parseDeepLinkPunktoIdFromPath } from './protocol/punkto-id.js';
 import { computeAtomId } from './protocol/atom-id.js';

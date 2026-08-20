@@ -1,6 +1,6 @@
 # Codex Current Task
 
-Status: **ACTIVE — Slice 3.6 review fix: restore runtime parity**
+Status: **HOLD — Slice 3.6 review fix implemented, awaiting CI/review**
 
 Repository: `Fisker1111/Punkto`
 Branch: `pilot-1`

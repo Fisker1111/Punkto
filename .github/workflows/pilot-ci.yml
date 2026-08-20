@@ -38,12 +38,17 @@ jobs:
           node --check pwa/ui-shell.js
           node --check pwa/ui-text.js
           node --check pwa/ui-map.js
+          node --check pwa/ui-board.js
           node --check pwa/ui-create.js
+          node --check pwa/ui-settings.js
           node --check pwa/key-management.js
           node --check pwa/sw.js
 
-      - name: Parse app.js explicitly as an ES module
-        run: node --input-type=module --check < pwa/app.js
+      - name: Parse PWA modules explicitly as ES modules
+        run: |
+          node --input-type=module --check < pwa/app.js
+          node --input-type=module --check < pwa/ui-map.js
+          node --input-type=module --check < pwa/ui-board.js
 
       - name: Required Pilot files exist
         run: |
@@ -53,6 +58,7 @@ jobs:
             pwa/ui-shell.js \
             pwa/ui-text.js \
             pwa/ui-map.js \
+            pwa/ui-board.js \
             pwa/ui-create.js \
             docs/PILOT_1_IMPLEMENTATION.md; do
             if [[ ! -f "$f" ]]; then
