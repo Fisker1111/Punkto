@@ -13,6 +13,7 @@ const elModalOptionsLabel = document.querySelector('#modal-options .modal-adjust
 const elModalOptionsHint = document.querySelector('#modal-options .modal-adjust-hint');
 
 const ACK_KEY = 'punkto-public-ack';
+const MAX_DRAFT_HEIGHT_M = 200;
 
 if (elAckBtn) {
   elAckBtn.addEventListener('click', () => {
@@ -102,7 +103,7 @@ function updateAltitudeLabels() {
 }
 
 function setAltitudeMeters(meters, mode = 'manual') {
-  const v = Math.max(0, Math.round(Number(meters) || 0));
+  const v = Math.min(MAX_DRAFT_HEIGHT_M, Math.max(0, Math.round(Number(meters) || 0)));
   if (modalAltitudeState.mode === 'floor') {
     const floor = Math.round(v / FLOOR_HEIGHT_M);
     elModalAltitudeSlider.value = String(floor);
@@ -172,7 +173,7 @@ export function openCreateModal() {
   const building = context.building || null;
   modalAltitudeState = building ? { mode: 'floor', building } : { mode: 'meter', building: null };
   elModalAltitudeSlider.min = '0';
-  elModalAltitudeSlider.max = building ? String(building.maxFloor) : '100';
+  elModalAltitudeSlider.max = building ? String(Math.min(building.maxFloor, Math.floor(MAX_DRAFT_HEIGHT_M / FLOOR_HEIGHT_M))) : String(MAX_DRAFT_HEIGHT_M);
   elModalAltitudeSlider.step = '1';
   elModalAltitudeSlider.value = '0';
   if (elModalRoofBtn) elModalRoofBtn.disabled = !building;
@@ -213,4 +214,5 @@ export function readCreateFormState() {
 export function setCreateError(message) { elModalError.textContent = message || ''; }
 export function setCreateSubmitting(submitting) { isSubmitting = !!submitting; updateSubmitState(); }
 export function updateCreateCenter(lat, lon) { if (!draft) return; draft.lat = lat; draft.lon = lon; emitPreview(); }
+export function updateCreateAltitude(meters, mode = 'spatial-drag') { if (!draft) return; setAltitudeMeters(meters, mode); }
 export function isCreateModalOpen() { return !!elModalOverlay?.classList.contains('open'); }

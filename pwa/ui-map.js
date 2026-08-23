@@ -30,6 +30,7 @@ let _getAtomSelectionId = null;
 let _getSelectedAtomId = () => null;
 let _getPlacementDraft = () => null;
 let _setPlacementDraftPosition = null;
+let _setPlacementDraftHeight = null;
 let _isCreateModalOpen = () => false;
 let _onOpenMapBoardForAtom = null;
 let _onOpenTextBoardForAtom = null;
@@ -52,11 +53,15 @@ let focusedPunktoId = null;
 let hasBootFit = false;
 let svgLeaderOverlay = null;
 let mapBoardBasePadding = null;
+let draftHeightDrag = null;
+let draftHeightDragRaf = null;
+let draftHeightDragPending = null;
 
 const SPATIAL_LOD = {
   groundRelationZoom: 14,
   stemZoom: 16,
 };
+const MAX_DRAFT_HEIGHT_M = 200;
 
 export function initMapView({
   mapStyle,
@@ -66,6 +71,7 @@ export function initMapView({
   getSelectedAtomId,
   getPlacementDraft,
   setPlacementDraftPosition,
+  setPlacementDraftHeight,
   isCreateModalOpen,
   onOpenMapBoardForAtom,
   onOpenTextBoardForAtom,
@@ -84,6 +90,7 @@ export function initMapView({
   _getSelectedAtomId = typeof getSelectedAtomId === 'function' ? getSelectedAtomId : _getSelectedAtomId;
   _getPlacementDraft = typeof getPlacementDraft === 'function' ? getPlacementDraft : _getPlacementDraft;
   _setPlacementDraftPosition = typeof setPlacementDraftPosition === 'function' ? setPlacementDraftPosition : null;
+  _setPlacementDraftHeight = typeof setPlacementDraftHeight === 'function' ? setPlacementDraftHeight : null;
   _isCreateModalOpen = typeof isCreateModalOpen === 'function' ? isCreateModalOpen : _isCreateModalOpen;
   _onOpenMapBoardForAtom = typeof onOpenMapBoardForAtom === 'function' ? onOpenMapBoardForAtom : null;
   _onOpenTextBoardForAtom = typeof onOpenTextBoardForAtom === 'function' ? onOpenTextBoardForAtom : null;
@@ -286,7 +293,7 @@ export async function renderAtoms(newAtomIds = null) {
   const stemData = scatterData.filter(d =>
     d.hasHeight && (d.selected || d.selectionId === 'draft' || zoom >= SPATIAL_LOD.stemZoom)
   );
-  const selectedLabelData = scatterData.filter(d => d.selected);
+  const selectedLabelData = scatterData.filter(d => d.selected || d.selectionId === 'draft');
 
   const { ScatterplotLayer, TextLayer } = window.deck;
   const layers = [
@@ -325,7 +332,7 @@ export async function renderAtoms(newAtomIds = null) {
       getLineColor: d => d.strokeColor,
       getLineWidth: d => d.selected ? 3 : 2,
       lineWidthUnits: 'pixels',
-      getRadius: d => d.selected ? 17 : 12,
+      getRadius: d => d.selectionId === 'draft' ? 15 : (d.selected ? 17 : 12),
       radiusUnits: 'pixels',
       radiusMinPixels: 8,
       radiusMaxPixels: 26,
@@ -333,6 +340,7 @@ export async function renderAtoms(newAtomIds = null) {
       autoHighlight: true,
       highlightColor: [255, 255, 100, 255],
       onClick: info => {
+        if (info.object?.selectionId === 'draft') return;
         if (!info.object || !map || !_onOpenMapBoardForAtom) return;
         _onOpenMapBoardForAtom(info.object.atom || info.object, atoms).catch((err) => console.warn('[map-board] open failed:', err));
       },
@@ -362,13 +370,13 @@ export async function renderAtoms(newAtomIds = null) {
         data: selectedLabelData,
         getPosition: d => d.position,
         getText: d => d.spatialLabel,
-        getColor: [244, 249, 255, 245],
-        getBackgroundColor: [8, 13, 22, 210],
+        getColor: d => d.selectionId === 'draft' ? [255, 246, 190, 255] : [244, 249, 255, 245],
+        getBackgroundColor: d => d.selectionId === 'draft' ? [31, 25, 9, 220] : [8, 13, 22, 210],
         background: true,
         backgroundPadding: [7, 4],
         getSize: 13,
         sizeUnits: 'pixels',
-        getPixelOffset: [0, -34],
+        getPixelOffset: d => d.selectionId === 'draft' ? [0, -42] : [0, -34],
         getTextAnchor: 'middle',
         getAlignmentBaseline: 'bottom',
         billboard: true,
@@ -419,6 +427,10 @@ export async function renderAtoms(newAtomIds = null) {
   if (svgLeaderOverlay) svgLeaderOverlay.innerHTML = '';
 
   if (!hasBootFit) hasBootFit = true;
+}
+
+export function cancelPlacementDraftHeightDrag() {
+  endDraftHeightDrag();
 }
 
 export function updateCrosshairReadout() {
@@ -554,6 +566,7 @@ function initMap() {
     layers: [],
   });
   map.addControl(deckOverlay);
+  installDraftHeightDragHandlers();
 
   map.on('load', async () => {
     console.log('[map] loaded');
@@ -629,6 +642,161 @@ function initMap() {
     if (_onShowOnboarding) _onShowOnboarding();
   });
   return map;
+}
+
+function installDraftHeightDragHandlers() {
+  if (!map) return;
+  const container = map.getContainer();
+  if (!container || container._punktoDraftHeightDragInstalled) return;
+  container._punktoDraftHeightDragInstalled = true;
+  container.addEventListener('pointerdown', onDraftPointerDown, { capture: true });
+}
+
+function onDraftPointerDown(ev) {
+  if (!map || !deckOverlay || !_isCreateModalOpen() || !_setPlacementDraftHeight) return;
+  if (ev.button != null && ev.button !== 0) return;
+  const draft = _getPlacementDraft();
+  if (!draft) return;
+  const point = eventPointInMap(ev);
+  if (!point) return;
+  const picked = deckOverlay.pickObject?.({
+    x: point.x,
+    y: point.y,
+    radius: 18,
+    layerIds: ['atoms'],
+  });
+  if (picked?.object?.selectionId !== 'draft') return;
+
+  ev.preventDefault();
+  ev.stopPropagation();
+  if (typeof ev.stopImmediatePropagation === 'function') ev.stopImmediatePropagation();
+  beginDraftHeightDrag(ev, draft);
+}
+
+function beginDraftHeightDrag(ev, draft) {
+  endDraftHeightDrag();
+  draftHeightDrag = {
+    pointerId: ev.pointerId,
+    startY: ev.clientY,
+    startHeight: clampDraftHeight(draft.altitude_m || 0),
+    lat: draft.lat,
+    lon: draft.lon,
+    gestures: disableMapGestures(),
+  };
+  const container = map?.getContainer();
+  if (container) {
+    container.classList.add('draft-height-dragging');
+    try { container.setPointerCapture?.(ev.pointerId); } catch {}
+  }
+  window.addEventListener('pointermove', onDraftPointerMove, { capture: true });
+  window.addEventListener('pointerup', onDraftPointerUp, { capture: true });
+  window.addEventListener('pointercancel', onDraftPointerCancel, { capture: true });
+}
+
+function onDraftPointerMove(ev) {
+  if (!draftHeightDrag || ev.pointerId !== draftHeightDrag.pointerId) return;
+  ev.preventDefault();
+  ev.stopPropagation();
+  const nextHeight = heightFromPointerDelta(draftHeightDrag.startHeight, draftHeightDrag.startY - ev.clientY);
+  draftHeightDragPending = nextHeight;
+  if (draftHeightDragRaf) return;
+  draftHeightDragRaf = requestAnimationFrame(() => {
+    draftHeightDragRaf = null;
+    const pending = draftHeightDragPending;
+    draftHeightDragPending = null;
+    if (pending == null) return;
+    _setPlacementDraftHeight?.(pending, 'spatial-drag');
+  });
+}
+
+function onDraftPointerUp(ev) {
+  if (!draftHeightDrag || ev.pointerId !== draftHeightDrag.pointerId) return;
+  ev.preventDefault();
+  ev.stopPropagation();
+  endDraftHeightDrag();
+}
+
+function onDraftPointerCancel(ev) {
+  if (!draftHeightDrag || ev.pointerId !== draftHeightDrag.pointerId) return;
+  endDraftHeightDrag();
+}
+
+function endDraftHeightDrag() {
+  if (!draftHeightDrag) return;
+  const drag = draftHeightDrag;
+  draftHeightDrag = null;
+  if (draftHeightDragRaf) {
+    cancelAnimationFrame(draftHeightDragRaf);
+    draftHeightDragRaf = null;
+  }
+  if (draftHeightDragPending != null) {
+    _setPlacementDraftHeight?.(draftHeightDragPending, 'spatial-drag');
+    draftHeightDragPending = null;
+  }
+  restoreMapGestures(drag.gestures);
+  const container = map?.getContainer();
+  if (container) {
+    container.classList.remove('draft-height-dragging');
+    try { container.releasePointerCapture?.(drag.pointerId); } catch {}
+  }
+  window.removeEventListener('pointermove', onDraftPointerMove, { capture: true });
+  window.removeEventListener('pointerup', onDraftPointerUp, { capture: true });
+  window.removeEventListener('pointercancel', onDraftPointerCancel, { capture: true });
+}
+
+function eventPointInMap(ev) {
+  const rect = map?.getContainer()?.getBoundingClientRect();
+  if (!rect) return null;
+  return { x: ev.clientX - rect.left, y: ev.clientY - rect.top };
+}
+
+function heightFromPointerDelta(startHeight, upwardPixels) {
+  const start = clampDraftHeight(startHeight);
+  const pixels = Number(upwardPixels) || 0;
+  if (pixels <= 0) {
+    return clampDraftHeight(start + pixels * (start > 30 ? 0.22 : 0.14));
+  }
+  if (start >= 30) return clampDraftHeight(start + pixels * 0.22);
+  const pixelsToThirtyMeters = (30 - start) / 0.14;
+  if (pixels <= pixelsToThirtyMeters) return clampDraftHeight(start + pixels * 0.14);
+  return clampDraftHeight(30 + ((pixels - pixelsToThirtyMeters) * 0.22));
+}
+
+function clampDraftHeight(height) {
+  const n = Number(height);
+  if (!Number.isFinite(n)) return 0;
+  return Math.min(MAX_DRAFT_HEIGHT_M, Math.max(0, n));
+}
+
+function disableMapGestures() {
+  if (!map) return [];
+  const names = ['dragPan', 'scrollZoom', 'boxZoom', 'dragRotate', 'keyboard', 'doubleClickZoom', 'touchZoomRotate'];
+  const disabled = [];
+  for (const name of names) {
+    const gesture = map[name];
+    if (!gesture || typeof gesture.disable !== 'function') continue;
+    let wasEnabled = true;
+    try {
+      wasEnabled = typeof gesture.isEnabled === 'function' ? gesture.isEnabled() : true;
+      if (wasEnabled) gesture.disable();
+    } catch (err) {
+      console.warn(`[map] could not disable ${name}:`, err);
+      continue;
+    }
+    disabled.push({ gesture, wasEnabled, name });
+  }
+  return disabled;
+}
+
+function restoreMapGestures(gestures) {
+  for (const item of Array.isArray(gestures) ? gestures : []) {
+    if (!item.wasEnabled || !item.gesture || typeof item.gesture.enable !== 'function') continue;
+    try {
+      item.gesture.enable();
+    } catch (err) {
+      console.warn(`[map] could not restore ${item.name}:`, err);
+    }
+  }
 }
 
 async function buildSelectionIds(atoms) {

@@ -23,6 +23,7 @@ import {
   detectBuildingAtCenter,
   toggle3D,
   setMapBoardViewport,
+  cancelPlacementDraftHeightDrag,
 } from './ui-map.js';
 import {
   initBoardView,
@@ -31,7 +32,7 @@ import {
   refreshMapBoardAtoms,
   hasOpenBoard,
 } from './ui-board.js';
-import { initCreateModal, openCreateModal, closeCreateModal, setCreateError, setCreateSubmitting, updateCreateCenter, isCreateModalOpen } from './ui-create.js';
+import { initCreateModal, openCreateModal, closeCreateModal, setCreateError, setCreateSubmitting, updateCreateCenter, updateCreateAltitude, isCreateModalOpen } from './ui-create.js';
 import { initSettingsView, renderSettingsView } from './ui-settings.js';
 import { decodeAtomLocation, encodeLocation, haversineMeters } from './core/location.js';
 import { db } from './storage/db.js';
@@ -402,7 +403,7 @@ async function refreshUI(newAtomIds = null) {
     // users see a clean list instead of a flash of "No atoms yet".
     if (initialSyncDone) {
       elAtomEmpty.innerHTML = '<strong>No text here yet</strong><br/>Be the first to leave something at this place.<br/><button id="empty-leave-note" class="btn btn-secondary" style="margin-top:8px">Leave note here</button>';
-      requestAnimationFrame(() => { const b = document.getElementById('empty-leave-note'); if (b) b.onclick = openCreateModal; });
+      requestAnimationFrame(() => { const b = document.getElementById('empty-leave-note'); if (b) b.onclick = openCreateOnMap; });
       elAtomEmpty.style.display = 'block';
     } else {
       elAtomEmpty.style.display = 'none';
@@ -653,6 +654,14 @@ function updateCreateLocationDisplay(draft) {
   elModalLocation.textContent = loc
     ? `${punkto}  ·  ${fmtCoords(loc.lat, loc.lon, loc.alt)}`
     : punkto;
+}
+
+function openCreateOnMap() {
+  closeMapBoard({ clearSelection: true });
+  dismissOnboarding();
+  showPage('map');
+  ensureMapInitialized();
+  openCreateModal();
 }
 
 async function resetCache() {
@@ -988,7 +997,7 @@ function wireEvents() {
     },
     onPreviewChanged: (draft) => { placementDraft = draft; updateCreateLocationDisplay(draft); renderAtoms(); },
     onSubmitCreate: submitAtomFromModal,
-    onClosed: () => { placementDraft = null; renderAtoms(); },
+    onClosed: () => { cancelPlacementDraftHeightDrag(); placementDraft = null; renderAtoms(); },
   });
   // Panel toggle
   elFabPanel.addEventListener('click', () => setPanelOpen(!panelOpen));
@@ -998,11 +1007,7 @@ function wireEvents() {
   elToggle3D.addEventListener('click', toggle3D);
 
   // Add atom
-  elFabAdd.addEventListener('click', () => {
-    closeMapBoard({ clearSelection: true });
-    dismissOnboarding();
-    openCreateModal();
-  });
+  elFabAdd.addEventListener('click', openCreateOnMap);
 
   // Handle keyboard escape
   document.addEventListener('keydown', e => {
@@ -1046,8 +1051,8 @@ function wireEvents() {
 // ---------------------------------------------------------------------------
 
 async function boot() {
-  console.log('PUNKTO APP.JS LOADED pilot1-slice45a-spatial-reading-2026-08-23-1');
-  window.PUNKTO_APP_VERSION = 'pilot1-slice45a-spatial-reading-2026-08-23-1';
+  console.log('PUNKTO APP.JS LOADED pilot1-slice45b-direct-height-2026-08-23-1');
+  window.PUNKTO_APP_VERSION = 'pilot1-slice45b-direct-height-2026-08-23-1';
 
   console.log('[punkto] booting...');
 
@@ -1103,7 +1108,7 @@ async function boot() {
       currentPage = 'map';
       ensureMapInitialized();
     },
-    onAdd: () => { closeMapBoard({ clearSelection: true }); dismissOnboarding(); openCreateModal(); },
+    onAdd: openCreateOnMap,
     onOpenSettings: () => {
       closeMapBoard({ clearSelection: true });
       renderNetworkPage();
@@ -1114,7 +1119,7 @@ async function boot() {
   initTextView({
     onShowOnMap: (id) => focusPunkto(id),
     onOpenBoard: (id) => { showPage('text'); },
-    onLeaveNote: () => { dismissOnboarding(); openCreateModal(); },
+    onLeaveNote: openCreateOnMap,
     onPostReply: submitBoardReply,
     helpers: {
       escHtml, deriveTitle, deriveCategory, isVerifiedAtom,
@@ -1129,6 +1134,7 @@ async function boot() {
     getSelectedAtomId: () => selectedAtomId,
     getPlacementDraft: () => placementDraft,
     setPlacementDraftPosition: updateCreateCenter,
+    setPlacementDraftHeight: updateCreateAltitude,
     isCreateModalOpen,
     onOpenMapBoardForAtom: openMapBoardForAtom,
     onOpenTextBoardForAtom: openTextBoardForAtom,
