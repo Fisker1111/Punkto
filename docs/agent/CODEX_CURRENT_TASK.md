@@ -1,6 +1,6 @@
 # Codex Current Task
 
-Status: **HOLD — Slice 4 implemented, awaiting CI/review**
+Status: **ACTIVE — Pilot_1 Slice 4.5A: spatial reading**
 
 Repository: `Fisker1111/Punkto`
 Branch: `pilot-1`
@@ -8,172 +8,201 @@ PR: `#110`
 
 ## Goal
 
-Implement Pilot_1 **Slice 4 — Fast create**.
+Implement **Pilot_1 Slice 4.5A — Spatial Reading**.
 
-The product path to optimize is:
+This is the first part of the Punkto spatial-placement program. The purpose is to make an existing atom's physical relationship to the ground immediately understandable before we implement direct-manipulation height placement.
 
-> **Tap `+` → type → publish → return to the world**
+Core product statement:
 
-This slice should make the ordinary public-post path feel immediate and obvious on mobile while preserving all existing signing, public-data acknowledgement, category, location, altitude, storage, relay, and federation semantics.
+> **Every atom has a true ground anchor. Elevated atoms show a physical stem from that anchor to the message beacon.**
 
-Pilot_1 target:
+The user should be able to look at an elevated atom and understand, without reading a form or entering a mode:
 
-> An urgent post should be accepted as a signed atom in under 20 seconds p95 on the named reference device/network.
+> **That point on the ground is its real place, and the message is physically above it.**
 
-Do not redesign the rest of Punkto. This is a focused create-flow slice.
+This task is **reading/selection only**. Do not implement the 4.5B vertical-drag placement interaction yet. Do not start Slice 5.
 
 ## Starting state
 
 Before editing:
 
-1. Read `AGENTS.md`, `docs/PILOT_1_IMPLEMENTATION.md`, and `pwa/ARCHITECTURE.md`.
+1. Read `AGENTS.md`, `docs/PILOT_1_IMPLEMENTATION.md`, `pwa/ARCHITECTURE.md`, and the current `ui-map.js` / `ui-board.js` implementation.
 2. Confirm branch is `pilot-1` and working tree is clean.
-3. Inspect the current create path in `pwa/ui-create.js`, create markup/CSS in `pwa/index.html`, and the narrow create orchestration/submission path in `pwa/app.js`.
-4. Preserve the Slice 3.6 module boundaries: create UI belongs in `ui-create.js`; do not move Map/board implementation back into `app.js`.
-5. Do not change test1/node1/node2 operations. A real human-created atom has already proven test1 write + federation through the ordinary relay path.
+3. Preserve the Slice 3.6 ownership boundary:
+   - `ui-map.js` owns MapLibre/deck.gl presentation and selection visuals;
+   - `ui-board.js` owns the selected-atom board sheet;
+   - `app.js` remains coordinator.
+4. Preserve Slice 4 fast-create behavior exactly. No create-flow redesign in this task.
+5. MapLibre remains the single authoritative camera/projection.
 
-## Product contract
+## Spatial grammar to implement
 
-### Primary simple path
+A real atom is still one protocol object. Ground anchor, stem, ring and beacon are visual representations only.
 
-For a returning/acknowledged user, opening `+` should immediately present a calm, obvious composer with:
+For an atom at physical height `h > 0`:
 
-- message field as the dominant control;
-- current anchor/location understandable at a glance;
-- category/type accessible without turning the sheet into a settings form;
-- one obvious primary **Publish** action;
-- Cancel/close secondary;
-- text focus quickly after opening.
+```text
+        ●  beacon / message at real height
+        │
+        │  stem = physical height relation
+        │
+        ○  ground anchor at same lon/lat, height 0
+```
 
-Normal posting should not require interacting with altitude, floor, author, device-altitude, or other advanced controls.
+For a ground-level atom (`h == 0`), the beacon and base visually collapse into one compact grounded object; do not create a fake visible stem.
 
-### Progressive disclosure
+### Ground anchor
 
-Keep advanced location/altitude/author controls available, but collapse them behind one clear secondary disclosure such as **Location & options** / **More options**.
+- exact same longitude/latitude as the atom;
+- always at ground height 0 in the Punkto map coordinate model;
+- subtle in normal state;
+- stronger when selected;
+- should read as the atom's true place on Earth, not as a second atom.
 
-The default simple path should not visually expose the full altitude/floor control stack.
+### Stem
 
-Preserve the existing capabilities when expanded:
+- exactly vertical;
+- connects the ground anchor to the atom's actual physical height;
+- visible for elevated atoms at useful local/near zooms;
+- stronger when selected;
+- no reply/order/popularity/time semantics may affect stem height.
 
-- author/display-name editing;
-- ground/floor/manual altitude behavior;
-- roof/building behavior when available;
-- device-altitude option;
-- placement preview/location behavior;
-- category behavior and emergency hint.
+### Beacon
 
-Category may remain visible in the primary composer if that is the clearest way to keep urgent posting fast. Do not hide Emergency behind several taps.
+- stays at the atom's real physical height;
+- remains the primary message object;
+- selected beacon receives stronger visual emphasis than ordinary beacons.
 
-### Public-data acknowledgement
+## Level of detail / calm-world rule
 
-Preserve first-use acknowledgement as a real gate.
+Do not turn the map into a forest of antennae.
 
-- It must clearly communicate that the post is public.
-- A first-use user must not accidentally publish before acknowledging.
-- After acknowledgement, focus should move naturally into the message field.
-- Returning users must not be forced through the acknowledgement again.
+Implement a restrained level-of-detail strategy using current MapLibre zoom and selection state. Exact thresholds may be chosen from current map behavior, but the result should approximately follow:
 
-Do not add legalistic copy or a multi-step onboarding flow.
+- **Far:** beacon only; no full stem forest.
+- **Medium:** beacon + subtle ground relation/base.
+- **Near:** beacon + ground base; elevated stems become legible.
+- **Selected:** full ground anchor + stem + beacon + compact height label regardless of ordinary LOD where practical.
 
-### Fast-open discipline
+Selection must remain visually obvious without making unselected atoms noisy.
 
-Opening the create sheet must not wait for optional device-altitude/geolocation work.
+## Selected atom depth treatment
 
-In particular, the current `requestDeviceAltitude()` behavior must not create friction or a permission prompt on every ordinary `+` open. Defer optional high-accuracy/device-altitude work until the user explicitly opens/uses the relevant advanced control.
+When an atom is selected on the Map:
 
-Composition must remain available even while optional spatial enhancement is unresolved.
+- ground anchor/ring becomes clearly visible;
+- stem brightens and remains thin;
+- beacon becomes slightly larger/brighter than ordinary state;
+- show a compact spatial label near the beacon or stem such as:
+  - `Ground` for 0 m; or
+  - `+12 m · ~Floor 4` for elevated atoms.
+- floor estimate may use the existing `FLOOR_HEIGHT_M` convention only as an approximate display hint; do not persist or reinterpret protocol data.
+- selected visual must remain anchored to the actual atom; no synthetic offset that changes geographic meaning.
 
-### Publish behavior
+The selected atom should be understandable even in a dense 3D-building area.
 
-Preserve the existing write path:
+## Board / sidecar correction
 
-- canonical Punkto location encoding;
-- existing signing behavior;
-- normal `postAtomToNetwork(...)` path;
-- local `upsertAtom(...)` after accepted post;
-- normal sync/federation behavior;
-- return to the Map/world after success;
-- no special test-only write endpoint.
+The current selected board can open partially off-screen or dominate too much of the world on desktop. Fix this as part of 4.5A because selection should read as one spatial interaction.
 
-Make the UI robust against accidental duplicate submits:
+### Desktop
 
-- Publish disabled while submitting;
-- empty/whitespace-only text must not publish;
-- first-use acknowledgement must still gate Publish;
-- Ctrl/Cmd+Enter may remain a shortcut only when the form is eligible to publish.
+- board becomes a contained spatial sidecar, approximately `400–440px` wide when viewport allows;
+- board must stay fully inside the viewport;
+- internal content scrolls instead of the panel extending off-screen;
+- when opening the board, apply MapLibre map padding (right side) or an equivalent MapLibre-native viewport accommodation so the selected atom remains visible beside the board;
+- preserve zoom, pitch and bearing;
+- do not perform an unrelated fly-to or recenter jump;
+- closing the board restores prior padding cleanly and leaves the user's spatial context intact.
 
-On failure, keep the user's composed text/options in place and show the existing inline error rather than discarding the draft.
+### Mobile
 
-### Spatial context
+- keep a bottom-sheet treatment;
+- cap it so a useful part of the map remains visible above it (roughly 55–65% viewport height maximum);
+- use internal scrolling for long board content;
+- selected atom should remain visually connected to the world behind the sheet.
 
-Successful publish should return to the same spatial context and show the newly posted atom through the normal refresh path.
+### Important camera rule
 
-Do not introduce a camera jump unrelated to the chosen anchor.
+> **The world makes room for the board; the board does not move the world to a different place.**
 
-The create flow must not invent a separate map/camera or encode reply/order semantics into altitude.
+Use the existing MapLibre camera. No second camera and no Three.js camera synchronization.
 
-## Visual direction
+## Building behavior in this task
 
-This is not a full visual redesign. Keep the established Candidate 4 / Candidate 5 language:
+Do **not** implement full building x-ray / floor slicing yet. That belongs to 4.5C.
 
-- warm, calm, public, mobile-first;
-- message first;
-- simple primary action;
-- advanced controls secondary;
-- no cyberpunk/debug-console feel;
-- no fake activity or gamification.
+Allowed in 4.5A only if very small and clearly helpful:
 
-A modest create-sheet CSS/markup cleanup is expected if necessary to make the fast path clear.
+- modest selected-atom visibility treatment if an existing building extrusion completely occludes the selected beacon.
 
-## Version marker
+Do not add custom 3D buildings, new tile providers, photogrammetry, interiors, or floor meshes in this task.
 
-This is new visible product behavior. Update the PWA marker from the Slice 3 marker to:
+## Product invariants
 
-`pilot1-slice4-fast-create-2026-08-20-1`
+Preserve all of these:
 
-Update both the console marker and `window.PUNKTO_APP_VERSION` consistently.
+- one displayed beacon resolves to one real atom;
+- independent atoms remain independent;
+- physical height is the only meaning of the vertical axis;
+- replies remain flat 2D board content;
+- no likes/followers/engagement ranking;
+- no protocol/storage/signing/sync/federation changes;
+- no fake activity or synthetic atoms;
+- MapLibre is the authoritative spatial context;
+- public content remains public;
+- Text view remains an equivalent/accessibility representation.
 
-## Expected scope
+## Expected implementation scope
 
-Prefer the smallest coherent set:
+Prefer the smallest coherent set, likely:
 
-- `pwa/ui-create.js`
-- `pwa/index.html`
-- `pwa/app.js` only for narrow create orchestration/version marker changes if needed
+- `pwa/ui-map.js`
+- `pwa/ui-board.js`
+- `pwa/index.html` for narrow board/layout CSS if needed
+- `pwa/app.js` only for narrow cross-module board-padding coordination/version marker if necessary
 - `pwa/ARCHITECTURE.md` only if the actual module API/ownership changes materially
 - `docs/agent/CODEX_CURRENT_TASK.md`
 
-Touch another PWA file only if required for a small mechanical integration change.
+A small helper in an existing UI/core module is acceptable if it avoids duplicated height/floor display logic.
 
 Do **not** edit:
 
 - relay/protocol formats;
-- signing/identity semantics;
 - storage schema;
+- signing/identity semantics;
 - peer discovery/sync cadence;
-- deployment/Caddy/Docker configuration;
-- node1/node2 production code/config;
-- Map/board product behavior unrelated to create.
+- deployment/Caddy/Docker files;
+- node1/node2 configuration;
+- create behavior except for a strictly mechanical integration required to keep it unchanged.
+
+## Version marker
+
+This is visible product behavior. Update both the console marker and `window.PUNKTO_APP_VERSION` to exactly:
+
+`pilot1-slice45a-spatial-reading-2026-08-23-1`
 
 ## Acceptance criteria
 
-The slice is acceptable when all are true:
+The task is acceptable only when all are true:
 
-1. `+` opens a create sheet where the message field is the obvious first action.
-2. Returning acknowledged users can type and publish without opening advanced controls.
-3. Text is focused promptly on ordinary open.
-4. First-use public acknowledgement remains a blocking one-time gate and hands focus to the composer after acceptance.
-5. Full altitude/floor/author controls are hidden by default but still available and functional through one clear disclosure.
-6. Optional device-altitude/geolocation work does not run/prompt merely because the create sheet opened.
-7. Category selection remains easy enough for a fast Emergency/Warning post; Emergency hint still works.
-8. Empty text cannot be published.
-9. Double-submit is prevented while a post is in flight.
-10. Failed submission preserves the draft and shows inline error.
-11. Successful submission still signs/posts/stores through the existing normal path and returns to the same world context.
-12. Placement preview, ground level, floor/manual altitude, roof/building behavior, and altitude-only Z semantics remain intact.
-13. `Text | Map | + | Settings`, board behavior, map selection, sync, settings and identity/key behavior are unchanged outside the create flow.
-14. Version marker is exactly `pilot1-slice4-fast-create-2026-08-20-1`.
-15. No deployment or ops files are changed.
+1. A ground-level atom visually reads as grounded and does not show a fake tall stem.
+2. An elevated atom can show a true ground anchor and a vertical stem to its real physical height.
+3. Stem height comes only from the atom's physical altitude/height field already used by Punkto.
+4. Far/medium views remain calm; 4.5A does not create a dense forest of stems.
+5. Selected atom gets a clearly stronger base/stem/beacon treatment.
+6. Selected atom shows a compact, understandable height label (`Ground` or `+N m · ~Floor N`).
+7. Selecting a real atom still opens the correct board/root semantics from Slice 3.
+8. On desktop, the board is fully inside the viewport and uses internal scrolling when needed.
+9. On desktop, board opening makes room using MapLibre-native padding/viewport handling while preserving zoom/pitch/bearing and the selected atom's geographic context.
+10. Closing the board restores map padding/context without an unrelated camera jump.
+11. On mobile, board remains a bottom sheet with useful map area visible above it.
+12. Existing `Test atom` / real-atom rendering path remains valid.
+13. Text view, fast create, signing, sync, storage, settings and federation behavior are unchanged.
+14. No 4.5B vertical-drag placement interaction is implemented yet.
+15. No 4.5C building floor/x-ray system is implemented yet.
+16. Version marker is exactly `pilot1-slice45a-spatial-reading-2026-08-23-1`.
+17. No deploy/ops files are changed.
 
 ## Automated checks
 
@@ -197,39 +226,38 @@ python3 relay/test_relay.py
 git diff --check
 ```
 
-Do not modify relay files to influence relay results.
+Do not modify relay files to influence relay test results.
 
-## Focused create-flow checks
+## Focused browser / implementation checks
 
-Where practical with a local/static browser session, verify without creating public test network activity:
+Where practical without creating new public atoms:
 
-- acknowledged user: `+` → composer ready/focused, advanced section closed;
-- Publish disabled for empty text and enabled for valid text;
-- category can be changed to WARN/EMGC quickly and emergency hint remains correct;
-- first-use acknowledgement blocks Publish, then acknowledgement focuses message field;
-- open/close advanced options and exercise ground/floor/manual/roof controls without console/deck.gl errors;
-- confirm opening create does **not** request optional device altitude automatically;
-- close/reopen resets the draft as before while persisted acknowledgement/author remain preserved;
-- Cancel and Escape still close safely;
-- no uncaught module/runtime errors.
-
-Do not fabricate additional public atoms merely to satisfy Codex testing. Live write-path verification will happen on test1 after review/deploy.
+- verify a ground atom renders without a tall stem;
+- verify an elevated fixture/local test object, if available without network writes, has base → stem → beacon geometry at the correct height;
+- verify selected styling is stronger but restrained;
+- verify selected spatial label uses height only;
+- verify board is fully visible at common desktop viewport sizes;
+- verify board content scrolls internally;
+- verify board open/close does not alter zoom/pitch/bearing unexpectedly;
+- verify mobile CSS still produces a bottom sheet with map visible above;
+- verify no uncaught MapLibre/deck.gl/module errors;
+- do not fabricate a new public network atom merely for testing.
 
 ## Commit / push contract
 
 Before committing, change the first status line to exactly:
 
-`Status: **HOLD — Slice 4 implemented, awaiting CI/review**`
+`Status: **HOLD — Slice 4.5A implemented, awaiting CI/review**`
 
 Make one focused implementation commit with exactly:
 
-`feat(pilot1): streamline fast create flow`
+`feat(pilot1): add spatial atom reading`
 
 Then:
 
-1. commit only the Slice 4 implementation + task-status/doc changes;
+1. commit only Slice 4.5A implementation + task-status/doc changes;
 2. push to `origin/pilot-1`;
-3. report exact SHA, files changed, automated checks, focused create-flow checks, and any uncertainty;
+3. report exact SHA, changed files, checks performed, and any UX uncertainty;
 4. stop.
 
-Do **not** deploy. Do **not** start Slice 5. ChatGPT will inspect the pushed exact SHA and Pilot CI before any test1 deployment authorization.
+Do **not** deploy. Do **not** start Slice 4.5B, Slice 4.5C, or Slice 5. ChatGPT will review the exact pushed SHA and Pilot CI before any test1 deployment authorization.
