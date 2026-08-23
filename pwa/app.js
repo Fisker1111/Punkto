@@ -23,6 +23,7 @@ import {
   detectBuildingAtCenter,
   toggle3D,
   setMapBoardViewport,
+  setMapCreateViewport,
   cancelPlacementDraftHeightDrag,
 } from './ui-map.js';
 import {
@@ -997,7 +998,8 @@ function wireEvents() {
     },
     onPreviewChanged: (draft) => { placementDraft = draft; updateCreateLocationDisplay(draft); renderAtoms(); },
     onSubmitCreate: submitAtomFromModal,
-    onClosed: () => { cancelPlacementDraftHeightDrag(); placementDraft = null; renderAtoms(); },
+    onViewportChanged: (open, composerRect) => setMapCreateViewport(open, composerRect),
+    onClosed: () => { cancelPlacementDraftHeightDrag(); setMapCreateViewport(false, null); placementDraft = null; renderAtoms(); },
   });
   // Panel toggle
   elFabPanel.addEventListener('click', () => setPanelOpen(!panelOpen));
@@ -1051,8 +1053,8 @@ function wireEvents() {
 // ---------------------------------------------------------------------------
 
 async function boot() {
-  console.log('PUNKTO APP.JS LOADED pilot1-slice45b-direct-height-2026-08-23-1');
-  window.PUNKTO_APP_VERSION = 'pilot1-slice45b-direct-height-2026-08-23-1';
+  console.log('PUNKTO APP.JS LOADED pilot1-slice45b-direct-height-2026-08-23-2');
+  window.PUNKTO_APP_VERSION = 'pilot1-slice45b-direct-height-2026-08-23-2';
 
   console.log('[punkto] booting...');
 

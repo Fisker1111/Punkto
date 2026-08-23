@@ -6,6 +6,7 @@ const elModalAuthor = document.getElementById('modal-author');
 const elModalSubmit = document.getElementById('modal-submit');
 const elModalCancel = document.getElementById('modal-cancel');
 const elModalError = document.getElementById('modal-error');
+const elModalBox = document.getElementById('modal');
 const elAckBanner = document.getElementById('ack-banner');
 const elAckBtn = document.getElementById('ack-btn');
 const elModalOptions = document.getElementById('modal-options');
@@ -20,6 +21,7 @@ if (elAckBtn) {
     localStorage.setItem(ACK_KEY, '1');
     if (elAckBanner) elAckBanner.style.display = 'none';
     updateSubmitState();
+    notifyViewportChangedSoon();
     setTimeout(() => elModalText?.focus(), 40);
   });
 }
@@ -41,6 +43,8 @@ let callbacks = null;
 let modalAltitudeState = { mode: 'meter', building: null };
 let draft = null;
 let isSubmitting = false;
+let viewportNotifyRaf = null;
+let modalResizeObserver = null;
 
 function isAcked() {
   return !!localStorage.getItem(ACK_KEY);
@@ -63,6 +67,51 @@ function submitIfEligible() {
   updateSubmitState();
   if (!canPublish()) return;
   callbacks?.onSubmitCreate?.(readCreateFormState());
+}
+
+function readComposerRect() {
+  if (!elModalBox || !isCreateModalOpen()) return null;
+  const rect = elModalBox.getBoundingClientRect();
+  return {
+    top: rect.top,
+    right: rect.right,
+    bottom: rect.bottom,
+    left: rect.left,
+    width: rect.width,
+    height: rect.height,
+  };
+}
+
+function notifyViewportChangedSoon() {
+  if (!isCreateModalOpen()) return;
+  if (viewportNotifyRaf) cancelAnimationFrame(viewportNotifyRaf);
+  viewportNotifyRaf = requestAnimationFrame(() => {
+    viewportNotifyRaf = null;
+    callbacks?.onViewportChanged?.(true, readComposerRect());
+  });
+}
+
+function startViewportObservation() {
+  stopViewportObservation();
+  if (window.ResizeObserver && elModalBox) {
+    modalResizeObserver = new ResizeObserver(() => notifyViewportChangedSoon());
+    modalResizeObserver.observe(elModalBox);
+  }
+  window.addEventListener('resize', notifyViewportChangedSoon);
+  window.addEventListener('orientationchange', notifyViewportChangedSoon);
+}
+
+function stopViewportObservation() {
+  if (viewportNotifyRaf) {
+    cancelAnimationFrame(viewportNotifyRaf);
+    viewportNotifyRaf = null;
+  }
+  if (modalResizeObserver) {
+    modalResizeObserver.disconnect();
+    modalResizeObserver = null;
+  }
+  window.removeEventListener('resize', notifyViewportChangedSoon);
+  window.removeEventListener('orientationchange', notifyViewportChangedSoon);
 }
 
 function altitudeMeters() {
@@ -150,6 +199,7 @@ export function initCreateModal(opts) {
   });
   elModalAltitudeSlider?.addEventListener('input', updateAltitudeLabels);
   elModalAltitudeSlider?.addEventListener('change', updateAltitudeLabels);
+  elModalOptions?.addEventListener('toggle', notifyViewportChangedSoon);
   elModalGroundBtn?.addEventListener('click', () => setAltitudeMeters(0, 'ground'));
   elModalRoofBtn?.addEventListener('click', () => { const b = modalAltitudeState.building; if (b) setAltitudeMeters(b.height, 'roof'); });
   elModalFloorMinus?.addEventListener('click', () => setAltitudeMeters(((Number(elModalFloorValue?.value) || 0) - 1) * FLOOR_HEIGHT_M, 'manual'));
@@ -186,9 +236,12 @@ export function openCreateModal() {
   draft = { lat: context.center?.lat ?? 0, lon: context.center?.lng ?? 0, altitude_m: 0, floor_hint: 0, placement_mode: 'ground' };
   updateAltitudeLabels();
   elModalOverlay.classList.add('open');
+  startViewportObservation();
   // First-use public-data acknowledgement
   const acked = isAcked();
   if (elAckBanner) elAckBanner.style.display = acked ? 'none' : 'block';
+  notifyViewportChangedSoon();
+  setTimeout(notifyViewportChangedSoon, 260);
   updateSubmitState();
   setTimeout(() => {
     if (!acked && elAckBtn) elAckBtn.focus();
@@ -197,6 +250,8 @@ export function openCreateModal() {
 }
 
 export function closeCreateModal() {
+  stopViewportObservation();
+  callbacks?.onViewportChanged?.(false, null);
   elModalOverlay?.classList.remove('open');
   draft = null;
   callbacks?.onClosed?.();

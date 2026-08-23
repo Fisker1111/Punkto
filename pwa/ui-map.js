@@ -53,6 +53,11 @@ let focusedPunktoId = null;
 let hasBootFit = false;
 let svgLeaderOverlay = null;
 let mapBoardBasePadding = null;
+let mapCreateBasePadding = null;
+let mapCreateOpen = false;
+let mapCreateComposerRect = null;
+let mapCreateViewportRaf = null;
+let mapCreateResizeInstalled = false;
 let draftHeightDrag = null;
 let draftHeightDragRaf = null;
 let draftHeightDragPending = null;
@@ -150,6 +155,16 @@ export function setMapBoardViewport(open, boardRect = null) {
     console.warn('[map-board] viewport padding failed:', err);
     if (!open) mapBoardBasePadding = null;
   }
+}
+
+export function setMapCreateViewport(open, composerRect = null) {
+  mapCreateOpen = !!open;
+  mapCreateComposerRect = normalizeViewportRect(composerRect);
+  if (!mapCreateOpen && mapCreateViewportRaf) {
+    cancelAnimationFrame(mapCreateViewportRaf);
+    mapCreateViewportRaf = null;
+  }
+  scheduleApplyMapCreateViewport();
 }
 
 export function missingMapLibraries() {
@@ -283,7 +298,7 @@ export async function renderAtoms(newAtomIds = null) {
       f: 'draft',
       t: Date.now(),
       label: 'draft',
-      spatialLabel: draftAlt > 0 ? formatSpatialHeightLabel(draftAlt) : 'Ground',
+      spatialLabel: formatDraftSpatialHeightLabel(draftAlt),
     });
   }
 
@@ -567,6 +582,7 @@ function initMap() {
   });
   map.addControl(deckOverlay);
   installDraftHeightDragHandlers();
+  installMapCreateViewportResizeHandler();
 
   map.on('load', async () => {
     console.log('[map] loaded');
@@ -638,10 +654,101 @@ function initMap() {
 
     if (_onRefreshUI) await _onRefreshUI();
     requestAnimationFrame(() => { if (map) map.resize(); });
+    scheduleApplyMapCreateViewport();
     if (_onFocusDeepLinkIfReady) await _onFocusDeepLinkIfReady();
     if (_onShowOnboarding) _onShowOnboarding();
   });
   return map;
+}
+
+function installMapCreateViewportResizeHandler() {
+  if (mapCreateResizeInstalled) return;
+  mapCreateResizeInstalled = true;
+  window.addEventListener('resize', () => {
+    if (mapCreateOpen) scheduleApplyMapCreateViewport();
+  });
+  window.addEventListener('orientationchange', () => {
+    if (mapCreateOpen) setTimeout(scheduleApplyMapCreateViewport, 80);
+  });
+}
+
+function scheduleApplyMapCreateViewport() {
+  if (mapCreateViewportRaf) return;
+  mapCreateViewportRaf = requestAnimationFrame(() => {
+    mapCreateViewportRaf = null;
+    applyMapCreateViewport();
+  });
+}
+
+function normalizeViewportRect(rect) {
+  if (!rect) return null;
+  const top = Number(rect.top);
+  const right = Number(rect.right);
+  const bottom = Number(rect.bottom);
+  const left = Number(rect.left);
+  const width = Number(rect.width);
+  const height = Number(rect.height);
+  if (![top, right, bottom, left, width, height].every(Number.isFinite)) return null;
+  return { top, right, bottom, left, width, height };
+}
+
+function applyMapCreateViewport() {
+  if (!map || typeof map.easeTo !== 'function') return;
+  const currentPadding = typeof map.getPadding === 'function'
+    ? map.getPadding()
+    : { top: 0, right: 0, bottom: 0, left: 0 };
+
+  if (mapCreateOpen && !mapCreateBasePadding) {
+    mapCreateBasePadding = { ...currentPadding };
+  }
+
+  const base = mapCreateBasePadding || currentPadding;
+  const padding = mapCreateOpen
+    ? createViewportPadding(base, mapCreateComposerRect)
+    : { ...base };
+  const reduceMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+
+  try {
+    map.easeTo({
+      padding,
+      duration: reduceMotion ? 0 : 120,
+      center: map.getCenter(),
+      pitch: map.getPitch(),
+      bearing: map.getBearing(),
+      zoom: map.getZoom(),
+    });
+    if (!mapCreateOpen) {
+      mapCreateBasePadding = null;
+      mapCreateComposerRect = null;
+    }
+  } catch (err) {
+    console.warn('[map-create] viewport padding failed:', err);
+    if (!mapCreateOpen) {
+      mapCreateBasePadding = null;
+      mapCreateComposerRect = null;
+    }
+  }
+}
+
+function createViewportPadding(base, composerRect) {
+  const mapRect = map?.getContainer()?.getBoundingClientRect?.();
+  const viewportHeight = window.innerHeight || document.documentElement.clientHeight || 0;
+  const mapHeight = mapRect?.height || viewportHeight || 0;
+  const fallbackHeight = Math.round((viewportHeight || mapHeight || 720) * 0.42);
+  const composerTop = Number.isFinite(composerRect?.top)
+    ? composerRect.top
+    : (mapRect ? mapRect.bottom - fallbackHeight : viewportHeight - fallbackHeight);
+  const mapBottom = Number.isFinite(mapRect?.bottom) ? mapRect.bottom : viewportHeight;
+  const overlap = Math.max(0, mapBottom - composerTop);
+  const touchReachMargin = Math.max(64, Math.round(mapHeight * 0.11));
+  const cap = Math.max(0, Math.round(mapHeight * 0.72));
+  const bottom = Math.min(cap, Math.ceil(overlap + touchReachMargin));
+  return {
+    top: base.top || 0,
+    right: base.right || 0,
+    bottom: Math.max(base.bottom || 0, bottom),
+    left: base.left || 0,
+  };
 }
 
 function installDraftHeightDragHandlers() {
@@ -830,6 +937,11 @@ function formatSpatialHeightLabel(alt) {
   const meters = Math.round(height);
   const floor = Math.max(1, Math.round(height / FLOOR_HEIGHT_M));
   return `+${meters} m · ~Floor ${floor}`;
+}
+
+function formatDraftSpatialHeightLabel(alt) {
+  const base = formatSpatialHeightLabel(alt);
+  return draftHeightDrag ? base : `${base}\nDrag height`;
 }
 
 function mapColorForAtom(atom, alpha = 245) {
