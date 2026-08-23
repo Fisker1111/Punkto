@@ -1,6 +1,6 @@
 # Codex Current Task
 
-Status: **HOLD â€” Slice 4.5A implemented, awaiting CI/review**
+Status: **ACTIVE — Pilot_1 Slice 4.5B: direct spatial height placement**
 
 Repository: `Fisker1111/Punkto`
 Branch: `pilot-1`
@@ -8,201 +8,259 @@ PR: `#110`
 
 ## Goal
 
-Implement **Pilot_1 Slice 4.5A — Spatial Reading**.
+Implement **Pilot_1 Slice 4.5B — Direct Spatial Height Placement**.
 
-This is the first part of the Punkto spatial-placement program. The purpose is to make an existing atom's physical relationship to the ground immediately understandable before we implement direct-manipulation height placement.
+This is the signature creation interaction for Punkto.
 
 Core product statement:
 
-> **Every atom has a true ground anchor. Elevated atoms show a physical stem from that anchor to the message beacon.**
+> **Tap `+` → the geographic place is fixed → drag the atom upward only if height matters → type → publish.**
 
-The user should be able to look at an elevated atom and understand, without reading a form or entering a mode:
+The user must not have to understand altitude forms, XYZ controls, CAD gizmos, or a separate 3D editor. The world itself is the height control.
 
-> **That point on the ground is its real place, and the message is physically above it.**
+Slice 4.5A already established the reading grammar:
 
-This task is **reading/selection only**. Do not implement the 4.5B vertical-drag placement interaction yet. Do not start Slice 5.
+```text
+        ●  beacon / atom at physical height
+        │
+        │  vertical stem
+        │
+        ○  ground anchor at fixed lon/lat
+```
+
+Slice 4.5B makes the **draft beacon itself draggable vertically** during creation.
+
+This task does **not** implement building translucency, floor slicing, indoor models, or custom 3D buildings. Those belong to 4.5C. Do not start Slice 5.
 
 ## Starting state
 
 Before editing:
 
-1. Read `AGENTS.md`, `docs/PILOT_1_IMPLEMENTATION.md`, `pwa/ARCHITECTURE.md`, and the current `ui-map.js` / `ui-board.js` implementation.
+1. Read `AGENTS.md`, `docs/PILOT_1_IMPLEMENTATION.md`, `pwa/ARCHITECTURE.md`, and current `pwa/ui-map.js`, `pwa/ui-create.js`, `pwa/app.js`, `pwa/index.html`.
 2. Confirm branch is `pilot-1` and working tree is clean.
-3. Preserve the Slice 3.6 ownership boundary:
-   - `ui-map.js` owns MapLibre/deck.gl presentation and selection visuals;
-   - `ui-board.js` owns the selected-atom board sheet;
-   - `app.js` remains coordinator.
-4. Preserve Slice 4 fast-create behavior exactly. No create-flow redesign in this task.
-5. MapLibre remains the single authoritative camera/projection.
+3. Preserve Slice 4.5A spatial reading behavior and board sidecar behavior.
+4. Preserve Slice 4 fast-create semantics: ground-level posting must remain fast and must not require height interaction.
+5. MapLibre remains the single authoritative camera/projection; deck.gl remains the Punkto spatial overlay.
+6. Do not change protocol, storage, signing, relay, federation, or node operations.
 
-## Spatial grammar to implement
+## The interaction to implement
 
-A real atom is still one protocol object. Ground anchor, stem, ring and beacon are visual representations only.
+### 1. Opening `+`
 
-For an atom at physical height `h > 0`:
+When the create flow opens on the Map:
 
-```text
-        ●  beacon / message at real height
-        │
-        │  stem = physical height relation
-        │
-        ○  ground anchor at same lon/lat, height 0
-```
+- establish the draft ground anchor from the current create location exactly as the existing flow already does;
+- initialize draft height to `0 m` unless an existing explicit draft value requires otherwise;
+- render the 4.5A draft grammar immediately:
+  - ground anchor at the chosen lon/lat;
+  - draft beacon at current height;
+  - vertical stem only when height > 0;
+- show an obvious but restrained spatial affordance that communicates **the beacon can be dragged up/down to set height**.
 
-For a ground-level atom (`h == 0`), the beacon and base visually collapse into one compact grounded object; do not create a fake visible stem.
+Do not require a second "3D editor" screen.
 
-### Ground anchor
+Do not automatically request device altitude merely because `+` opened.
 
-- exact same longitude/latitude as the atom;
-- always at ground height 0 in the Punkto map coordinate model;
-- subtle in normal state;
-- stronger when selected;
-- should read as the atom's true place on Earth, not as a second atom.
+### 2. Direct vertical manipulation — the Punkto Move
 
-### Stem
+The draft beacon is the handle.
 
-- exactly vertical;
-- connects the ground anchor to the atom's actual physical height;
-- visible for elevated atoms at useful local/near zooms;
-- stronger when selected;
-- no reply/order/popularity/time semantics may affect stem height.
+When pointer/touch begins on the **draft beacon**:
 
-### Beacon
+- enter height-drag mode;
+- freeze the geographic ground anchor (`lon/lat`) for the duration of the drag;
+- disable conflicting map pan/rotate/zoom gestures while the drag is active;
+- vertical pointer movement changes only physical draft height;
+- horizontal pointer drift must not move the geographic anchor;
+- update beacon, stem and height label live while dragging;
+- on release/cancel, restore ordinary map interaction cleanly.
 
-- stays at the atom's real physical height;
-- remains the primary message object;
-- selected beacon receives stronger visual emphasis than ordinary beacons.
+There must be **no XYZ arrows and no separate altitude slider as the primary interaction**.
 
-## Level of detail / calm-world rule
+### 3. Height mapping / feel
 
-Do not turn the map into a forest of antennae.
+Prioritize intuitive human-building placement, not mathematical cleverness.
 
-Implement a restrained level-of-detail strategy using current MapLibre zoom and selection state. Exact thresholds may be chosen from current map behavior, but the result should approximately follow:
+Requirements:
 
-- **Far:** beacon only; no full stem forest.
-- **Medium:** beacon + subtle ground relation/base.
-- **Near:** beacon + ground base; elevated stems become legible.
-- **Selected:** full ground anchor + stem + beacon + compact height label regardless of ordinary LOD where practical.
+- upward screen drag increases height;
+- downward screen drag decreases height;
+- clamp at `0 m` minimum;
+- use a conservative Pilot maximum around `200 m` to prevent runaway values;
+- the `0–30 m` range must be easy to control precisely because ordinary floors/buildings matter most;
+- a slightly accelerated response above ordinary building heights is acceptable if it improves usability;
+- avoid large jumps from tiny finger movement;
+- update on animation frames / smoothly enough to feel direct;
+- choose the cleanest implementation compatible with current MapLibre/deck.gl architecture rather than hardcoding a brittle projection trick.
 
-Selection must remain visually obvious without making unselected atoms noisy.
+The mapping may be viewport-aware, but the interaction must remain monotonic and predictable.
 
-## Selected atom depth treatment
+### 4. Spatial label
 
-When an atom is selected on the Map:
+During placement, show a compact label next to the draft beacon, for example:
 
-- ground anchor/ring becomes clearly visible;
-- stem brightens and remains thin;
-- beacon becomes slightly larger/brighter than ordinary state;
-- show a compact spatial label near the beacon or stem such as:
-  - `Ground` for 0 m; or
-  - `+12 m · ~Floor 4` for elevated atoms.
-- floor estimate may use the existing `FLOOR_HEIGHT_M` convention only as an approximate display hint; do not persist or reinterpret protocol data.
-- selected visual must remain anchored to the actual atom; no synthetic offset that changes geographic meaning.
+- `Ground`
+- `+3 m · ~Floor 1`
+- `+9 m · ~Floor 3`
+- `+12 m · ~Floor 4`
 
-The selected atom should be understandable even in a dense 3D-building area.
+Use the same approximate floor convention as 4.5A. Floor is only a display hint; physical metres remain authoritative.
 
-## Board / sidecar correction
+The label should follow the beacon and remain readable without obscuring the composer.
 
-The current selected board can open partially off-screen or dominate too much of the world on desktop. Fix this as part of 4.5A because selection should read as one spatial interaction.
+### 5. Ground remains the zero-friction default
 
-### Desktop
+A user who wants a normal ground-level public message must still be able to:
 
-- board becomes a contained spatial sidecar, approximately `400–440px` wide when viewport allows;
-- board must stay fully inside the viewport;
-- internal content scrolls instead of the panel extending off-screen;
-- when opening the board, apply MapLibre map padding (right side) or an equivalent MapLibre-native viewport accommodation so the selected atom remains visible beside the board;
-- preserve zoom, pitch and bearing;
-- do not perform an unrelated fly-to or recenter jump;
-- closing the board restores prior padding cleanly and leaves the user's spatial context intact.
+> **Tap `+` → type → Publish**
 
-### Mobile
+without touching the 3D placement control.
 
-- keep a bottom-sheet treatment;
-- cap it so a useful part of the map remains visible above it (roughly 55–65% viewport height maximum);
-- use internal scrolling for long board content;
-- selected atom should remain visually connected to the world behind the sheet.
+Do not insert a mandatory height-confirmation step.
 
-### Important camera rule
+At height 0, the draft reads as a compact grounded beacon/base. A small `Ground` cue is acceptable.
 
-> **The world makes room for the board; the board does not move the world to a different place.**
+### 6. Composer coexistence
 
-Use the existing MapLibre camera. No second camera and no Three.js camera synchronization.
+The create composer and spatial placement must work together rather than one replacing the other.
 
-## Building behavior in this task
+- message field remains obvious;
+- category remains easy to reach;
+- Publish remains the primary action;
+- map area must remain large enough to manipulate the draft beacon;
+- on mobile, do not let the composer cover the entire placement area;
+- on desktop, avoid a giant centered modal that blocks the draft beacon;
+- Cancel/close returns to the prior map context cleanly.
 
-Do **not** implement full building x-ray / floor slicing yet. That belongs to 4.5C.
+A narrow markup/CSS adjustment is allowed if needed to make the draft beacon directly manipulable while the composer is open.
 
-Allowed in 4.5A only if very small and clearly helpful:
+Do not perform a broad visual redesign.
 
-- modest selected-atom visibility treatment if an existing building extrusion completely occludes the selected beacon.
+### 7. Manual / accessibility fallback
 
-Do not add custom 3D buildings, new tile providers, photogrammetry, interiors, or floor meshes in this task.
+Preserve a non-gesture fallback under `Location & options`.
+
+Existing ground/floor/manual/device-altitude controls may remain, but they are now secondary/fallback controls.
+
+When fallback controls change height:
+
+- the spatial draft beacon/stem/label must update immediately;
+- when the beacon is dragged, the fallback value/readout must stay synchronized.
+
+Do not remove accessibility or precision entry just because direct manipulation exists.
+
+## Important interaction ownership
+
+Keep module boundaries clear:
+
+- `ui-map.js` owns spatial draft rendering and pointer/touch manipulation of the draft beacon;
+- `ui-create.js` owns composer/form state and fallback controls;
+- `app.js` coordinates draft state and publish orchestration only where necessary.
+
+Prefer a small explicit callback/API between create and map modules over moving implementation back into `app.js`.
+
+## Camera behavior
+
+During a height drag:
+
+- do not fly the camera to another location;
+- do not silently alter the ground anchor;
+- keep zoom/pitch/bearing stable;
+- temporarily suppress only the map gestures that conflict with direct beacon dragging;
+- restore map gestures after pointerup/pointercancel even if an error occurs.
+
+If current pitch is too flat to make vertical placement understandable, a very small explicit placement-mode pitch assist is acceptable only if:
+
+- it is deterministic;
+- it preserves center/bearing/zoom meaning;
+- it is not cinematic;
+- it does not fire repeatedly while editing;
+- closing create restores the user's prior camera state cleanly.
+
+Prefer not to change camera automatically unless needed for usability.
+
+## Building behavior
+
+Do **not** implement 4.5C in this task.
+
+Specifically do not add:
+
+- translucent selected building;
+- x-ray/cutaway rendering;
+- floor planes or floor snapping based on building geometry;
+- indoor rooms;
+- new building providers;
+- Three.js scene/camera.
+
+The base → stem → beacon interaction must work beautifully even on empty terrain with no building data.
 
 ## Product invariants
 
 Preserve all of these:
 
-- one displayed beacon resolves to one real atom;
+- one displayed beacon = one real atom;
+- ground anchor is visual only, not a second persisted atom;
+- vertical axis means physical height only;
 - independent atoms remain independent;
-- physical height is the only meaning of the vertical axis;
 - replies remain flat 2D board content;
-- no likes/followers/engagement ranking;
+- no engagement ranking or gamification;
 - no protocol/storage/signing/sync/federation changes;
-- no fake activity or synthetic atoms;
+- no fake activity;
 - MapLibre is the authoritative spatial context;
-- public content remains public;
-- Text view remains an equivalent/accessibility representation.
+- Text view remains an equivalent/accessibility representation;
+- ordinary ground posting remains fast.
 
-## Expected implementation scope
+## Version marker
+
+Update both console marker and `window.PUNKTO_APP_VERSION` to exactly:
+
+`pilot1-slice45b-direct-height-2026-08-23-1`
+
+## Expected scope
 
 Prefer the smallest coherent set, likely:
 
 - `pwa/ui-map.js`
-- `pwa/ui-board.js`
-- `pwa/index.html` for narrow board/layout CSS if needed
-- `pwa/app.js` only for narrow cross-module board-padding coordination/version marker if necessary
-- `pwa/ARCHITECTURE.md` only if the actual module API/ownership changes materially
+- `pwa/ui-create.js`
+- `pwa/app.js` only for narrow draft-state/callback coordination + version marker
+- `pwa/index.html` only for focused create-layout/placement affordance CSS/markup
+- `pwa/ARCHITECTURE.md` only if module API/ownership changes materially
 - `docs/agent/CODEX_CURRENT_TASK.md`
 
-A small helper in an existing UI/core module is acceptable if it avoids duplicated height/floor display logic.
+Touch another PWA file only if mechanically required.
 
 Do **not** edit:
 
-- relay/protocol formats;
+- relay/protocol files;
 - storage schema;
-- signing/identity semantics;
-- peer discovery/sync cadence;
-- deployment/Caddy/Docker files;
+- signing/key semantics;
+- sync/federation behavior;
+- deployment/Caddy/Docker configuration;
 - node1/node2 configuration;
-- create behavior except for a strictly mechanical integration required to keep it unchanged.
-
-## Version marker
-
-This is visible product behavior. Update both the console marker and `window.PUNKTO_APP_VERSION` to exactly:
-
-`pilot1-slice45a-spatial-reading-2026-08-23-1`
+- Slice 5 field-hardening scope.
 
 ## Acceptance criteria
 
 The task is acceptable only when all are true:
 
-1. A ground-level atom visually reads as grounded and does not show a fake tall stem.
-2. An elevated atom can show a true ground anchor and a vertical stem to its real physical height.
-3. Stem height comes only from the atom's physical altitude/height field already used by Punkto.
-4. Far/medium views remain calm; 4.5A does not create a dense forest of stems.
-5. Selected atom gets a clearly stronger base/stem/beacon treatment.
-6. Selected atom shows a compact, understandable height label (`Ground` or `+N m · ~Floor N`).
-7. Selecting a real atom still opens the correct board/root semantics from Slice 3.
-8. On desktop, the board is fully inside the viewport and uses internal scrolling when needed.
-9. On desktop, board opening makes room using MapLibre-native padding/viewport handling while preserving zoom/pitch/bearing and the selected atom's geographic context.
-10. Closing the board restores map padding/context without an unrelated camera jump.
-11. On mobile, board remains a bottom sheet with useful map area visible above it.
-12. Existing `Test atom` / real-atom rendering path remains valid.
-13. Text view, fast create, signing, sync, storage, settings and federation behavior are unchanged.
-14. No 4.5B vertical-drag placement interaction is implemented yet.
-15. No 4.5C building floor/x-ray system is implemented yet.
-16. Version marker is exactly `pilot1-slice45a-spatial-reading-2026-08-23-1`.
-17. No deploy/ops files are changed.
+1. Opening `+` visibly presents a draft ground anchor/beacon in the Map world.
+2. Ground posting remains valid without any height interaction.
+3. The user can directly press/touch the draft beacon and drag upward to increase physical height.
+4. Dragging down decreases height and cannot go below 0 m.
+5. Geographic lon/lat remains fixed during height drag.
+6. Conflicting MapLibre gestures are disabled only while dragging and restored afterward, including pointer cancellation/error paths.
+7. The stem stretches live between ground anchor and draft beacon.
+8. A live compact height label follows the draft (`Ground` / `+N m · ~Floor N`).
+9. The 0–30 m range is controllable enough for ordinary building-floor placement; small finger movement does not create absurd jumps.
+10. Height is conservatively capped around 200 m for Pilot_1.
+11. Manual/floor/device-altitude fallback controls remain available and stay synchronized with the spatial draft.
+12. Message/category/Publish flow remains simple; no mandatory separate height step is introduced.
+13. Publish uses the selected draft physical height through the existing canonical signing/write/storage/network path.
+14. Cancel/close restores ordinary map gestures and leaves no stuck drag state.
+15. Slice 4.5A real-atom selection, board sidecar, LOD, Text view, Settings, sync, identity and federation remain unchanged.
+16. No building x-ray/floor slicing is added.
+17. Version marker is exactly `pilot1-slice45b-direct-height-2026-08-23-1`.
+18. No deploy/ops files are changed.
 
 ## Automated checks
 
@@ -226,38 +284,41 @@ python3 relay/test_relay.py
 git diff --check
 ```
 
-Do not modify relay files to influence relay test results.
+Do not modify relay files to influence relay results.
 
-## Focused browser / implementation checks
+## Focused interaction checks
 
-Where practical without creating new public atoms:
+Where practical in a local/static browser without publishing public network test atoms:
 
-- verify a ground atom renders without a tall stem;
-- verify an elevated fixture/local test object, if available without network writes, has base → stem → beacon geometry at the correct height;
-- verify selected styling is stronger but restrained;
-- verify selected spatial label uses height only;
-- verify board is fully visible at common desktop viewport sizes;
-- verify board content scrolls internally;
-- verify board open/close does not alter zoom/pitch/bearing unexpectedly;
-- verify mobile CSS still produces a bottom sheet with map visible above;
+- open `+` and confirm draft starts at ground;
+- drag draft beacon upward and verify live stem + label;
+- drag back to ground and verify compact grounded state;
+- verify lon/lat do not change while height is dragged;
+- verify map does not pan/rotate under the finger during active beacon drag;
+- verify map gestures work again immediately after release/cancel;
+- verify fallback manual/floor controls and direct drag remain synchronized;
+- verify Cancel/Escape leaves no stuck interaction state;
+- verify composer remains usable on desktop and mobile viewport sizes;
 - verify no uncaught MapLibre/deck.gl/module errors;
-- do not fabricate a new public network atom merely for testing.
+- do not publish a fabricated public atom merely to satisfy Codex testing.
+
+The final interaction quality is a **human tactile gate** after exact-SHA test1 deployment. Code/CI success alone does not approve the feel of the gesture.
 
 ## Commit / push contract
 
 Before committing, change the first status line to exactly:
 
-`Status: **HOLD — Slice 4.5A implemented, awaiting CI/review**`
+`Status: **HOLD — Slice 4.5B implemented, awaiting CI/review**`
 
 Make one focused implementation commit with exactly:
 
-`feat(pilot1): add spatial atom reading`
+`feat(pilot1): add direct spatial height placement`
 
 Then:
 
-1. commit only Slice 4.5A implementation + task-status/doc changes;
+1. commit only Slice 4.5B implementation + task-status/doc changes;
 2. push to `origin/pilot-1`;
-3. report exact SHA, changed files, checks performed, and any UX uncertainty;
+3. report exact SHA, changed files, automated checks, interaction checks, and any UX uncertainty;
 4. stop.
 
-Do **not** deploy. Do **not** start Slice 4.5B, Slice 4.5C, or Slice 5. ChatGPT will review the exact pushed SHA and Pilot CI before any test1 deployment authorization.
+Do **not** deploy. Do **not** start Slice 4.5C or Slice 5. ChatGPT will review the exact pushed SHA and Pilot CI before test1 deployment authorization.
