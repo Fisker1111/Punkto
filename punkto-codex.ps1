@@ -154,7 +154,11 @@ Write-Host 'Native Windows Codex sandbox write mode is bypassed for this local t
 # runs while workspace writes are effectively blocked. For this trusted local
 # development checkout we bypass Codex's sandbox/approvals and rely on the
 # repository task contract plus the exact-SHA Git/CI/review gates after push.
-& $CodexExe exec --dangerously-bypass-approvals-and-sandbox --cd $RepoRoot $Task
+#
+# Feed the task through stdin instead of as one giant positional argument. This
+# avoids Windows command-line length/quoting edge cases and uses Codex exec's
+# documented '-' stdin-prompt mode.
+$Task | & $CodexExe exec --dangerously-bypass-approvals-and-sandbox --cd $RepoRoot -
 $CodexExit = $LASTEXITCODE
 
 Write-Host ''
