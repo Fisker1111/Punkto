@@ -13,6 +13,7 @@ let _onShowMap = null;
 let _onRenderMap = null;
 let _onSubmitReply = null;
 let _onFocusMap = null;
+let _onBoardViewportChanged = null;
 
 let _selectedAtomId = null;
 let _selectedMapAtom = null;
@@ -31,6 +32,7 @@ export function initBoardView({
   onRenderMap,
   onSubmitReply,
   onFocusMap,
+  onBoardViewportChanged,
 } = {}) {
   _sheet = sheet || document.getElementById('map-board-sheet');
   _getAtoms = typeof getAtoms === 'function' ? getAtoms : _getAtoms;
@@ -41,6 +43,7 @@ export function initBoardView({
   _onRenderMap = typeof onRenderMap === 'function' ? onRenderMap : null;
   _onSubmitReply = typeof onSubmitReply === 'function' ? onSubmitReply : null;
   _onFocusMap = typeof onFocusMap === 'function' ? onFocusMap : null;
+  _onBoardViewportChanged = typeof onBoardViewportChanged === 'function' ? onBoardViewportChanged : null;
 
   if (!_sheet || _sheet.dataset.boardViewBound === 'true') return;
   _sheet.dataset.boardViewBound = 'true';
@@ -73,6 +76,7 @@ export function closeMapBoard({ clearSelection = true } = {}) {
     _sheet.setAttribute('aria-hidden', 'true');
     _sheet.innerHTML = '';
   }
+  setBoardViewport(false);
   _selectedBoardAtom = null;
   _selectedBoardAtoms = [];
   _replyStatus = null;
@@ -97,6 +101,7 @@ export function renderMapBoardSheet() {
   });
   _sheet.classList.add('open');
   _sheet.setAttribute('aria-hidden', 'false');
+  setBoardViewport(true);
 }
 
 export async function openMapBoardForAtom(atom, atoms = _getAtoms()) {
@@ -141,6 +146,14 @@ function notifySelection() {
 
 async function renderMap() {
   if (_onRenderMap) await _onRenderMap();
+}
+
+function setBoardViewport(open) {
+  if (!_onBoardViewportChanged) return;
+  const rect = open && _sheet
+    ? (_sheet.querySelector('.board-detail')?.getBoundingClientRect() || _sheet.getBoundingClientRect())
+    : null;
+  _onBoardViewportChanged(open, rect);
 }
 
 function handleBoardClick(e) {

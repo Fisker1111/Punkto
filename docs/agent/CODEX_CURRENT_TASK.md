@@ -1,6 +1,6 @@
 # Codex Current Task
 
-Status: **ACTIVE — Pilot_1 Slice 4.5A: spatial reading**
+Status: **HOLD â€” Slice 4.5A implemented, awaiting CI/review**
 
 Repository: `Fisker1111/Punkto`
 Branch: `pilot-1`

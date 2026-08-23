@@ -613,14 +613,14 @@
       bottom: calc(var(--nav-h) + var(--safe-b) + 8px);
       z-index: 140;
       display: none;
-      max-height: min(58vh, 560px);
+      max-height: min(62vh, 560px);
       padding: 0 12px;
       pointer-events: none;
     }
     #map-board-sheet.open { display: block; }
     #map-board-sheet .board-detail {
       width: min(100%, 760px);
-      max-height: min(58vh, 560px);
+      max-height: min(62vh, 560px);
       margin: 0 auto;
       padding: 12px;
       overflow-y: auto;
@@ -643,13 +643,14 @@
         left: 116px;
         right: 20px;
         bottom: 20px;
+        top: 76px;
         padding: 0;
       }
       #map-board-sheet .board-detail {
         margin-left: auto;
         margin-right: 0;
-        width: min(540px, calc(100vw - 156px));
-        max-height: min(72vh, 680px);
+        width: min(424px, calc(100vw - 176px));
+        max-height: calc(100vh - 96px);
         border-radius: 14px;
       }
     }

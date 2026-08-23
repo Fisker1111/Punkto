@@ -51,6 +51,12 @@ let _lastRenderedAtoms = [];
 let focusedPunktoId = null;
 let hasBootFit = false;
 let svgLeaderOverlay = null;
+let mapBoardBasePadding = null;
+
+const SPATIAL_LOD = {
+  groundRelationZoom: 14,
+  stemZoom: 16,
+};
 
 export function initMapView({
   mapStyle,
@@ -96,6 +102,47 @@ export function getMapInstance() {
 
 export function isMapLoaded() {
   return mapLoadComplete;
+}
+
+export function setMapBoardViewport(open, boardRect = null) {
+  if (!map || typeof map.easeTo !== 'function') return;
+  const viewportWidth = window.innerWidth || document.documentElement.clientWidth || 0;
+  const viewportHeight = window.innerHeight || document.documentElement.clientHeight || 0;
+  const isDesktop = viewportWidth >= 900;
+  const currentPadding = typeof map.getPadding === 'function'
+    ? map.getPadding()
+    : { top: 0, right: 0, bottom: 0, left: 0 };
+
+  if (open && !mapBoardBasePadding) {
+    mapBoardBasePadding = { ...currentPadding };
+  }
+
+  const base = mapBoardBasePadding || currentPadding;
+  let padding = { ...base };
+  if (open) {
+    if (isDesktop) {
+      const sidecarWidth = boardRect?.width || 424;
+      padding.right = Math.max(base.right || 0, Math.ceil(sidecarWidth + 44));
+    } else {
+      const sheetHeight = boardRect?.height || Math.round(viewportHeight * 0.58);
+      padding.bottom = Math.max(base.bottom || 0, Math.min(Math.ceil(sheetHeight + 22), Math.round(viewportHeight * 0.66)));
+    }
+  }
+
+  const reduceMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+  try {
+    map.easeTo({
+      padding,
+      duration: reduceMotion ? 0 : 180,
+      pitch: map.getPitch(),
+      bearing: map.getBearing(),
+      zoom: map.getZoom(),
+    });
+    if (!open) mapBoardBasePadding = null;
+  } catch (err) {
+    console.warn('[map-board] viewport padding failed:', err);
+    if (!open) mapBoardBasePadding = null;
+  }
 }
 
 export function missingMapLibraries() {
@@ -166,6 +213,7 @@ export async function renderAtoms(newAtomIds = null) {
 
   const atoms = (await _getAllAtomsNewestFirst()).filter(a => !_isHiddenAtom(a));
   _lastRenderedAtoms = atoms;
+  const zoom = map && typeof map.getZoom === 'function' ? map.getZoom() : 0;
 
   const atomsByPunkto = new Map();
   for (const a of atoms) {
@@ -180,22 +228,29 @@ export async function renderAtoms(newAtomIds = null) {
   const scatterData = atoms.map(a => {
     const selectionId = selectionIds.get(a) || getAtomStableId(a) || stripPunktoPrefix(a.punkto || '');
     const isSel = selectedAtomId && selectionId === selectedAtomId;
+    const altitude = physicalAltitude(a);
     return {
       atom: a,
       selectionId,
-      position: [a.lon, a.lat, a.alt],
+      altitude,
+      position: [a.lon, a.lat, altitude],
       ground: [a.lon, a.lat, 0],
+      source: [a.lon, a.lat, 0],
+      target: [a.lon, a.lat, altitude],
       color: mapColorForAtom(a, isSel ? 255 : 245),
       haloColor: mapColorForAtom(a, isSel ? 120 : 70),
       strokeColor: isSel ? [255, 255, 100, 255] : [8, 12, 20, 220],
       ringColor: mapColorForAtom(a, isSel ? 200 : 90),
       stemColor: mapColorForAtom(a, isSel ? 220 : 153),
+      width: isSel ? 2.5 : 1.5,
       selected: isSel,
+      hasHeight: altitude > 0,
       punkto: a.punkto,
       text: a.x,
       f: a.f,
       t: a.t,
       label: (a.x || a.f || '').slice(0, 40),
+      spatialLabel: formatSpatialHeightLabel(altitude),
     };
   });
 
@@ -205,33 +260,46 @@ export async function renderAtoms(newAtomIds = null) {
     scatterData.push({
       position: [placementDraft.lon, placementDraft.lat, draftAlt],
       ground: [placementDraft.lon, placementDraft.lat, 0],
+      source: [placementDraft.lon, placementDraft.lat, 0],
+      target: [placementDraft.lon, placementDraft.lat, draftAlt],
       color: rgba(DRAFT_COLOR, 255),
       haloColor: rgba(DRAFT_COLOR, 95),
       strokeColor: [8, 12, 20, 230],
       ringColor: rgba(DRAFT_COLOR, 120),
       stemColor: rgba(DRAFT_COLOR, 180),
+      width: 2,
       selected: false,
+      hasHeight: draftAlt > 0,
       selectionId: 'draft',
       punkto: 'draft',
       text: 'Placement preview',
       f: 'draft',
       t: Date.now(),
       label: 'draft',
+      spatialLabel: draftAlt > 0 ? formatSpatialHeightLabel(draftAlt) : 'Ground',
     });
   }
 
-  const { ScatterplotLayer } = window.deck;
+  const groundRingData = scatterData.filter(d =>
+    d.selected || d.selectionId === 'draft' || zoom >= SPATIAL_LOD.groundRelationZoom
+  );
+  const stemData = scatterData.filter(d =>
+    d.hasHeight && (d.selected || d.selectionId === 'draft' || zoom >= SPATIAL_LOD.stemZoom)
+  );
+  const selectedLabelData = scatterData.filter(d => d.selected);
+
+  const { ScatterplotLayer, TextLayer } = window.deck;
   const layers = [
     new ScatterplotLayer({
       id: 'atom-ground-rings',
-      data: scatterData,
+      data: groundRingData,
       getPosition: d => d.ground,
       getFillColor: d => d.ringColor,
       stroked: true,
       getLineColor: d => d.ringColor,
       getLineWidth: d => d.selected ? 2 : 1,
       lineWidthUnits: 'pixels',
-      getRadius: d => d.selected ? 16 : 12,
+      getRadius: d => d.selected ? 18 : (d.hasHeight ? 11 : 9),
       radiusUnits: 'pixels',
       radiusMinPixels: 8,
       radiusMaxPixels: 28,
@@ -257,7 +325,7 @@ export async function renderAtoms(newAtomIds = null) {
       getLineColor: d => d.strokeColor,
       getLineWidth: d => d.selected ? 3 : 2,
       lineWidthUnits: 'pixels',
-      getRadius: d => d.selected ? 16 : 12,
+      getRadius: d => d.selected ? 17 : 12,
       radiusUnits: 'pixels',
       radiusMinPixels: 8,
       radiusMaxPixels: 26,
@@ -273,36 +341,37 @@ export async function renderAtoms(newAtomIds = null) {
 
   const { LineLayer } = window.deck;
   if (LineLayer) {
-    const lollipopData = atoms
-      .filter(a => (a.alt || 0) > 0)
-      .map(a => {
-        const baseRgba = mapColorForAtom(a, 245);
-        const isSel = selectedAtomId && (selectionIds.get(a) || getAtomStableId(a) || stripPunktoPrefix(a.punkto || '')) === selectedAtomId;
-        const color = [baseRgba[0], baseRgba[1], baseRgba[2], isSel ? 230 : 153];
-        return {
-          source: [a.lon, a.lat, 0],
-          target: [a.lon, a.lat, a.alt],
-          color,
-          width: isSel ? 3 : 2,
-        };
-      });
-    if (placementDraft && (placementDraft.altitude_m || 0) > 0) {
-      lollipopData.push({
-        source: [placementDraft.lon, placementDraft.lat, 0],
-        target: [placementDraft.lon, placementDraft.lat, placementDraft.altitude_m || 0],
-        color: rgba(DRAFT_COLOR, 180),
-        width: 2,
-      });
-    }
     layers.push(
       new LineLayer({
         id: 'atom-lollipops',
-        data: lollipopData,
+        data: stemData,
         getSourcePosition: d => d.source,
         getTargetPosition: d => d.target,
-        getColor: d => d.color,
+        getColor: d => d.stemColor,
         getWidth: d => d.width,
         widthUnits: 'pixels',
+        pickable: false,
+      })
+    );
+  }
+
+  if (TextLayer && selectedLabelData.length) {
+    layers.push(
+      new TextLayer({
+        id: 'selected-atom-spatial-label',
+        data: selectedLabelData,
+        getPosition: d => d.position,
+        getText: d => d.spatialLabel,
+        getColor: [244, 249, 255, 245],
+        getBackgroundColor: [8, 13, 22, 210],
+        background: true,
+        backgroundPadding: [7, 4],
+        getSize: 13,
+        sizeUnits: 'pixels',
+        getPixelOffset: [0, -34],
+        getTextAnchor: 'middle',
+        getAlignmentBaseline: 'bottom',
+        billboard: true,
         pickable: false,
       })
     );
@@ -580,6 +649,19 @@ function getCategoryMeta(atom) {
 
 function rgba(color, alpha = 245) {
   return [color[0], color[1], color[2], alpha];
+}
+
+function physicalAltitude(atom) {
+  const alt = Number(atom?.alt);
+  return Number.isFinite(alt) && alt > 0 ? alt : 0;
+}
+
+function formatSpatialHeightLabel(alt) {
+  const height = Number(alt);
+  if (!Number.isFinite(height) || height < 1) return 'Ground';
+  const meters = Math.round(height);
+  const floor = Math.max(1, Math.round(height / FLOOR_HEIGHT_M));
+  return `+${meters} m · ~Floor ${floor}`;
 }
 
 function mapColorForAtom(atom, alpha = 245) {

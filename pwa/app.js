@@ -22,6 +22,7 @@ import {
   focusPunktoOnMap,
   detectBuildingAtCenter,
   toggle3D,
+  setMapBoardViewport,
 } from './ui-map.js';
 import {
   initBoardView,
@@ -1045,8 +1046,8 @@ function wireEvents() {
 // ---------------------------------------------------------------------------
 
 async function boot() {
-  console.log('PUNKTO APP.JS LOADED pilot1-slice4-fast-create-2026-08-20-1');
-  window.PUNKTO_APP_VERSION = 'pilot1-slice4-fast-create-2026-08-20-1';
+  console.log('PUNKTO APP.JS LOADED pilot1-slice45a-spatial-reading-2026-08-23-1');
+  window.PUNKTO_APP_VERSION = 'pilot1-slice45a-spatial-reading-2026-08-23-1';
 
   console.log('[punkto] booting...');
 
@@ -1151,6 +1152,7 @@ async function boot() {
     onRenderMap: renderAtoms,
     onSubmitReply: submitBoardReply,
     onFocusMap: focusPunkto,
+    onBoardViewportChanged: setMapBoardViewport,
   });
 
   startSyncBoot().catch((err) => {
