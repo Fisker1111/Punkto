@@ -61,6 +61,8 @@ let mapCreateResizeInstalled = false;
 let draftHeightDrag = null;
 let draftHeightDragRaf = null;
 let draftHeightDragPending = null;
+let heightPlacementActive = false;
+let buildingOpacityRestore = new Map();
 
 const SPATIAL_LOD = {
   groundRelationZoom: 14,
@@ -114,6 +116,24 @@ export function getMapInstance() {
 
 export function isMapLoaded() {
   return mapLoadComplete;
+}
+
+export function enterHeightPlacementMode(draft) {
+  heightPlacementActive = true;
+  ghostBuildingLayersForPlacement();
+  easeCameraForHeightPlacement(draft);
+  renderAtoms().catch((err) => console.warn('[map-create] render placement failed:', err));
+}
+
+export function updateHeightPlacementDraft() {
+  if (!heightPlacementActive) return;
+  renderAtoms().catch((err) => console.warn('[map-create] render placement update failed:', err));
+}
+
+export function exitHeightPlacementMode() {
+  heightPlacementActive = false;
+  restoreBuildingLayersAfterPlacement();
+  renderAtoms().catch((err) => console.warn('[map-create] render placement exit failed:', err));
 }
 
 export function setMapBoardViewport(open, boardRect = null) {
@@ -581,7 +601,6 @@ function initMap() {
     layers: [],
   });
   map.addControl(deckOverlay);
-  installDraftHeightDragHandlers();
   installMapCreateViewportResizeHandler();
 
   map.on('load', async () => {
@@ -603,13 +622,6 @@ function initMap() {
 
     ensureLeaderOverlay();
     map.on('render', drawLeaderLines);
-    map.on('click', (e) => {
-      const placementDraft = _getPlacementDraft();
-      if (_isCreateModalOpen() && placementDraft && _setPlacementDraftPosition) {
-        _setPlacementDraftPosition(e.lngLat.lat, e.lngLat.lng);
-      }
-    });
-
     if (!_hasDeepLink() && navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         (pos) => {
@@ -648,6 +660,7 @@ function initMap() {
           'fill-extrusion-opacity': 0.58,
         },
       });
+      if (heightPlacementActive) ghostBuildingLayersForPlacement();
     } catch (e) {
       console.warn('[map] 3D buildings layer failed:', e);
     }
@@ -659,6 +672,65 @@ function initMap() {
     if (_onShowOnboarding) _onShowOnboarding();
   });
   return map;
+}
+
+function easeCameraForHeightPlacement(draft) {
+  if (!map || !draft) return;
+  const currentPitch = typeof map.getPitch === 'function' ? map.getPitch() : 0;
+  if (currentPitch >= 50) return;
+  const reduceMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+  try {
+    map.easeTo({
+      center: [draft.lon, draft.lat],
+      pitch: 60,
+      bearing: map.getBearing(),
+      zoom: map.getZoom(),
+      duration: reduceMotion ? 0 : 180,
+      essential: false,
+    });
+  } catch (err) {
+    console.warn('[map-create] height placement camera failed:', err);
+  }
+}
+
+function getFillExtrusionLayerIds() {
+  if (!map || !map.getStyle) return [];
+  try {
+    return (map.getStyle().layers || [])
+      .filter((layer) => layer?.type === 'fill-extrusion')
+      .map((layer) => layer.id)
+      .filter(Boolean);
+  } catch {
+    return [];
+  }
+}
+
+function ghostBuildingLayersForPlacement() {
+  if (!map || !map.getPaintProperty || !map.setPaintProperty) return;
+  for (const layerId of getFillExtrusionLayerIds()) {
+    if (buildingOpacityRestore.has(layerId)) continue;
+    try {
+      buildingOpacityRestore.set(layerId, map.getPaintProperty(layerId, 'fill-extrusion-opacity'));
+      map.setPaintProperty(layerId, 'fill-extrusion-opacity', 0.18);
+    } catch (err) {
+      console.warn(`[map-create] could not ghost building layer ${layerId}:`, err);
+    }
+  }
+}
+
+function restoreBuildingLayersAfterPlacement() {
+  if (!map || !map.setPaintProperty) {
+    buildingOpacityRestore.clear();
+    return;
+  }
+  for (const [layerId, opacity] of buildingOpacityRestore.entries()) {
+    try {
+      map.setPaintProperty(layerId, 'fill-extrusion-opacity', opacity == null ? 0.58 : opacity);
+    } catch (err) {
+      console.warn(`[map-create] could not restore building layer ${layerId}:`, err);
+    }
+  }
+  buildingOpacityRestore.clear();
 }
 
 function installMapCreateViewportResizeHandler() {
@@ -941,7 +1013,7 @@ function formatSpatialHeightLabel(alt) {
 
 function formatDraftSpatialHeightLabel(alt) {
   const base = formatSpatialHeightLabel(alt);
-  return draftHeightDrag ? base : `${base}\nDrag height`;
+  return heightPlacementActive ? base : `${base}\nHeight`;
 }
 
 function mapColorForAtom(atom, alpha = 245) {

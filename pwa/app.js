@@ -25,6 +25,9 @@ import {
   setMapBoardViewport,
   setMapCreateViewport,
   cancelPlacementDraftHeightDrag,
+  enterHeightPlacementMode,
+  updateHeightPlacementDraft,
+  exitHeightPlacementMode,
 } from './ui-map.js';
 import {
   initBoardView,
@@ -996,8 +999,17 @@ function wireEvents() {
       const map = getMapInstance();
       return { center: map ? map.getCenter() : { lat: 0, lng: 0 }, building: detectBuildingAtCenter().building };
     },
-    onPreviewChanged: (draft) => { placementDraft = draft; updateCreateLocationDisplay(draft); renderAtoms(); },
+    onPreviewChanged: (draft) => {
+      placementDraft = draft;
+      updateCreateLocationDisplay(draft);
+      updateHeightPlacementDraft();
+      renderAtoms();
+    },
     onSubmitCreate: submitAtomFromModal,
+    onHeightPlacementChanged: (open, draft) => {
+      if (open && draft) enterHeightPlacementMode(draft);
+      else exitHeightPlacementMode();
+    },
     onViewportChanged: (open, composerRect) => setMapCreateViewport(open, composerRect),
     onClosed: () => { cancelPlacementDraftHeightDrag(); setMapCreateViewport(false, null); placementDraft = null; renderAtoms(); },
   });
@@ -1053,8 +1065,8 @@ function wireEvents() {
 // ---------------------------------------------------------------------------
 
 async function boot() {
-  console.log('PUNKTO APP.JS LOADED pilot1-slice45b-direct-height-2026-08-23-2');
-  window.PUNKTO_APP_VERSION = 'pilot1-slice45b-direct-height-2026-08-23-2';
+  console.log('PUNKTO APP.JS LOADED pilot1-slice45b2-sight-height-lever-2026-08-28-1');
+  window.PUNKTO_APP_VERSION = 'pilot1-slice45b2-sight-height-lever-2026-08-28-1';
 
   console.log('[punkto] booting...');
 

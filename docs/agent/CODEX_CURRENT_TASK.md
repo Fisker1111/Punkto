@@ -1,6 +1,6 @@
 # Codex Current Task
 
-Status: **ACTIVE — Pilot_1 Slice 4.5B2: sight-lock + spatial height lever**
+Status: **HOLD — Slice 4.5B2 implemented, awaiting CI/review**
 
 Repository: `Fisker1111/Punkto`
 Branch: `pilot-1`

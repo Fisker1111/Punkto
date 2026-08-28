@@ -1197,11 +1197,162 @@
       backdrop-filter: none;
       pointer-events: none;
     }
+    #modal-overlay.height-placement-open {
+      z-index: 260;
+    }
     #modal-overlay.open .modal-box { pointer-events: auto; }
+    #modal-overlay.height-placement-open .modal-box { display: none; }
+    body.create-height-placement-open #bottom-nav,
+    body.create-height-placement-open #side-rail-nav,
+    body.create-height-placement-open #toggle-3d,
+    body.create-height-placement-open #crosshair-readout {
+      opacity: 0;
+      pointer-events: none;
+    }
     #map.draft-height-dragging,
     #map.draft-height-dragging canvas {
       cursor: ns-resize;
       touch-action: none;
+    }
+
+    .height-placement {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 410;
+    }
+    .height-placement[hidden] { display: none !important; }
+    .height-placement-readout {
+      position: fixed;
+      top: calc(18px + env(safe-area-inset-top, 0px));
+      left: 50%;
+      transform: translateX(-50%);
+      min-width: 118px;
+      padding: 10px 14px;
+      border: 1px solid rgba(255,220,80,0.34);
+      border-radius: var(--radius-md);
+      background: rgba(11,16,24,0.76);
+      color: var(--text);
+      box-shadow: var(--shadow-float);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      text-align: center;
+      pointer-events: none;
+    }
+    .height-placement-kicker {
+      display: block;
+      margin-bottom: 3px;
+      font-size: 10px;
+      font-weight: 700;
+      color: rgba(255,246,190,0.68);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+    .height-placement-readout strong {
+      display: block;
+      font-size: 16px;
+      line-height: 1.2;
+      color: #fff2a6;
+      white-space: nowrap;
+    }
+    .height-lever {
+      position: fixed;
+      right: max(18px, env(safe-area-inset-right, 0px));
+      top: 50%;
+      transform: translateY(-50%);
+      width: 104px;
+      height: min(58vh, 430px);
+      min-height: 300px;
+      pointer-events: auto;
+      touch-action: none;
+      user-select: none;
+    }
+    .height-lever-track {
+      position: absolute;
+      top: 16px;
+      bottom: 16px;
+      right: 20px;
+      width: 12px;
+      border-radius: var(--radius-pill);
+      background: rgba(8,12,20,0.76);
+      border: 1px solid rgba(255,255,255,0.16);
+      box-shadow: inset 0 0 0 1px rgba(0,0,0,0.24), var(--shadow-soft);
+    }
+    .height-lever-track::before {
+      content: '';
+      position: absolute;
+      left: -7px;
+      right: -7px;
+      top: 42%;
+      border-top: 1px solid rgba(255,255,255,0.22);
+    }
+    .height-lever-meter {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      height: 0%;
+      border-radius: var(--radius-pill);
+      background: linear-gradient(180deg, #fff2a6 0%, #0ca8ff 100%);
+      box-shadow: 0 0 18px rgba(255,220,80,0.24);
+    }
+    .height-lever-handle {
+      position: absolute;
+      left: 50%;
+      bottom: 0%;
+      transform: translate(-50%, 50%);
+      width: 54px;
+      height: 54px;
+      border-radius: 50%;
+      border: 2px solid rgba(255,255,255,0.92);
+      background: #fff2a6;
+      box-shadow: 0 12px 30px rgba(0,0,0,0.5), 0 0 0 8px rgba(255,220,80,0.18);
+      cursor: ns-resize;
+      touch-action: none;
+    }
+    .height-lever-label {
+      position: absolute;
+      right: 44px;
+      padding: 4px 7px;
+      border-radius: var(--radius-sm);
+      background: rgba(8,12,20,0.68);
+      color: rgba(244,249,255,0.76);
+      font-size: 11px;
+      font-weight: 600;
+      line-height: 1;
+      white-space: nowrap;
+    }
+    .height-lever-label-top { top: 10px; }
+    .height-lever-label-mid { top: 42%; }
+    .height-lever-label-bottom { bottom: 10px; }
+    .height-placement-actions {
+      position: fixed;
+      left: 50%;
+      bottom: calc(18px + var(--safe-b));
+      transform: translateX(-50%);
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      padding: 8px;
+      border: 1px solid var(--border2);
+      border-radius: var(--radius-md);
+      background: rgba(11,16,24,0.76);
+      box-shadow: var(--shadow-float);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      pointer-events: auto;
+    }
+    #modal-placement-summary {
+      display: inline-flex;
+      width: fit-content;
+      margin-bottom: 8px;
+      padding: 5px 9px;
+      border: 1px solid rgba(255,220,80,0.28);
+      border-radius: var(--radius-sm);
+      background: rgba(255,220,80,0.09);
+      color: #fff2a6;
+      font-size: 12px;
+      font-weight: 700;
     }
 
     .modal-box {
@@ -1656,8 +1807,29 @@
 
   <!-- ── Write Punkti modal ───────────────────────────────────── -->
   <div id="modal-overlay" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+    <section id="height-placement" class="height-placement" aria-label="Choose height" aria-hidden="true" hidden>
+      <div class="height-placement-readout">
+        <span class="height-placement-kicker">Height</span>
+        <strong id="height-placement-readout">Ground</strong>
+      </div>
+      <div id="height-lever" class="height-lever" aria-label="Height lever">
+        <div class="height-lever-label height-lever-label-top">200 m</div>
+        <div class="height-lever-label height-lever-label-mid">30 m</div>
+        <div class="height-lever-label height-lever-label-bottom">Ground</div>
+        <div class="height-lever-track">
+          <div id="height-lever-meter" class="height-lever-meter"></div>
+          <button id="height-lever-handle" class="height-lever-handle" type="button" role="slider" aria-label="Height" aria-valuemin="0" aria-valuemax="200" aria-valuenow="0" aria-valuetext="Ground"></button>
+        </div>
+      </div>
+      <div class="height-placement-actions">
+        <button class="btn btn-secondary" id="height-placement-cancel" type="button">Cancel</button>
+        <button class="btn btn-secondary" id="height-placement-ground" type="button">Ground</button>
+        <button class="btn btn-primary" id="height-placement-done" type="button">Done</button>
+      </div>
+    </section>
     <div id="modal" class="modal-box">
       <h2 id="modal-title">Write Punkti</h2>
+      <div id="modal-placement-summary">Ground</div>
       <div id="modal-location">…</div>
       <!-- First-use public-data acknowledgement banner (hidden after first ack) -->
       <div id="ack-banner" style="display:none" role="alertdialog" aria-labelledby="ack-title" aria-describedby="ack-body">
