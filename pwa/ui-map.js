@@ -279,12 +279,12 @@ export async function renderAtoms(newAtomIds = null) {
       ground: [a.lon, a.lat, 0],
       source: [a.lon, a.lat, 0],
       target: [a.lon, a.lat, altitude],
-      color: mapColorForAtom(a, isSel ? 255 : 245),
-      haloColor: mapColorForAtom(a, isSel ? 120 : 70),
-      strokeColor: isSel ? [255, 255, 100, 255] : [8, 12, 20, 220],
-      ringColor: mapColorForAtom(a, isSel ? 200 : 90),
-      stemColor: mapColorForAtom(a, isSel ? 220 : 153),
-      width: isSel ? 2.5 : 1.5,
+      color: mapColorForAtom(a, isSel ? 255 : 248),
+      haloColor: mapColorForAtom(a, isSel ? 130 : 76),
+      strokeColor: isSel ? [255, 250, 176, 255] : [244, 249, 255, 220],
+      ringColor: mapColorForAtom(a, isSel ? 210 : 104),
+      stemColor: mapColorForAtom(a, isSel ? 230 : 176),
+      width: isSel ? 2.4 : 1.65,
       selected: isSel,
       hasHeight: altitude > 0,
       punkto: a.punkto,
@@ -305,11 +305,11 @@ export async function renderAtoms(newAtomIds = null) {
       source: [placementDraft.lon, placementDraft.lat, 0],
       target: [placementDraft.lon, placementDraft.lat, draftAlt],
       color: rgba(DRAFT_COLOR, 255),
-      haloColor: rgba(DRAFT_COLOR, 95),
-      strokeColor: [8, 12, 20, 230],
-      ringColor: rgba(DRAFT_COLOR, 120),
-      stemColor: rgba(DRAFT_COLOR, 180),
-      width: 2,
+      haloColor: rgba(DRAFT_COLOR, 118),
+      strokeColor: [255, 252, 212, 245],
+      ringColor: rgba(DRAFT_COLOR, 154),
+      stemColor: rgba(DRAFT_COLOR, 205),
+      width: 2.15,
       selected: false,
       hasHeight: draftAlt > 0,
       selectionId: 'draft',
@@ -339,9 +339,9 @@ export async function renderAtoms(newAtomIds = null) {
       getFillColor: d => d.ringColor,
       stroked: true,
       getLineColor: d => d.ringColor,
-      getLineWidth: d => d.selected ? 2 : 1,
+      getLineWidth: d => d.selectionId === 'draft' ? 2 : (d.selected ? 2 : 1.15),
       lineWidthUnits: 'pixels',
-      getRadius: d => d.selected ? 18 : (d.hasHeight ? 11 : 9),
+      getRadius: d => d.selectionId === 'draft' ? 17 : (d.selected ? 18 : (d.hasHeight ? 11 : 9)),
       radiusUnits: 'pixels',
       radiusMinPixels: 8,
       radiusMaxPixels: 28,
@@ -352,7 +352,7 @@ export async function renderAtoms(newAtomIds = null) {
       data: scatterData,
       getPosition: d => d.position,
       getFillColor: d => d.haloColor,
-      getRadius: d => d.selected ? 26 : 18,
+      getRadius: d => d.selectionId === 'draft' ? 27 : (d.selected ? 27 : 18),
       radiusUnits: 'pixels',
       radiusMinPixels: 13,
       radiusMaxPixels: 36,
@@ -365,9 +365,9 @@ export async function renderAtoms(newAtomIds = null) {
       getFillColor: d => d.color,
       stroked: true,
       getLineColor: d => d.strokeColor,
-      getLineWidth: d => d.selected ? 3 : 2,
+      getLineWidth: d => d.selectionId === 'draft' ? 2.6 : (d.selected ? 3 : 2.2),
       lineWidthUnits: 'pixels',
-      getRadius: d => d.selectionId === 'draft' ? 15 : (d.selected ? 17 : 12),
+      getRadius: d => d.selectionId === 'draft' ? 15 : (d.selected ? 16 : 12),
       radiusUnits: 'pixels',
       radiusMinPixels: 8,
       radiusMaxPixels: 26,
@@ -654,10 +654,16 @@ function initMap() {
         'source-layer': 'building',
         minzoom: 12,
         paint: {
-          'fill-extrusion-color': '#8f9fb7',
+          'fill-extrusion-color': [
+            'interpolate',
+            ['linear'],
+            ['zoom'],
+            12, '#c6c0b5',
+            16, '#b8c0c9'
+          ],
           'fill-extrusion-height': ['coalesce', ['get', 'render_height'], ['get', 'height'], 5],
           'fill-extrusion-base': ['coalesce', ['get', 'render_min_height'], 0],
-          'fill-extrusion-opacity': 0.58,
+          'fill-extrusion-opacity': 0.64,
         },
       });
       if (heightPlacementActive) ghostBuildingLayersForPlacement();
@@ -711,7 +717,7 @@ function ghostBuildingLayersForPlacement() {
     if (buildingOpacityRestore.has(layerId)) continue;
     try {
       buildingOpacityRestore.set(layerId, map.getPaintProperty(layerId, 'fill-extrusion-opacity'));
-      map.setPaintProperty(layerId, 'fill-extrusion-opacity', 0.18);
+      map.setPaintProperty(layerId, 'fill-extrusion-opacity', 0.16);
     } catch (err) {
       console.warn(`[map-create] could not ghost building layer ${layerId}:`, err);
     }
@@ -725,7 +731,7 @@ function restoreBuildingLayersAfterPlacement() {
   }
   for (const [layerId, opacity] of buildingOpacityRestore.entries()) {
     try {
-      map.setPaintProperty(layerId, 'fill-extrusion-opacity', opacity == null ? 0.58 : opacity);
+      map.setPaintProperty(layerId, 'fill-extrusion-opacity', opacity == null ? 0.64 : opacity);
     } catch (err) {
       console.warn(`[map-create] could not restore building layer ${layerId}:`, err);
     }
