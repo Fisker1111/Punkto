@@ -1,6 +1,6 @@
 # Codex Current Task
 
-Status: **HOLD — Slice 4.5B2 implemented, awaiting CI/review**
+Status: **ACTIVE — Pilot_1 Slice 4.5C: hero create action + visual polish**
 
 Repository: `Fisker1111/Punkto`
 Branch: `pilot-1`
@@ -8,251 +8,268 @@ PR: `#110`
 
 ## Why this task exists
 
-Human test of deployed Slice 4.5B (`7ce1cba2a35eb263d8d605c59d3828ab93153550`) proved that direct height manipulation can work technically, but the creation workflow is visually cluttered because map placement, height manipulation, and message composition happen at the same time.
-
-The next product decision is now locked:
+Human testing of deployed Slice 4.5B2 (`d6541b9f3cc67bcc7e302cc68201c52ba1b054ce`) accepted the core spatial creation philosophy:
 
 > **The sight chooses place. The lever chooses height. The world shows both.**
 
-Punkto already has a sight/crosshair at the center of the map. The user moves the map under that sight before pressing `+`.
+The interaction works. Do **not** redesign it.
 
-The revised creation flow is:
+The remaining problem is visual hierarchy and finish. On the normal 3D world view, the most important action — creating a Punkti — is still not visually dominant enough. The current shell gives Text / Map / + / Settings too much equal weight, and the world graphics can be improved one notch without becoming heavy or decorative.
 
-> **Aim with the center sight → press `+` to lock x/y → choose physical height with a floating vertical lever while the atom is rendered in the 3D world → Done → write → Publish.**
+The next product decision is locked:
 
-Do not show the writing composer while the user is choosing height.
+> **`+` is the hero action. Everything else is supporting navigation.**
+
+The user specifically expects the primary `+` action to live at the **bottom-left**, remain obvious on the main 3D view, and be substantially larger / stronger than Text, Map, and Settings, which should remain nearby but smaller and quieter.
+
+This task is polish, hierarchy, and graphics only. Preserve all proven behavior.
 
 ## Starting state
 
 1. Start from current `pilot-1` HEAD.
-2. Read `AGENTS.md`, `pwa/ARCHITECTURE.md`, and current `pwa/app.js`, `pwa/ui-map.js`, `pwa/ui-create.js`, `pwa/index.html` before editing.
-3. Preserve MapLibre as the one authoritative spatial camera and deck.gl as the Punkto spatial overlay.
-4. Preserve all protocol/storage/signing/relay/federation behavior exactly.
-5. Preserve Slice 4.5A selected-atom reading + board behavior.
-6. Preserve the existing spatial atom grammar: ground anchor + vertical stem + beacon head.
-7. Preserve the current Pilot scalar height range: 0–200 m.
+2. Read `AGENTS.md`, `pwa/ARCHITECTURE.md`, current `pwa/ui-shell.js`, `pwa/ui-map.js`, `pwa/ui-create.js`, `pwa/app.js`, and `pwa/index.html` before editing.
+3. Preserve the deployed Slice 4.5B2 creation workflow exactly:
+   - aim with center sight;
+   - `+` locks x/y;
+   - height lever controls physical height;
+   - world renders anchor + stem + beacon;
+   - buildings ghost during height placement;
+   - `Done` then opens the writing composer;
+   - Publish uses the existing signed/public atom path.
+4. Preserve MapLibre as the authoritative spatial camera and deck.gl as the Punkto spatial overlay.
+5. Preserve protocol/storage/signing/relay/federation behavior exactly.
+6. Preserve selected-atom board, Text view, Settings behavior, deep-link behavior, and existing Pilot height semantics.
 
-## Product invariant
+## Product hierarchy
 
-The vertical axis means **physical height only**.
+The main world should visually communicate, without explanation:
 
-No reply ordering, age, popularity, urgency score, or any other semantic may enter Z.
+1. **Look around the world.**
+2. **Press `+` to leave something here.**
+3. Text / Map / Settings are available, but secondary.
 
-A placed elevated Punkti must still be one real atom. The ground anchor and stem are visual support, not extra persisted atoms.
+The create action is not one nav tab among equals. It is the primary action of Punkto.
 
-## Required workflow
+## Required change A — make `+` the hero action
 
-### Stage 0 — aim before pressing `+`
+### Placement
 
-The existing center sight/crosshair is the proposed horizontal position.
+On the normal Map / 3D world view:
 
-The user pans/rotates/zooms the map normally until the sight is over the desired point.
+- place the persistent create button at the **bottom-left**;
+- it must be easy to find immediately on both desktop and mobile;
+- it must not collide with MapLibre controls, map attribution, browser safe areas, board UI, or the height-placement controls;
+- during the dedicated height-placement stage, the existing focused placement UI may still suppress the shell as it does today.
 
-Do not add a separate `Use this place` confirmation before `+`.
+### Visual weight
 
-### Stage 1 — pressing `+` locks x/y immediately
+The `+` button must be unmistakably more important than other shell controls.
 
-When the user presses `+`:
+Target character:
 
-- close any open board as today;
-- stay in Map context;
-- capture the exact geographic coordinate under the existing center sight / MapLibre center at that moment;
-- freeze this draft `lat/lon` for the height-placement stage;
-- do not open the writing composer yet;
-- enter an explicit height-placement mode.
+- large circular or softly rounded control;
+- roughly 60–72 px visual diameter on desktop, with a touch target at least 56 px; mobile must remain thumb-friendly;
+- strong Punkto blue/cyan identity with restrained depth/glow;
+- large, crisp plus glyph;
+- clear hover/focus/pressed states;
+- no constant distracting pulsing animation;
+- a subtle one-time / onboarding emphasis is acceptable if already compatible with current onboarding behavior.
 
-The locked ground anchor must remain at that exact world coordinate even if the camera is subsequently pitched or adjusted.
+The button should feel like **“leave a Punkti here”**, not “open generic menu”.
 
-### Stage 2 — height-placement mode
+Do not add a long permanent text label that clutters the map. A very compact supporting hint may be used if it materially improves first-use comprehension, but the symbol/button itself must carry the action.
 
-Height placement is a focused full-map interaction.
+### Interaction
 
-Required visual elements:
+Do not change what `+` does. It must invoke the current accepted B2 flow unchanged.
 
-- the locked ground anchor at the chosen x/y;
-- the draft beacon head at the current physical height;
-- the vertical stem connecting ground anchor to beacon head;
-- a compact height readout (`Ground`, `+3 m`, `+10 m · ~Floor 3`, etc.);
-- a large touch-friendly **floating vertical lever / hoverbar** in screen space for choosing height;
-- a clear `Done` action;
-- a clear `Cancel` action;
-- optional `Ground` reset if it improves usability.
+## Required change B — supporting controls live nearby but become quieter
 
-Do not show the message textarea, category form, author field, public notice panel, or `Location & options` during this stage.
+Text, Map, and Settings should remain accessible near the same bottom-left shell area, but should be clearly subordinate.
 
-The height lever is the primary control. It must not look like a CAD XYZ gizmo.
+Desired relationship:
 
-Suggested interaction character:
+```text
+small supporting controls
+[Text] [Map] [Settings]
 
-- a vertical track with a large draggable handle;
-- readable metre markings or labels appropriate to the current range;
-- ordinary building heights (0–30 m) should be easy to control precisely;
-- taller heights may accelerate / compress the scale if needed;
-- dragging up increases height;
-- dragging down decreases height;
-- clamp at 0 m and 200 m;
-- update the actual 3D beacon/stem continuously while dragging;
-- do not require grabbing the small world-space beacon itself anymore;
-- map gestures should remain available when the user is not actively dragging the lever, but the lever gesture itself must never pan/rotate the map.
+[      +      ]   ← hero
+```
 
-The previous direct-beacon drag may be removed or disabled during create if it competes with this new primary interaction. Do not leave two equally prominent height interactions.
+or an equally compact vertical / clustered treatment that works better responsively.
 
-### Stage 3 — camera for spatial comprehension
+Requirements:
 
-Entering height-placement mode should make vertical height visually understandable.
+- support controls must be visibly smaller and lower contrast than `+`;
+- active Map/Text state must remain clear but calm;
+- Settings remains reachable without competing for attention;
+- preserve existing `data-nav-action` / shell behavior where practical;
+- do not introduce a hamburger/menu layer just to hide these three actions;
+- minimum touch target about 44 px even if visual chrome is smaller;
+- the group should feel like one purposeful bottom-left instrument cluster, not a large opaque navigation panel;
+- reduce the current feeling of a tall/heavy side rail on desktop and an equally weighted bottom dock on mobile;
+- map should remain visually dominant.
 
-If the current camera pitch is too flat to read Z, gently move to a useful oblique pitch (rough target around 55–65 degrees) while:
+If a shared responsive shell can replace duplicated desktop rail / mobile dock styling without risky JS changes, prefer that. Do not perform an unrelated shell rewrite.
 
-- preserving the locked ground coordinate;
-- preserving zoom and bearing unless a tiny adjustment is technically required;
-- not flying to another place;
-- not producing a cinematic transition;
-- respecting `prefers-reduced-motion` with instant/minimal movement.
+## Required change C — improve world graphics one notch
 
-The selected x/y must remain the spatial truth throughout.
+This is **not** a redesign and not a new art system. Refine the current MapLibre/deck.gl presentation so the 3D world looks more deliberate and easier to read.
 
-When leaving height mode, do not create a disorienting camera jump. Preserve the world context for the writing stage and after publish.
+### Buildings
 
-## Buildings are part of the height proof
+Current extrusions are functional but read as heavy gray blocks. Improve them modestly:
 
-This is a core acceptance requirement, not optional decoration.
+- use a lighter / warmer neutral building treatment that sits naturally over the current OpenFreeMap basemap;
+- improve contrast between roofs/faces/world without making buildings visually dominant;
+- preserve useful 3D depth;
+- keep normal building opacity high enough to read solidly;
+- preserve the existing ghost/transparency behavior during height placement and restore behavior afterwards;
+- do not add textures, custom meshes, architectural detail, shadows requiring a new renderer, or provider changes.
 
-If the chosen x/y lies in/under a rendered building and the user chooses, for example, `+10 m`, the user must be able to perceive **both ends** of the spatial relation:
+### Atom spatial grammar
 
-- the ground anchor at the bottom / ground relation;
-- the beacon head at +10 m;
-- the stem connecting them.
+Polish the existing **ground anchor → stem → beacon** treatment:
 
-The building must not visually hide the relationship.
+- beacon head should read more crisply against both pale basemap and gray buildings;
+- selected/draft beacon may have a slightly stronger ring/halo and cleaner edge;
+- stems should remain thin but clearly legible through/against buildings;
+- ground anchor must be visible enough to prove the Earth relationship, but visually subordinate to the beacon head;
+- elevated atoms must still clearly show both top and bottom when building ghosting is active;
+- do not increase sizes so much that sparse Pilot atoms feel cartoonishly large;
+- do not encode popularity, age, reply count, or any non-spatial semantic in size/height.
 
-During active height-placement mode:
+### Center sight / aiming
 
-1. Prefer making only the building containing/intersecting the locked x/y translucent / ghosted when technically reliable with the current MapLibre building source/layer.
-2. If selective per-building transparency is not reliable because the source lacks stable feature IDs or equivalent support, use the smallest safe fallback that still proves the relation (for example temporarily reducing opacity of the current 3D building layer during height placement).
-3. Restore normal building opacity immediately when height placement ends or is cancelled.
-4. Do not add architectural interiors, custom building meshes, photogrammetry, or a new 3D engine.
-5. Do not fabricate floor truth. Approximate floor text must remain marked with `~` when derived from the existing floor-height assumption.
+Refine the existing center sight only enough to make its purpose clear before `+`:
 
-The acceptance test is visual:
+- crisp and visible over varied backgrounds;
+- compact, not weapon-like / tactical;
+- should read as a placement target;
+- it must remain at the exact MapLibre visual center used for x/y capture;
+- do not add verbose developer/GIS coordinates around it by default.
 
-> At +10 m inside a building, the human can still see/understand the ground anchor, the elevated beacon, and their vertical relationship.
+### Height lever
 
-## Stage 4 — `Done` opens the writing composer
+Keep the accepted lever interaction and mapping exactly. Small visual refinements are allowed:
 
-When the user taps `Done` in height-placement mode:
+- cleaner track/handle/readout hierarchy;
+- ordinary 0–30 m range remains visually easy to manipulate;
+- labels remain readable over the map;
+- do not alter the height mapping, range, stored value, or `Done → Write` sequence unless a tiny bug fix is required to preserve existing behavior.
 
-- freeze `lat`, `lon`, and chosen height in the draft;
-- exit the height lever UI;
-- restore any temporarily ghosted building styling;
-- open the existing write composer only now.
+## Required change D — reduce visual clutter
 
-The writing composer should focus on writing, not spatial manipulation.
+Where safe, remove or soften shell chrome that competes with the world.
 
-Show a compact placement summary near the top, e.g.:
+Examples of acceptable refinement:
 
-- the Punkto/location identifier already used by the app;
-- `Ground` or `+10 m · ~Floor 3`.
+- make the top `Punkto · N visible` status chip slightly calmer/smaller if it currently dominates;
+- reduce oversized opaque backgrounds around navigation;
+- use consistent blur/translucency sparingly;
+- tighten spacing and corner radii so the interface feels intentional rather than assembled from panels.
 
-Keep:
+Do not hide useful status information or create an invisible/minimalist UI that becomes hard to operate.
 
-- message textarea;
-- category;
-- public-data acknowledgement / emergency warning behavior;
-- author/options fallback if still needed;
-- Publish / Cancel.
+## Visual character
 
-But the primary spatial choice is already complete.
+Target:
 
-The old altitude slider/floor/device-altitude controls may remain under `Location & options` as accessibility/fallback controls, but they must not make the primary composer feel like a second height-placement UI. If those fallback controls change height, the stored draft and placement summary must stay synchronized.
+**warm · spatial · calm · public · curious · useful · slightly alive**
 
-### Cancel semantics
+Avoid:
 
-- `Cancel` during height placement abandons the draft and returns to normal Map with no atom persisted.
-- `Cancel` during writing abandons the draft and returns to the Map with no atom persisted.
-- no public/network write occurs until Publish.
+- cyberpunk neon excess;
+- gaming HUD / military reticle look;
+- generic admin dashboard styling;
+- giant glass panels;
+- deep black voids;
+- excessive gradients/glow;
+- skeuomorphic 3D controls;
+- decorative animation unrelated to state.
 
-## Preserve fast ground posting
+The map and real place remain the canvas. Punkto UI should feel like a small, confident instrument over it.
 
-Ground remains the default.
+## Responsive behavior
 
-The flow for a normal ground post should be:
+Test at minimum:
 
-> **aim → `+` → `Done` → type → Publish**
+- desktop wide landscape similar to the recent human screenshots;
+- laptop width around 1280–1600 px;
+- mobile portrait around 390×844;
+- narrow mobile around 360 px.
 
-Do not require a height confirmation beyond `Done`, do not force the user to move the lever, and do not request device altitude automatically.
+Requirements:
 
-## Data / persistence
+- hero `+` remains bottom-left and reachable;
+- support controls remain nearby and do not cover significant map area;
+- safe-area insets respected;
+- board sidecar / mobile board sheet still works;
+- Settings opens correctly;
+- create height stage still suppresses unrelated shell controls cleanly;
+- write composer still fits and restores shell/map context correctly after close/publish.
 
-Use the existing draft/publish data path and current Pilot height scalar. Do not change protocol/schema/storage/signing/network semantics.
+## Accessibility / interaction quality
 
-The height chosen in Stage 2 must be exactly the height published by the existing atom creation path and later rendered by the same spatial grammar.
-
-Do not create an extra ground atom or helper record.
-
-## UI / visual constraints
-
-- The map is the dominant surface during height placement.
-- Height UI should be calm, minimal, touch-friendly, and readable over varied map backgrounds.
-- Avoid large dark translucent composer panels during height placement.
-- Avoid developer/GIS language such as X/Y/Z, transform, altitude datum, etc. in user-facing text.
-- Prefer `Height` / `Ground` / metres / approximate floor language.
-- Keep the existing nav identity and obvious `+` outside placement mode.
-- During height placement, it is acceptable to suppress/disable unrelated nav controls if that prevents accidental mode changes, as long as Cancel is obvious.
+- keep keyboard focus visible;
+- maintain semantic buttons and aria labels;
+- hero `+` should have an accessible label equivalent to `Leave a Punkti` / `Create Punkti` while visible text may remain only `+`;
+- support controls retain readable labels or accessible names;
+- no hover-only affordances;
+- respect reduced motion;
+- avoid tiny hit targets.
 
 ## Architecture
 
-Keep responsibilities clean:
+Preferred ownership:
 
-- `ui-map.js`: map camera, spatial draft rendering, building ghosting, height placement visualization, world-space geometry.
-- `ui-create.js`: create-flow state/UI including height-stage controls and write-stage controls.
-- `app.js`: narrow coordination between create state and map state; no spatial implementation logic.
-- `index.html`: containers/CSS only as needed.
+- `pwa/ui-shell.js`: only shell behavior/state if needed;
+- `pwa/index.html`: shell markup/CSS and focused visual polish;
+- `pwa/ui-map.js`: only map/building/beacon/sight visual refinements;
+- `pwa/ui-create.js`: only height-lever visual refinement if necessary;
+- `pwa/app.js`: version marker only unless narrow coordination is genuinely required.
 
-If useful, expose explicit map APIs such as entering/updating/exiting placement mode rather than reaching into map internals from `ui-create.js`.
-
-Do not add Three.js. Do not replace MapLibre/deck.gl.
+Do not move product logic into CSS/markup hacks. Do not duplicate shell event behavior unnecessarily.
 
 ## Version marker
 
 Update both console marker and `window.PUNKTO_APP_VERSION` to exactly:
 
-`pilot1-slice45b2-sight-height-lever-2026-08-28-1`
+`pilot1-slice45c-hero-shell-polish-2026-08-28-1`
 
 ## Expected scope
 
 Prefer only:
 
-- `pwa/ui-map.js`
-- `pwa/ui-create.js`
-- `pwa/app.js`
 - `pwa/index.html`
-- `pwa/ARCHITECTURE.md` only if module ownership/API meaningfully changes
+- `pwa/ui-shell.js` if shell behavior/markup synchronization requires it
+- `pwa/ui-map.js`
+- `pwa/ui-create.js` only for narrow lever polish
+- `pwa/app.js` for version marker
 - `docs/agent/CODEX_CURRENT_TASK.md`
 
-Do not edit relay/protocol/storage/signing/sync/deployment/node configuration.
+Touch `pwa/ARCHITECTURE.md` only if module ownership meaningfully changes.
+
+Do **not** edit relay/protocol/storage/signing/sync/deployment/node configuration.
 
 ## Acceptance criteria
 
 All must be true before committing:
 
-1. Before `+`, existing center sight remains the horizontal aiming device.
-2. Pressing `+` locks the exact coordinate under that sight immediately.
-3. Pressing `+` does **not** open the write composer; it opens focused height-placement mode.
-4. Height-placement mode shows ground anchor + stem + beacon in the actual MapLibre/deck.gl world.
-5. A large screen-space vertical lever is the obvious primary height control.
-6. Moving the lever changes only physical height; draft lon/lat stay fixed.
-7. Ground is default; range clamps 0–200 m; ordinary 0–30 m placement is controllable.
-8. If needed, camera becomes gently oblique without changing the chosen place.
-9. At +10 m in a rendered building, both ground anchor and elevated beacon/stem relationship remain visually understandable via building ghosting/transparency or the narrowest reliable fallback.
-10. Building styling restores after Done/Cancel.
-11. `Done` freezes position+height and only then opens the writing composer.
-12. Composer shows a compact spatial summary but does not compete with an active 3D height-control UI.
-13. Publish uses exactly the chosen lat/lon/height through the existing signing/posting path.
-14. Cancel from either stage persists nothing.
-15. Existing manual/floor/device controls, if retained, are secondary fallbacks and stay synchronized.
-16. Existing selected atom board, Text view, Settings, relay/sync/storage/signing behavior remain unchanged.
-17. No extra helper atom is persisted.
-18. Version marker is exactly `pilot1-slice45b2-sight-height-lever-2026-08-28-1`.
+1. On normal Map view, the `+` button is immediately obvious as the primary action.
+2. `+` is positioned bottom-left on desktop and mobile, with safe-area handling.
+3. Text / Map / Settings remain near the same control cluster but are visibly smaller/quieter.
+4. The supporting controls remain usable with ~44 px minimum hit targets and clear active/focus states.
+5. Pressing `+` still opens the accepted B2 sight-lock + height-lever flow with no behavioral regression.
+6. The existing center sight remains the x/y aiming truth and is visually clearer but not tactical/heavy.
+7. Buildings look one notch more refined/lighter while preserving 3D readability.
+8. Height-placement building ghosting still makes ground anchor + stem + elevated beacon readable through buildings and restores afterwards.
+9. Beacon head, stem, and ground anchor are clearer against both basemap and building backgrounds without becoming oversized/noisy.
+10. Height lever behavior/range/mapping and `Done → Write` sequence are unchanged.
+11. Board sidecar/mobile sheet, Text view, Settings, deep links, create write/publish flow, relay/sync/storage/signing remain unchanged.
+12. No semantic is encoded into Z except physical height.
+13. No new heavy graphics engine/assets/provider introduced.
+14. Version marker is exactly `pilot1-slice45c-hero-shell-polish-2026-08-28-1`.
 
 ## Automated checks
 
@@ -278,38 +295,38 @@ git diff --check
 
 ## Focused browser checks
 
-Where practical without publishing a public atom:
+Where practical without publishing another public atom:
 
-- move map so a recognizable ground/building point is under center sight;
-- press `+` and verify write composer does not open;
-- verify locked x/y remains fixed while adjusting camera/height;
-- move lever Ground → ~3 m → ~10 m → ~20 m → Ground;
-- verify stem/head update continuously;
-- verify map does not pan under lever drag;
-- verify containing/intersecting building does not hide both ends of the atom relation at ~10 m;
-- press Done and verify write composer opens with the chosen spatial summary;
-- cancel from write and verify no persisted atom;
-- repeat and cancel directly from height stage;
-- verify no stuck building opacity, map padding, gesture lock, or create state;
-- verify no uncaught MapLibre/deck.gl/module errors.
+- normal desktop Map: verify hero `+` is unmistakable bottom-left and support controls are quieter;
+- mobile portrait: same, including safe-area and thumb reach;
+- Text ↔ Map works from new control cluster;
+- Settings opens/closes correctly;
+- press `+`: verify B2 height stage opens, not write composer;
+- lever still works Ground → ~3 m → ~10 m → Ground;
+- building ghosting still works;
+- Done opens write composer only afterwards;
+- cancel returns to normal shell with correct building opacity and no stuck hidden controls;
+- board open/close does not collide with bottom-left cluster;
+- inspect atoms against pale ground and gray building backgrounds;
+- no uncaught MapLibre/deck.gl/module errors.
 
-The final gameplay feel remains a human gate after test1 staging.
+Human visual acceptance on test1 remains required before proceeding to Slice 5.
 
 ## Commit / push contract
 
 Before committing, change the first status line to exactly:
 
-`Status: **HOLD — Slice 4.5B2 implemented, awaiting CI/review**`
+`Status: **HOLD — Slice 4.5C implemented, awaiting CI/review**`
 
 Make one focused implementation commit with exactly:
 
-`feat(pilot1): add sight-locked height lever flow`
+`feat(pilot1): make create the hero action`
 
 Then:
 
 1. commit only this task's implementation + task status change;
 2. push to `origin/pilot-1`;
-3. report exact SHA, changed files, automated checks, focused interaction checks, and any remaining uncertainty;
+3. report exact SHA, changed files, automated checks, focused browser checks, and remaining visual uncertainty;
 4. stop.
 
-Do **not** deploy. Do **not** start Slice 4.5C or Slice 5. ChatGPT will review the exact pushed SHA and Pilot CI first.
+Do **not** deploy. Do **not** start Slice 5. ChatGPT will review the exact pushed SHA and Pilot CI first.
