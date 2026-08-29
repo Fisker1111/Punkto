@@ -1065,8 +1065,8 @@ function wireEvents() {
 // ---------------------------------------------------------------------------
 
 async function boot() {
-  console.log('PUNKTO APP.JS LOADED pilot1-slice45c2-local-height-tool-2026-08-29-1');
-  window.PUNKTO_APP_VERSION = 'pilot1-slice45c2-local-height-tool-2026-08-29-1';
+  console.log('PUNKTO APP.JS LOADED pilot1-slice45c3-draft-visible-2026-08-29-1');
+  window.PUNKTO_APP_VERSION = 'pilot1-slice45c3-draft-visible-2026-08-29-1';
 
   console.log('[punkto] booting...');
 

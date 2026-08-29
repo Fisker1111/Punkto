@@ -71,6 +71,7 @@ const SPATIAL_LOD = {
   stemZoom: 16,
 };
 const MAX_DRAFT_HEIGHT_M = 200;
+const HEIGHT_PLACEMENT_MIN_ZOOM = 16.4;
 
 export function initMapView({
   mapStyle,
@@ -307,20 +308,22 @@ export async function renderAtoms(newAtomIds = null) {
     };
   });
 
+  let draftData = null;
   const placementDraft = _getPlacementDraft();
   if (placementDraft) {
     const draftAlt = placementDraft.altitude_m || 0;
-    scatterData.push({
+    draftData = {
       position: [placementDraft.lon, placementDraft.lat, draftAlt],
       ground: [placementDraft.lon, placementDraft.lat, 0],
       source: [placementDraft.lon, placementDraft.lat, 0],
       target: [placementDraft.lon, placementDraft.lat, draftAlt],
       color: rgba(DRAFT_COLOR, 255),
-      haloColor: rgba(DRAFT_COLOR, 118),
-      strokeColor: [255, 252, 212, 245],
-      ringColor: rgba(DRAFT_COLOR, 154),
-      stemColor: rgba(DRAFT_COLOR, 205),
-      width: 2.15,
+      haloColor: rgba(DRAFT_COLOR, 148),
+      strokeColor: [255, 252, 212, 255],
+      ringColor: rgba(DRAFT_COLOR, 238),
+      stemColor: rgba(DRAFT_COLOR, 248),
+      casingColor: [8, 10, 14, 230],
+      width: 3.1,
       selected: false,
       hasHeight: draftAlt > 0,
       selectionId: 'draft',
@@ -330,16 +333,16 @@ export async function renderAtoms(newAtomIds = null) {
       t: Date.now(),
       label: 'draft',
       spatialLabel: formatDraftSpatialHeightLabel(draftAlt),
-    });
+    };
   }
 
   const groundRingData = scatterData.filter(d =>
-    d.selected || d.selectionId === 'draft' || zoom >= SPATIAL_LOD.groundRelationZoom
+    d.selected || zoom >= SPATIAL_LOD.groundRelationZoom
   );
   const stemData = scatterData.filter(d =>
-    d.hasHeight && (d.selected || d.selectionId === 'draft' || zoom >= SPATIAL_LOD.stemZoom)
+    d.hasHeight && (d.selected || zoom >= SPATIAL_LOD.stemZoom)
   );
-  const selectedLabelData = scatterData.filter(d => d.selected || d.selectionId === 'draft');
+  const selectedLabelData = scatterData.filter(d => d.selected);
 
   const { ScatterplotLayer, TextLayer } = window.deck;
   const layers = [
@@ -409,6 +412,10 @@ export async function renderAtoms(newAtomIds = null) {
     );
   }
 
+  if (draftData) {
+    appendDraftPlacementLayers(layers, draftData, { ScatterplotLayer, LineLayer });
+  }
+
   if (TextLayer && selectedLabelData.length) {
     layers.push(
       new TextLayer({
@@ -427,6 +434,29 @@ export async function renderAtoms(newAtomIds = null) {
         getAlignmentBaseline: 'bottom',
         billboard: true,
         pickable: false,
+      })
+    );
+  }
+
+  if (TextLayer && draftData) {
+    layers.push(
+      new TextLayer({
+        id: 'placement-draft-spatial-label',
+        data: [draftData],
+        getPosition: d => d.position,
+        getText: d => d.spatialLabel,
+        getColor: [255, 246, 190, 255],
+        getBackgroundColor: [31, 25, 9, 224],
+        background: true,
+        backgroundPadding: [7, 4],
+        getSize: 13,
+        sizeUnits: 'pixels',
+        getPixelOffset: [0, -48],
+        getTextAnchor: 'middle',
+        getAlignmentBaseline: 'bottom',
+        billboard: true,
+        pickable: false,
+        parameters: draftPlacementRenderParameters(),
       })
     );
   }
@@ -477,6 +507,118 @@ export async function renderAtoms(newAtomIds = null) {
 
 export function cancelPlacementDraftHeightDrag() {
   endDraftHeightDrag();
+}
+
+function appendDraftPlacementLayers(layers, draft, { ScatterplotLayer, LineLayer }) {
+  const data = [draft];
+  const renderParameters = draftPlacementRenderParameters();
+
+  if (LineLayer && draft.hasHeight) {
+    layers.push(
+      new LineLayer({
+        id: 'placement-draft-stem-casing',
+        data,
+        getSourcePosition: d => d.source,
+        getTargetPosition: d => d.target,
+        getColor: d => d.casingColor,
+        getWidth: d => d.width + 4.5,
+        widthUnits: 'pixels',
+        pickable: false,
+        parameters: renderParameters,
+      }),
+      new LineLayer({
+        id: 'placement-draft-stem',
+        data,
+        getSourcePosition: d => d.source,
+        getTargetPosition: d => d.target,
+        getColor: d => d.stemColor,
+        getWidth: d => d.width,
+        widthUnits: 'pixels',
+        pickable: false,
+        parameters: renderParameters,
+      })
+    );
+  }
+
+  layers.push(
+    new ScatterplotLayer({
+      id: 'placement-draft-ground-halo',
+      data,
+      getPosition: d => d.ground,
+      getFillColor: d => d.casingColor,
+      getRadius: d => d.hasHeight ? 22 : 27,
+      radiusUnits: 'pixels',
+      radiusMinPixels: 16,
+      radiusMaxPixels: 34,
+      pickable: false,
+      parameters: renderParameters,
+    }),
+    new ScatterplotLayer({
+      id: 'placement-draft-ground-anchor',
+      data,
+      getPosition: d => d.ground,
+      getFillColor: [255, 220, 80, 58],
+      stroked: true,
+      getLineColor: d => d.ringColor,
+      getLineWidth: 3,
+      lineWidthUnits: 'pixels',
+      getRadius: d => d.hasHeight ? 14 : 17,
+      radiusUnits: 'pixels',
+      radiusMinPixels: 10,
+      radiusMaxPixels: 26,
+      pickable: false,
+      parameters: renderParameters,
+    }),
+    new ScatterplotLayer({
+      id: 'placement-draft-beacon-halo',
+      data,
+      getPosition: d => d.position,
+      getFillColor: d => d.casingColor,
+      getRadius: 28,
+      radiusUnits: 'pixels',
+      radiusMinPixels: 20,
+      radiusMaxPixels: 38,
+      pickable: false,
+      parameters: renderParameters,
+    }),
+    new ScatterplotLayer({
+      id: 'placement-draft-beacon-glow',
+      data,
+      getPosition: d => d.position,
+      getFillColor: d => d.haloColor,
+      getRadius: 24,
+      radiusUnits: 'pixels',
+      radiusMinPixels: 17,
+      radiusMaxPixels: 34,
+      pickable: false,
+      parameters: renderParameters,
+    }),
+    new ScatterplotLayer({
+      id: 'placement-draft-beacon',
+      data,
+      getPosition: d => d.position,
+      getFillColor: d => d.color,
+      stroked: true,
+      getLineColor: d => d.strokeColor,
+      getLineWidth: 3.2,
+      lineWidthUnits: 'pixels',
+      getRadius: 15,
+      radiusUnits: 'pixels',
+      radiusMinPixels: 10,
+      radiusMaxPixels: 27,
+      pickable: true,
+      autoHighlight: true,
+      highlightColor: [255, 255, 130, 255],
+      parameters: renderParameters,
+    })
+  );
+}
+
+function draftPlacementRenderParameters() {
+  return {
+    depthTest: false,
+    depthMask: false,
+  };
 }
 
 export function updateCrosshairReadout() {
@@ -697,14 +839,17 @@ function initMap() {
 function easeCameraForHeightPlacement(draft) {
   if (!map || !draft) return;
   const currentPitch = typeof map.getPitch === 'function' ? map.getPitch() : 0;
-  if (currentPitch >= 50) return;
+  const currentZoom = typeof map.getZoom === 'function' ? map.getZoom() : 0;
+  const nextPitch = Math.max(currentPitch, 60);
+  const nextZoom = Math.max(currentZoom, HEIGHT_PLACEMENT_MIN_ZOOM);
+  if (currentPitch >= 50 && currentZoom >= HEIGHT_PLACEMENT_MIN_ZOOM) return;
   const reduceMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
   try {
     map.easeTo({
       center: [draft.lon, draft.lat],
-      pitch: 60,
+      pitch: nextPitch,
       bearing: map.getBearing(),
-      zoom: map.getZoom(),
+      zoom: nextZoom,
       duration: reduceMotion ? 0 : 180,
       essential: false,
     });
@@ -902,7 +1047,7 @@ function onDraftPointerDown(ev) {
     x: point.x,
     y: point.y,
     radius: 18,
-    layerIds: ['atoms'],
+    layerIds: ['placement-draft-beacon', 'atoms'],
   });
   if (picked?.object?.selectionId !== 'draft') return;
 

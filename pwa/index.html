@@ -1349,7 +1349,7 @@
       bottom: 0;
       height: 0%;
       border-radius: var(--radius-pill);
-      background: linear-gradient(180deg, #fff1a3 0%, #2ac2ff 42%, #0b9dff 100%);
+      background: linear-gradient(180deg, #7fe4ff 0%, #2ac2ff 42%, #0b9dff 100%);
       box-shadow: 0 0 16px rgba(42,194,255,0.22);
     }
     .height-lever-handle {
@@ -1360,11 +1360,18 @@
       width: 52px;
       height: 52px;
       border-radius: 50%;
-      border: 2px solid rgba(255,255,255,0.94);
-      background: linear-gradient(180deg, #fff6bf 0%, #ffe277 100%);
-      box-shadow: 0 12px 28px rgba(0,0,0,0.46), 0 0 0 7px rgba(255,220,80,0.18), 0 0 20px rgba(255,220,80,0.24);
+      border: 2px solid rgba(212,246,255,0.92);
+      background: linear-gradient(180deg, rgba(22,42,58,0.96) 0%, rgba(9,18,30,0.96) 100%);
+      box-shadow: 0 12px 28px rgba(0,0,0,0.46), 0 0 0 6px rgba(42,194,255,0.16), 0 0 18px rgba(42,194,255,0.24);
       cursor: ns-resize;
       touch-action: none;
+    }
+    .height-lever-handle::before {
+      content: '';
+      position: absolute;
+      inset: 18px 13px;
+      border-top: 2px solid rgba(212,246,255,0.72);
+      border-bottom: 2px solid rgba(212,246,255,0.72);
     }
     .height-lever-label {
       position: absolute;
