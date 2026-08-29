@@ -1,6 +1,6 @@
 # Codex Current Task
 
-Status: **ACTIVE — Pilot_1 Slice 4.5C2: local height tool + placement-stage declutter**
+Status: **HOLD — Slice 4.5C2 implemented, awaiting CI/review**
 
 Repository: `Fisker1111/Punkto`
 Branch: `pilot-1`

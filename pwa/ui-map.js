@@ -39,6 +39,7 @@ let _onRefreshUI = null;
 let _onQueueRefreshUI = null;
 let _onFocusDeepLinkIfReady = null;
 let _onShowOnboarding = null;
+let _onPlacementScreenChanged = null;
 let _hasDeepLink = () => false;
 let _getCurrentPage = () => 'map';
 
@@ -62,6 +63,7 @@ let draftHeightDrag = null;
 let draftHeightDragRaf = null;
 let draftHeightDragPending = null;
 let heightPlacementActive = false;
+let heightPlacementProjectionRaf = null;
 let buildingOpacityRestore = new Map();
 
 const SPATIAL_LOD = {
@@ -87,6 +89,7 @@ export function initMapView({
   onQueueRefreshUI,
   onFocusDeepLinkIfReady,
   onShowOnboarding,
+  onPlacementScreenChanged,
   hasDeepLink,
   getCurrentPage,
 } = {}) {
@@ -106,6 +109,7 @@ export function initMapView({
   _onQueueRefreshUI = typeof onQueueRefreshUI === 'function' ? onQueueRefreshUI : null;
   _onFocusDeepLinkIfReady = typeof onFocusDeepLinkIfReady === 'function' ? onFocusDeepLinkIfReady : null;
   _onShowOnboarding = typeof onShowOnboarding === 'function' ? onShowOnboarding : null;
+  _onPlacementScreenChanged = typeof onPlacementScreenChanged === 'function' ? onPlacementScreenChanged : null;
   _hasDeepLink = typeof hasDeepLink === 'function' ? hasDeepLink : _hasDeepLink;
   _getCurrentPage = typeof getCurrentPage === 'function' ? getCurrentPage : _getCurrentPage;
 }
@@ -122,16 +126,23 @@ export function enterHeightPlacementMode(draft) {
   heightPlacementActive = true;
   ghostBuildingLayersForPlacement();
   easeCameraForHeightPlacement(draft);
+  scheduleHeightPlacementProjection();
   renderAtoms().catch((err) => console.warn('[map-create] render placement failed:', err));
 }
 
 export function updateHeightPlacementDraft() {
   if (!heightPlacementActive) return;
+  scheduleHeightPlacementProjection();
   renderAtoms().catch((err) => console.warn('[map-create] render placement update failed:', err));
 }
 
 export function exitHeightPlacementMode() {
   heightPlacementActive = false;
+  if (heightPlacementProjectionRaf) {
+    cancelAnimationFrame(heightPlacementProjectionRaf);
+    heightPlacementProjectionRaf = null;
+  }
+  _onPlacementScreenChanged?.(null);
   restoreBuildingLayersAfterPlacement();
   renderAtoms().catch((err) => console.warn('[map-create] render placement exit failed:', err));
 }
@@ -611,12 +622,15 @@ function initMap() {
       updateBubbleVisibility();
       drawLeaderLines();
       updateCrosshairReadout();
+      scheduleHeightPlacementProjection();
       queueRefreshUI();
     });
+    map.on('move', scheduleHeightPlacementProjection);
     map.on('moveend', () => {
       updateBubbleVisibility();
       drawLeaderLines();
       updateCrosshairReadout();
+      scheduleHeightPlacementProjection();
       queueRefreshUI();
     });
 
@@ -744,10 +758,50 @@ function installMapCreateViewportResizeHandler() {
   mapCreateResizeInstalled = true;
   window.addEventListener('resize', () => {
     if (mapCreateOpen) scheduleApplyMapCreateViewport();
+    scheduleHeightPlacementProjection();
   });
   window.addEventListener('orientationchange', () => {
     if (mapCreateOpen) setTimeout(scheduleApplyMapCreateViewport, 80);
+    setTimeout(scheduleHeightPlacementProjection, 80);
   });
+}
+
+function scheduleHeightPlacementProjection() {
+  if (!heightPlacementActive || !_onPlacementScreenChanged) return;
+  if (heightPlacementProjectionRaf) return;
+  heightPlacementProjectionRaf = requestAnimationFrame(() => {
+    heightPlacementProjectionRaf = null;
+    emitHeightPlacementProjection();
+  });
+}
+
+function emitHeightPlacementProjection() {
+  if (!heightPlacementActive || !_onPlacementScreenChanged) return;
+  const draft = _getPlacementDraft();
+  if (!map || !draft || !Number.isFinite(Number(draft.lon)) || !Number.isFinite(Number(draft.lat))) {
+    _onPlacementScreenChanged(null);
+    return;
+  }
+  try {
+    const point = map.project([Number(draft.lon), Number(draft.lat)]);
+    const rect = map.getContainer()?.getBoundingClientRect?.();
+    if (!point || !rect || !Number.isFinite(point.x) || !Number.isFinite(point.y)) {
+      _onPlacementScreenChanged(null);
+      return;
+    }
+    _onPlacementScreenChanged({
+      x: rect.left + point.x,
+      y: rect.top + point.y,
+      mapLeft: rect.left,
+      mapTop: rect.top,
+      mapRight: rect.right,
+      mapBottom: rect.bottom,
+      visible: point.x >= 0 && point.y >= 0 && point.x <= rect.width && point.y <= rect.height,
+    });
+  } catch (err) {
+    console.warn('[map-create] placement projection failed:', err);
+    _onPlacementScreenChanged(null);
+  }
 }
 
 function scheduleApplyMapCreateViewport() {

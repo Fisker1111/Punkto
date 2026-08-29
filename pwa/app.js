@@ -36,7 +36,7 @@ import {
   refreshMapBoardAtoms,
   hasOpenBoard,
 } from './ui-board.js';
-import { initCreateModal, openCreateModal, closeCreateModal, setCreateError, setCreateSubmitting, updateCreateCenter, updateCreateAltitude, isCreateModalOpen } from './ui-create.js';
+import { initCreateModal, openCreateModal, closeCreateModal, setCreateError, setCreateSubmitting, updateCreateCenter, updateCreateAltitude, updateCreatePlacementScreenPoint, isCreateModalOpen } from './ui-create.js';
 import { initSettingsView, renderSettingsView } from './ui-settings.js';
 import { decodeAtomLocation, encodeLocation, haversineMeters } from './core/location.js';
 import { db } from './storage/db.js';
@@ -1065,8 +1065,8 @@ function wireEvents() {
 // ---------------------------------------------------------------------------
 
 async function boot() {
-  console.log('PUNKTO APP.JS LOADED pilot1-slice45c-hero-shell-polish-2026-08-28-1');
-  window.PUNKTO_APP_VERSION = 'pilot1-slice45c-hero-shell-polish-2026-08-28-1';
+  console.log('PUNKTO APP.JS LOADED pilot1-slice45c2-local-height-tool-2026-08-29-1');
+  window.PUNKTO_APP_VERSION = 'pilot1-slice45c2-local-height-tool-2026-08-29-1';
 
   console.log('[punkto] booting...');
 
@@ -1157,6 +1157,7 @@ async function boot() {
     onQueueRefreshUI: queueRefreshUI,
     onFocusDeepLinkIfReady: focusDeepLinkIfReady,
     onShowOnboarding: showOnboarding,
+    onPlacementScreenChanged: updateCreatePlacementScreenPoint,
     hasDeepLink: () => Boolean(deepLinkPunkto),
     getCurrentPage: () => currentPage,
   });
