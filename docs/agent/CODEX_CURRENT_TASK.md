@@ -49,6 +49,23 @@ Preserve:
 - protocol/storage/signing/relay/federation;
 - board/Text/Settings/deep links.
 
+## Browser-console evidence from the failing C3 build
+
+Human Firefox console from the exact deployed C3 marker `pilot1-slice45c3-draft-visible-2026-08-29-1` shows the app/map booting normally with no uncaught application/module exception around the failed height placement.
+
+Observed warnings:
+- Firefox/WebGL deprecation and texture warnings;
+- many MapLibre `Image "..." could not be loaded` style/sprite warnings;
+- source-map 404 for `maplibre-gl.js.map`;
+- `deck: Missing character: · (183)` from the TextLayer glyph atlas;
+- three opaque worker/blob warnings: `Expected value to be of type number, but found null instead.`
+
+Treat the WebGL deprecations, missing basemap icons, source-map 404, and missing `·` glyph as **non-causal unless code evidence links them to the disappearing geometry**. The missing glyph can affect the height label text, not the ground/stem/beacon geometry.
+
+Do inspect the `Expected value ... number ... null` warning if you can trace it cheaply to a placement/camera numeric value, but do not let an opaque worker warning distract from the reproducible visual evidence: the C3 world-space draft leaves the usable frame at higher height while the rest of the UI remains responsive.
+
+The absence of an uncaught runtime exception strengthens the hypothesis that this is primarily camera/projection/framing behavior rather than a crashed render loop.
+
 ## Primary fix — frame both endpoints of the vertical relation
 
 During active height placement, maintain a **safe placement viewport** in which both endpoints remain visible:
