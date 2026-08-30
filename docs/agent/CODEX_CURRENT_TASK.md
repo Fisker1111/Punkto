@@ -1,6 +1,6 @@
 # Codex Current Task
 
-Status: **HOLD — Slice 4.5C3 implemented, awaiting CI/review**
+Status: **ACTIVE — Pilot_1 Slice 4.5C4: keep the full vertical relation in frame**
 
 Repository: `Fisker1111/Punkto`
 Branch: `pilot-1`
@@ -8,29 +8,29 @@ PR: `#110`
 
 ## Why this task exists
 
-Human testing of deployed Slice 4.5C2 accepted the local height lever direction, but exposed a visual regression:
+Human testing of deployed Slice 4.5C3 shows the regression is **not solved**.
 
-> **When height selection starts / height is changed, the actual draft atom can disappear from view.**
+At about `+66 m · ~Floor 22`, the user can see the locked ground sight and local height lever, but the actual world-space draft beacon and stem are not visible in the usable viewport. The C3 dedicated draft layers likely solved depth/occlusion, but the spatial object is still leaving the visible frame.
 
-In the human desktop screenshot at about `+23 m · ~Floor 8`, the ground sight and local lever are visible, but the yellow world-space draft beacon / stem relationship is not clearly visible. This breaks the core spatial promise of the placement step.
+The screenshot strongly suggests a **camera/framing problem at elevated heights**, not merely a color or depth problem. C3 also introduced a minimum placement zoom, which may make high vertical separation worse.
 
-The lever is only a control. The atom is the thing being placed.
+Locked product rule:
 
-Locked rule:
+> **Height selection is valid only if the user can continuously see the physical relationship: ground anchor → stem → top beacon.**
 
-> **During height placement, the user must always be able to see the ground anchor, the stem, and the actual draft beacon simultaneously whenever height > 0.**
+The lever is secondary. The world-space atom is primary.
 
-Do not proceed to Slice 5 until this is fixed.
+Do not start Slice 5 until this is fixed and human-verified.
 
 ## Starting state
 
 Start from exact current `pilot-1` HEAD:
 
-`4bce1d71a21962398baf5e7b439405c76de7e18c`
+`eb56a1efa7e427e5748dcd9a04de9aee8108df30`
 
-The deployed application baseline is Slice 4.5C2 application SHA:
+Deployed application baseline under test:
 
-`169ff365edd9995354117d2bc02b1e976fa16dc6`
+`4c1de6ad4e41183d6bbefe0cbff943cad7e8a17e`
 
 Read `AGENTS.md`, `pwa/ARCHITECTURE.md`, current `pwa/ui-map.js`, `pwa/ui-create.js`, `pwa/index.html`, and `pwa/app.js` before editing.
 
@@ -39,91 +39,134 @@ Preserve the accepted interaction exactly:
 > **Aim → `+` locks x/y → choose physical height → Done → write → Publish.**
 
 Preserve:
-- local lever from 4.5C2;
 - exact locked lon/lat;
-- 0–200 m height mapping and fine 0–30 m behavior;
+- 0–200 m physical height mapping and fine 0–30 m control;
+- dedicated draft placement layers from C3;
 - building ghosting;
+- local lever concept;
 - hero `+` shell;
 - `Done → Write`;
 - protocol/storage/signing/relay/federation;
 - board/Text/Settings/deep links.
 
-## Primary requirement — the world-space draft must never disappear
+## Primary fix — frame both endpoints of the vertical relation
 
-During active height placement:
+During active height placement, maintain a **safe placement viewport** in which both endpoints remain visible:
 
-1. At `0 m`, show the ground anchor / draft beacon clearly at the locked place.
-2. At any positive height, show all three clearly:
-   - ground anchor at Earth;
-   - stem from ground to selected physical height;
-   - draft beacon at the top.
-3. The lever handle must never be mistaken for or visually replace the world-space beacon.
-4. The draft world object must remain visually legible over pale ground, roads, and ghosted buildings.
-5. Published atoms must not be altered just to solve this draft-placement regression.
+- ground anchor at `[lon, lat, 0]`;
+- top beacon at `[lon, lat, selectedHeight]`;
+- stem between them.
 
-## Diagnose the actual cause before choosing the fix
+### Required behavior
 
-Inspect the current MapLibre/deck.gl rendering and camera behavior rather than applying a blind CSS patch.
+1. At Ground, the locked placement is clearly visible.
+2. At positive heights, the ground anchor, stem, and top beacon must remain simultaneously visible.
+3. The top beacon must not leave the viewport above the top HUD/readout.
+4. The ground anchor must not be pushed behind `Cancel · Ground · Done`.
+5. The vertical relation must not be hidden under the lever.
+6. Keep the geographic x/y fixed. Camera framing may change; the world coordinate must not.
+7. Do not change the selected physical height to make framing easier.
 
-Likely areas to verify:
-- draft scatter/stem layer depth ordering against MapLibre / fill-extrusion layers;
-- whether the draft beacon/stem is being depth-occluded even when buildings are ghosted;
-- camera pitch/zoom/frustum at ordinary zoom levels;
-- deck overlay redraw/update timing when `altitude_m` changes;
-- whether C2 projection/lever callbacks unintentionally affect the draft render;
-- whether the top beacon visually collapses onto the ground anchor at lower zoom.
+## Diagnose and remove the C3 framing regression
 
-If depth ordering is the cause, prefer a focused solution such as dedicated draft-placement layers / render parameters so **only the active draft** can remain visually readable through the placement context. Do not make every published atom render permanently through all geometry.
+Inspect `easeCameraForHeightPlacement()` and the C3 `HEIGHT_PLACEMENT_MIN_ZOOM` behavior first.
 
-If camera framing is the cause, use the smallest deterministic adjustment needed to keep both endpoints readable. Do not move the geographic anchor, do not perform cinematic camera movement, and do not continuously chase the lever.
+Do not assume “more zoom” is better. At an oblique pitch, zooming in can push an elevated top point far outside the screen.
 
-## Spatial visibility / framing requirements
+If the C3 minimum zoom causes the problem, remove or replace it with a **height-aware framing policy**.
 
-The user must be able to understand height at ordinary Pilot zooms.
+Preferred principle:
 
-- Ground → ~3 m: beacon may be close to anchor, but it must still read as the same object / selected height.
-- ~10–30 m: top and bottom should be unmistakably distinct at normal street/district placement zoom.
-- ~100–200 m: both endpoints should remain in the usable viewport where practical; if framing assistance is required, keep it calm and deterministic.
-- The atom must not be hidden behind the lever, top readout, or bottom `Cancel · Ground · Done` bar.
-- Lever positioning may respond to the actual visible draft object if that improves association, but the lever remains secondary.
+> **Fit the relation, not a hardcoded zoom.**
 
-Do not change the physical height value to make the visualization easier.
+## Use actual screen-space endpoint projection
 
-## 4.5C2 behavior to preserve
+Where practical, project both the ground and elevated draft positions into screen space using the authoritative MapLibre/deck.gl camera state.
 
-- lever remains local to the placement rather than docked at the far-right edge;
-- lever flips side / clamps safely;
-- zoom controls, 2D/3D toggle, onboarding hint, and unrelated shell are suppressed during placement;
-- compact top height readout remains;
-- all suppressed controls restore after Done/Cancel;
-- building opacity restores correctly;
-- no stale placement state after cancel.
+MapLibre remains the spatial authority. It is acceptable to use deck.gl `WebMercatorViewport` or the overlay viewport, provided it is derived from the same MapLibre center/zoom/pitch/bearing/viewport and treats Z as physical metres.
 
-## Visual priority
+The map module should be able to reason about:
 
-During height mode the hierarchy must be:
+- ground screen point;
+- top-beacon screen point;
+- safe top boundary;
+- safe bottom boundary;
+- current lever/readout/action exclusion zones.
 
-1. **world-space draft atom** — primary;
-2. ground/stem relationship — primary spatial proof;
-3. local lever — control for Z;
-4. numeric height/floor label — confirmation;
-5. Cancel / Ground / Done — workflow controls.
+Do not approximate the top point by simply subtracting arbitrary CSS pixels from the ground point.
 
-The lever must never become the visually dominant “atom”.
+## Framing policy
+
+Implement the smallest calm deterministic camera adjustment needed.
+
+### Desired behavior
+
+- `0–30 m`: usually preserve a close street/building view; only adjust if either endpoint approaches an exclusion boundary.
+- `30–100 m`: gently zoom out and/or shift camera framing enough to keep both endpoints visible.
+- `100–200 m`: continue to fit the complete vertical relation; wider framing is acceptable.
+- no cinematic orbiting;
+- no repeated oscillation/jitter while dragging;
+- no camera fighting the lever;
+- no changing bearing unless absolutely necessary;
+- pitch can remain around the current useful oblique value, but may be reduced slightly if that is the cleanest way to fit the relation.
+
+Prefer stable hysteresis / threshold behavior so tiny height changes do not cause constant camera movement.
+
+### Safe viewport
+
+Respect practical UI exclusion zones:
+
+- compact top height readout / Punkto header area;
+- bottom `Cancel · Ground · Done` actions;
+- safe-area insets;
+- local lever footprint.
+
+Keep a modest margin around both endpoints rather than letting them sit exactly on the edge.
+
+## Lever association — follow the visible atom, not merely the ground point
+
+C2/C3 position the lever from the locked ground projection. At high height, this can visually separate the lever from the actual top beacon.
+
+Refine the placement-screen callback/API so the create UI can receive enough information to position the lever relative to the **visible top beacon** when height > 0.
+
+Preferred mental model:
+
+> **top atom ↔ height lever**
+
+Requirements:
+- when height > 0, prefer placing the lever locally beside the top beacon or the visible relation midpoint if that avoids overlap;
+- at Ground, use the ground point;
+- flip/clamp as today;
+- never cover the top beacon, ground anchor, or stem;
+- do not move the world coordinate to accommodate the lever.
+
+A short restrained connector is fine.
+
+## Keep the C3 visibility treatment
+
+Do not remove the focused C3 draft render behavior unless it is proven harmful.
+
+Preserve:
+- dedicated draft layers;
+- active draft readable through ghosted buildings;
+- draft world object visually distinct from lever handle;
+- published atoms unchanged.
+
+This task is primarily about **framing**, not re-styling the atom again.
 
 ## Version marker
 
 Update console marker and `window.PUNKTO_APP_VERSION` to exactly:
 
-`pilot1-slice45c3-draft-visible-2026-08-29-1`
+`pilot1-slice45c4-relation-framing-2026-08-30-1`
 
 ## Expected scope
 
 Prefer only:
 - `pwa/ui-map.js`
-- `pwa/ui-create.js` only if lever avoidance/association needs adjustment
-- `pwa/index.html` only for narrow presentation fixes
-- `pwa/app.js` for version marker
+- `pwa/ui-create.js` for top-beacon-aware lever positioning if needed
+- `pwa/index.html` only for narrow exclusion/margin presentation changes
+- `pwa/app.js` for version marker / narrow callback coordination
 - `docs/agent/CODEX_CURRENT_TASK.md`
 
 Do not edit relay/protocol/storage/signing/sync/deployment/node configuration.
@@ -134,18 +177,20 @@ Do not start Slice 5.
 All must be true before committing:
 
 1. `+` still locks the exact current center sight x/y and opens height mode first.
-2. At Ground, the draft placement remains visible.
-3. At ~3 m, ~10 m, ~23 m, ~30 m, ~100 m, and ~200 m, the actual world-space draft beacon is visible and clearly separate from the lever handle.
-4. For positive height, ground anchor + stem + top beacon are simultaneously understandable.
-5. The world anchor never moves when height changes.
-6. Building ghosting still permits reading top + bottom through/inside buildings.
-7. Draft visibility is robust at both desktop and mobile portrait sizes.
-8. Local lever remains near the placement and does not cover the beacon/stem/anchor.
-9. Height mapping/range/resolution remain unchanged.
-10. Done opens Write; Cancel writes nothing; controls/buildings restore correctly.
-11. Published atom rendering semantics are not globally changed in a misleading way.
-12. Board, Text, Settings, deep links, storage, signing, relay/sync remain unchanged.
-13. Version marker is exactly `pilot1-slice45c3-draft-visible-2026-08-29-1`.
+2. At Ground, the draft anchor/beacon is visible.
+3. At ~3 m, ~10 m, ~23 m, ~30 m, ~66 m, ~100 m, and ~200 m, **ground anchor + stem + top beacon are simultaneously inside the usable viewport and understandable**.
+4. At ~66 m, reproduce the human screenshot scenario and confirm the top atom no longer disappears above/outside the frame.
+5. Camera adjustment is calm and deterministic, with no jitter while dragging.
+6. The locked lon/lat never changes because of framing.
+7. The selected physical height never changes because of framing.
+8. Buildings remain ghosted during placement and restore afterward.
+9. Dedicated draft visibility layers remain effective through building geometry.
+10. Lever remains local and preferably follows the visible top beacon when height > 0; it does not hide the world-space atom.
+11. Ground/height mapping/range/resolution remain unchanged.
+12. Done opens Write; Cancel writes nothing; controls/buildings/camera UI state restore correctly.
+13. Published atom rendering semantics remain unchanged.
+14. Board, Text, Settings, deep links, storage, signing, relay/sync remain unchanged.
+15. Version marker is exactly `pilot1-slice45c4-relation-framing-2026-08-30-1`.
 
 ## Automated checks
 
@@ -173,30 +218,32 @@ git diff --check
 
 Where practical without publishing another atom:
 
-- desktop at a similar zoom/pitch to the human screenshot: press `+`, test Ground → 3 → 10 → 23 → 30 → 100 m and visually confirm the actual yellow world beacon remains present;
-- verify stem and ground anchor remain visible with it;
-- repeat over/inside a building with ghosting active;
-- confirm lever remains local but never covers the world beacon;
-- mobile portrait ~390×844 and narrow ~360 px: same basic visibility gate;
+- reproduce desktop placement around the same geometry/pitch as the human +66 m screenshot;
+- Ground → 3 → 10 → 23 → 30 → 66 → 100 → 200 m;
+- verify both endpoints and the stem remain inside the usable viewport at every step;
+- verify the camera widens/frames only as needed and does not jitter while the lever moves;
+- test inside/near a ghosted building;
+- mobile portrait ~390×844 and narrow ~360 px: test Ground, ~10, ~30, ~66, ~100 m;
+- verify lever remains associated with the visible atom and does not cover it;
 - Done → Write and Cancel restoration smoke test;
 - no uncaught MapLibre/deck.gl/module errors.
 
-Human visual acceptance on test1 remains required.
+Human visual/tactile acceptance on test1 remains required.
 
 ## Commit / push contract
 
 Before committing, change the first status line to exactly:
 
-`Status: **HOLD — Slice 4.5C3 implemented, awaiting CI/review**`
+`Status: **HOLD — Slice 4.5C4 implemented, awaiting CI/review**`
 
 Make one focused implementation commit with exactly:
 
-`fix(pilot1): keep placement atom visible`
+`fix(pilot1): keep height relation in frame`
 
 Then:
 1. commit only this fix + task status change;
 2. push to `origin/pilot-1`;
-3. report exact SHA, changed files, automated checks, browser checks, and any remaining visual uncertainty;
+3. report exact SHA, changed files, automated checks, browser checks, and remaining visual uncertainty;
 4. stop.
 
 Do **not** deploy. Do **not** start Slice 5. ChatGPT will review the exact pushed SHA and Pilot CI first.
