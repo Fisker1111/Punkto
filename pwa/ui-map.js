@@ -71,13 +71,6 @@ const SPATIAL_LOD = {
   stemZoom: 16,
 };
 const MAX_DRAFT_HEIGHT_M = 200;
-const HEIGHT_PLACEMENT_BASE_ZOOM = 16.1;
-const HEIGHT_PLACEMENT_MAX_ZOOM = 16.7;
-const HEIGHT_PLACEMENT_MIN_ZOOM = 14.25;
-const HEIGHT_PLACEMENT_CAMERA_MS = 150;
-const HEIGHT_PLACEMENT_CAMERA_MIN_INTERVAL_MS = 130;
-const HEIGHT_PLACEMENT_FRAMING_MARGIN_PX = 34;
-let heightPlacementLastCameraAt = 0;
 
 export function initMapView({
   mapStyle,
@@ -131,23 +124,19 @@ export function isMapLoaded() {
 
 export function enterHeightPlacementMode(draft) {
   heightPlacementActive = true;
-  heightPlacementLastCameraAt = 0;
   ghostBuildingLayersForPlacement();
-  easeCameraForHeightPlacement(draft);
   scheduleHeightPlacementProjection();
   renderAtoms().catch((err) => console.warn('[map-create] render placement failed:', err));
 }
 
 export function updateHeightPlacementDraft() {
   if (!heightPlacementActive) return;
-  easeCameraForHeightPlacement(_getPlacementDraft());
   scheduleHeightPlacementProjection();
   renderAtoms().catch((err) => console.warn('[map-create] render placement update failed:', err));
 }
 
 export function exitHeightPlacementMode() {
   heightPlacementActive = false;
-  heightPlacementLastCameraAt = 0;
   if (heightPlacementProjectionRaf) {
     cancelAnimationFrame(heightPlacementProjectionRaf);
     heightPlacementProjectionRaf = null;
@@ -320,29 +309,7 @@ export async function renderAtoms(newAtomIds = null) {
   let draftData = null;
   const placementDraft = _getPlacementDraft();
   if (placementDraft) {
-    const draftAlt = placementDraft.altitude_m || 0;
-    draftData = {
-      position: [placementDraft.lon, placementDraft.lat, draftAlt],
-      ground: [placementDraft.lon, placementDraft.lat, 0],
-      source: [placementDraft.lon, placementDraft.lat, 0],
-      target: [placementDraft.lon, placementDraft.lat, draftAlt],
-      color: rgba(DRAFT_COLOR, 255),
-      haloColor: rgba(DRAFT_COLOR, 148),
-      strokeColor: [255, 252, 212, 255],
-      ringColor: rgba(DRAFT_COLOR, 238),
-      stemColor: rgba(DRAFT_COLOR, 248),
-      casingColor: [8, 10, 14, 230],
-      width: 3.1,
-      selected: false,
-      hasHeight: draftAlt > 0,
-      selectionId: 'draft',
-      punkto: 'draft',
-      text: 'Placement preview',
-      f: 'draft',
-      t: Date.now(),
-      label: 'draft',
-      spatialLabel: formatDraftSpatialHeightLabel(draftAlt),
-    };
+    draftData = buildPlacementDraftRenderData(placementDraft);
   }
 
   const groundRingData = scatterData.filter(d =>
@@ -518,6 +485,35 @@ export function cancelPlacementDraftHeightDrag() {
   endDraftHeightDrag();
 }
 
+function buildPlacementDraftRenderData(placementDraft) {
+  const lon = Number(placementDraft?.lon);
+  const lat = Number(placementDraft?.lat);
+  if (!Number.isFinite(lon) || !Number.isFinite(lat)) return null;
+  const draftAlt = clampDraftHeight(placementDraft.altitude_m || 0);
+  return {
+    position: [lon, lat, draftAlt],
+    ground: [lon, lat, 0],
+    source: [lon, lat, 0],
+    target: [lon, lat, draftAlt],
+    color: rgba(DRAFT_COLOR, 255),
+    haloColor: rgba(DRAFT_COLOR, 172),
+    strokeColor: [255, 252, 212, 255],
+    ringColor: rgba(DRAFT_COLOR, 255),
+    stemColor: rgba(DRAFT_COLOR, 255),
+    casingColor: [8, 10, 14, 235],
+    width: 4,
+    selected: false,
+    hasHeight: draftAlt > 0,
+    selectionId: 'draft',
+    punkto: 'draft',
+    text: 'Placement preview',
+    f: 'draft',
+    t: Date.now(),
+    label: 'draft',
+    spatialLabel: formatDraftSpatialHeightLabel(draftAlt),
+  };
+}
+
 function appendDraftPlacementLayers(layers, draft, { ScatterplotLayer, LineLayer }) {
   const data = [draft];
   const renderParameters = draftPlacementRenderParameters();
@@ -555,10 +551,10 @@ function appendDraftPlacementLayers(layers, draft, { ScatterplotLayer, LineLayer
       data,
       getPosition: d => d.ground,
       getFillColor: d => d.casingColor,
-      getRadius: d => d.hasHeight ? 22 : 27,
+      getRadius: d => d.hasHeight ? 24 : 31,
       radiusUnits: 'pixels',
       radiusMinPixels: 16,
-      radiusMaxPixels: 34,
+      radiusMaxPixels: 40,
       pickable: false,
       parameters: renderParameters,
     }),
@@ -569,12 +565,12 @@ function appendDraftPlacementLayers(layers, draft, { ScatterplotLayer, LineLayer
       getFillColor: [255, 220, 80, 58],
       stroked: true,
       getLineColor: d => d.ringColor,
-      getLineWidth: 3,
+      getLineWidth: 3.6,
       lineWidthUnits: 'pixels',
-      getRadius: d => d.hasHeight ? 14 : 17,
+      getRadius: d => d.hasHeight ? 15 : 20,
       radiusUnits: 'pixels',
       radiusMinPixels: 10,
-      radiusMaxPixels: 26,
+      radiusMaxPixels: 30,
       pickable: false,
       parameters: renderParameters,
     }),
@@ -583,10 +579,10 @@ function appendDraftPlacementLayers(layers, draft, { ScatterplotLayer, LineLayer
       data,
       getPosition: d => d.position,
       getFillColor: d => d.casingColor,
-      getRadius: 28,
+      getRadius: 31,
       radiusUnits: 'pixels',
       radiusMinPixels: 20,
-      radiusMaxPixels: 38,
+      radiusMaxPixels: 42,
       pickable: false,
       parameters: renderParameters,
     }),
@@ -595,10 +591,10 @@ function appendDraftPlacementLayers(layers, draft, { ScatterplotLayer, LineLayer
       data,
       getPosition: d => d.position,
       getFillColor: d => d.haloColor,
-      getRadius: 24,
+      getRadius: 27,
       radiusUnits: 'pixels',
       radiusMinPixels: 17,
-      radiusMaxPixels: 34,
+      radiusMaxPixels: 38,
       pickable: false,
       parameters: renderParameters,
     }),
@@ -609,12 +605,12 @@ function appendDraftPlacementLayers(layers, draft, { ScatterplotLayer, LineLayer
       getFillColor: d => d.color,
       stroked: true,
       getLineColor: d => d.strokeColor,
-      getLineWidth: 3.2,
+      getLineWidth: 3.8,
       lineWidthUnits: 'pixels',
-      getRadius: 15,
+      getRadius: 18,
       radiusUnits: 'pixels',
-      radiusMinPixels: 10,
-      radiusMaxPixels: 27,
+      radiusMinPixels: 12,
+      radiusMaxPixels: 31,
       pickable: true,
       autoHighlight: true,
       highlightColor: [255, 255, 130, 255],
@@ -843,131 +839,6 @@ function initMap() {
     if (_onShowOnboarding) _onShowOnboarding();
   });
   return map;
-}
-
-function easeCameraForHeightPlacement(draft) {
-  if (!map || !draft) return;
-  if (!Number.isFinite(Number(draft.lon)) || !Number.isFinite(Number(draft.lat))) return;
-  const projected = projectHeightPlacementEndpoints(draft);
-  const safeRect = getHeightPlacementSafeRect(projected?.rect);
-  if (!projected || !safeRect) return;
-
-  const currentPitch = typeof map.getPitch === 'function' ? map.getPitch() : 0;
-  const currentZoom = typeof map.getZoom === 'function' ? map.getZoom() : 0;
-  const height = clampDraftHeight(draft.altitude_m || 0);
-  const targetPitch = height >= 120 ? 46 : (height >= 70 ? 50 : Math.max(currentPitch, 54));
-  const targetZoom = heightAwarePlacementZoom(height, currentZoom, projected, safeRect);
-  const shift = requiredPlacementScreenShift(projected, safeRect);
-  const shouldMove = Math.abs(shift.x) > 12 || Math.abs(shift.y) > 12;
-  const shouldZoom = Math.abs(targetZoom - currentZoom) > 0.08;
-  const shouldPitch = Math.abs(targetPitch - currentPitch) > 2;
-  if (!shouldMove && !shouldZoom && !shouldPitch) return;
-
-  const now = performance.now?.() || Date.now();
-  if (heightPlacementLastCameraAt && now - heightPlacementLastCameraAt < HEIGHT_PLACEMENT_CAMERA_MIN_INTERVAL_MS) return;
-  heightPlacementLastCameraAt = now;
-
-  let center = [draft.lon, draft.lat];
-  if (shouldMove) {
-    center = shiftedMapCenter(shift) || center;
-  }
-  const reduceMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
-  try {
-    map.easeTo({
-      center,
-      pitch: targetPitch,
-      bearing: map.getBearing(),
-      zoom: targetZoom,
-      duration: reduceMotion ? 0 : HEIGHT_PLACEMENT_CAMERA_MS,
-      essential: false,
-    });
-    setTimeout(() => {
-      if (!heightPlacementActive) return;
-      easeCameraForHeightPlacement(_getPlacementDraft());
-      scheduleHeightPlacementProjection();
-    }, (reduceMotion ? 0 : HEIGHT_PLACEMENT_CAMERA_MS) + 40);
-  } catch (err) {
-    console.warn('[map-create] height placement camera failed:', err);
-  }
-}
-
-function heightAwarePlacementZoom(height, currentZoom, projected, safeRect) {
-  const h = clampDraftHeight(height);
-  let desired = currentZoom;
-  if (h <= 30) desired = Math.min(currentZoom, HEIGHT_PLACEMENT_MAX_ZOOM);
-  else if (h <= 100) desired = Math.min(currentZoom, 16.15 - ((h - 30) / 70) * 0.9);
-  else desired = Math.min(currentZoom, 15.25 - ((h - 100) / 100) * 0.8);
-  if (h <= 4 && currentZoom < HEIGHT_PLACEMENT_BASE_ZOOM) desired = Math.min(HEIGHT_PLACEMENT_BASE_ZOOM, HEIGHT_PLACEMENT_MAX_ZOOM);
-
-  const spanY = Math.abs(projected.top.y - projected.ground.y);
-  const safeHeight = Math.max(1, safeRect.bottom - safeRect.top);
-  if (spanY > safeHeight * 0.82) {
-    const ratio = spanY / (safeHeight * 0.70);
-    desired = Math.min(desired, currentZoom - Math.min(1.2, Math.log2(Math.max(1.01, ratio))));
-  }
-  return Math.min(HEIGHT_PLACEMENT_MAX_ZOOM, Math.max(HEIGHT_PLACEMENT_MIN_ZOOM, desired));
-}
-
-function requiredPlacementScreenShift(projected, safeRect) {
-  const points = [projected.ground, projected.top];
-  const minX = Math.min(...points.map((p) => p.x));
-  const maxX = Math.max(...points.map((p) => p.x));
-  const minY = Math.min(...points.map((p) => p.y));
-  const maxY = Math.max(...points.map((p) => p.y));
-  let x = 0;
-  let y = 0;
-  if (minX < safeRect.left) x = safeRect.left - minX;
-  else if (maxX > safeRect.right) x = safeRect.right - maxX;
-  if (minY < safeRect.top) y = safeRect.top - minY;
-  else if (maxY > safeRect.bottom) y = safeRect.bottom - maxY;
-  return { x, y };
-}
-
-function shiftedMapCenter(shift) {
-  if (!map || !shift || (!shift.x && !shift.y)) return null;
-  try {
-    const rect = map.getContainer()?.getBoundingClientRect?.();
-    if (!rect || !map.unproject) return null;
-    const centerPoint = { x: rect.width / 2, y: rect.height / 2 };
-    const lngLat = map.unproject([centerPoint.x - shift.x, centerPoint.y - shift.y]);
-    if (!lngLat || !Number.isFinite(lngLat.lng) || !Number.isFinite(lngLat.lat)) return null;
-    return [lngLat.lng, lngLat.lat];
-  } catch {
-    return null;
-  }
-}
-
-function getHeightPlacementSafeRect(mapRect = null) {
-  const rect = mapRect || map?.getContainer()?.getBoundingClientRect?.();
-  if (!rect) return null;
-  const readoutRect = document.querySelector('.height-placement-readout')?.getBoundingClientRect?.();
-  const actionsRect = document.querySelector('.height-placement-actions')?.getBoundingClientRect?.();
-  const leverRect = document.getElementById('height-lever')?.getBoundingClientRect?.();
-  const margin = HEIGHT_PLACEMENT_FRAMING_MARGIN_PX;
-  const width = rect.width;
-  const height = rect.height;
-  let top = margin;
-  let bottom = height - margin;
-  if (readoutRect) top = Math.max(top, readoutRect.bottom - rect.top + margin);
-  if (actionsRect) bottom = Math.min(bottom, actionsRect.top - rect.top - margin);
-
-  let left = margin;
-  let right = width - margin;
-  if (leverRect && leverRect.width > 0 && leverRect.height > 0) {
-    const leverLeft = leverRect.left - rect.left;
-    const leverRight = leverRect.right - rect.left;
-    if (leverLeft > width / 2) right = Math.min(right, leverLeft - margin);
-    else left = Math.max(left, leverRight + margin);
-  }
-  if (right - left < 160) {
-    left = margin;
-    right = width - margin;
-  }
-  if (bottom - top < 180) {
-    top = margin;
-    bottom = height - margin;
-  }
-  return { left, right, top, bottom };
 }
 
 function projectHeightPlacementEndpoints(draft) {
