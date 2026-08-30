@@ -26,7 +26,7 @@ Do not start Slice 5 until this is fixed and human-verified.
 
 Start from exact current `pilot-1` HEAD:
 
-`eb56a1efa7e427e5748dcd9a04de9aee8108df30`
+`8fedc635295609181d942ffbfb7c4c0e23d68286`
 
 Deployed application baseline under test:
 
