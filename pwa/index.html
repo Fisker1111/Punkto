@@ -90,21 +90,21 @@
       position: fixed;
       top: 10px; left: 50%;
       transform: translateX(-50%);
-      height: 34px;
-      background: var(--surface);
-      backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
-      border: 1px solid var(--border);
+      height: 30px;
+      background: rgba(18, 26, 40, 0.54);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border: 1px solid rgba(35,70,112,0.12);
       border-radius: 999px;
       display: flex;
       align-items: center;
-      padding: 0 12px;
-      gap: 12px;
+      padding: 0 10px;
+      gap: 10px;
       z-index: 200;
       pointer-events: none;
     }
     #topbar .brand {
-      font-size: 18px;
+      font-size: 15px;
       font-weight: 700;
       color: var(--text);
       letter-spacing: 0.02em;
@@ -115,10 +115,10 @@
     }
     #topbar .brand::before {
       content: '';
-      width: 8px; height: 8px;
+      width: 7px; height: 7px;
       background: linear-gradient(90deg, #0ca8ff 0%, #3bb9ff 100%);
       border-radius: 50%;
-      box-shadow: 0 0 10px var(--accent-glow);
+      box-shadow: 0 0 8px var(--accent-glow);
     }
     #atom-count {
       font-size: 12px;
@@ -143,117 +143,144 @@
     /* ── Shared navigation buttons ──────────────────────────── */
     #bottom-nav {
       position: fixed;
-      left: 12px; right: 12px;
-      bottom: calc(10px + var(--safe-b));
-      height: var(--nav-h);
-      padding-bottom: 0;
-      background: var(--surface);
-      backdrop-filter: blur(16px);
-      -webkit-backdrop-filter: blur(16px);
-      border: 1px solid var(--border);
-      border-radius: var(--radius-xl);
-      box-shadow: var(--shadow-float);
-      display: flex;
-      align-items: stretch;
+      left: max(14px, env(safe-area-inset-left, 0px));
+      right: auto;
+      bottom: calc(14px + var(--safe-b));
+      width: min(306px, calc(100vw - 28px));
+      display: grid;
+      grid-template-columns: repeat(3, minmax(74px, 1fr));
+      grid-template-areas:
+        "text map settings"
+        "add add add";
+      gap: 8px;
+      align-items: end;
       z-index: 200;
+      pointer-events: none;
     }
     #side-rail-nav { display: none; }
     .nav-btn {
-      background: none;
-      border: none;
+      min-width: 44px;
+      min-height: 44px;
+      background: rgba(16, 24, 36, 0.42);
+      border: 1px solid rgba(120, 150, 190, 0.18);
+      border-radius: var(--radius-md);
       color: var(--text-dim);
       cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
       font-size: 13px;
-      font-weight: 500;
-      letter-spacing: 0.03em;
-      transition: color 0.15s;
+      font-weight: 650;
+      letter-spacing: 0;
+      transition: background 0.15s, border-color 0.15s, box-shadow 0.15s, color 0.15s, transform 0.12s;
       position: relative;
       font-family: inherit;
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      box-shadow: 0 10px 24px rgba(6, 12, 20, 0.22);
+      pointer-events: auto;
     }
-    .nav-btn:active { opacity: 0.6; }
-    .nav-view { flex: 35; }
-    .nav-add  { flex: 15; }
-    .nav-settings-btn { flex: 15; font-size: 13px; letter-spacing: 0.02em; }
+    .nav-btn:hover,
+    .nav-btn:focus-visible {
+      color: var(--text);
+      border-color: rgba(120, 164, 215, 0.34);
+      background: rgba(22, 32, 48, 0.56);
+    }
+    .nav-btn:focus-visible {
+      outline: 2px solid rgba(59, 185, 255, 0.72);
+      outline-offset: 3px;
+    }
+    .nav-btn:active { transform: translateY(1px); opacity: 0.82; }
+    .nav-view { flex: none; }
+    #nav-text, #nav-rail-text { grid-area: text; }
+    #nav-map, #nav-rail-map { grid-area: map; }
+    #nav-settings, #nav-rail-settings { grid-area: settings; }
+    .nav-add  { grid-area: add; }
+    .nav-settings-btn { flex: none; font-size: 12px; letter-spacing: 0; }
 
-    .nav-view.active { color: var(--accent); }
+    .nav-view.active {
+      color: #d8f3ff;
+      background: rgba(11,157,255,0.13);
+      border-color: rgba(59,185,255,0.34);
+    }
     .nav-view.active::before {
       top: auto; bottom: 6px;
       content: '';
       position: absolute;
-      left: 24%; right: 24%;
+      left: 14px; right: 14px;
       height: 2px;
       background: linear-gradient(90deg, #0ca8ff 0%, #3bb9ff 100%);
-      border-radius: 0 0 2px 2px;
-      box-shadow: 0 0 8px var(--accent-glow);
+      border-radius: var(--radius-pill);
+      box-shadow: 0 0 8px rgba(11,157,255,0.18);
     }
 
     /* + button — pill style */
-    .nav-add { font-size: 0; }
+    .nav-add {
+      min-height: 68px;
+      background: linear-gradient(180deg, rgba(60,190,255,0.98) 0%, rgba(11,132,230,0.98) 100%);
+      border-color: rgba(208, 244, 255, 0.58);
+      border-radius: 22px;
+      color: #ffffff;
+      font-size: 0;
+      box-shadow: 0 16px 34px rgba(7, 28, 46, 0.42), 0 0 0 1px rgba(255,255,255,0.16) inset, 0 0 26px rgba(11,157,255,0.28);
+    }
     .nav-add::after {
       content: '+';
-      width: 42px; height: 42px;
-      background: linear-gradient(90deg, #0ca8ff 0%, #3bb9ff 100%);
+      width: 64px; height: 64px;
+      background: transparent;
       border-radius: 50%;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 24px;
-      font-weight: 300;
+      font-size: 46px;
+      line-height: 1;
+      font-weight: 320;
       color: #ffffff;
-      box-shadow: 0 4px 16px var(--accent-glow);
+      text-shadow: 0 1px 0 rgba(0,0,0,0.18), 0 0 18px rgba(255,255,255,0.24);
       transition: transform 0.12s;
     }
+    .nav-add:hover,
+    .nav-add:focus-visible {
+      background: linear-gradient(180deg, rgba(80,202,255,1) 0%, rgba(12,150,246,1) 100%);
+      border-color: rgba(232, 250, 255, 0.78);
+      box-shadow: 0 18px 38px rgba(7, 28, 46, 0.48), 0 0 0 1px rgba(255,255,255,0.2) inset, 0 0 30px rgba(11,157,255,0.34);
+    }
     .nav-add:active::after { transform: scale(0.92); }
-    .nav-settings-btn:hover, .nav-settings-btn:focus-visible { color: var(--text); }
+    .nav-settings-btn.active {
+      color: var(--text);
+      background: rgba(255,255,255,0.08);
+      border-color: rgba(180, 210, 243, 0.28);
+    }
 
     /* ── Desktop/tablet floating side rail ─────────────────── */
     #side-rail-nav {
       position: fixed;
       left: 20px;
-      top: 50%;
-      transform: translateY(-50%);
+      bottom: 20px;
       z-index: 210;
-      background: var(--surface);
-      backdrop-filter: blur(16px);
-      -webkit-backdrop-filter: blur(16px);
-      border: 1px solid rgba(35,70,112,0.14);
-      border-radius: 20px;
-      padding: 10px;
-      gap: 8px;
-      width: 84px;
+      width: 288px;
       display: none;
-      flex-direction: column;
-      align-items: stretch;
-      box-shadow: 0 18px 40px rgba(25,64,106,0.2);
+      grid-template-columns: repeat(3, minmax(74px, 1fr));
+      grid-template-areas:
+        "text map settings"
+        "add add add";
+      gap: 8px;
+      align-items: end;
+      pointer-events: none;
     }
     .rail-btn {
       min-height: 44px;
-      border-radius: var(--radius-md);
       font-size: 12px;
-      letter-spacing: 0.02em;
-    }
-    .rail-btn.nav-view.active {
-      background: rgba(11,157,255,0.14);
-      color: var(--accent);
     }
     .rail-btn.nav-view.active::before {
-      top: auto; bottom: 6px; display: none; }
-    .rail-btn.nav-add::after { width: 38px; height: 38px; }
-    .rail-btn.nav-settings-btn {
-      font-size: 11px;
-      color: var(--text-mid);
+      top: auto;
+      bottom: 6px;
     }
-    .rail-btn.nav-settings-btn.active {
-      color: var(--text);
-      background: rgba(255,255,255,0.08);
-    }
+    .rail-btn.nav-add { min-height: 70px; }
 
     @media (min-width: 900px) {
       #bottom-nav { display: none; }
-      #side-rail-nav { display: flex; }
+      #side-rail-nav { display: grid; }
       #map { bottom: 0 !important; }
       #map.panel-open { bottom: 0; }
       #leader-lines { bottom: 0; }
@@ -293,10 +320,10 @@
       position: fixed;
       top: 0;
       left: 0; right: 0;
-      bottom: calc(var(--nav-h) + var(--safe-b));
+      bottom: 0;
       z-index: 10;
     }
-    #map.panel-open { bottom: calc(var(--panel-h) + var(--nav-h) + var(--safe-b)); }
+    #map.panel-open { bottom: 0; }
 
     /* ── Crosshair (map only) ───────────────────────────────── */
     #crosshair {
@@ -308,14 +335,24 @@
       display: flex;
       flex-direction: column;
       align-items: center;
+      width: 32px;
+      height: 32px;
+      border: 1px solid rgba(255,255,255,0.72);
+      border-radius: 50%;
+      box-shadow: 0 0 0 4px rgba(8, 18, 28, 0.16), 0 0 18px rgba(12, 168, 255, 0.18);
     }
     #crosshair::before, #crosshair::after {
       content: '';
       position: absolute;
-      background: rgba(0,212,255,0.7);
+      background: rgba(12,168,255,0.82);
+      border-radius: var(--radius-pill);
+      box-shadow: 0 0 0 1px rgba(255,255,255,0.18);
     }
-    #crosshair::before { width: 1px; height: 22px; top: -11px; left: 0; }
-    #crosshair::after  { width: 22px; height: 1px; left: -11px; top: 0; }
+    #crosshair::before { width: 2px; height: 18px; top: 6px; left: 14px; }
+    #crosshair::after  { width: 18px; height: 2px; left: 6px; top: 14px; }
+    #crosshair {
+      background: radial-gradient(circle, rgba(255,255,255,0.92) 0 2px, rgba(12,168,255,0.45) 3px, transparent 4px);
+    }
     #crosshair-readout {
       position: fixed;
       left: 50%;
@@ -335,7 +372,7 @@
       position: fixed;
       top: 0;
       left: 0; right: 0;
-      bottom: calc(var(--nav-h) + var(--safe-b));
+      bottom: 0;
       z-index: 15;
       pointer-events: none;
     }
@@ -439,7 +476,7 @@
       position: fixed;
       top: 0;
       left: 0; right: 0;
-      bottom: calc(var(--nav-h) + var(--safe-b));
+      bottom: 0;
       overflow-y: auto;
       z-index: 10;
     }
@@ -605,6 +642,55 @@
     .board-reply-status.success { color:var(--success); font-weight:700; }
     .board-reply-status.error { color:#9f2d24; font-weight:700; }
     .reply-toast span { font-size: 12px; color: var(--text-mid); line-height: 1.35; }
+
+    #map-board-sheet {
+      position: fixed;
+      left: 0;
+      right: 0;
+      bottom: calc(132px + var(--safe-b));
+      z-index: 140;
+      display: none;
+      max-height: min(62vh, 560px);
+      padding: 0 12px;
+      pointer-events: none;
+    }
+    #map-board-sheet.open { display: block; }
+    #map-board-sheet .board-detail {
+      width: min(100%, 760px);
+      max-height: min(62vh, 560px);
+      margin: 0 auto;
+      padding: 12px;
+      overflow-y: auto;
+      pointer-events: auto;
+      border: 1px solid rgba(120,150,190,0.28);
+      border-radius: 18px 18px 12px 12px;
+      background: rgba(12, 18, 28, 0.88);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+      box-shadow: var(--shadow-panel);
+    }
+    #map-board-sheet .board-root .main-card-title { font-size: 20px; line-height: 1.25; }
+    #map-board-sheet .board-root .board-body { font-size: 16px; line-height: 1.65; }
+    #map-board-sheet .main-card { box-shadow: none; }
+    #map-board-sheet .board-back { position: sticky; top: 0; z-index: 1; }
+    body.page-text #map-board-sheet { display: none !important; }
+
+    @media (min-width: 900px) {
+      #map-board-sheet {
+        left: 20px;
+        right: 20px;
+        bottom: 20px;
+        top: 76px;
+        padding: 0;
+      }
+      #map-board-sheet .board-detail {
+        margin-left: auto;
+        margin-right: 0;
+        width: min(424px, calc(100vw - 40px));
+        max-height: calc(100vh - 96px);
+        border-radius: 14px;
+      }
+    }
 
     /* Phase 2 token-aligned aliases */
     .ui-card { background: linear-gradient(180deg, var(--surface-strong), var(--surface)); border: 1px solid var(--border2); border-radius: 16px; }
@@ -889,6 +975,29 @@
     .hint-plus { color: var(--accent); font-weight: 700; font-size: 14px; }
     @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
 
+    /* ── Pilot_1 Slice 1: empty-map invitation ─────────────── */
+    /* Lightweight screen-space overlay. Never covers the map or competes
+       with `+`. Hidden on Text page via the view-switch rules below. */
+    #map-empty-hint {
+      position: fixed;
+      left: 50%;
+      bottom: calc(var(--nav-h) + var(--safe-b) + 18px);
+      transform: translateX(-50%);
+      background: var(--surface);
+      border: 1px solid var(--border2);
+      border-radius: 999px;
+      padding: 8px 18px;
+      font-size: 13px;
+      color: var(--text-mid);
+      z-index: 55;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+      white-space: nowrap;
+    }
+    #map-empty-hint.open { opacity: 1; }
+    body.page-text #map-empty-hint { display: none !important; }
+
     /* ── Settings panel (slide up) ──────────────────────────── */
     /* Reusable component tokens */
     .ui-card { border: 1px solid var(--border2); border-radius: var(--radius-lg); background: linear-gradient(180deg, var(--surface-strong), var(--surface-soft)); box-shadow: var(--shadow-soft); }
@@ -903,7 +1012,7 @@
 
     #settings-menu {
       position: fixed;
-      left: 0; right: 0; bottom: calc(var(--nav-h) + var(--safe-b));
+      left: 0; right: 0; bottom: 0;
       max-height: 78vh;
       background: rgba(18, 32, 52, 0.88);
       border-top: 1px solid rgba(132, 176, 225, 0.38);
@@ -1120,6 +1229,185 @@
       justify-content: center;
     }
     .modal-overlay.open { display: flex; }
+    #modal-overlay.open {
+      background: transparent;
+      backdrop-filter: none;
+      pointer-events: none;
+    }
+    #modal-overlay.height-placement-open {
+      z-index: 260;
+    }
+    #modal-overlay.open .modal-box { pointer-events: auto; }
+    #modal-overlay.height-placement-open .modal-box { display: none; }
+    body.create-height-placement-open #bottom-nav,
+    body.create-height-placement-open #side-rail-nav,
+    body.create-height-placement-open #topbar,
+    body.create-height-placement-open #toggle-3d,
+    body.create-height-placement-open #onboarding-hint,
+    body.create-height-placement-open #map-empty-hint,
+    body.create-height-placement-open #crosshair,
+    body.create-height-placement-open #panel,
+    body.create-height-placement-open #map-board-sheet,
+    body.create-height-placement-open .maplibregl-ctrl-top-left,
+    body.create-height-placement-open .maplibregl-ctrl-top-right,
+    body.create-height-placement-open .maplibregl-ctrl-bottom-left .maplibregl-ctrl:not(.maplibregl-ctrl-attrib),
+    body.create-height-placement-open .maplibregl-ctrl-bottom-right .maplibregl-ctrl:not(.maplibregl-ctrl-attrib),
+    body.create-height-placement-open #crosshair-readout {
+      opacity: 0;
+      pointer-events: none;
+    }
+    #map.draft-height-dragging,
+    #map.draft-height-dragging canvas {
+      cursor: ns-resize;
+      touch-action: none;
+    }
+
+    .height-placement {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 410;
+    }
+    .height-placement[hidden] { display: none !important; }
+    .height-placement-readout {
+      position: fixed;
+      top: calc(12px + env(safe-area-inset-top, 0px));
+      left: 50%;
+      transform: translateX(-50%);
+      min-width: 96px;
+      padding: 6px 10px;
+      border: 1px solid rgba(255,220,80,0.20);
+      border-radius: 10px;
+      background: rgba(13,18,26,0.58);
+      color: var(--text);
+      box-shadow: 0 8px 20px rgba(0,0,0,0.28);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      text-align: center;
+      pointer-events: none;
+    }
+    .height-placement-kicker {
+      display: block;
+      margin-bottom: 2px;
+      font-size: 9px;
+      font-weight: 700;
+      color: rgba(255,246,190,0.58);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+    .height-placement-readout strong {
+      display: block;
+      font-size: 13px;
+      line-height: 1.2;
+      color: rgba(255,242,166,0.92);
+      white-space: nowrap;
+    }
+    .height-lever {
+      position: fixed;
+      right: max(18px, env(safe-area-inset-right, 0px));
+      top: 50%;
+      transform: translateY(-50%);
+      width: 104px;
+      height: min(58vh, 430px);
+      min-height: 300px;
+      pointer-events: auto;
+      touch-action: none;
+      user-select: none;
+    }
+    .height-lever-track {
+      position: absolute;
+      top: 16px;
+      bottom: 16px;
+      right: 20px;
+      width: 10px;
+      border-radius: var(--radius-pill);
+      background: rgba(9,13,20,0.68);
+      border: 1px solid rgba(255,255,255,0.14);
+      box-shadow: inset 0 0 0 1px rgba(0,0,0,0.22), 0 10px 24px rgba(0,0,0,0.34);
+    }
+    .height-lever-track::before {
+      content: '';
+      position: absolute;
+      left: -8px;
+      right: -8px;
+      top: 42%;
+      border-top: 1px solid rgba(255,255,255,0.22);
+    }
+    .height-lever-meter {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      height: 0%;
+      border-radius: var(--radius-pill);
+      background: linear-gradient(180deg, #7fe4ff 0%, #2ac2ff 42%, #0b9dff 100%);
+      box-shadow: 0 0 16px rgba(42,194,255,0.22);
+    }
+    .height-lever-handle {
+      position: absolute;
+      left: 50%;
+      bottom: 0%;
+      transform: translate(-50%, 50%);
+      width: 52px;
+      height: 52px;
+      border-radius: 50%;
+      border: 2px solid rgba(212,246,255,0.92);
+      background: linear-gradient(180deg, rgba(22,42,58,0.96) 0%, rgba(9,18,30,0.96) 100%);
+      box-shadow: 0 12px 28px rgba(0,0,0,0.46), 0 0 0 6px rgba(42,194,255,0.16), 0 0 18px rgba(42,194,255,0.24);
+      cursor: ns-resize;
+      touch-action: none;
+    }
+    .height-lever-handle::before {
+      content: '';
+      position: absolute;
+      inset: 18px 13px;
+      border-top: 2px solid rgba(212,246,255,0.72);
+      border-bottom: 2px solid rgba(212,246,255,0.72);
+    }
+    .height-lever-label {
+      position: absolute;
+      right: 44px;
+      padding: 4px 7px;
+      border-radius: var(--radius-sm);
+      background: rgba(13,18,26,0.68);
+      color: rgba(244,249,255,0.76);
+      font-size: 11px;
+      font-weight: 600;
+      line-height: 1;
+      white-space: nowrap;
+    }
+    .height-lever-label-top { top: 10px; }
+    .height-lever-label-mid { top: 42%; }
+    .height-lever-label-bottom { bottom: 10px; }
+    .height-placement-actions {
+      position: fixed;
+      left: 50%;
+      bottom: calc(18px + var(--safe-b));
+      transform: translateX(-50%);
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      padding: 8px;
+      border: 1px solid var(--border2);
+      border-radius: var(--radius-md);
+      background: rgba(11,16,24,0.76);
+      box-shadow: var(--shadow-float);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      pointer-events: auto;
+    }
+    #modal-placement-summary {
+      display: inline-flex;
+      width: fit-content;
+      margin-bottom: 8px;
+      padding: 5px 9px;
+      border: 1px solid rgba(255,220,80,0.28);
+      border-radius: var(--radius-sm);
+      background: rgba(255,220,80,0.09);
+      color: #fff2a6;
+      font-size: 12px;
+      font-weight: 700;
+    }
 
     .modal-box {
       background: var(--surface);
@@ -1151,7 +1439,7 @@
 
     .modal-box textarea {
       width: 100%;
-      min-height: 88px;
+      min-height: 118px;
       background: var(--surface2);
       border: 1px solid var(--border2);
       border-radius: 10px;
@@ -1176,8 +1464,9 @@
     .modal-box input[type="text"]:focus, .modal-box input[type="number"]:focus, .modal-box select:focus {
       outline: none; border-color: var(--accent-dim);
     }
-    #modal-category-row { margin: 10px 0 12px; display: flex; flex-direction: column; gap: 6px; }
-    #modal-author-row { margin-bottom: 14px; }
+    #modal-category-row { margin: 0 0 12px; display: flex; flex-direction: column; gap: 6px; }
+    #modal-category-row label { font-size: 12px; color: var(--text-mid); }
+    #modal-author-row { margin-top: 12px; }
     #modal-author { width: 100%; }
 
     #ack-banner {
@@ -1199,29 +1488,31 @@
       padding: 10px 14px;
       font-size: 12px;
       color: #ff8888;
-      margin-bottom: 14px;
+      margin-bottom: 12px;
       display: flex;
       gap: 8px;
       align-items: flex-start;
     }
     #modal-notice .icon { flex-shrink: 0; }
 
-    #modal-altitude {
+    #modal-options {
       margin-bottom: 14px;
       padding: 14px;
       background: var(--surface2);
       border-radius: 10px;
     }
+    #modal-options[open] { border: 1px solid var(--border2); }
+    #modal-altitude { margin-top: 12px; }
     #modal-altitude > div strong { font-size: 12px; color: var(--text-dim); }
     #modal-altitude-primary { font-size: 14px; font-weight: 600; color: var(--accent); margin: 4px 0; }
     #modal-altitude-secondary { font-size: 11px; color: var(--text-dim); margin-bottom: 8px; }
     #modal-altitude-hint { font-size: 10px; color: var(--text-dim); }
     #modal-altitude-slider { width: 100%; margin: 8px 0; accent-color: var(--accent); }
-    details#modal-altitude > summary { cursor: pointer; list-style: none; display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 13px; font-weight: 600; color: var(--text); }
-    details#modal-altitude > summary::-webkit-details-marker { display: none; }
-    details#modal-altitude > summary::after { content: '\25B8'; color: var(--text-dim); transition: transform .15s ease; }
-    details#modal-altitude[open] > summary::after { transform: rotate(90deg); }
-    details#modal-altitude[open] > summary { margin-bottom: 8px; }
+    details#modal-options > summary { cursor: pointer; list-style: none; display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 13px; font-weight: 600; color: var(--text); }
+    details#modal-options > summary::-webkit-details-marker { display: none; }
+    details#modal-options > summary::after { content: '\25B8'; color: var(--text-dim); transition: transform .15s ease; }
+    details#modal-options[open] > summary::after { transform: rotate(90deg); }
+    details#modal-options[open] > summary { margin-bottom: 8px; }
     .modal-adjust-hint { font-size: 11px; font-weight: 400; color: var(--text-dim); }
 
     #modal-placement-modes { display: flex; gap: 6px; flex-wrap: wrap; margin: 8px 0; }
@@ -1248,6 +1539,11 @@
       color: #ffffff;
       border-color: var(--accent);
       font-weight: 600;
+    }
+    .btn:disabled {
+      cursor: not-allowed;
+      opacity: 0.48;
+      transform: none;
     }
     .btn-secondary:hover { border-color: var(--text-dim); color: var(--text); }
 
@@ -1543,6 +1839,14 @@
     <div class="hint-text">Move the map, choose a place, then tap <span class="hint-plus">+</span> to write a Punkti.</div>
   </div>
 
+  <!-- ── Pilot_1 Slice 1: empty-map invitation (screen-space, non-covering) -->
+  <div id="map-empty-hint" aria-hidden="true">
+    <div class="map-empty-text">Leave the first note here.</div>
+  </div>
+
+  <!-- Pilot_1 Slice 3: selected map atom board sheet -->
+  <section id="map-board-sheet" aria-live="polite" aria-hidden="true"></section>
+
   <!-- ── Nearby panel ─────────────────────────────────────── -->
   <div id="panel" role="complementary" aria-label="Nearby Punkti">
     <div id="panel-header">
@@ -1557,8 +1861,29 @@
 
   <!-- ── Write Punkti modal ───────────────────────────────────── -->
   <div id="modal-overlay" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+    <section id="height-placement" class="height-placement" aria-label="Choose height" aria-hidden="true" hidden>
+      <div class="height-placement-readout">
+        <span class="height-placement-kicker">Height</span>
+        <strong id="height-placement-readout">Ground</strong>
+      </div>
+      <div id="height-lever" class="height-lever" aria-label="Height lever">
+        <div class="height-lever-label height-lever-label-top">200 m</div>
+        <div class="height-lever-label height-lever-label-mid">30 m</div>
+        <div class="height-lever-label height-lever-label-bottom">Ground</div>
+        <div class="height-lever-track">
+          <div id="height-lever-meter" class="height-lever-meter"></div>
+          <button id="height-lever-handle" class="height-lever-handle" type="button" role="slider" aria-label="Height" aria-valuemin="0" aria-valuemax="200" aria-valuenow="0" aria-valuetext="Ground"></button>
+        </div>
+      </div>
+      <div class="height-placement-actions">
+        <button class="btn btn-secondary" id="height-placement-cancel" type="button">Cancel</button>
+        <button class="btn btn-secondary" id="height-placement-ground" type="button">Ground</button>
+        <button class="btn btn-primary" id="height-placement-done" type="button">Done</button>
+      </div>
+    </section>
     <div id="modal" class="modal-box">
       <h2 id="modal-title">Write Punkti</h2>
+      <div id="modal-placement-summary">Ground</div>
       <div id="modal-location">…</div>
       <!-- First-use public-data acknowledgement banner (hidden after first ack) -->
       <div id="ack-banner" style="display:none" role="alertdialog" aria-labelledby="ack-title" aria-describedby="ack-body">
@@ -1569,6 +1894,7 @@
       <div id="modal-notice">
         <span class="icon">⚠</span>Public &amp; permanent — atoms may be retained by other nodes. Do not post secrets or sensitive personal information.
       </div>
+      <textarea id="modal-text" placeholder="What should people know here?"></textarea>
       <div id="modal-category-row">
         <label for="modal-category"><strong>Category</strong></label>
         <select id="modal-category">
@@ -1581,12 +1907,17 @@
         </select>
         <div id="modal-emergency-hint" style="display:none;font-size:12px;color:var(--text-dim);margin-top:6px;">Public urgent post — not a replacement for calling emergency services.</div>
       </div>
-      <details id="modal-altitude" class="modal-adjust">
-        <summary><span class="modal-adjust-label">Adjust height</span><span class="modal-adjust-hint">optional · defaults to ground</span></summary>
-        <div id="modal-altitude-primary">Ground level</div>
-        <input id="modal-altitude-slider" type="range" min="0" max="100" step="1" value="0" />
-        <div id="modal-altitude-secondary">+0 m above ground</div>
-        <div id="modal-altitude-hint"></div>
+      <details id="modal-options" class="modal-adjust">
+        <summary><span class="modal-adjust-label">Location &amp; options</span><span class="modal-adjust-hint">ground by default</span></summary>
+        <div id="modal-author-row">
+          <input id="modal-author" type="text" placeholder="your name / handle (optional)" />
+        </div>
+        <div id="modal-altitude">
+          <div id="modal-altitude-primary">Ground level</div>
+          <input id="modal-altitude-slider" type="range" min="0" max="100" step="1" value="0" />
+          <div id="modal-altitude-secondary">+0 m above ground</div>
+          <div id="modal-altitude-hint"></div>
+        </div>
         <div id="modal-placement-controls">
           <div id="modal-placement-modes">
             <button class="btn btn-secondary" id="modal-ground-btn" type="button">Ground</button>
@@ -1605,14 +1936,10 @@
           </div>
         </div>
       </details>
-      <textarea id="modal-text" placeholder="Write a note for this place (optional)"></textarea>
-      <div id="modal-author-row">
-        <input id="modal-author" type="text" placeholder="your name / handle (optional)" />
-      </div>
       <div id="modal-error"></div>
       <div id="modal-actions">
         <button class="btn btn-secondary" id="modal-cancel">Cancel</button>
-        <button class="btn btn-primary" id="modal-submit">Place here</button>
+        <button class="btn btn-primary" id="modal-submit">Publish</button>
       </div>
     </div>
   </div>
@@ -1656,14 +1983,14 @@
   <nav id="bottom-nav" role="navigation" aria-label="Main navigation">
     <button class="nav-btn nav-view" id="nav-text" data-nav-action="text" data-nav-page="text" aria-label="Text feed">Text</button>
     <button class="nav-btn nav-view active" id="nav-map" data-nav-action="map" data-nav-page="map" aria-label="Map view">Map</button>
-    <button class="nav-btn nav-add" id="nav-add" data-nav-action="add" aria-label="Write Punkti"></button>
+    <button class="nav-btn nav-add" id="nav-add" data-nav-action="add" aria-label="Leave a Punkti"></button>
     <button class="nav-btn nav-settings-btn" id="nav-settings" data-nav-action="settings" aria-label="Settings">Settings</button>
   </nav>
 
   <nav id="side-rail-nav" role="navigation" aria-label="Main navigation desktop">
     <button class="nav-btn nav-view rail-btn" id="nav-rail-text" data-nav-action="text" data-nav-page="text" aria-label="Text feed">Text</button>
     <button class="nav-btn nav-view rail-btn active" id="nav-rail-map" data-nav-action="map" data-nav-page="map" aria-label="Map view">Map</button>
-    <button class="nav-btn nav-add rail-btn" id="nav-rail-add" data-nav-action="add" aria-label="Write Punkti"></button>
+    <button class="nav-btn nav-add rail-btn" id="nav-rail-add" data-nav-action="add" aria-label="Leave a Punkti"></button>
     <button class="nav-btn nav-settings-btn rail-btn" id="nav-rail-settings" data-nav-action="settings" aria-label="Settings">Settings</button>
   </nav>
 

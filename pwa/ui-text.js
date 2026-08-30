@@ -94,6 +94,11 @@ function _findRootForReply(reply, atoms) {
   const list = Array.isArray(atoms) ? atoms : [];
   return list.find((atom) => _isRootAtom(atom) && _replyBelongsToRoot(reply, atom)) || null;
 }
+export function resolveBoardAtom(atom, atoms = []) {
+  if (!atom) return null;
+  if (!_isReplyAtom(atom)) return atom;
+  return _findRootForReply(atom, atoms) || atom;
+}
 function _boardReplies(root, atoms) {
   return (Array.isArray(atoms) ? atoms : [])
     .filter((a) => a !== root && _replyBelongsToRoot(a, root))
@@ -299,7 +304,7 @@ function renderReplyList(root, replies) {
   }).join('') + '</div>';
 }
 
-function renderOrphanReplyDetail(reply) {
+function renderOrphanReplyDetail(reply, opts = {}) {
   const raw = String(reply?.x || '').trim();
   const cat = _categoryBadge(reply?.category || reply?.kind || _deriveCategory(reply));
   const author = _authorLabel(reply);
@@ -307,10 +312,11 @@ function renderOrphanReplyDetail(reply) {
   const trust = _trustLabel(reply);
   const parentId = String(reply?.parent_id || reply?.root_id || '').trim();
   const atomId = stripPunktoPrefix(reply?.punkto || '');
-  const backLabel = _boardReturnTab === 'activity' ? '← Back to Activity' : '← Visible here';
+  const backLabel = opts.backLabel || (_boardReturnTab === 'activity' ? '← Back to Activity' : '← Visible here');
+  const backAction = opts.backAction || 'board-back';
   return `<section class="board-detail ui-board-panel">
 ` +
-    `  <button class="board-back ui-btn" data-action="board-back">${_escHtml(backLabel)}</button>
+    `  <button class="board-back ui-btn" data-action="${_escHtml(backAction)}">${_escHtml(backLabel)}</button>
 ` +
     `  <div class="main-card ui-card board-root">
 ` +
@@ -332,7 +338,8 @@ function renderOrphanReplyDetail(reply) {
 ` +
     `</section>`;
 }
-function renderBoardDetail(atom) {
+function renderBoardDetail(atom, opts = {}) {
+  const atoms = Array.isArray(opts.atoms) ? opts.atoms : _mainFeedAtoms;
   const cat = _categoryBadge(atom.category || atom.kind || _deriveCategory(atom));
   const raw = String(atom.x || '').trim();
   const title = _escHtml(_deriveTitle(atom));
@@ -347,10 +354,12 @@ function renderBoardDetail(atom) {
   const meta = [timeMeta, floorMeta, distanceMeta].filter(Boolean).join(' · ');
   const atomId = stripPunktoPrefix(atom.punkto || _selectedBoardId || '');
   const stableId = _atomStableId(atom);
-  const replies = _boardReplies(atom, _mainFeedAtoms);
+  const replies = _boardReplies(atom, atoms);
   const canReply = Boolean(stableId);
-  const replyValue = _replyStatus?.type === 'error' ? _replyDraft : '';
-  const replyStatus = _replyStatus ? `<p id="board-reply-status" class="board-reply-status ${_replyStatus.type === 'error' ? 'error' : 'success'}">${_escHtml(_replyStatus.message)}</p>` : '<p id="board-reply-status" class="board-reply-status"></p>';
+  const replyStatusState = opts.replyStatus === undefined ? _replyStatus : opts.replyStatus;
+  const replyDraft = opts.replyDraft === undefined ? _replyDraft : opts.replyDraft;
+  const replyValue = replyStatusState?.type === 'error' ? replyDraft : '';
+  const replyStatus = replyStatusState ? `<p id="board-reply-status" class="board-reply-status ${replyStatusState.type === 'error' ? 'error' : 'success'}">${_escHtml(replyStatusState.message)}</p>` : '<p id="board-reply-status" class="board-reply-status"></p>';
   const disabledAttr = canReply ? '' : ' disabled';
   const orphanText = canReply ? '' : '<p class="board-reply-status error">Cannot reply: board id is missing.</p>';
   const trustLine = author ? `${trust} by ${author}` : `${trust} public post`;
@@ -361,10 +370,11 @@ function renderBoardDetail(atom) {
   const copyLinkBtn = atomId
     ? '<button class="main-card-reply ui-btn" data-action="copy-board-link" data-id="' + _escHtml(atomId) + '">Copy board link</button>'
     : '';
-  const backLabel = _boardReturnTab === 'activity' ? '← Back to Activity' : '← Visible here';
+  const backLabel = opts.backLabel || (_boardReturnTab === 'activity' ? '← Back to Activity' : '← Visible here');
+  const backAction = opts.backAction || 'board-back';
   return `<section class="board-detail ui-board-panel">
 ` +
-    `  <button class="board-back ui-btn" data-action="board-back">${_escHtml(backLabel)}</button>
+    `  <button class="board-back ui-btn" data-action="${_escHtml(backAction)}">${_escHtml(backLabel)}</button>
 ` +
     `  <div class="main-card ui-card board-root${_isImportedSourceAtom(atom) ? ' main-card--imported-source' : ''}">
 ` +
@@ -393,6 +403,13 @@ function renderBoardDetail(atom) {
     `  <form class="main-card ui-card board-compose ui-reply-box" data-action="board-reply-form"><label for="board-reply-text">Public reply</label><textarea id="board-reply-text" placeholder="Write a public reply…"${disabledAttr}>${_escHtml(replyValue)}</textarea><p>Replies are public and anchored to this board’s exact location.</p>${orphanText}${replyStatus}<button class="main-card-show3d ui-btn" id="board-reply-submit" type="submit" data-action="post-board-reply"${disabledAttr}>Post public reply</button></form>
 ` +
     `</section>`;
+}
+
+export function renderBoardSheetHtml({ atom, atoms = [], replyStatus = null, replyDraft = '', backLabel = 'Close board', backAction = 'map-board-close' } = {}) {
+  const boardAtom = resolveBoardAtom(atom, atoms);
+  if (!boardAtom) return '';
+  if (_isReplyAtom(boardAtom)) return renderOrphanReplyDetail(boardAtom, { backLabel, backAction });
+  return renderBoardDetail(boardAtom, { atoms, replyStatus, replyDraft, backLabel, backAction });
 }
 
 export function renderTextFeed({ atoms = [], locationDenied = false, loadingVisibleAtoms = false } = {}) {
