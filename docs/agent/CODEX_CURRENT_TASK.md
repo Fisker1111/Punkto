@@ -1,6 +1,6 @@
 # Codex Current Task
 
-Status: **ACTIVE — Pilot_1 Slice 4.5C4: keep the full vertical relation in frame**
+Status: **HOLD — Slice 4.5C4 implemented, awaiting CI/review**
 
 Repository: `Fisker1111/Punkto`
 Branch: `pilot-1`

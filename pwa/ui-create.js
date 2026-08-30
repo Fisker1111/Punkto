@@ -309,6 +309,7 @@ function positionHeightLever() {
   const fallbackGap = Math.min(localGap, 58);
   const anchorX = Number.isFinite(placementScreenPoint?.x) ? placementScreenPoint.x : viewportWidth / 2;
   const anchorY = Number.isFinite(placementScreenPoint?.y) ? placementScreenPoint.y : viewportHeight / 2;
+  const relation = placementRelationBounds();
 
   const readoutRect = elHeightReadout?.closest('.height-placement-readout')?.getBoundingClientRect?.();
   const actionsRect = document.querySelector('.height-placement-actions')?.getBoundingClientRect?.();
@@ -325,8 +326,8 @@ function positionHeightLever() {
   const maxLeft = Math.max(minLeft, viewportWidth - margin - leverWidth);
   const rightLeft = anchorX + localGap;
   const leftLeft = anchorX - localGap - leverWidth;
-  const rightFits = rightLeft <= maxLeft;
-  const leftFits = leftLeft >= minLeft;
+  const rightFits = rightLeft <= maxLeft && !leverOverlapsRelation(rightLeft, top, leverWidth, leverHeight, relation);
+  const leftFits = leftLeft >= minLeft && !leverOverlapsRelation(leftLeft, top, leverWidth, leverHeight, relation);
   const narrowPortrait = viewportWidth < 460 && viewportHeight > viewportWidth;
   const rightSpace = viewportWidth - anchorX - margin;
   const leftSpace = anchorX - margin;
@@ -360,6 +361,38 @@ function positionHeightLever() {
   elHeightLever.style.setProperty('--height-lever-guide-w', `${Math.round(connectorWidth)}px`);
   elHeightLever.classList.toggle('height-lever--left', side === 'left');
   elHeightLever.classList.toggle('height-lever--right', side !== 'left');
+}
+
+function placementRelationBounds() {
+  const ground = readScreenPoint('ground');
+  const top = readScreenPoint('top');
+  const points = [ground, top].filter(Boolean);
+  if (!points.length) return null;
+  const xs = points.map((p) => p.x);
+  const ys = points.map((p) => p.y);
+  return {
+    left: Math.min(...xs) - 28,
+    right: Math.max(...xs) + 28,
+    top: Math.min(...ys) - 28,
+    bottom: Math.max(...ys) + 28,
+  };
+}
+
+function readScreenPoint(kind) {
+  const xKey = kind === 'top' ? 'topX' : 'groundX';
+  const yKey = kind === 'top' ? 'topY' : 'groundY';
+  const x = Number(placementScreenPoint?.[xKey]);
+  const y = Number(placementScreenPoint?.[yKey]);
+  if (!Number.isFinite(x) || !Number.isFinite(y)) return null;
+  return { x, y };
+}
+
+function leverOverlapsRelation(left, top, width, height, relation) {
+  if (!relation) return false;
+  return left < relation.right
+    && left + width > relation.left
+    && top < relation.bottom
+    && top + height > relation.top;
 }
 
 function clamp(value, min, max) {
