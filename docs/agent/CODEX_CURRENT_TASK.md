@@ -1,102 +1,119 @@
 # Codex Current Task
 
-Status: **HOLD — Slice 4.5C4 correction implemented, awaiting CI/review**
+Status: **ACTIVE — restore the last known-good B2 height-placement path**
 
 Repository: `Fisker1111/Punkto`
 Branch: `pilot-1`
 PR: `#110`
 
-## Human evidence / diagnosis correction
+## Human evidence
 
-The deployed C4 application SHA `eabb035481284b619a76db4803aeca3cf870cad5` is still wrong.
+The deployed build is confirmed as:
 
-Two fresh human screenshots show:
+`pilot1-slice45c4-stable-placement-2026-08-30-2`
 
-1. At **Ground**, the locked center sight is visible but the yellow world-space draft atom is not visibly readable.
-2. At **+200 m**, C4 dynamically zooms the map far outward while the yellow world-space draft still is not readable. The dark height-lever handle remains visually dominant.
+Application SHA:
 
-Therefore the C4 framing hypothesis is not accepted. The product must not chase height by changing map zoom.
+`0ed108d9e92d147a40ff1f9bb553d042ad72ecbb`
 
-The original accepted interaction principle is stronger:
+Human testing still shows **no yellow world-space placement atom** during the height stage.
 
-> **The sight chooses place. The lever chooses height. The world shows both.**
+The important historical clue is now explicit: the height interaction was human-accepted in Slice 4.5B2, when the lever was still on the right side. The regression appeared after the later work that moved the lever locally and changed draft rendering/projection.
 
-And the gameplay rule remains:
+Accepted B2 reference SHA:
 
-> **The camera must not fight the user during height manipulation.**
+`d6541b9f3cc67bcc7e302cc68201c52ba1b054ce`
 
-## Starting state
+Human acceptance of B2 was: the placement philosophy worked and a real elevated atom was successfully created.
 
-Start from exact current `pilot-1` HEAD at task activation. Read current `pwa/ui-map.js`, `pwa/ui-create.js`, `pwa/index.html`, `pwa/app.js`, and `AGENTS.md` before editing.
+## Code evidence
 
-Do not start Slice 5. This is a correction to C4, not a new product slice.
+Compare current code against exact B2 SHA above before editing.
 
-## Required correction
+In B2, `renderAtoms()` placed the draft directly into the normal `scatterData` array, so the draft used the same proven deck.gl layers as real atoms:
 
-### 1. Remove dynamic height-driven zoom/framing
+- `atom-ground-rings`
+- `atom-category-halos`
+- `atoms`
+- `atom-lollipops`
+- selected/draft spatial label
 
-During the height stage, changing the lever from 0 through 200 m must **not change map zoom**.
+B2 explicitly included `selectionId === 'draft'` in ground/stem/label filters.
 
-Remove/disable the C4 height-aware zoom policy and any recursive camera fitting that was introduced solely to chase the vertical relation.
+Later C2/C3/C4 work detached the draft from `scatterData`, introduced `draftData`, dedicated `placement-draft-*` layers, custom render parameters, screen-projection callbacks, and local lever positioning. Human evidence says that later path is not trustworthy.
 
-A one-time gentle pitch setup on entering the height stage is acceptable only if already needed for the accepted B2 interaction. Height changes themselves must not continuously zoom/reframe the map.
+## Required fix — restore proven B2 placement behavior, not another new rendering experiment
 
-Do not change locked lon/lat or selected physical height.
+Use exact B2 SHA `d6541b9f3cc67bcc7e302cc68201c52ba1b054ce` as the behavioral/reference baseline for the **height-placement stage only**.
 
-### 2. Make the actual world-space draft unmistakably visible
+### 1. Restore B2 world-draft rendering path
 
-The yellow placement object must be visually present independently of the lever UI.
+Restore the B2 principle exactly:
 
-At Ground:
-- the locked place must show a visible yellow draft beacon/anchor;
-- the old blue center sight must not cover or visually replace it after x/y has been locked;
-- once `+` locks x/y, either hide/de-emphasize the sight during the height stage or otherwise guarantee the yellow draft remains clearly visible over it.
+- draft is inserted into the normal `scatterData` alongside real atoms;
+- draft uses the same normal ground-ring / halo / atom / lollipop layers;
+- ground/stem/label filters explicitly include `selectionId === 'draft'`;
+- no separate dedicated `placement-draft-*` layers are required for the world object;
+- remove/disable the later dedicated draft render path if it competes with or replaces the B2 path;
+- no special depth/render parameter experiment is needed unless B2 already used it.
 
-At positive height:
-- show yellow ground anchor;
-- show yellow/cased stem;
-- show yellow top beacon;
-- all are one real draft at the locked world coordinate;
-- the dark lever handle is only a control and may never masquerade as the atom.
+Do not redesign published atom rendering semantics.
 
-Inspect the dedicated draft deck.gl layers added in C3. Confirm they receive finite `[lon, lat, z]` values and are actually included in `deckOverlay.setProps({ layers })` during the height stage. Fix the real rendering/UI-covering issue rather than adding more camera heuristics.
+### 2. Restore the B2 height-control placement if necessary
 
-### 3. Keep lever separate from the world object
+Because the user specifically identified the regression as appearing after moving the lever away from the right-side B2 design, prefer restoring the **B2 right-side height lever behavior** for now rather than preserving the later local-lever positioning system.
 
-Do not position the lever handle directly over the top beacon, ground anchor, or stem.
+The priority is correctness and the last known-good interaction, not preserving C2/C3/C4 lever-position polish.
 
-The lever may remain nearby, but preserve a clear visual gap. Its connector may point toward the draft without covering it.
+Remove/disable later screen-projection/local-lever machinery if it is no longer needed after restoring B2 behavior.
 
-If C4 top-beacon-following makes the lever cover the world object, simplify it. Local and obviously associated is enough.
+### 3. Keep later shell improvements outside the placement stage
 
-### 4. No placement-stage clutter
+Do **not** roll the whole app back to B2.
 
-During height placement, suppress unrelated UI that competes with the spatial task, including the `Leave the first note here.` empty-state hint if it is currently visible.
+Preserve later accepted improvements that are independent of height placement:
 
-Keep only the necessary placement elements: map/world, draft relation, height readout, lever, Cancel/Ground/Done, required attribution.
+- current lower-left hero `+` shell;
+- current Text / Map / Settings shell treatment;
+- current board/composer behavior;
+- current warm map/building presentation where unrelated;
+- current signing/storage/network/relay/federation;
+- current human atoms and protocol behavior.
 
-### 5. Preserve accepted behavior
+Placement-stage declutter from current C4 may remain if it does not interfere:
+- hide old blue center sight after x/y lock;
+- hide `Leave the first note here.` during height placement;
+- keep only placement controls + required attribution.
 
-Do not change:
-- Aim → `+` locks x/y → choose physical height → Done → Write → Publish;
-- 0–200 m mapping and fine 0–30 m control;
-- building ghosting;
-- signing/storage/network/relay/federation;
-- published atom rendering;
-- board/Text/Settings/deep links.
+### 4. Camera rule
 
-## Acceptance gate
+Do not reintroduce height-driven zoom/framing.
 
-Before committing, verify as far as local browser tooling allows:
+Moving height from Ground to 200 m must not change map zoom.
 
-- Ground: yellow draft is clearly visible at locked place; center sight does not hide it.
-- ~23 m: yellow ground anchor + stem + top beacon visible.
-- ~66 m: same, with no map zoom change caused by moving the lever.
-- ~100 m and ~200 m: same principle; map zoom remains the entry zoom.
-- Lever is visibly separate from the yellow top beacon.
-- `Leave the first note here.` is not shown during height placement.
-- Done opens Write; Cancel restores normal shell/camera controls and persists nothing.
-- no uncaught runtime/module errors.
+Preserve locked lon/lat and physical height.
+
+### 5. Accepted interaction remains
+
+> **Aim → `+` locks x/y → choose physical height → Done → Write → Publish.**
+
+Ground remains default.
+
+## Acceptance criteria
+
+Before commit, verify as far as tooling allows:
+
+1. Ground: yellow draft atom/ring is visible at locked location.
+2. ~23 m: yellow ground anchor + stem + top yellow atom visible.
+3. ~66 m: same; map zoom unchanged from height-stage entry.
+4. ~200 m: same principle; map zoom unchanged.
+5. Right-side/B2 lever remains visually a control, not the atom.
+6. Draft is rendered through the same normal deck.gl atom/lollipop path used in B2.
+7. No duplicate competing draft object from dedicated C3/C4 layers.
+8. Done → Write still works; Cancel persists nothing.
+9. Buildings restore after placement.
+10. No protocol/storage/signing/relay/federation changes.
+11. No uncaught runtime/module errors.
 
 Human test1 verification remains mandatory.
 
@@ -104,18 +121,19 @@ Human test1 verification remains mandatory.
 
 Set exactly:
 
-`pilot1-slice45c4-stable-placement-2026-08-30-2`
+`pilot1-slice45b2-render-restore-2026-08-30-1`
 
 ## Expected scope
 
 Prefer only:
 - `pwa/ui-map.js`
 - `pwa/ui-create.js`
-- `pwa/index.html` if needed for placement visibility/declutter
+- `pwa/index.html` only if needed to restore B2 lever layout / remove obsolete local-placement CSS
 - `pwa/app.js` version marker
 - this task file
 
-No relay/protocol/storage/signing/deployment changes.
+Do not edit relay/protocol/storage/signing/sync/deployment/node configuration.
+Do not start Slice 5.
 
 ## Checks
 
@@ -125,10 +143,10 @@ Run the normal Pilot CI-compatible JS/module checks, `python3 relay/test_relay.p
 
 Before commit, set status to:
 
-`Status: **HOLD — Slice 4.5C4 correction implemented, awaiting CI/review**`
+`Status: **HOLD — B2 height-placement render path restored, awaiting CI/review**`
 
 Commit exactly:
 
-`fix(pilot1): stabilize height placement preview`
+`fix(pilot1): restore proven height placement render path`
 
 Push to `origin/pilot-1`, report exact SHA/checks, then stop. Do not deploy and do not start Slice 5.
