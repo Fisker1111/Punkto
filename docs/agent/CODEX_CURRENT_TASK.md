@@ -1,6 +1,6 @@
 # Codex Current Task
 
-Status: **ACTIVE — restore the last known-good B2 height-placement path**
+Status: **HOLD — B2 height-placement render path restored, awaiting CI/review**
 
 Repository: `Fisker1111/Punkto`
 Branch: `pilot-1`

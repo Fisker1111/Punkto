@@ -57,8 +57,6 @@ let modalResizeObserver = null;
 let createStage = 'closed';
 let leverDrag = null;
 let leverRaf = null;
-let leverPositionRaf = null;
-let placementScreenPoint = null;
 
 function isAcked() {
   return !!localStorage.getItem(ACK_KEY);
@@ -97,7 +95,6 @@ function setCreateStage(stage) {
     elHeightStage.hidden = !isHeight;
     elHeightStage.setAttribute('aria-hidden', isHeight ? 'false' : 'true');
   }
-  if (isHeight) positionHeightLeverSoon();
 }
 
 function submitIfEligible() {
@@ -212,7 +209,6 @@ function updatePlacementReadouts() {
   if (elHeightReadout) elHeightReadout.textContent = label;
   if (elModalPlacementSummary) elModalPlacementSummary.textContent = label;
   updateLeverVisual(draft.altitude_m || 0);
-  positionHeightLeverSoon();
 }
 
 function updateLeverVisual(meters) {
@@ -284,119 +280,6 @@ function endLeverDrag(ev) {
   window.removeEventListener('pointermove', onLeverPointerMove, { capture: true });
   window.removeEventListener('pointerup', endLeverDrag, { capture: true });
   window.removeEventListener('pointercancel', endLeverDrag, { capture: true });
-}
-
-function positionHeightLeverSoon() {
-  if (createStage !== 'height' || !elHeightLever) return;
-  if (leverPositionRaf) cancelAnimationFrame(leverPositionRaf);
-  leverPositionRaf = requestAnimationFrame(() => {
-    leverPositionRaf = null;
-    positionHeightLever();
-  });
-}
-
-function positionHeightLever() {
-  if (createStage !== 'height' || !elHeightLever) return;
-  const viewportWidth = window.innerWidth || document.documentElement.clientWidth || 0;
-  const viewportHeight = window.innerHeight || document.documentElement.clientHeight || 0;
-  if (!viewportWidth || !viewportHeight) return;
-
-  const rect = elHeightLever.getBoundingClientRect();
-  const leverWidth = rect.width || 104;
-  const leverHeight = rect.height || 300;
-  const margin = 18;
-  const localGap = Math.min(140, Math.max(80, Math.round(viewportWidth * 0.12)));
-  const fallbackGap = Math.min(localGap, 58);
-  const anchorX = Number.isFinite(placementScreenPoint?.x) ? placementScreenPoint.x : viewportWidth / 2;
-  const anchorY = Number.isFinite(placementScreenPoint?.y) ? placementScreenPoint.y : viewportHeight / 2;
-  const relation = placementRelationBounds();
-
-  const readoutRect = elHeightReadout?.closest('.height-placement-readout')?.getBoundingClientRect?.();
-  const actionsRect = document.querySelector('.height-placement-actions')?.getBoundingClientRect?.();
-  const topLimit = Math.max(margin, Math.ceil((readoutRect?.bottom || 0) + 18));
-  const bottomLimit = Math.min(
-    viewportHeight - margin,
-    Math.floor((actionsRect?.top || viewportHeight) - 18)
-  );
-  const minTop = topLimit;
-  const maxTop = Math.max(minTop, bottomLimit - leverHeight);
-  const top = clamp(anchorY - (leverHeight / 2), minTop, maxTop);
-
-  const minLeft = margin;
-  const maxLeft = Math.max(minLeft, viewportWidth - margin - leverWidth);
-  const rightLeft = anchorX + localGap;
-  const leftLeft = anchorX - localGap - leverWidth;
-  const rightFits = rightLeft <= maxLeft && !leverOverlapsRelation(rightLeft, top, leverWidth, leverHeight, relation);
-  const leftFits = leftLeft >= minLeft && !leverOverlapsRelation(leftLeft, top, leverWidth, leverHeight, relation);
-  const narrowPortrait = viewportWidth < 460 && viewportHeight > viewportWidth;
-  const rightSpace = viewportWidth - anchorX - margin;
-  const leftSpace = anchorX - margin;
-  let side = 'right';
-
-  if (narrowPortrait) {
-    side = rightSpace >= leftSpace ? 'right' : 'left';
-  }
-  if (side === 'right' && !rightFits && leftFits) side = 'left';
-  if (side === 'left' && !leftFits && rightFits) side = 'right';
-
-  let left;
-  if (side === 'right' && rightFits) {
-    left = rightLeft;
-  } else if (side === 'left' && leftFits) {
-    left = leftLeft;
-  } else {
-    side = rightSpace >= leftSpace ? 'right' : 'left';
-    const fallbackLeft = side === 'right'
-      ? anchorX + fallbackGap
-      : anchorX - fallbackGap - leverWidth;
-    left = clamp(fallbackLeft, minLeft, maxLeft);
-  }
-
-  const connectorY = clamp(anchorY - top, 38, leverHeight - 38);
-  const leverEdgeX = side === 'right' ? left : left + leverWidth;
-  const connectorWidth = Math.min(66, Math.max(18, Math.abs(leverEdgeX - anchorX) - 17));
-  elHeightLever.style.left = `${Math.round(left)}px`;
-  elHeightLever.style.top = `${Math.round(top)}px`;
-  elHeightLever.style.setProperty('--height-lever-guide-y', `${Math.round(connectorY)}px`);
-  elHeightLever.style.setProperty('--height-lever-guide-w', `${Math.round(connectorWidth)}px`);
-  elHeightLever.classList.toggle('height-lever--left', side === 'left');
-  elHeightLever.classList.toggle('height-lever--right', side !== 'left');
-}
-
-function placementRelationBounds() {
-  const ground = readScreenPoint('ground');
-  const top = readScreenPoint('top');
-  const points = [ground, top].filter(Boolean);
-  if (!points.length) return null;
-  const xs = points.map((p) => p.x);
-  const ys = points.map((p) => p.y);
-  return {
-    left: Math.min(...xs) - 28,
-    right: Math.max(...xs) + 28,
-    top: Math.min(...ys) - 28,
-    bottom: Math.max(...ys) + 28,
-  };
-}
-
-function readScreenPoint(kind) {
-  const xKey = kind === 'top' ? 'topX' : 'groundX';
-  const yKey = kind === 'top' ? 'topY' : 'groundY';
-  const x = Number(placementScreenPoint?.[xKey]);
-  const y = Number(placementScreenPoint?.[yKey]);
-  if (!Number.isFinite(x) || !Number.isFinite(y)) return null;
-  return { x, y };
-}
-
-function leverOverlapsRelation(left, top, width, height, relation) {
-  if (!relation) return false;
-  return left < relation.right
-    && left + width > relation.left
-    && top < relation.bottom
-    && top + height > relation.top;
-}
-
-function clamp(value, min, max) {
-  return Math.min(max, Math.max(min, Number(value) || 0));
 }
 
 function onLeverKeyDown(ev) {
@@ -522,7 +405,6 @@ export function openCreateModal() {
   stopViewportObservation();
   callbacks?.onViewportChanged?.(false, null);
   callbacks?.onHeightPlacementChanged?.(true, { ...draft });
-  positionHeightLeverSoon();
   updateSubmitState();
   setTimeout(() => elHeightDone?.focus(), 80);
 }
@@ -539,16 +421,6 @@ export function closeCreateModal() {
   if (leverRaf) {
     cancelAnimationFrame(leverRaf);
     leverRaf = null;
-  }
-  if (leverPositionRaf) {
-    cancelAnimationFrame(leverPositionRaf);
-    leverPositionRaf = null;
-  }
-  placementScreenPoint = null;
-  if (elHeightLever) {
-    elHeightLever.style.left = '';
-    elHeightLever.style.top = '';
-    elHeightLever.classList.remove('height-lever--left', 'height-lever--right');
   }
   stopViewportObservation();
   callbacks?.onViewportChanged?.(false, null);
@@ -571,11 +443,5 @@ export function setCreateError(message) { elModalError.textContent = message || 
 export function setCreateSubmitting(submitting) { isSubmitting = !!submitting; updateSubmitState(); }
 export function updateCreateCenter(lat, lon) { if (!draft) return; draft.lat = lat; draft.lon = lon; emitPreview(); }
 export function updateCreateAltitude(meters, mode = 'spatial-drag') { if (!draft) return; setAltitudeMeters(meters, mode); }
-export function updateCreatePlacementScreenPoint(point) {
-  placementScreenPoint = point && Number.isFinite(Number(point.x)) && Number.isFinite(Number(point.y))
-    ? { ...point, x: Number(point.x), y: Number(point.y) }
-    : null;
-  positionHeightLeverSoon();
-}
 export function isCreateModalOpen() { return !!elModalOverlay?.classList.contains('open'); }
 export function isCreateHeightPlacementOpen() { return createStage === 'height'; }

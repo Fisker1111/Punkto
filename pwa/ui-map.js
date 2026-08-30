@@ -39,7 +39,6 @@ let _onRefreshUI = null;
 let _onQueueRefreshUI = null;
 let _onFocusDeepLinkIfReady = null;
 let _onShowOnboarding = null;
-let _onPlacementScreenChanged = null;
 let _hasDeepLink = () => false;
 let _getCurrentPage = () => 'map';
 
@@ -63,7 +62,6 @@ let draftHeightDrag = null;
 let draftHeightDragRaf = null;
 let draftHeightDragPending = null;
 let heightPlacementActive = false;
-let heightPlacementProjectionRaf = null;
 let buildingOpacityRestore = new Map();
 
 const SPATIAL_LOD = {
@@ -89,7 +87,6 @@ export function initMapView({
   onQueueRefreshUI,
   onFocusDeepLinkIfReady,
   onShowOnboarding,
-  onPlacementScreenChanged,
   hasDeepLink,
   getCurrentPage,
 } = {}) {
@@ -109,7 +106,6 @@ export function initMapView({
   _onQueueRefreshUI = typeof onQueueRefreshUI === 'function' ? onQueueRefreshUI : null;
   _onFocusDeepLinkIfReady = typeof onFocusDeepLinkIfReady === 'function' ? onFocusDeepLinkIfReady : null;
   _onShowOnboarding = typeof onShowOnboarding === 'function' ? onShowOnboarding : null;
-  _onPlacementScreenChanged = typeof onPlacementScreenChanged === 'function' ? onPlacementScreenChanged : null;
   _hasDeepLink = typeof hasDeepLink === 'function' ? hasDeepLink : _hasDeepLink;
   _getCurrentPage = typeof getCurrentPage === 'function' ? getCurrentPage : _getCurrentPage;
 }
@@ -125,23 +121,16 @@ export function isMapLoaded() {
 export function enterHeightPlacementMode(draft) {
   heightPlacementActive = true;
   ghostBuildingLayersForPlacement();
-  scheduleHeightPlacementProjection();
   renderAtoms().catch((err) => console.warn('[map-create] render placement failed:', err));
 }
 
 export function updateHeightPlacementDraft() {
   if (!heightPlacementActive) return;
-  scheduleHeightPlacementProjection();
   renderAtoms().catch((err) => console.warn('[map-create] render placement update failed:', err));
 }
 
 export function exitHeightPlacementMode() {
   heightPlacementActive = false;
-  if (heightPlacementProjectionRaf) {
-    cancelAnimationFrame(heightPlacementProjectionRaf);
-    heightPlacementProjectionRaf = null;
-  }
-  _onPlacementScreenChanged?.(null);
   restoreBuildingLayersAfterPlacement();
   renderAtoms().catch((err) => console.warn('[map-create] render placement exit failed:', err));
 }
@@ -306,19 +295,39 @@ export async function renderAtoms(newAtomIds = null) {
     };
   });
 
-  let draftData = null;
   const placementDraft = _getPlacementDraft();
   if (placementDraft) {
-    draftData = buildPlacementDraftRenderData(placementDraft);
+    const draftAlt = placementDraft.altitude_m || 0;
+    scatterData.push({
+      position: [placementDraft.lon, placementDraft.lat, draftAlt],
+      ground: [placementDraft.lon, placementDraft.lat, 0],
+      source: [placementDraft.lon, placementDraft.lat, 0],
+      target: [placementDraft.lon, placementDraft.lat, draftAlt],
+      color: rgba(DRAFT_COLOR, 255),
+      haloColor: rgba(DRAFT_COLOR, 95),
+      strokeColor: [8, 12, 20, 230],
+      ringColor: rgba(DRAFT_COLOR, 120),
+      stemColor: rgba(DRAFT_COLOR, 180),
+      width: 2,
+      selected: false,
+      hasHeight: draftAlt > 0,
+      selectionId: 'draft',
+      punkto: 'draft',
+      text: 'Placement preview',
+      f: 'draft',
+      t: Date.now(),
+      label: 'draft',
+      spatialLabel: formatDraftSpatialHeightLabel(draftAlt),
+    });
   }
 
   const groundRingData = scatterData.filter(d =>
-    d.selected || zoom >= SPATIAL_LOD.groundRelationZoom
+    d.selected || d.selectionId === 'draft' || zoom >= SPATIAL_LOD.groundRelationZoom
   );
   const stemData = scatterData.filter(d =>
-    d.hasHeight && (d.selected || zoom >= SPATIAL_LOD.stemZoom)
+    d.hasHeight && (d.selected || d.selectionId === 'draft' || zoom >= SPATIAL_LOD.stemZoom)
   );
-  const selectedLabelData = scatterData.filter(d => d.selected);
+  const selectedLabelData = scatterData.filter(d => d.selected || d.selectionId === 'draft');
 
   const { ScatterplotLayer, TextLayer } = window.deck;
   const layers = [
@@ -388,10 +397,6 @@ export async function renderAtoms(newAtomIds = null) {
     );
   }
 
-  if (draftData) {
-    appendDraftPlacementLayers(layers, draftData, { ScatterplotLayer, LineLayer });
-  }
-
   if (TextLayer && selectedLabelData.length) {
     layers.push(
       new TextLayer({
@@ -410,29 +415,6 @@ export async function renderAtoms(newAtomIds = null) {
         getAlignmentBaseline: 'bottom',
         billboard: true,
         pickable: false,
-      })
-    );
-  }
-
-  if (TextLayer && draftData) {
-    layers.push(
-      new TextLayer({
-        id: 'placement-draft-spatial-label',
-        data: [draftData],
-        getPosition: d => d.position,
-        getText: d => d.spatialLabel,
-        getColor: [255, 246, 190, 255],
-        getBackgroundColor: [31, 25, 9, 224],
-        background: true,
-        backgroundPadding: [7, 4],
-        getSize: 13,
-        sizeUnits: 'pixels',
-        getPixelOffset: [0, -48],
-        getTextAnchor: 'middle',
-        getAlignmentBaseline: 'bottom',
-        billboard: true,
-        pickable: false,
-        parameters: draftPlacementRenderParameters(),
       })
     );
   }
@@ -483,147 +465,6 @@ export async function renderAtoms(newAtomIds = null) {
 
 export function cancelPlacementDraftHeightDrag() {
   endDraftHeightDrag();
-}
-
-function buildPlacementDraftRenderData(placementDraft) {
-  const lon = Number(placementDraft?.lon);
-  const lat = Number(placementDraft?.lat);
-  if (!Number.isFinite(lon) || !Number.isFinite(lat)) return null;
-  const draftAlt = clampDraftHeight(placementDraft.altitude_m || 0);
-  return {
-    position: [lon, lat, draftAlt],
-    ground: [lon, lat, 0],
-    source: [lon, lat, 0],
-    target: [lon, lat, draftAlt],
-    color: rgba(DRAFT_COLOR, 255),
-    haloColor: rgba(DRAFT_COLOR, 172),
-    strokeColor: [255, 252, 212, 255],
-    ringColor: rgba(DRAFT_COLOR, 255),
-    stemColor: rgba(DRAFT_COLOR, 255),
-    casingColor: [8, 10, 14, 235],
-    width: 4,
-    selected: false,
-    hasHeight: draftAlt > 0,
-    selectionId: 'draft',
-    punkto: 'draft',
-    text: 'Placement preview',
-    f: 'draft',
-    t: Date.now(),
-    label: 'draft',
-    spatialLabel: formatDraftSpatialHeightLabel(draftAlt),
-  };
-}
-
-function appendDraftPlacementLayers(layers, draft, { ScatterplotLayer, LineLayer }) {
-  const data = [draft];
-  const renderParameters = draftPlacementRenderParameters();
-
-  if (LineLayer && draft.hasHeight) {
-    layers.push(
-      new LineLayer({
-        id: 'placement-draft-stem-casing',
-        data,
-        getSourcePosition: d => d.source,
-        getTargetPosition: d => d.target,
-        getColor: d => d.casingColor,
-        getWidth: d => d.width + 4.5,
-        widthUnits: 'pixels',
-        pickable: false,
-        parameters: renderParameters,
-      }),
-      new LineLayer({
-        id: 'placement-draft-stem',
-        data,
-        getSourcePosition: d => d.source,
-        getTargetPosition: d => d.target,
-        getColor: d => d.stemColor,
-        getWidth: d => d.width,
-        widthUnits: 'pixels',
-        pickable: false,
-        parameters: renderParameters,
-      })
-    );
-  }
-
-  layers.push(
-    new ScatterplotLayer({
-      id: 'placement-draft-ground-halo',
-      data,
-      getPosition: d => d.ground,
-      getFillColor: d => d.casingColor,
-      getRadius: d => d.hasHeight ? 24 : 31,
-      radiusUnits: 'pixels',
-      radiusMinPixels: 16,
-      radiusMaxPixels: 40,
-      pickable: false,
-      parameters: renderParameters,
-    }),
-    new ScatterplotLayer({
-      id: 'placement-draft-ground-anchor',
-      data,
-      getPosition: d => d.ground,
-      getFillColor: [255, 220, 80, 58],
-      stroked: true,
-      getLineColor: d => d.ringColor,
-      getLineWidth: 3.6,
-      lineWidthUnits: 'pixels',
-      getRadius: d => d.hasHeight ? 15 : 20,
-      radiusUnits: 'pixels',
-      radiusMinPixels: 10,
-      radiusMaxPixels: 30,
-      pickable: false,
-      parameters: renderParameters,
-    }),
-    new ScatterplotLayer({
-      id: 'placement-draft-beacon-halo',
-      data,
-      getPosition: d => d.position,
-      getFillColor: d => d.casingColor,
-      getRadius: 31,
-      radiusUnits: 'pixels',
-      radiusMinPixels: 20,
-      radiusMaxPixels: 42,
-      pickable: false,
-      parameters: renderParameters,
-    }),
-    new ScatterplotLayer({
-      id: 'placement-draft-beacon-glow',
-      data,
-      getPosition: d => d.position,
-      getFillColor: d => d.haloColor,
-      getRadius: 27,
-      radiusUnits: 'pixels',
-      radiusMinPixels: 17,
-      radiusMaxPixels: 38,
-      pickable: false,
-      parameters: renderParameters,
-    }),
-    new ScatterplotLayer({
-      id: 'placement-draft-beacon',
-      data,
-      getPosition: d => d.position,
-      getFillColor: d => d.color,
-      stroked: true,
-      getLineColor: d => d.strokeColor,
-      getLineWidth: 3.8,
-      lineWidthUnits: 'pixels',
-      getRadius: 18,
-      radiusUnits: 'pixels',
-      radiusMinPixels: 12,
-      radiusMaxPixels: 31,
-      pickable: true,
-      autoHighlight: true,
-      highlightColor: [255, 255, 130, 255],
-      parameters: renderParameters,
-    })
-  );
-}
-
-function draftPlacementRenderParameters() {
-  return {
-    depthTest: false,
-    depthMask: false,
-  };
 }
 
 export function updateCrosshairReadout() {
@@ -769,15 +610,12 @@ function initMap() {
       updateBubbleVisibility();
       drawLeaderLines();
       updateCrosshairReadout();
-      scheduleHeightPlacementProjection();
       queueRefreshUI();
     });
-    map.on('move', scheduleHeightPlacementProjection);
     map.on('moveend', () => {
       updateBubbleVisibility();
       drawLeaderLines();
       updateCrosshairReadout();
-      scheduleHeightPlacementProjection();
       queueRefreshUI();
     });
 
@@ -841,58 +679,6 @@ function initMap() {
   return map;
 }
 
-function projectHeightPlacementEndpoints(draft) {
-  if (!map || !draft) return null;
-  const lon = Number(draft.lon);
-  const lat = Number(draft.lat);
-  const height = clampDraftHeight(draft.altitude_m || 0);
-  const rect = map.getContainer()?.getBoundingClientRect?.();
-  if (!rect || !Number.isFinite(lon) || !Number.isFinite(lat)) return null;
-  const viewport = makeDeckViewport(rect);
-  const ground = projectWorldPosition([lon, lat, 0], viewport);
-  const top = projectWorldPosition([lon, lat, height], viewport);
-  if (!ground || !top) return null;
-  return { ground, top, height, rect };
-}
-
-function makeDeckViewport(rect) {
-  const Viewport = window.deck?.WebMercatorViewport;
-  if (!Viewport || !map) return null;
-  const center = map.getCenter();
-  try {
-    return new Viewport({
-      width: rect.width,
-      height: rect.height,
-      longitude: center.lng,
-      latitude: center.lat,
-      zoom: map.getZoom(),
-      pitch: map.getPitch(),
-      bearing: map.getBearing(),
-    });
-  } catch {
-    return null;
-  }
-}
-
-function projectWorldPosition(position, viewport = null) {
-  if (viewport && typeof viewport.project === 'function') {
-    try {
-      const projected = viewport.project(position);
-      const x = Number(projected?.[0]);
-      const y = Number(projected?.[1]);
-      if (Number.isFinite(x) && Number.isFinite(y)) return { x, y };
-    } catch {}
-  }
-  if (!map || !position) return null;
-  try {
-    const point = map.project([position[0], position[1]]);
-    if (!point || !Number.isFinite(point.x) || !Number.isFinite(point.y)) return null;
-    return { x: point.x, y: point.y };
-  } catch {
-    return null;
-  }
-}
-
 function getFillExtrusionLayerIds() {
   if (!map || !map.getStyle) return [];
   try {
@@ -938,58 +724,10 @@ function installMapCreateViewportResizeHandler() {
   mapCreateResizeInstalled = true;
   window.addEventListener('resize', () => {
     if (mapCreateOpen) scheduleApplyMapCreateViewport();
-    scheduleHeightPlacementProjection();
   });
   window.addEventListener('orientationchange', () => {
     if (mapCreateOpen) setTimeout(scheduleApplyMapCreateViewport, 80);
-    setTimeout(scheduleHeightPlacementProjection, 80);
   });
-}
-
-function scheduleHeightPlacementProjection() {
-  if (!heightPlacementActive || !_onPlacementScreenChanged) return;
-  if (heightPlacementProjectionRaf) return;
-  heightPlacementProjectionRaf = requestAnimationFrame(() => {
-    heightPlacementProjectionRaf = null;
-    emitHeightPlacementProjection();
-  });
-}
-
-function emitHeightPlacementProjection() {
-  if (!heightPlacementActive || !_onPlacementScreenChanged) return;
-  const draft = _getPlacementDraft();
-  if (!map || !draft || !Number.isFinite(Number(draft.lon)) || !Number.isFinite(Number(draft.lat))) {
-    _onPlacementScreenChanged(null);
-    return;
-  }
-  try {
-    const projected = projectHeightPlacementEndpoints(draft);
-    const rect = projected?.rect;
-    if (!projected || !rect) {
-      _onPlacementScreenChanged(null);
-      return;
-    }
-    const topVisible = projected.top.x >= 0 && projected.top.y >= 0 && projected.top.x <= rect.width && projected.top.y <= rect.height;
-    const groundVisible = projected.ground.x >= 0 && projected.ground.y >= 0 && projected.ground.x <= rect.width && projected.ground.y <= rect.height;
-    const anchor = projected.height > 0 ? projected.top : projected.ground;
-    _onPlacementScreenChanged({
-      x: rect.left + anchor.x,
-      y: rect.top + anchor.y,
-      anchor: projected.height > 0 ? 'top' : 'ground',
-      groundX: rect.left + projected.ground.x,
-      groundY: rect.top + projected.ground.y,
-      topX: rect.left + projected.top.x,
-      topY: rect.top + projected.top.y,
-      mapLeft: rect.left,
-      mapTop: rect.top,
-      mapRight: rect.right,
-      mapBottom: rect.bottom,
-      visible: topVisible && groundVisible,
-    });
-  } catch (err) {
-    console.warn('[map-create] placement projection failed:', err);
-    _onPlacementScreenChanged(null);
-  }
 }
 
 function scheduleApplyMapCreateViewport() {
@@ -1090,7 +828,7 @@ function onDraftPointerDown(ev) {
     x: point.x,
     y: point.y,
     radius: 18,
-    layerIds: ['placement-draft-beacon', 'atoms'],
+    layerIds: ['atoms'],
   });
   if (picked?.object?.selectionId !== 'draft') return;
 

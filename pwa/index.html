@@ -1304,29 +1304,15 @@
     }
     .height-lever {
       position: fixed;
-      left: calc(100vw - 122px);
+      right: max(18px, env(safe-area-inset-right, 0px));
       top: 50%;
+      transform: translateY(-50%);
       width: 104px;
       height: min(58vh, 430px);
       min-height: 300px;
       pointer-events: auto;
       touch-action: none;
       user-select: none;
-    }
-    .height-lever::before {
-      content: '';
-      position: absolute;
-      top: var(--height-lever-guide-y, 50%);
-      width: var(--height-lever-guide-w, 42px);
-      border-top: 1px solid rgba(255,220,80,0.40);
-      filter: drop-shadow(0 0 5px rgba(255,220,80,0.22));
-      pointer-events: none;
-    }
-    .height-lever--right::before {
-      right: calc(100% - 18px);
-    }
-    .height-lever--left::before {
-      left: calc(100% - 18px);
     }
     .height-lever-track {
       position: absolute;
@@ -1389,14 +1375,6 @@
       font-weight: 600;
       line-height: 1;
       white-space: nowrap;
-    }
-    .height-lever--left .height-lever-track {
-      left: 20px;
-      right: auto;
-    }
-    .height-lever--left .height-lever-label {
-      left: 44px;
-      right: auto;
     }
     .height-lever-label-top { top: 10px; }
     .height-lever-label-mid { top: 42%; }
