@@ -2,14 +2,60 @@ import { canonicalAtomId, canonicalAtomUrl } from './protocol/exact-link.js';
 
 const A4 = { width: 595.28, height: 841.89 };
 const MARGIN = 54;
+const QR_CORE_SIZE = 250;
+const QR_QUIET_MODULES = 4;
+
+const WIN_ANSI_OVERRIDES = new Map([
+  ['€', 0x80],
+  ['‚', 0x82],
+  ['ƒ', 0x83],
+  ['„', 0x84],
+  ['…', 0x85],
+  ['†', 0x86],
+  ['‡', 0x87],
+  ['ˆ', 0x88],
+  ['‰', 0x89],
+  ['Š', 0x8a],
+  ['‹', 0x8b],
+  ['Œ', 0x8c],
+  ['Ž', 0x8e],
+  ['‘', 0x91],
+  ['’', 0x92],
+  ['“', 0x93],
+  ['”', 0x94],
+  ['•', 0x95],
+  ['–', 0x96],
+  ['—', 0x97],
+  ['˜', 0x98],
+  ['™', 0x99],
+  ['š', 0x9a],
+  ['›', 0x9b],
+  ['œ', 0x9c],
+  ['ž', 0x9e],
+  ['Ÿ', 0x9f],
+]);
+
+function winAnsiByte(char) {
+  const code = char.codePointAt(0);
+  if (code >= 0x20 && code <= 0x7e) return code;
+  if (code >= 0xa0 && code <= 0xff) return code;
+  return WIN_ANSI_OVERRIDES.get(char) ?? 0x3f;
+}
 
 function pdfEscape(value) {
-  return String(value == null ? '' : value)
-    .replace(/[^\x09\x0a\x0d\x20-\x7e]/g, '?')
-    .replace(/\\/g, '\\\\')
-    .replace(/\(/g, '\\(')
-    .replace(/\)/g, '\\)')
-    .replace(/\r?\n/g, '\\n');
+  let output = '';
+  for (const char of String(value == null ? '' : value).replace(/\r?\n/g, '\n')) {
+    if (char === '\n') {
+      output += '\\n';
+      continue;
+    }
+    const byte = winAnsiByte(char);
+    if (byte === 0x5c) output += '\\\\';
+    else if (byte === 0x28) output += '\\(';
+    else if (byte === 0x29) output += '\\)';
+    else output += String.fromCharCode(byte);
+  }
+  return output;
 }
 
 function textLines(text, maxChars, maxLines) {
@@ -48,6 +94,15 @@ function qrMatrix(payload) {
   return { count, modules };
 }
 
+export function printedQrLayout(moduleCount) {
+  const moduleSize = QR_CORE_SIZE / moduleCount;
+  const quietZone = QR_QUIET_MODULES * moduleSize;
+  const totalSize = QR_CORE_SIZE + quietZone * 2;
+  const x = (A4.width - totalSize) / 2;
+  const y = 144;
+  return { x, y, moduleSize, quietZone, totalSize, coreSize: QR_CORE_SIZE, quietModules: QR_QUIET_MODULES };
+}
+
 function buildContent({ message, meta, url }) {
   const commands = [];
   const titleLines = textLines(message || 'Untitled Punkti', 39, 12);
@@ -73,29 +128,27 @@ function buildContent({ message, meta, url }) {
     y -= 15;
   }
 
-  const qrSize = 250;
-  const qrX = (A4.width - qrSize) / 2;
-  const qrY = 144;
-  commands.push('0 0 0 rg');
-  commands.push(`${qrX - 12} ${qrY - 12} ${qrSize + 24} ${qrSize + 24} re S`);
   const matrix = qrMatrix(url);
-  const moduleSize = qrSize / matrix.count;
+  const qr = printedQrLayout(matrix.count);
+  commands.push('1 1 1 rg');
+  commands.push(`${qr.x.toFixed(3)} ${qr.y.toFixed(3)} ${qr.totalSize.toFixed(3)} ${qr.totalSize.toFixed(3)} re f`);
+  commands.push('0 0 0 rg');
   for (const [mx, my] of matrix.modules) {
-    const x = qrX + mx * moduleSize;
-    const rectY = qrY + (matrix.count - my - 1) * moduleSize;
-    commands.push(`${x.toFixed(3)} ${rectY.toFixed(3)} ${Math.ceil(moduleSize * 1000) / 1000} ${Math.ceil(moduleSize * 1000) / 1000} re f`);
+    const x = qr.x + qr.quietZone + mx * qr.moduleSize;
+    const rectY = qr.y + qr.quietZone + (matrix.count - my - 1) * qr.moduleSize;
+    commands.push(`${x.toFixed(3)} ${rectY.toFixed(3)} ${Math.ceil(qr.moduleSize * 1000) / 1000} ${Math.ceil(qr.moduleSize * 1000) / 1000} re f`);
   }
 
   commands.push('/F1 9 Tf');
   commands.push('0 0 0 rg');
   let urlY = 92;
-  for (const line of textLines(url, 82, 2).lines) {
+  for (const line of textLines(url, 100, 2).lines) {
     commands.push(`1 0 0 1 ${MARGIN} ${urlY} Tm (${pdfEscape(line)}) Tj`);
     urlY -= 12;
   }
   commands.push('/F1 8 Tf');
   commands.push('0.25 0.25 0.25 rg');
-  commands.push(`1 0 0 1 ${MARGIN} ${36} Tm (${pdfEscape('punkto.xyz - leave a message here')}) Tj`);
+  commands.push(`1 0 0 1 ${MARGIN} ${36} Tm (${pdfEscape('punkto.xyz · leave a message here')}) Tj`);
   return commands.join('\n');
 }
 
@@ -104,8 +157,8 @@ function makePdf(content) {
     '<< /Type /Catalog /Pages 2 0 R >>',
     '<< /Type /Pages /Kids [3 0 R] /Count 1 >>',
     `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${A4.width} ${A4.height}] /Resources << /Font << /F1 4 0 R /F2 5 0 R >> >> /Contents 6 0 R >>`,
-    '<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>',
-    '<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold >>',
+    '<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>',
+    '<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>',
     `<< /Length ${content.length} >>\nstream\n${content}\nendstream`,
   ];
   let pdf = '%PDF-1.4\n%\xE2\xE3\xCF\xD3\n';

@@ -1,6 +1,6 @@
 # Codex Current Task
 
-Status: **ACTIVE — Slice 5 review correction: print/PDF robustness + hard CI gate**
+Status: **HOLD — Slice 5 print/CI correction implemented, awaiting review**
 
 Repository: `Fisker1111/Punkto`
 Branch: `pilot-1`

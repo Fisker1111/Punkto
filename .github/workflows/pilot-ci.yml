@@ -50,6 +50,9 @@ jobs:
           node --input-type=module --check < pwa/ui-map.js
           node --input-type=module --check < pwa/ui-board.js
 
+      - name: Slice 5 deterministic helper tests
+        run: node pwa/test-slice5.mjs
+
       - name: Required Pilot files exist
         run: |
           for f in \
