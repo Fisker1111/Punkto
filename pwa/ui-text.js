@@ -8,6 +8,7 @@ let _onShowOnMap = null;
 let _onLeaveNote = null;
 let _onOpenBoard = null;
 let _onPostReply = null;
+let _onPrintAtom = null;
 let _helpers = null;
 let _replyStatus = null;
 let _replyDraft = '';
@@ -63,7 +64,7 @@ function _fmtAltLabel(alt){ return _helpers?.fmtAltitudeLabel ? _helpers.fmtAlti
 function _fmtDistance(m){ return _helpers?.fmtDistance ? _helpers.fmtDistance(m) : ''; }
 function _fmtTime(t){ return _helpers?.fmtTime ? _helpers.fmtTime(t) : ''; }
 export function getAtomStableId(atom) {
-  return String(atom?.atom_id || atom?.id || stripPunktoPrefix(atom?.punkto || '') || '').trim();
+  return String(atom?.atom_id || stripPunktoPrefix(atom?.punkto || '') || '').trim();
 }
 export function isReplyAtom(atom) {
   return String(atom?.relation || '').toLowerCase() === 'reply' || Boolean(atom?.parent_id);
@@ -132,11 +133,12 @@ function _importedSourceLine(atom) {
   return `Imported source data · ${details.join(' · ')}`;
 }
 
-export function initTextView({ onShowOnMap, onLeaveNote, onOpenBoard, onPostReply, helpers } = {}) {
+export function initTextView({ onShowOnMap, onLeaveNote, onOpenBoard, onPostReply, onPrintAtom, helpers } = {}) {
   _onShowOnMap = typeof onShowOnMap === 'function' ? onShowOnMap : null;
   _onLeaveNote = typeof onLeaveNote === 'function' ? onLeaveNote : null;
   _onOpenBoard = typeof onOpenBoard === 'function' ? onOpenBoard : null;
   _onPostReply = typeof onPostReply === 'function' ? onPostReply : null;
+  _onPrintAtom = typeof onPrintAtom === 'function' ? onPrintAtom : null;
   _helpers = helpers || null;
 
   _syncTabUi();
@@ -169,15 +171,22 @@ export function initTextView({ onShowOnMap, onLeaveNote, onOpenBoard, onPostRepl
         e.stopPropagation();
         const id = copyBtn.dataset.id || '';
         if (!id) return;
-        const origin = window.location.origin || '';
-        const link = origin + '/p/' + encodeURIComponent(id);
+        const link = window.location.origin + '/p/' + encodeURIComponent(id);
         navigator.clipboard?.writeText(link).then(() => {
           copyBtn.textContent = 'Copied';
-          window.setTimeout(() => { copyBtn.textContent = 'Copy board link'; }, 1400);
+          window.setTimeout(() => { copyBtn.textContent = 'Copy exact link'; }, 1400);
         }).catch(() => {
           copyBtn.textContent = 'Copy failed';
-          window.setTimeout(() => { copyBtn.textContent = 'Copy board link'; }, 1400);
+          window.setTimeout(() => { copyBtn.textContent = 'Copy exact link'; }, 1400);
         });
+        return;
+      }
+
+      const printBtn = e.target.closest('[data-action="print-punkti"]');
+      if (printBtn) {
+        e.preventDefault();
+        e.stopPropagation();
+        if (_selectedBoardAtom && _onPrintAtom) _onPrintAtom(_selectedBoardAtom, printBtn);
         return;
       }
 
@@ -367,8 +376,11 @@ function renderBoardDetail(atom, opts = {}) {
   const publicLine = importedLine || (trust === 'Unsigned' ? 'Unsigned public post' : 'Public board');
   const sourceBadge = _importedSourceBadge(atom);
   // Future: reply threads may include "Reply to unknown atom" when parent is missing.
-  const copyLinkBtn = atomId
-    ? '<button class="main-card-reply ui-btn" data-action="copy-board-link" data-id="' + _escHtml(atomId) + '">Copy board link</button>'
+  const copyLinkBtn = stableId
+    ? '<button class="main-card-reply ui-btn" data-action="copy-board-link" data-id="' + _escHtml(stableId) + '">Copy exact link</button>'
+    : '';
+  const printBtn = stableId
+    ? '<button class="main-card-reply ui-btn" data-action="print-punkti" data-id="' + _escHtml(stableId) + '">Print this Punkti</button>'
     : '';
   const backLabel = opts.backLabel || (_boardReturnTab === 'activity' ? '← Back to Activity' : '← Visible here');
   const backAction = opts.backAction || 'board-back';
@@ -393,7 +405,7 @@ function renderBoardDetail(atom, opts = {}) {
 ` +
     (meta ? `    <div class="main-card-meta"><span>${_escHtml(meta)}</span></div>
 ` : '') +
-    `    <div class="main-card-actions"><button class="main-card-show3d ui-btn" data-action="show-in-3d" data-id="${_escHtml(atomId)}">Show on map</button>${copyLinkBtn}</div>
+    `    <div class="main-card-actions"><button class="main-card-show3d ui-btn" data-action="show-in-3d" data-id="${_escHtml(atomId)}">Show on map</button>${copyLinkBtn}${printBtn}</div>
 ` +
     `  </div>
 ` +

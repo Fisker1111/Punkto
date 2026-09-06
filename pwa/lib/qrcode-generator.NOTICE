@@ -1,0 +1,7 @@
+qrcode-generator 1.4.4
+Source: https://www.npmjs.com/package/qrcode-generator
+Repository: https://github.com/kazuhikoarase/qrcode-generator
+Author: Kazuhiko Arase
+License: MIT
+
+Vendored for client-side QR generation in Punkto print PDFs.

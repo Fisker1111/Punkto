@@ -20,6 +20,8 @@
   <script src="/lib/dexie.min.js"></script>
   <!-- TweetNaCl.js for Ed25519 -->
   <script src="/nacl.min.js"></script>
+  <!-- QR code generation for client-side Punkti PDFs -->
+  <script src="/lib/qrcode-generator.js"></script>
   <!-- Key management -->
   <script src="/key-management.js"></script>
 
@@ -53,14 +55,16 @@
       --text-sm: 12px;
       --text-md: 13px;
       --text-lg: 14px;
-      --border:    rgba(35,70,112,0.14);
-      --border2:   rgba(35,70,112,0.22);
+      --border:    rgba(180,139,88,0.16);
+      --border2:   rgba(210,165,104,0.24);
       --text:      #e8eef7;
       --text-mid:  rgba(232,238,247,0.72);
       --text-dim:  rgba(232,238,247,0.5);
-      --accent:    #0b9dff;
-      --accent-dim:#2b7fc2;
-      --accent-glow: rgba(11,157,255,0.20);
+      --accent:    #f0b35f;
+      --accent-dim:#c98a45;
+      --accent-glow: rgba(240,179,95,0.22);
+      --sky:       #4a97bf;
+      --leaf:      #4bb57e;
       --danger:    #ff5566;
       --success:   #00e676;
       --warning:   #ffb300;
@@ -73,7 +77,7 @@
     html, body {
       width: 100%; height: 100%;
       overflow: hidden;
-      background: linear-gradient(180deg,#0b0f16 0%,#070a10 100%);
+      background: linear-gradient(180deg,#111318 0%,#080b10 100%);
       color: var(--text);
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
       font-size: 14px;
@@ -116,7 +120,7 @@
     #topbar .brand::before {
       content: '';
       width: 7px; height: 7px;
-      background: linear-gradient(90deg, #0ca8ff 0%, #3bb9ff 100%);
+      background: linear-gradient(90deg, #f0b35f 0%, #76c893 100%);
       border-radius: 50%;
       box-shadow: 0 0 8px var(--accent-glow);
     }
@@ -200,7 +204,7 @@
 
     .nav-view.active {
       color: #d8f3ff;
-      background: rgba(11,157,255,0.13);
+      background: rgba(240,179,95,0.13);
       border-color: rgba(59,185,255,0.34);
     }
     .nav-view.active::before {
@@ -209,20 +213,20 @@
       position: absolute;
       left: 14px; right: 14px;
       height: 2px;
-      background: linear-gradient(90deg, #0ca8ff 0%, #3bb9ff 100%);
+      background: linear-gradient(90deg, #f0b35f 0%, #76c893 100%);
       border-radius: var(--radius-pill);
-      box-shadow: 0 0 8px rgba(11,157,255,0.18);
+      box-shadow: 0 0 8px rgba(240,179,95,0.18);
     }
 
     /* + button — pill style */
     .nav-add {
       min-height: 68px;
-      background: linear-gradient(180deg, rgba(60,190,255,0.98) 0%, rgba(11,132,230,0.98) 100%);
-      border-color: rgba(208, 244, 255, 0.58);
+      background: linear-gradient(180deg, rgba(247,188,94,0.98) 0%, rgba(195,111,70,0.98) 100%);
+      border-color: rgba(255, 238, 190, 0.58);
       border-radius: 22px;
       color: #ffffff;
       font-size: 0;
-      box-shadow: 0 16px 34px rgba(7, 28, 46, 0.42), 0 0 0 1px rgba(255,255,255,0.16) inset, 0 0 26px rgba(11,157,255,0.28);
+      box-shadow: 0 16px 34px rgba(44, 24, 12, 0.44), 0 0 0 1px rgba(255,255,255,0.16) inset, 0 0 26px rgba(240,179,95,0.26);
     }
     .nav-add::after {
       content: '+';
@@ -241,9 +245,9 @@
     }
     .nav-add:hover,
     .nav-add:focus-visible {
-      background: linear-gradient(180deg, rgba(80,202,255,1) 0%, rgba(12,150,246,1) 100%);
+      background: linear-gradient(180deg, rgba(255,205,115,1) 0%, rgba(215,124,76,1) 100%);
       border-color: rgba(232, 250, 255, 0.78);
-      box-shadow: 0 18px 38px rgba(7, 28, 46, 0.48), 0 0 0 1px rgba(255,255,255,0.2) inset, 0 0 30px rgba(11,157,255,0.34);
+      box-shadow: 0 18px 38px rgba(44, 24, 12, 0.50), 0 0 0 1px rgba(255,255,255,0.2) inset, 0 0 30px rgba(240,179,95,0.32);
     }
     .nav-add:active::after { transform: scale(0.92); }
     .nav-settings-btn.active {
@@ -574,7 +578,7 @@
     .main-card-badges { display:flex; align-items:center; gap:6px; flex-wrap:wrap; }
     .main-card-icon { width:28px; height:28px; border-radius:50%; background: rgba(0,212,255,0.1); border:1px solid rgba(0,212,255,0.3); display:inline-flex; align-items:center; justify-content:center; color: var(--accent); font-size:13px; font-weight:700; }
     .main-card-type, .main-card-cat { font-size:10px; font-weight:600; letter-spacing:0.06em; text-transform:uppercase; padding:4px 8px; border-radius:999px; background: var(--chip-bg); color: var(--text-mid); }
-    .main-card-type { color: var(--accent); background: rgba(0,212,255,0.12); }
+    .main-card-type { color: var(--accent); background: rgba(240,179,95,0.13); }
     .main-card-source-badge {
       color: #ffd46b !important;
       background: rgba(255, 193, 7, 0.16) !important;
@@ -582,7 +586,7 @@
     }
     .main-card-source-line span { color: #ffd46b; }
     .cat-talk { background: rgba(138,160,190,0.16) !important; color: #c7d2e1 !important; border: 1px solid rgba(138,160,190,0.5); }
-    .cat-info { background: rgba(11,157,255,0.18) !important; color: #82caff !important; border: 1px solid rgba(11,157,255,0.48); }
+    .cat-info { background: rgba(240,179,95,0.18) !important; color: #82caff !important; border: 1px solid rgba(11,157,255,0.48); }
     .cat-warn { background: rgba(255,179,0,0.18) !important; color: #ffd46b !important; border: 1px solid rgba(255,179,0,0.52); }
     .cat-emgc { background: rgba(255,85,102,0.18) !important; color: #ff9aa8 !important; border: 1px solid rgba(255,85,102,0.52); }
     .cat-evnt { background: rgba(0,210,118,0.17) !important; color: #7ee2ad !important; border: 1px solid rgba(0,210,118,0.48); }
@@ -604,7 +608,7 @@
       font-size:13px;
       font-weight:600;
     }
-    .main-card-show3d { border:1px solid rgba(0,212,255,0.35); background: rgba(0,212,255,0.11); color: var(--accent); }
+    .main-card-show3d { border:1px solid rgba(240,179,95,0.36); background: rgba(240,179,95,0.13); color: var(--accent); }
     .main-card-reply { border:1px solid rgba(138,167,204,0.36); background: rgba(118,146,181,0.14); color: var(--text-mid); }
     .main-card-reply:hover { color: var(--text); border-color: rgba(138,167,204,0.52); }
     .reply-toast {
@@ -745,7 +749,7 @@
       color: var(--text-dim);
     }
     .btn-cta {
-      background: linear-gradient(90deg, #0ca8ff 0%, #3bb9ff 100%);
+      background: linear-gradient(90deg, #f0b35f 0%, #76c893 100%);
       color: #ffffff;
       border: none;
       padding: 11px 26px;
@@ -821,7 +825,7 @@
     .atom-dot {
       width: 6px; height: 6px;
       border-radius: 50%;
-      background: linear-gradient(90deg, #0ca8ff 0%, #3bb9ff 100%);
+      background: linear-gradient(90deg, #f0b35f 0%, #76c893 100%);
       margin-top: 6px;
     }
     .atom-body .atom-text { color: var(--text); font-size: 13px; line-height: 1.4; word-break: break-word; }
@@ -1002,7 +1006,7 @@
     /* Reusable component tokens */
     .ui-card { border: 1px solid var(--border2); border-radius: var(--radius-lg); background: linear-gradient(180deg, var(--surface-strong), var(--surface-soft)); box-shadow: var(--shadow-soft); }
     .ui-btn { appearance:none; border:1px solid var(--border2); border-radius: var(--radius-pill); padding:7px 12px; font-size:var(--text-sm); font-weight:600; font-family:inherit; cursor:pointer; }
-    .ui-btn-primary { border-color: rgba(0,212,255,0.35); background: rgba(0,212,255,0.11); color: var(--accent); }
+    .ui-btn-primary { border-color: rgba(240,179,95,0.36); background: rgba(240,179,95,0.13); color: var(--accent); }
     .ui-btn-secondary { border-color: rgba(138,167,204,0.36); background: rgba(118,146,181,0.14); color: var(--text-mid); }
     .ui-tab { border:1px solid rgba(120,150,190,0.24); border-radius: var(--radius-pill); background: var(--chip-bg); color: var(--text-mid); font-size: var(--text-xs); padding: 7px 13px; }
     .ui-badge { font-size:10px; font-weight:600; letter-spacing:0.06em; text-transform:uppercase; padding:4px 8px; border-radius: var(--radius-pill); background: var(--chip-bg); color:var(--text-mid); }
@@ -1535,7 +1539,7 @@
     .btn:active { transform: scale(0.97); }
     .btn-secondary { background: var(--surface3); color: var(--text-mid); }
     .btn-primary {
-      background: linear-gradient(90deg, #0ca8ff 0%, #3bb9ff 100%);
+      background: linear-gradient(90deg, #f0b35f 0%, #76c893 100%);
       color: #ffffff;
       border-color: var(--accent);
       font-weight: 600;
@@ -1734,17 +1738,17 @@
     <div class="settings-separator"></div>
 
     <!-- Identity -->
-    <div class="settings-section-title">Identity</div>
+    <div class="settings-section-title">Your Punkto Identity</div>
     <div class="settings-info" id="settings-identity-info">
       <div>
-        <span class="k">Name</span>
+        <span class="k">Public name</span>
         <span class="v"><input id="settings-name" type="text" placeholder="Your public name" /></span>
       </div>
       <div>
-        <span class="k">Status</span><span class="v" id="me-key-status">No key on this device</span>
+        <span class="k">Status</span><span class="v" id="me-key-status">No identity saved on this device</span>
       </div>
       <div class="dim">
-        <span class="k">Help</span><span class="v" id="me-key-helper">Punktis you write are unsigned.</span>
+        <span class="k">Help</span><span class="v" id="me-key-helper">Create or import an identity to sign new public Punktis.</span>
       </div>
       <div class="dim" id="me-writing-as-row" style="display:none;">
         <span class="k">Writing as</span><span class="v" id="me-writing-as">—</span>
@@ -1759,21 +1763,22 @@
 
     <!-- Key info (shown after generate/import) -->
     <div id="key-info" class="settings-info" style="display:none; margin-top:8px;">
-      <div><span class="k">Author ID</span> <span class="v mono" id="key-author-id">—</span></div>
+      <div><span class="k">Punkto ID</span> <span class="v mono" id="key-author-id">—</span></div>
       <div><span class="k">Fingerprint</span>    <span class="v mono" id="key-pubkey">—</span></div>
-      <div><span class="k">Mnemonic</span>  <span class="v key-mnemonic" id="key-mnemonic">—</span></div>
+      <div><span class="k">Recovery words</span>  <span class="v key-mnemonic" id="key-mnemonic">Hidden until you choose Show recovery words</span></div>
       <div style="margin-top:6px;display:flex;gap:8px;flex-wrap:wrap">
-        <button id="btn-print-mnemonic" class="btn btn-secondary">Print Mnemonic</button>
-        <button id="btn-export-key" class="btn btn-secondary">Export JSON</button>
+        <button id="btn-print-mnemonic" class="btn btn-secondary">Show recovery words</button>
+        <button id="btn-export-key" class="btn btn-secondary">Download backup</button>
       </div>
     </div>
 
     <div class="settings-key-actions">
-      <button id="btn-generate-key">Generate new key</button>
-      <button id="btn-import-key">Import key</button>
-      <button id="btn-save-key">Save key</button>
-      <button id="btn-load-key">Load key</button>
+      <button id="btn-generate-key">Create my identity</button>
+      <button id="btn-import-key">Import existing identity</button>
+      <button id="btn-save-key">Show recovery words</button>
+      <button id="btn-load-key">Download backup</button>
     </div>
+    <p class="settings-note">Private signing and recovery material stays on this device. Browser storage is not hardware-secure; clearing browser or app data can erase the local identity unless you keep a backup or recovery words.</p>
 
     <div class="settings-separator"></div>
 
@@ -1946,28 +1951,29 @@
   <div id="modal-add" style="display:none"></div>
 
   <!-- ── Mnemonic modal ───────────────────────────────────── -->
-  <div id="mnemonic-overlay" class="modal-overlay">
+  <div id="mnemonic-overlay" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="mnemonic-title" aria-hidden="true">
     <div id="mnemonic-box" class="modal-box" style="max-width:440px">
-      <h2>⚠ New Key Generated</h2>
-      <div id="mnemonic-warning">Write these 12 words on paper immediately.<br>Never store them digitally. This is your only backup.</div>
+      <h2 id="mnemonic-title">Your recovery words</h2>
+      <div id="mnemonic-warning">Keep these 12 words or a downloaded backup. Anyone with them can write as this Punkto ID.</div>
       <div id="mnemonic-words"></div>
       <div id="mnemonic-author"></div>
       <div id="mnemonic-actions">
-        <button class="btn btn-secondary" id="btn-mnemonic-copy">Copy words</button>
-        <button class="btn btn-primary" id="btn-mnemonic-close">I've written these down ✓</button>
+        <button class="btn btn-secondary" id="btn-mnemonic-copy" type="button">Copy words</button>
+        <button class="btn btn-primary" id="btn-mnemonic-close" type="button">Done</button>
       </div>
     </div>
   </div>
   <div id="modal-mnemonic" style="display:none"></div>
 
   <!-- ── Import key modal (placeholder for compatibility) ──── -->
-  <div id="modal-import" class="modal-overlay" role="dialog" aria-modal="true">
+  <div id="modal-import" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="import-key-title" aria-hidden="true">
     <div class="modal-box" style="max-width:440px">
-      <h2>Import Key</h2>
-      <p style="font-size:12px;color:var(--text-dim);margin-bottom:14px">Paste your 12-word mnemonic or exported JSON.</p>
+      <h2 id="import-key-title">Import existing identity</h2>
+      <p style="font-size:12px;color:var(--text-dim);margin-bottom:14px">Paste your 12 recovery words, paste backup JSON, or choose a Punkto identity backup file.</p>
       <textarea id="import-key-text" placeholder="12 mnemonic words separated by spaces"></textarea>
       <div id="import-key-error" style="font-size:12px;color:var(--danger);margin-bottom:8px;min-height:16px"></div>
       <div style="display:flex;gap:10px;justify-content:flex-end">
+        <button class="btn btn-secondary" id="import-key-file" type="button">Choose file</button>
         <button class="btn btn-secondary" id="import-key-cancel">Cancel</button>
         <button class="btn btn-primary" id="import-key-confirm">Import</button>
       </div>

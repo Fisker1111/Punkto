@@ -14,6 +14,7 @@ let _onRenderMap = null;
 let _onSubmitReply = null;
 let _onFocusMap = null;
 let _onBoardViewportChanged = null;
+let _onPrintAtom = null;
 
 let _selectedAtomId = null;
 let _selectedMapAtom = null;
@@ -33,6 +34,7 @@ export function initBoardView({
   onSubmitReply,
   onFocusMap,
   onBoardViewportChanged,
+  onPrintAtom,
 } = {}) {
   _sheet = sheet || document.getElementById('map-board-sheet');
   _getAtoms = typeof getAtoms === 'function' ? getAtoms : _getAtoms;
@@ -44,6 +46,7 @@ export function initBoardView({
   _onSubmitReply = typeof onSubmitReply === 'function' ? onSubmitReply : null;
   _onFocusMap = typeof onFocusMap === 'function' ? onFocusMap : null;
   _onBoardViewportChanged = typeof onBoardViewportChanged === 'function' ? onBoardViewportChanged : null;
+  _onPrintAtom = typeof onPrintAtom === 'function' ? onPrintAtom : null;
 
   if (!_sheet || _sheet.dataset.boardViewBound === 'true') return;
   _sheet.dataset.boardViewBound = 'true';
@@ -170,13 +173,20 @@ function handleBoardClick(e) {
     const id = copyBtn.dataset.id || '';
     if (!id) return;
     const link = (window.location.origin || '') + '/p/' + encodeURIComponent(id);
-    navigator.clipboard?.writeText(link).then(() => {
+      navigator.clipboard?.writeText(link).then(() => {
       copyBtn.textContent = 'Copied';
-      window.setTimeout(() => { copyBtn.textContent = 'Copy board link'; }, 1400);
+      window.setTimeout(() => { copyBtn.textContent = 'Copy exact link'; }, 1400);
     }).catch(() => {
       copyBtn.textContent = 'Copy failed';
-      window.setTimeout(() => { copyBtn.textContent = 'Copy board link'; }, 1400);
+      window.setTimeout(() => { copyBtn.textContent = 'Copy exact link'; }, 1400);
     });
+    return;
+  }
+
+  const printBtn = e.target.closest('[data-action="print-punkti"]');
+  if (printBtn) {
+    e.preventDefault();
+    if (_selectedBoardAtom && _onPrintAtom) _onPrintAtom(_selectedBoardAtom, printBtn);
     return;
   }
 

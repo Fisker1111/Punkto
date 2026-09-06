@@ -1,6 +1,6 @@
 # Codex Current Task
 
-Status: **ACTIVE — Slice 5: Finish Punkto**
+Status: **HOLD — Slice 5 implemented, awaiting CI/review and test1 deployment**
 
 Repository: `Fisker1111/Punkto`
 Branch: `pilot-1`

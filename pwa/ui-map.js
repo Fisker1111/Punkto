@@ -11,17 +11,18 @@ import { decodeAtomLocation, FLOOR_HEIGHT_M } from './core/location.js';
 import { fmtCoords, fmtRelativeTime, fmtTime, escHtml, renderAtomText } from './core/display.js';
 import { stripPunktoPrefix, ensurePunktoPrefix } from './protocol/punkto-id.js';
 import { getAtomStableId } from './ui-text.js';
+import { isStableAtomId } from './protocol/atom-id.js';
 
 const CATEGORY_META = {
-  TEXT: { code: 'TEXT', label: 'Talk', cls: 'cat-talk', color: [138, 160, 190] },
-  INFO: { code: 'INFO', label: 'Info', cls: 'cat-info', color: [11, 157, 255] },
-  WARN: { code: 'WARN', label: 'Warning', cls: 'cat-warn', color: [255, 179, 0] },
+  TEXT: { code: 'TEXT', label: 'Talk', cls: 'cat-talk', color: [224, 166, 96] },
+  INFO: { code: 'INFO', label: 'Info', cls: 'cat-info', color: [74, 151, 191] },
+  WARN: { code: 'WARN', label: 'Warning', cls: 'cat-warn', color: [237, 176, 74] },
   EMGC: { code: 'EMGC', label: 'Emergency', cls: 'cat-emgc', color: [255, 85, 102] },
-  EVNT: { code: 'EVNT', label: 'Event', cls: 'cat-evnt', color: [0, 210, 118] },
-  LOST: { code: 'LOST', label: 'Lost/Found', cls: 'cat-lost', color: [255, 132, 64] },
+  EVNT: { code: 'EVNT', label: 'Event', cls: 'cat-evnt', color: [75, 181, 126] },
+  LOST: { code: 'LOST', label: 'Lost/Found', cls: 'cat-lost', color: [230, 126, 83] },
 };
 const IMPORTED_SOURCE_COLOR = [255, 193, 7];
-const DRAFT_COLOR = [255, 220, 80];
+const DRAFT_COLOR = [255, 213, 93];
 
 let _mapStyle = 'https://tiles.openfreemap.org/styles/liberty';
 let _getAllAtomsNewestFirst = async () => [];
@@ -221,25 +222,25 @@ export function ensureMapInitialized() {
 export async function focusPunktoOnMap(id) {
   if (!id) return;
   ensureMapInitialized();
-  const punkto = ensurePunktoPrefix(id);
+  const rawId = String(id || '').trim();
+  const focusAtoms = (await _getAllAtomsNewestFirst()).filter(a => !_isHiddenAtom(a));
+  const focusedAtom = focusAtoms.find((atom) => {
+    const pid = String(atom?.punkto || '').trim();
+    const stable = getAtomStableId(atom);
+    return stable === rawId || pid === ensurePunktoPrefix(rawId) || stripPunktoPrefix(pid) === rawId;
+  }) || null;
+  const punkto = focusedAtom?.punkto || (isStableAtomId(rawId) ? '' : ensurePunktoPrefix(rawId));
   const loc = decodeAtomLocation(punkto);
   if (!loc || !map) return;
 
   map.flyTo({ center: [loc.lon, loc.lat], zoom: 16, duration: 1200 });
   document.title = `Punkto · ${punkto}`;
 
-  if (focusedPunktoId && focusedPunktoId !== id) {
+  if (focusedPunktoId && focusedPunktoId !== rawId) {
     const prev = atomMarkers.get(`p:${focusedPunktoId}`);
     if (prev) prev.getElement().classList.remove('atom-bubble--focus');
   }
-  focusedPunktoId = id;
-
-  const focusAtoms = (await _getAllAtomsNewestFirst()).filter(a => !_isHiddenAtom(a));
-  const focusedAtom = focusAtoms.find((atom) => {
-    const pid = String(atom?.punkto || '').trim();
-    const stable = getAtomStableId(atom);
-    return pid === punkto || stripPunktoPrefix(pid) === id || stable === id;
-  }) || null;
+  focusedPunktoId = rawId;
   if (focusedAtom && _onOpenMapBoardForAtom) {
     await _onOpenMapBoardForAtom(focusedAtom, focusAtoms);
   } else if (_onClearSelection) {
@@ -327,7 +328,7 @@ export async function renderAtoms(newAtomIds = null) {
   const stemData = scatterData.filter(d =>
     d.hasHeight && (d.selected || d.selectionId === 'draft' || zoom >= SPATIAL_LOD.stemZoom)
   );
-  const selectedLabelData = scatterData.filter(d => d.selected || d.selectionId === 'draft');
+  const selectedLabelData = scatterData.filter(d => d.selected);
 
   const { ScatterplotLayer, TextLayer } = window.deck;
   const layers = [

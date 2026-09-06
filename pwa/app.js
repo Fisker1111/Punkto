@@ -45,7 +45,8 @@ import { ensureNode } from './storage/node-store.js';
 import { fmtTime, fmtRelativeTime, fmtCoords, fmtDistance, fmtAltitudeLabel, deriveTitle, deriveCategory, getCategoryMeta, escHtml, renderAtomText } from './core/display.js';
 import { isHiddenAtom, isVerifiedAtom } from './core/atoms.js';
 import { ensurePunktoPrefix, stripPunktoPrefix, parseDeepLinkPunktoId as parseDeepLinkPunktoIdFromPath } from './protocol/punkto-id.js';
-import { computeAtomId } from './protocol/atom-id.js';
+import { canonicalAtomId, parsePublicPPath } from './protocol/exact-link.js';
+import { downloadPunktiPdf } from './print-pdf.js';
 import { createNodeRegistry } from './sync/node-registry.js';
 import { postAtomToNetwork, fetchNodeInfo, fetchNodeCursor } from './sync/network-client.js';
 import { createSyncEngine } from './sync/sync-engine.js';
@@ -102,10 +103,10 @@ function showPage(page) {
 }
 
 async function getAtomSelectionId(atom) {
-  const direct = String(atom?.atom_id || atom?.id || '').trim();
+  const direct = String(atom?.atom_id || '').trim();
   if (direct) return direct;
   try {
-    const computed = await computeAtomId(atom);
+    const computed = await canonicalAtomId(atom);
     if (computed) return computed;
   } catch {}
   return getAtomStableId(atom) || stripPunktoPrefix(atom?.punkto || '');
@@ -224,6 +225,19 @@ async function focusDeepLinkIfReady() {
   await focusPunkto(deepLinkPunkto);
 }
 
+async function ensureAtomIds(atoms) {
+  const list = Array.isArray(atoms) ? atoms : [];
+  await Promise.all(list.map(async (atom) => {
+    if (atom?.atom_id) return;
+    try {
+      atom.atom_id = await canonicalAtomId(atom);
+      if (atom.id) await db.atoms.update(atom.id, { atom_id: atom.atom_id });
+    } catch (err) {
+      console.warn('[atom-id] could not derive canonical id:', err?.message || err);
+    }
+  }));
+}
+
 async function startSyncBoot() {
   if (syncBootPromise) return syncBootPromise;
   syncBootPromise = (async () => {
@@ -311,7 +325,7 @@ function renderMePage() {
  * Returns the full punkto id (without 'p:' prefix) or null.
  */
 function parseDeepLinkPunktoId() {
-  return parseDeepLinkPunktoIdFromPath(location.pathname || '');
+  return parsePublicPPath(location.pathname || '')?.id || parseDeepLinkPunktoIdFromPath(location.pathname || '');
 }
 
 /**
@@ -356,6 +370,7 @@ async function refreshUI(newAtomIds = null) {
   // The full DB count is not exposed in the UI — users see only the clean subset.
   const allAtoms = await getAllAtomsNewestFirst();
   const visibleAtoms = allAtoms.filter(a => !isHiddenAtom(a));
+  await ensureAtomIds(visibleAtoms);
   const total = visibleAtoms.length;
   elCountNum.textContent = total;
   // Keep settings info (if menu is open) in sync
@@ -504,7 +519,7 @@ let placementDraft = null;
 
 
 function selectedBoardStableId(atom) {
-  return String(atom?.atom_id || atom?.id || stripPunktoPrefix(atom?.punkto || '') || '').trim();
+  return String(atom?.atom_id || '').trim();
 }
 
 function copyRootLocationFields(root, reply) {
@@ -524,11 +539,20 @@ function readableReplyError(err) {
   return err?.message ? `Could not post public reply: ${err.message}` : 'Could not post public reply.';
 }
 
+function readablePublishError(err) {
+  const code = err?.code || err?.detail?.error;
+  if (code === 'rate_limited') return 'Publish was rate limited. Your draft is still here; wait a moment and try again.';
+  if (code === 'atom_too_old') return 'The relay rejected this timestamp. Your draft is still here; try publishing again.';
+  if (code === 'invalid_signature') return 'The relay rejected the signature. Your draft is still here; check your identity or import it again.';
+  if (err?.name === 'TimeoutError') return 'Network timed out. Your draft is still here; try again when the connection returns.';
+  return `Could not publish yet. Your draft is still here. ${err?.message || 'Check your connection and try again.'}`;
+}
+
 async function submitBoardReply({ boardAtom, text }) {
   const root = boardAtom || {};
   let parentId = selectedBoardStableId(root);
   if (!parentId) {
-    try { parentId = await computeAtomId(root); } catch {}
+    try { parentId = await canonicalAtomId(root); } catch {}
   }
   if (!parentId) throw new Error('Cannot reply: board id is missing.');
 
@@ -553,6 +577,7 @@ async function submitBoardReply({ boardAtom, text }) {
     const signedReply = await signAtomForSubmit(reply);
     const result = await postAtomToNetwork(signedReply, nodeRegistry);
     if (result?.atom_id) signedReply.atom_id = result.atom_id;
+    if (!signedReply.atom_id) signedReply.atom_id = await canonicalAtomId(signedReply);
     await upsertAtom(signedReply);
     await refreshUI();
     setSyncStatus('ok');
@@ -562,33 +587,52 @@ async function submitBoardReply({ boardAtom, text }) {
   }
 }
 
-// Ensure an identity is available for signing. Loads from localStorage first,
-// then silently generates one (persisted) so signed-atom submission always works.
-async function ensureIdentity() {
+const IDENTITY_META_KEY = 'activeIdentity';
+
+async function saveIdentityToDb(identity) {
+  await db.meta.put({ key: IDENTITY_META_KEY, value: identity });
+}
+
+async function loadIdentityFromDb() {
+  const row = await db.meta.get(IDENTITY_META_KEY);
+  return row?.value || null;
+}
+
+async function loadPersistedIdentity() {
   if (currentIdentity) return currentIdentity;
-  const saved = localStorage.getItem('punkto-identity');
-  if (saved) {
-    try {
-      currentIdentity = JSON.parse(saved);
+  try {
+    const saved = await loadIdentityFromDb();
+    if (saved?.authorId) {
+      currentIdentity = saved;
       displayKeyInfo(currentIdentity);
       return currentIdentity;
-    } catch (err) {
-      console.error('[identity] load failed:', err);
     }
-  }
-  try {
-    if (typeof window.generateIdentity !== 'function') {
-      console.error('[identity] generateIdentity not loaded — atoms will be unsigned');
-      return null;
-    }
-    currentIdentity = await window.generateIdentity();
-    localStorage.setItem('punkto-identity', JSON.stringify(currentIdentity));
-    displayKeyInfo(currentIdentity);
-    return currentIdentity;
   } catch (err) {
-    console.error('[identity] auto-generate failed:', err);
-    return null;
+    console.warn('[identity] IndexedDB load failed:', err);
   }
+  const legacy = localStorage.getItem('punkto-identity');
+  if (legacy) {
+    try {
+      const parsed = JSON.parse(legacy);
+      currentIdentity = parsed?.mnemonic && typeof window.identityFromMnemonic === 'function'
+        ? await window.identityFromMnemonic(parsed.mnemonic)
+        : parsed;
+      if (currentIdentity?.authorId) {
+        await saveIdentityToDb(currentIdentity);
+        displayKeyInfo(currentIdentity);
+        return currentIdentity;
+      }
+    } catch (err) {
+      console.error('[identity] legacy migration failed:', err);
+    }
+  }
+  return null;
+}
+
+// Load the active local identity for signing. Publishing may continue unsigned
+// when no identity exists, but Punkto never silently creates or replaces keys.
+async function ensureIdentity() {
+  return loadPersistedIdentity();
 }
 
 // Sign an atom before network submission. Falls back to unsigned if no identity
@@ -636,6 +680,7 @@ async function submitAtomFromModal({ text, author, category, draft }) {
     const signedAtom = await signAtomForSubmit(atom);
     const result = await postAtomToNetwork(signedAtom, nodeRegistry);
     if (result?.atom_id) signedAtom.atom_id = result.atom_id;
+    if (!signedAtom.atom_id) signedAtom.atom_id = await canonicalAtomId(signedAtom);
     await upsertAtom(signedAtom);
     closeCreateModal();
     await refreshUI();
@@ -645,9 +690,36 @@ async function submitAtomFromModal({ text, author, category, draft }) {
     if (loc && map) map.flyTo({ center: [loc.lon, loc.lat], zoom: Math.max(map.getZoom(), 14) });
   } catch (err) {
     console.error('[addAtom]', err);
-    setCreateError(`Error: ${err.message}`);
+    setSyncStatus('error');
+    setCreateError(readablePublishError(err));
   } finally {
     setCreateSubmitting(false);
+  }
+}
+
+async function printPunktiForAtom(atom, button = null) {
+  if (!atom) return;
+  const originalText = button?.textContent;
+  if (button) {
+    button.disabled = true;
+    button.textContent = 'Preparing PDF...';
+  }
+  try {
+    await downloadPunktiPdf(atom, { origin: window.location.origin });
+    if (button) {
+      button.textContent = 'PDF downloaded';
+      setTimeout(() => { button.textContent = originalText || 'Print this Punkti'; }, 1600);
+    }
+  } catch (err) {
+    console.error('[print]', err);
+    if (button) {
+      button.textContent = 'Print failed';
+      setTimeout(() => { button.textContent = originalText || 'Print this Punkti'; }, 1800);
+    } else {
+      showBootError(`Could not create PDF: ${err?.message || err}`);
+    }
+  } finally {
+    if (button) button.disabled = false;
   }
 }
 
@@ -768,6 +840,7 @@ function showMnemonicModal(identity) {
   ).join('');
   authorEl.textContent = `Author ID: ${identity.authorId}`;
   overlay.classList.add('open');
+  overlay.setAttribute('aria-hidden', 'false');
   const copyBtn = document.getElementById('btn-mnemonic-copy');
   const closeBtn = document.getElementById('btn-mnemonic-close');
   copyBtn.onclick = () => {
@@ -778,7 +851,10 @@ function showMnemonicModal(identity) {
       copyBtn.textContent = identity.mnemonic.join(' ');
     });
   };
-  closeBtn.onclick = () => overlay.classList.remove('open');
+  closeBtn.onclick = () => {
+    overlay.classList.remove('open');
+    overlay.setAttribute('aria-hidden', 'true');
+  };
 }
 
 /**
@@ -1065,8 +1141,8 @@ function wireEvents() {
 // ---------------------------------------------------------------------------
 
 async function boot() {
-  console.log('PUNKTO APP.JS LOADED pilot1-slice45b2-render-restore-2026-08-30-1');
-  window.PUNKTO_APP_VERSION = 'pilot1-slice45b2-render-restore-2026-08-30-1';
+  console.log('PUNKTO APP.JS LOADED pilot1-slice5-finish-punkto-2026-09-06-1');
+  window.PUNKTO_APP_VERSION = 'pilot1-slice5-finish-punkto-2026-09-06-1';
 
   console.log('[punkto] booting...');
 
@@ -1135,6 +1211,7 @@ async function boot() {
     onOpenBoard: (id) => { showPage('text'); },
     onLeaveNote: openCreateOnMap,
     onPostReply: submitBoardReply,
+    onPrintAtom: printPunktiForAtom,
     helpers: {
       escHtml, deriveTitle, deriveCategory, isVerifiedAtom,
       fmtAltitudeLabel, fmtDistance, fmtTime,
@@ -1173,6 +1250,7 @@ async function boot() {
     onSubmitReply: submitBoardReply,
     onFocusMap: focusPunkto,
     onBoardViewportChanged: setMapBoardViewport,
+    onPrintAtom: printPunktiForAtom,
   });
 
   startSyncBoot().catch((err) => {
@@ -1222,10 +1300,10 @@ function displayKeyInfo(identity) {
     renderSettingsView({
       identity: {
         name,
-        status: 'No key on this device',
-        helper: 'Punktis you write are unsigned.',
+        status: 'No identity saved on this device',
+        helper: 'Create or import an identity to sign new public Punktis. Clearing browser data can erase it unless you keep a backup or recovery words.',
         canSave: false,
-        canLoad: !!localStorage.getItem('punkto-identity'),
+        canLoad: false,
       },
     });
     return;
@@ -1233,18 +1311,107 @@ function displayKeyInfo(identity) {
   renderSettingsView({
     identity: {
       name,
-      status: 'Key loaded on this device',
-      helper: 'New Punktis can be signed.',
+      status: 'Saved on this device',
+      helper: 'Your signing words stay on this device. Keep a backup or recovery words; clearing browser data can erase the local identity.',
       authorId: identity.authorId,
       pubkey: identity.pubkey ? identity.pubkey.slice(0, 20) + '...' : '—',
       shortPubkey: shortFingerprint(identity.pubkey),
-      mnemonic: Array.isArray(identity.mnemonic) ? identity.mnemonic.join(' ') : '—',
+      mnemonic: 'Hidden until you choose Show recovery words',
       canSave: true,
-      canLoad: !!localStorage.getItem('punkto-identity'),
+      canLoad: true,
     },
   });
   const meShort = document.getElementById('me-author-short');
   if (meShort) meShort.textContent = shortFingerprint(identity.pubkey);
+}
+
+async function activateIdentity(identity, { replacing = false } = {}) {
+  if (!identity?.authorId) throw new Error('Identity is missing an author ID.');
+  if (currentIdentity?.authorId && currentIdentity.authorId !== identity.authorId && !replacing) {
+    const ok = confirm('Replace the Punkto identity saved on this device? Keep a backup before replacing it.');
+    if (!ok) return false;
+  }
+  currentIdentity = identity;
+  await saveIdentityToDb(identity);
+  localStorage.setItem('punkto-identity', JSON.stringify(identity));
+  displayKeyInfo(identity);
+  return true;
+}
+
+async function createIdentityFromSettings() {
+  if (currentIdentity?.authorId) {
+    const ok = confirm('This device already has a Punkto identity. Create and replace it only if you have backed up the current one.');
+    if (!ok) return;
+  }
+  const identity = await window.generateIdentity();
+  const activated = await activateIdentity(identity, { replacing: Boolean(currentIdentity?.authorId) });
+  if (activated) showMnemonicModal(identity);
+}
+
+async function importIdentityText(raw) {
+  const text = String(raw || '').trim();
+  if (!text) throw new Error('Paste recovery words or choose a backup JSON file.');
+  const identity = text.startsWith('{')
+    ? await window.importKeyFromJson(text)
+    : await window.identityFromMnemonic(text);
+  return activateIdentity(identity);
+}
+
+function downloadIdentityBackup() {
+  if (!currentIdentity || typeof window.exportKeyJson !== 'function') return;
+  const blob = new Blob([window.exportKeyJson(currentIdentity)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `punkto-identity-${currentIdentity.authorId}.punkto-key.json`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 5000);
+}
+
+function openIdentityImportModal() {
+  const overlay = document.getElementById('modal-import');
+  const textarea = document.getElementById('import-key-text');
+  const error = document.getElementById('import-key-error');
+  const cancel = document.getElementById('import-key-cancel');
+  const confirmBtn = document.getElementById('import-key-confirm');
+  const fileBtn = document.getElementById('import-key-file');
+  if (!overlay || !textarea || !confirmBtn) return;
+  textarea.value = '';
+  if (error) error.textContent = '';
+  overlay.classList.add('open');
+  overlay.setAttribute('aria-hidden', 'false');
+  setTimeout(() => textarea.focus(), 60);
+  const close = () => {
+    overlay.classList.remove('open');
+    overlay.setAttribute('aria-hidden', 'true');
+  };
+  cancel.onclick = close;
+  confirmBtn.onclick = async () => {
+    confirmBtn.disabled = true;
+    if (error) error.textContent = '';
+    try {
+      const ok = await importIdentityText(textarea.value);
+      if (ok) close();
+    } catch (err) {
+      if (error) error.textContent = err?.message || 'Could not import identity.';
+    } finally {
+      confirmBtn.disabled = false;
+    }
+  };
+  if (fileBtn) {
+    fileBtn.onclick = () => {
+      const input = document.createElement('input');
+      input.type = 'file';
+      input.accept = '.json,.punkto-key.json,application/json';
+      input.onchange = async (ev) => {
+        const file = ev.target.files?.[0];
+        if (!file) return;
+        textarea.value = await file.text();
+      };
+      input.click();
+    };
+  }
 }
 
 function setupKeyManagement() {
@@ -1254,68 +1421,24 @@ function setupKeyManagement() {
       resetCache();
     },
     onGenerateKey: async () => {
-      try {
-        if (typeof window.generateIdentity !== 'function') {
-          console.error('[identity] generateIdentity not loaded');
-          return;
-        }
-        const identity = await window.generateIdentity();
-        currentIdentity = identity;
-        displayKeyInfo(identity);
-        showMnemonicModal(identity);
-      } catch (err) {
-        console.error('[identity] generate failed:', err);
-      }
+      try { await createIdentityFromSettings(); }
+      catch (err) { console.error('[identity] create failed:', err); }
     },
-    onImportKey: () => {
-      const input = document.createElement('input');
-      input.type = 'file'; input.accept = '.json';
-      input.onchange = async (ev) => {
-        const file = ev.target.files[0]; if (!file) return;
-        try {
-          const identity = importKeyFromJson(await file.text());
-          currentIdentity = identity; displayKeyInfo(identity);
-        } catch (err) { console.error('[identity] import failed:', err); }
-      };
-      input.click();
-    },
+    onImportKey: openIdentityImportModal,
     onSaveKey: () => {
       if (!currentIdentity) return;
-      if (!confirm('localStorage is not secure. Save temporarily?')) return;
-      localStorage.setItem('punkto-identity', JSON.stringify(currentIdentity));
-      displayKeyInfo(currentIdentity);
+      showMnemonicModal(currentIdentity);
     },
-    onLoadKey: () => {
-      const saved = localStorage.getItem('punkto-identity');
-      if (!saved) return;
-      try {
-        const identity = JSON.parse(saved);
-        currentIdentity = identity; displayKeyInfo(identity);
-      } catch (err) { console.error('[identity] load failed:', err); }
-    },
+    onLoadKey: downloadIdentityBackup,
     onNameChanged: (name) => {
       setStoredAuthorName(name);
       displayKeyInfo(currentIdentity);
     },
     onPrintMnemonic: () => {
-      if (!currentIdentity) return;
-      const words = currentIdentity.mnemonic.map((w, i) =>
-        `<span>${i+1}. ${w}</span>`).join(' ');
-      const win = window.open('', '_blank');
-      win.document.write(`<!DOCTYPE html><html><head><title>Punkto Key</title>
-<style>body{font-family:monospace;padding:20px;}</style></head>
-<body><h1>Punkto Identity — KEEP SAFE</h1><p>${words}</p>
-<p>Author: ${currentIdentity.authorId}</p></body></html>`);
-      win.document.close(); win.print();
+      if (currentIdentity) showMnemonicModal(currentIdentity);
     },
-    onExportKey: () => {
-      if (!currentIdentity) return;
-      const blob = new Blob([exportKeyJson(currentIdentity)], { type: 'application/json' });
-      const a = document.createElement('a');
-      a.href = URL.createObjectURL(blob);
-      a.download = 'punkto-key.json'; a.click();
-    },
+    onExportKey: downloadIdentityBackup,
   });
   displayKeyInfo(currentIdentity);
-}
-// Rebuild trigger: 2026-05-25T13:16:00Z
+  loadPersistedIdentity().then(displayKeyInfo).catch((err) => console.warn('[identity] load failed:', err));
+}// Rebuild trigger: 2026-05-25T13:16:00Z
