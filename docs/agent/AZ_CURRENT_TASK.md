@@ -1,88 +1,163 @@
 # AZ Current Task
 
-Status: **ACTIVE — deploy final Slice 5 glowing-orb polish to test1**
+Status: **ACTIVE — Slice 6 production cutover and test1 retirement**
 
 Repository: `Fisker1111/Punkto`
-Branch: `pilot-1`
-PR: `#110`
+Coordination branch: `pilot-1`
+Merged PR: `#110`
 Owner: **AZ (deployment / operations)**
 
 ## Mission
 
-Deploy the reviewed final Slice 5 visual polish to **test1 only** for one last human visual acceptance check.
+Complete **Slice 6** and close the Pilot_1 staging era:
 
-Deploy exactly this application SHA:
+1. deploy the merged Pilot_1 release from `main` to `https://punkto.xyz`;
+2. verify production end-to-end;
+3. preserve/verify legitimate test1 data;
+4. retire the standalone test1 app/relay only after production is proven good;
+5. leave `node1` and `node2` untouched.
+
+PR #110 is already merged to `main`.
+
+Exact merged main release SHA:
+
+`c25c6f1320206742d7d94b52496bc6be0a2e12dd`
+
+Accepted visual application commit contained in that merge:
 
 `6cd203c87de49d9322dae590b56fa8fee429c4c4`
 
-Commit:
+The human has accepted Slice 5 including the glowing-orb polish. Pilot CI on the PR head was green before merge.
 
-`fix(pilot1): render hovering atoms as glowing orbs`
+## Hard exact-SHA rule
 
-Pilot CI:
+**Do not deploy a moving branch tip.** Deploy production from exact merged main SHA:
 
-- Run: `34972455907`
-- Number: `#169`
-- Result: **green**
-- PWA validation: PASS
-- Slice 5 deterministic helper tests: PASS
-- Relay regression suite: PASS
+`c25c6f1320206742d7d94b52496bc6be0a2e12dd`
 
-## Scope of this change
+Use Git-object/exact-SHA deployment discipline (`git archive` or equivalent). Do not rebuild product code manually on the server.
 
-This is visual-only map rendering polish. Hovering atom markers should now read as small glowing spherical **orbs** rather than flat discs, while preserving:
+## Phase 1 — preflight and backups
 
-- category/atom color identity;
-- yellow placement draft identity;
-- ground anchor/ring;
-- vertical stem and physical-altitude meaning;
-- selection/click behavior;
-- accepted creation flow: Aim → `+` → choose height → Done → Write → Publish;
-- existing camera/placement behavior.
+Before changing production:
 
-No protocol, signing, identity, board/reply, PDF/QR, relay, federation, or server behavior is intentionally changed.
+1. Fetch `origin/main` and verify `c25c6f1320206742d7d94b52496bc6be0a2e12dd` exists and is the PR #110 merge.
+2. Record current `punkto.xyz` PWA, relay/container, Caddy/routing, volume, node identity and health state.
+3. Make timestamped rollback backups of the currently served production PWA and any production relay/config that will be touched.
+4. Record test1 state: PWA version, relay health, persistent volume, current buffer/legitimate human atoms and federation state.
+5. Confirm node1/node2 current markers and do not modify them.
+6. Inspect the actual production topology before changing anything. Preserve production identity, persistent data and federation configuration unless a change is strictly required for this release.
 
-## Critical deployment rule
+If production topology differs materially from expectations, stop and report rather than improvising a destructive migration.
 
-**Do not deploy the moving `pilot-1` branch tip.** This task-file activation advances the branch after the application commit. Deploy only `pwa/` from exact SHA `6cd203c87de49d9322dae590b56fa8fee429c4c4` using the same exact-SHA/Git-object deployment discipline as prior test1 releases.
+## Phase 2 — deploy `punkto.xyz`
 
-## Before deploy
+Deploy the PWA from exact main SHA `c25c6f1320206742d7d94b52496bc6be0a2e12dd` to `punkto.xyz`.
 
-1. Confirm test1 currently serves the accepted Slice 5 RC (`cbdf113359443e293f1d478396becc0ed0ca40cc`) and relay health is OK.
-2. Back up the currently served test1 PWA to a timestamped rollback directory.
-3. Preserve relay data, node identity, federation configuration, persistent volume, and all human-created atoms.
-4. Do not touch node1 or node2.
+The release must include the accepted Slice 5 behavior, including:
 
-## Deploy
+- nearby-first spatial world;
+- glowing Punkti orbs;
+- physical-altitude stems/ground anchors;
+- accepted Aim → `+` → height → Done → Write → Publish flow;
+- board/replies;
+- Your Punkto Identity UX and local persistence;
+- exact `/p/<64-hex-atom-id>` links;
+- client-side A4 Punkti PDF with QR and footer `punkto.xyz · leave a message here`.
 
-Replace only the test1 static PWA with `pwa/` from exact SHA `6cd203c87de49d9322dae590b56fa8fee429c4c4`.
+Do not touch node1/node2. Do not make opportunistic product-code edits.
 
-No product-code edits. No production/main deployment.
+If the production relay component does not require a code/config change for this release, leave it intact. If a relay/runtime change is genuinely required, first prove why from the merged SHA/topology and preserve identity/data/volume.
 
-## Required verification
+## Phase 3 — production proof
 
-After deployment:
+Before retiring test1, verify `punkto.xyz` is healthy.
 
-1. Byte/hash-verify served `ui-map.js` against exact SHA `6cd203c87de49d9322dae590b56fa8fee429c4c4`; also confirm normal core files still match that exact application SHA.
-2. Confirm the app boots without uncaught module/runtime errors.
-3. In a real WebGL-capable browser if available, verify:
-   - ordinary hovering atoms visually read as glowing spherical orbs, not flat circles;
-   - orb category colors remain recognizable;
-   - elevated atoms retain their vertical stems and ground anchors;
-   - selected atom remains readable/clickable;
-   - height-placement draft remains visible as a yellow glowing orb;
-   - height lever and accepted placement flow remain unchanged;
-   - no camera zoom/framing behavior was reintroduced.
-4. Smoke-check existing board/Text/Settings/create/cancel behavior without fabricating public data.
-5. Confirm test1 relay remains healthy and existing human atoms remain present.
-6. Confirm node1/node2 are untouched.
+Required checks:
 
-If your browser environment cannot provide WebGL visual proof, state that limitation explicitly and leave final visual acceptance to the human.
+1. Served core files match exact Git-object bytes from `c25c6f1320206742d7d94b52496bc6be0a2e12dd` for at least:
+   - `app.js`
+   - `index.html`
+   - `ui-map.js`
+   - `ui-board.js`
+   - `ui-text.js`
+   - `ui-create.js`
+   - `ui-settings.js`
+   - `key-management.js`
+   - `print-pdf.js`
+   - `protocol/exact-link.js`
+   - `lib/qrcode-generator.js`
+2. Fresh/private browser loads `https://punkto.xyz` without uncaught module/runtime errors.
+3. Map and glowing orbs render on a WebGL-capable browser if available.
+4. Existing public atoms load/read correctly.
+5. Create/cancel placement flow works structurally without camera regressions.
+6. Identity settings load; do not expose recovery words/private material in durable logs.
+7. Exact atom links under `https://punkto.xyz/p/<atom_id>` resolve correctly.
+8. `Print this Punkti` generates an A4 PDF whose QR points to the exact `https://punkto.xyz/p/<atom_id>` URL.
+9. Board/Text/Settings/reply UI smoke-checks pass.
+10. Production relay/health/federation is healthy and normal peer visibility to node1/node2 is preserved.
 
-## Report
+Do not create fake public data merely for testing. If a harmless legitimate human action is required, leave it to the human.
 
-Report exact deployed SHA, rollback path, served-file hash proof, browser/runtime result, relay/data health, and node1/node2 status. If direct PR posting is unavailable, save the DEPLOY block locally.
+## Phase 4 — test1 data safety gate
+
+**Do not retire test1 until this gate passes.**
+
+1. Enumerate legitimate currently retained human atoms on test1 by canonical atom ID.
+2. Verify those legitimate atoms are available through the normal production/federated network or otherwise safely preserved.
+3. If any legitimate retained atom exists only on test1, do not shut the relay down. Keep test1 online and report the exact gap so we can preserve it without re-signing/fabricating history.
+4. Make a final archival backup of test1 PWA, relay data volume, identity/config and relevant Caddy config.
+
+Aged-out atoms under the deliberate retention policy are not a retirement blocker if they are already outside the configured serving window; record that distinction clearly.
+
+## Phase 5 — retire test1
+
+Only after production proof and the test1 data-safety gate pass:
+
+1. Disable standalone test1 writes/runtime.
+2. Stop the standalone test1 relay/app containers as appropriate, but **preserve the relay data volume and final backup** for rollback/archive.
+3. Configure `test1.punkto.xyz` as a permanent preserving redirect to `punkto.xyz`:
+   - preserve path;
+   - preserve query string;
+   - `/p/<atom_id>` must therefore land on the same exact production path.
+4. Verify several redirect cases, including `/`, an exact `/p/<atom_id>`, and a URL with query parameters.
+5. Confirm node1/node2 remain untouched and healthy.
+
+Do not delete the archived test1 data/volume during this task.
+
+## Final report
+
+Report:
+
+- exact merged main SHA deployed;
+- production backup/rollback paths;
+- served-file hash proof;
+- production browser/runtime result and any visual limitations;
+- production relay/federation health;
+- exact-link + PDF/QR proof;
+- test1 retained-human-atom preservation result;
+- final test1 archival backup/volume state;
+- redirect proof;
+- node1/node2 untouched status;
+- any blockers/unexpected behavior.
+
+If direct GitHub PR posting is unavailable, save the final DEPLOY/CUTOVER report locally for ChatGPT.
 
 ## Stop rule
 
-After test1 verification, stop and set/consider this task complete. Do not merge PR #110, deploy main/punkto.xyz, retire test1, or start Slice 6. Human visual acceptance is the final gate.
+After the full cutover and retirement verification, stop.
+
+Do not begin new product work. Do not modify node1/node2. Do not delete archival test1 data. The goal is to end with:
+
+```text
+main @ c25c6f1320206742d7d94b52496bc6be0a2e12dd
+        ↓
+     punkto.xyz
+        ↔
+      node1
+      node2
+
+test1.punkto.xyz → permanent preserving redirect to punkto.xyz
+standalone test1 runtime → retired
+archival test1 data → preserved
+```
