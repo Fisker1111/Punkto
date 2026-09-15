@@ -23,6 +23,36 @@ const CATEGORY_META = {
 };
 const IMPORTED_SOURCE_COLOR = [255, 193, 7];
 const DRAFT_COLOR = [255, 213, 93];
+const ATOM_ORB_ICON_SIZE = 64;
+const ATOM_ORB_ICON_ATLAS = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(`
+<svg xmlns="http://www.w3.org/2000/svg" width="192" height="64" viewBox="0 0 192 64">
+  <defs>
+    <radialGradient id="orbBody" cx="38%" cy="30%" r="58%">
+      <stop offset="0%" stop-color="white" stop-opacity="1"/>
+      <stop offset="34%" stop-color="white" stop-opacity=".98"/>
+      <stop offset="68%" stop-color="white" stop-opacity=".72"/>
+      <stop offset="100%" stop-color="white" stop-opacity=".18"/>
+    </radialGradient>
+    <radialGradient id="orbShade" cx="66%" cy="72%" r="54%">
+      <stop offset="0%" stop-color="white" stop-opacity=".72"/>
+      <stop offset="46%" stop-color="white" stop-opacity=".28"/>
+      <stop offset="100%" stop-color="white" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="orbLight" cx="38%" cy="30%" r="30%">
+      <stop offset="0%" stop-color="white" stop-opacity="1"/>
+      <stop offset="48%" stop-color="white" stop-opacity=".45"/>
+      <stop offset="100%" stop-color="white" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <circle cx="32" cy="32" r="27" fill="url(#orbBody)"/>
+  <circle cx="96" cy="32" r="27" fill="url(#orbShade)"/>
+  <circle cx="160" cy="32" r="27" fill="url(#orbLight)"/>
+</svg>` )}`;
+const ATOM_ORB_ICON_MAPPING = {
+  body: { x: 0, y: 0, width: ATOM_ORB_ICON_SIZE, height: ATOM_ORB_ICON_SIZE, mask: true },
+  shade: { x: ATOM_ORB_ICON_SIZE, y: 0, width: ATOM_ORB_ICON_SIZE, height: ATOM_ORB_ICON_SIZE, mask: true },
+  light: { x: ATOM_ORB_ICON_SIZE * 2, y: 0, width: ATOM_ORB_ICON_SIZE, height: ATOM_ORB_ICON_SIZE, mask: true },
+};
 
 let _mapStyle = 'https://tiles.openfreemap.org/styles/liberty';
 let _getAllAtomsNewestFirst = async () => [];
@@ -330,7 +360,7 @@ export async function renderAtoms(newAtomIds = null) {
   );
   const selectedLabelData = scatterData.filter(d => d.selected);
 
-  const { ScatterplotLayer, TextLayer } = window.deck;
+  const { ScatterplotLayer, TextLayer, IconLayer, LineLayer } = window.deck;
   const layers = [
     new ScatterplotLayer({
       id: 'atom-ground-rings',
@@ -347,42 +377,8 @@ export async function renderAtoms(newAtomIds = null) {
       radiusMaxPixels: 28,
       pickable: false,
     }),
-    new ScatterplotLayer({
-      id: 'atom-category-halos',
-      data: scatterData,
-      getPosition: d => d.position,
-      getFillColor: d => d.haloColor,
-      getRadius: d => d.selectionId === 'draft' ? 27 : (d.selected ? 27 : 18),
-      radiusUnits: 'pixels',
-      radiusMinPixels: 13,
-      radiusMaxPixels: 36,
-      pickable: false,
-    }),
-    new ScatterplotLayer({
-      id: 'atoms',
-      data: scatterData,
-      getPosition: d => d.position,
-      getFillColor: d => d.color,
-      stroked: true,
-      getLineColor: d => d.strokeColor,
-      getLineWidth: d => d.selectionId === 'draft' ? 2.6 : (d.selected ? 3 : 2.2),
-      lineWidthUnits: 'pixels',
-      getRadius: d => d.selectionId === 'draft' ? 15 : (d.selected ? 16 : 12),
-      radiusUnits: 'pixels',
-      radiusMinPixels: 8,
-      radiusMaxPixels: 26,
-      pickable: true,
-      autoHighlight: true,
-      highlightColor: [255, 255, 100, 255],
-      onClick: info => {
-        if (info.object?.selectionId === 'draft') return;
-        if (!info.object || !map || !_onOpenMapBoardForAtom) return;
-        _onOpenMapBoardForAtom(info.object.atom || info.object, atoms).catch((err) => console.warn('[map-board] open failed:', err));
-      },
-    }),
   ];
 
-  const { LineLayer } = window.deck;
   if (LineLayer) {
     layers.push(
       new LineLayer({
@@ -393,6 +389,128 @@ export async function renderAtoms(newAtomIds = null) {
         getColor: d => d.stemColor,
         getWidth: d => d.width,
         widthUnits: 'pixels',
+        pickable: false,
+      })
+    );
+  }
+
+  layers.push(
+    new ScatterplotLayer({
+      id: 'atom-category-halos',
+      data: scatterData,
+      getPosition: d => d.position,
+      getFillColor: d => d.haloColor,
+      getRadius: d => d.selectionId === 'draft' ? 25 : (d.selected ? 25 : 18),
+      radiusUnits: 'pixels',
+      radiusMinPixels: 13,
+      radiusMaxPixels: 32,
+      pickable: false,
+    }),
+    new ScatterplotLayer({
+      id: 'atoms',
+      data: scatterData,
+      getPosition: d => d.position,
+      getFillColor: d => IconLayer ? orbPickFillColor(d) : d.color,
+      stroked: true,
+      getLineColor: d => IconLayer ? orbPickStrokeColor(d) : d.strokeColor,
+      getLineWidth: d => IconLayer ? 1 : (d.selectionId === 'draft' ? 2.6 : (d.selected ? 3 : 2.2)),
+      lineWidthUnits: 'pixels',
+      getRadius: d => d.selectionId === 'draft' ? 15 : (d.selected ? 16 : 12),
+      radiusUnits: 'pixels',
+      radiusMinPixels: 8,
+      radiusMaxPixels: 26,
+      pickable: true,
+      autoHighlight: true,
+      highlightColor: [255, 246, 174, 72],
+      onClick: info => {
+        if (info.object?.selectionId === 'draft') return;
+        if (!info.object || !map || !_onOpenMapBoardForAtom) return;
+        _onOpenMapBoardForAtom(info.object.atom || info.object, atoms).catch((err) => console.warn('[map-board] open failed:', err));
+      },
+    })
+  );
+
+  if (IconLayer) {
+    layers.push(
+      new IconLayer({
+        id: 'atom-orb-bodies',
+        data: scatterData,
+        iconAtlas: ATOM_ORB_ICON_ATLAS,
+        iconMapping: ATOM_ORB_ICON_MAPPING,
+        getIcon: () => 'body',
+        getPosition: d => d.position,
+        getColor: d => d.color,
+        getSize: d => orbPixelSize(d),
+        sizeUnits: 'pixels',
+        sizeMinPixels: 18,
+        sizeMaxPixels: 34,
+        billboard: true,
+        pickable: false,
+      }),
+      new IconLayer({
+        id: 'atom-orb-lower-shade',
+        data: scatterData,
+        iconAtlas: ATOM_ORB_ICON_ATLAS,
+        iconMapping: ATOM_ORB_ICON_MAPPING,
+        getIcon: () => 'shade',
+        getPosition: d => d.position,
+        getColor: d => orbShadeColor(d),
+        getSize: d => orbPixelSize(d),
+        sizeUnits: 'pixels',
+        sizeMinPixels: 18,
+        sizeMaxPixels: 34,
+        billboard: true,
+        pickable: false,
+      }),
+      new IconLayer({
+        id: 'atom-orb-highlights',
+        data: scatterData,
+        iconAtlas: ATOM_ORB_ICON_ATLAS,
+        iconMapping: ATOM_ORB_ICON_MAPPING,
+        getIcon: () => 'light',
+        getPosition: d => d.position,
+        getColor: d => orbHighlightColor(d),
+        getSize: d => orbPixelSize(d),
+        sizeUnits: 'pixels',
+        sizeMinPixels: 18,
+        sizeMaxPixels: 34,
+        billboard: true,
+        pickable: false,
+      })
+    );
+  } else {
+    layers.push(
+      new ScatterplotLayer({
+        id: 'atom-orb-soft-cores',
+        data: scatterData,
+        getPosition: d => d.position,
+        getFillColor: d => orbInnerLightColor(d),
+        getRadius: d => d.selectionId === 'draft' ? 8 : (d.selected ? 8 : 6),
+        radiusUnits: 'pixels',
+        radiusMinPixels: 4,
+        radiusMaxPixels: 11,
+        pickable: false,
+      }),
+      new ScatterplotLayer({
+        id: 'atom-orb-lower-shade-fallback',
+        data: scatterData,
+        getPosition: d => d.position,
+        getFillColor: d => orbShadeColor(d),
+        getRadius: d => d.selectionId === 'draft' ? 14 : (d.selected ? 14 : 10),
+        radiusUnits: 'pixels',
+        radiusMinPixels: 7,
+        radiusMaxPixels: 22,
+        pickable: false,
+      }),
+      new ScatterplotLayer({
+        id: 'atom-orb-highlights-fallback',
+        data: scatterData,
+        getPosition: d => d.position,
+        getFillColor: d => orbHighlightColor(d),
+        getRadius: d => d.selectionId === 'draft' ? 5 : (d.selected ? 5 : 4),
+        radiusUnits: 'pixels',
+        radiusMinPixels: 3,
+        radiusMaxPixels: 7,
         pickable: false,
       })
     );
@@ -983,6 +1101,34 @@ function getCategoryMeta(atom) {
 
 function rgba(color, alpha = 245) {
   return [color[0], color[1], color[2], alpha];
+}
+
+function orbPixelSize(d) {
+  if (d.selectionId === 'draft') return 30;
+  return d.selected ? 31 : 24;
+}
+
+function orbPickFillColor(d) {
+  return d.selectionId === 'draft' ? rgba(DRAFT_COLOR, 12) : mapColorForAtom(d.atom, d.selected ? 18 : 10);
+}
+
+function orbPickStrokeColor(d) {
+  return d.selectionId === 'draft' ? rgba(DRAFT_COLOR, 44) : mapColorForAtom(d.atom, d.selected ? 52 : 28);
+}
+
+function orbShadeColor(d) {
+  if (d.selectionId === 'draft') return [58, 38, 6, 86];
+  return d.selected ? [17, 17, 21, 82] : [12, 14, 18, 58];
+}
+
+function orbHighlightColor(d) {
+  if (d.selectionId === 'draft') return [255, 252, 213, 170];
+  return d.selected ? [255, 255, 238, 178] : [255, 252, 230, 132];
+}
+
+function orbInnerLightColor(d) {
+  if (d.selectionId === 'draft') return [255, 252, 206, 150];
+  return d.selected ? [255, 253, 229, 142] : [255, 246, 218, 92];
 }
 
 function physicalAltitude(atom) {

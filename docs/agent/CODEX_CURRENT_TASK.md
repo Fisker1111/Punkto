@@ -1,6 +1,6 @@
 # Codex Current Task
 
-Status: **ACTIVE — final Slice 5 visual polish: glowing atom orbs**
+Status: **HOLD — glowing atom orb polish implemented, awaiting review/test1 deployment**
 
 Repository: `Fisker1111/Punkto`
 Branch: `pilot-1`
