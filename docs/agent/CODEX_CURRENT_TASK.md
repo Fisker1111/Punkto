@@ -1,6 +1,6 @@
 # Codex Current Task
 
-Status: **HOLD — Slice 5 print/CI correction implemented, awaiting review**
+Status: **ACTIVE — final Slice 5 visual polish: glowing atom orbs**
 
 Repository: `Fisker1111/Punkto`
 Branch: `pilot-1`
@@ -8,121 +8,158 @@ PR: `#110`
 
 ## Context
 
-Slice 5 implementation commit under review:
+Slice 5 is **human accepted** on test1.
 
-`d05c55ea0ae54b177ab69c008c7b14188fa763b6`
+Current accepted application release candidate:
 
-Commit:
+`cbdf113359443e293f1d478396becc0ed0ca40cc`
 
-`feat(pilot1): finish Punkto for field release`
+Runtime marker:
 
-Pilot CI run `34040922877` / #159 is green, but review found two concrete print/PDF issues and one validation-gap that must be corrected **before AZ deployment**.
+`pilot1-slice5-finish-punkto-2026-09-06-1`
 
-Do not broaden Slice 5. Preserve the completed identity, exact-link, visual, placement, board, signing, storage, relay and federation work.
+The accepted product flow, placement mechanics, identity, exact links, PDF/QR, board/replies, signing, relay and federation must remain unchanged.
 
-## 1. Preserve ordinary user text in the A4 PDF
+Human acceptance found one final visual polish item before Slice 6:
 
-Current `pwa/print-pdf.js` `pdfEscape()` replaces every non-ASCII character with `?`.
+> The hovering atom at the top of its stem currently reads as a flat circle/disc. It should read as a small glowing globe/orb in 3D space.
 
-That is not acceptable for the Pilot_1 print loop: ordinary Danish text such as `æ ø å Æ Ø Å` and common Western-European punctuation must print correctly rather than being corrupted.
+This is **visual polish only**, not a new feature.
 
-Implement the smallest lightweight fix appropriate for the current hand-built PDF approach.
+## Goal
 
-Requirements:
+Make Punkto's primary atom marker feel like a **small luminous spherical orb** rather than a flat 2D disc.
 
-- at minimum preserve common Western-European/WinAnsi text correctly, including Danish `æøåÆØÅ`, `é`, `ü`, `€`, curly quotes/dashes where representable, and the middle dot `·`;
-- declare/use the correct PDF font encoding for the bytes emitted (e.g. WinAnsi if keeping standard Helvetica);
-- do not silently corrupt those characters to `?`;
-- unsupported characters outside the chosen lightweight Pilot_1 encoding may degrade visibly/fallback safely, but must not break PDF generation;
-- keep the PDF client-side and lightweight; do not add a large font framework or remote dependency unless absolutely necessary;
-- keep the message the strongest object on the page;
-- keep long-message truncation notice behavior.
+The visual should reinforce the product idea:
 
-Also make the footer exactly:
+> **A public message exists here.**
 
-`punkto.xyz · leave a message here`
+It should feel warm, spatial, calm, lightly alive, and unmistakably Punkto — not neon cyberpunk, not a game pickup, and not a glossy skeuomorphic marble.
 
-not a hyphen substitute.
+## Required behavior
 
-## 2. Give the QR a real quiet zone
+### Orb appearance
 
-The current PDF draws the QR matrix at 250 pt with only ~12 pt of white space before a black outline. For the exact atom URL this is generally less than the standard four-module quiet zone and is unnecessarily fragile for office/home printing.
+For the main atom marker rendered at its physical position:
 
-Make the printed QR robust:
+- read immediately as a **sphere/orb**, not a flat filled circle;
+- retain the atom/category color as the core identity;
+- add a restrained luminous halo/glow;
+- add subtle directional highlight/shading or layered depth so the object has volume;
+- selected atoms may be slightly brighter/clearer, but do not introduce dramatic animation;
+- elevated atoms must clearly remain at the top of their existing vertical stem;
+- ground relation ring remains a separate flat ground cue;
+- physical altitude remains the only meaning of Z.
 
-- provide a white quiet zone of at least **4 QR modules on every side**;
-- do not place a black border inside that quiet zone;
-- if a decorative border remains, place it outside the required quiet zone or remove it;
-- keep QR high-contrast black/white and large;
-- QR payload must remain the exact canonical atom URL.
+The **yellow placement draft atom** must use the same spherical visual language and remain obviously distinct as the placement preview.
 
-## 3. Turn Slice 5 helper tests into a hard CI gate
+### Keep the current geometry semantics
 
-`pwa/test-slice5.mjs` exists, but Pilot CI #159 did not execute it. The PWA validation job currently only syntax-checks modules.
+Do not change:
 
-Update `.github/workflows/pilot-ci.yml` so the hard PWA validation job runs the deterministic Slice 5 helper test:
+- atom geographic x/y;
+- physical altitude;
+- stem endpoints;
+- ground rings;
+- selection identity;
+- category semantics;
+- click/pick target behavior;
+- clustering/LOD rules;
+- accepted create flow: **Aim → + → choose physical height → Done → Write → Publish**.
 
-```bash
-node pwa/test-slice5.mjs
-```
+The camera must not move or zoom in response to this polish.
 
-Extend `pwa/test-slice5.mjs` as needed to cover the corrected print behavior, including:
+## Implementation guidance
 
-- valid `%PDF` / A4 geometry remains true;
-- exact canonical URL remains in PDF / QR payload;
-- secrets remain absent;
-- Danish/WinAnsi sample text does not become corrupted question marks;
-- footer uses the middle dot text;
-- QR layout helper or deterministic geometry check proves >= 4-module quiet zone.
+Prefer the **smallest robust rendering change** inside the existing deck.gl rendering path in `pwa/ui-map.js`.
 
-Keep tests deterministic and network-free.
+A literal 3D mesh is **not required**. A layered screen-space orb treatment is acceptable and probably preferable if it preserves performance and picking.
+
+Good approaches may include:
+
+- layered concentric deck.gl marker layers;
+- a lightweight highlight/glow treatment;
+- a small local/generated icon texture if needed;
+- another simple deck.gl primitive already available in the bundled build.
+
+Avoid:
+
+- new remote assets or dependencies;
+- large image files;
+- custom 3D models;
+- WebGL shader rewrites;
+- changes to MapLibre camera/projection ownership;
+- expensive per-frame DOM work.
+
+Keep the existing `atoms` layer (or an equivalent single authoritative pickable layer) responsible for interaction so clicking/selecting atoms does not regress.
+
+## Visual acceptance
+
+At normal street-scale 3D view, a human should look at the top of an elevated stem and say:
+
+> "That is a glowing point/orb floating there."
+
+not:
+
+> "That is a flat orange circle."
+
+The orb should remain legible against:
+
+- pale map backgrounds;
+- buildings;
+- green park areas;
+- water;
+- both normal and selected states.
+
+Do not over-enlarge it. Keep roughly the same perceived footprint as the current marker, with glow extending modestly beyond it.
 
 ## Scope lock
 
-Prefer only:
+Prefer changing only:
 
-- `pwa/print-pdf.js`
-- `pwa/test-slice5.mjs`
-- `.github/workflows/pilot-ci.yml`
+- `pwa/ui-map.js`
 - this task file
 
-Do **not** modify:
+Touch `pwa/index.html` only if strictly necessary for a local visual constant/style and avoid unrelated cleanup.
 
-- placement interaction;
-- `ui-map.js` unless absolutely required (it should not be);
-- identity/key protocol;
+Do **not** change:
+
+- `app.js` product behavior;
+- create/height logic;
+- board/replies;
+- identity/key handling;
+- exact-link logic;
+- PDF/QR generation;
+- storage schema;
 - signing;
-- exact-link identity semantics;
-- board/reply behavior;
 - relay/federation;
 - node/server/deployment config;
 - production/main.
 
 ## Checks
 
-Run:
+Run at minimum:
 
 ```bash
-node --check pwa/print-pdf.js
-node pwa/test-slice5.mjs
-node --check pwa/app.js
 node --check pwa/ui-map.js
+node --check pwa/app.js
+node pwa/test-slice5.mjs
 python3 relay/test_relay.py
 git diff --check
 ```
 
-The exact pushed correction SHA must then receive green Pilot CI with the Slice 5 helper test visible in the hard PWA validation job.
+Pilot CI must be green on the exact pushed SHA.
 
 ## Completion contract
 
 Before commit, set status to:
 
-`Status: **HOLD — Slice 5 print/CI correction implemented, awaiting review**`
+`Status: **HOLD — glowing atom orb polish implemented, awaiting review/test1 deployment**`
 
 Commit exactly:
 
-`fix(pilot1): harden Punkti PDF and Slice 5 CI`
+`fix(pilot1): render hovering atoms as glowing orbs`
 
-Push to `origin/pilot-1`, report exact SHA/checks, then stop.
+Push to `origin/pilot-1`, report exact SHA and checks, then stop.
 
 Do not deploy. Do not merge to main. Do not start Slice 6.
