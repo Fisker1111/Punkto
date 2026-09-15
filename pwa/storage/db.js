@@ -19,5 +19,11 @@ db.version(4).stores({
   meta:  'key',
   nodes: 'url',
 });
+// v5: index canonical relay atom ids for exact /p/<atom_id> lookup.
+db.version(5).stores({
+  atoms: '++id, atom_id, punkto, t, lat, lon, alt',
+  meta:  'key',
+  nodes: 'url',
+});
 
 export { db };

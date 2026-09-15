@@ -71,6 +71,21 @@ export function deriveCategory(atom) {
   return raw || 'Talk';
 }
 
+const CATEGORY_META = {
+  TEXT: { code: 'TEXT', label: 'Talk', cls: 'cat-talk' },
+  INFO: { code: 'INFO', label: 'Info', cls: 'cat-info' },
+  WARN: { code: 'WARN', label: 'Warning', cls: 'cat-warn' },
+  EMGC: { code: 'EMGC', label: 'Emergency', cls: 'cat-emgc' },
+  EVNT: { code: 'EVNT', label: 'Event', cls: 'cat-evnt' },
+  LOST: { code: 'LOST', label: 'Lost/Found', cls: 'cat-lost' },
+};
+
+export function getCategoryMeta(atom) {
+  const key = String(atom?.category || atom?.kind || '').trim().toUpperCase();
+  if (key === 'TALK') return CATEGORY_META.TEXT;
+  return CATEGORY_META[key] || CATEGORY_META.TEXT;
+}
+
 export function escHtml(str) {
   return String(str)
     .replace(/&/g, '&amp;')

@@ -10,6 +10,7 @@ Current architecture:
   - `pwa/ui-shell.js`
   - `pwa/ui-text.js`
   - `pwa/ui-map.js`
+  - `pwa/ui-board.js`
 - **Core/helper layer**
   - `pwa/core/location.js`
   - `pwa/core/display.js`
@@ -82,16 +83,32 @@ Owns Text view rendering:
 - feed card markup
 - empty/location-denied states
 - click delegation for **Show on map** and **Leave note here** callbacks
+- shared board/thread semantics and markup helpers used by Text and Map board UI
 
 It expects already-sorted atom data from `app.js` and stays DOM-focused.
 
 ### `pwa/ui-map.js`
-Owns lightweight map view wrapper behavior:
-- lazy map initialization boundary
-- resize-on-show behavior
-- focus wrapper that delegates actual focus logic back to `app.js`
+Owns Map presentation behavior:
+- MapLibre/deck.gl initialization and map instance lifecycle
+- map show/resize handling
+- beacon, ground-ring, halo, and altitude-stem layer construction
+- selected-beacon visual state using exact real-atom identity
+- map click/tap selection delegation
+- map-only camera/fly-to behavior
+- map-local rendering state such as deck overlay, loaded state, DOM bubble legacy-disabled state, and empty-map hint visibility
+- building detection/crosshair readout used by create placement
 
-It does **not** replace MapLibre/deck.gl engine logic.
+It receives app-level services through explicit callbacks for atom reads, selection identity, board opening, create-placement coordination, refresh scheduling, deep-link follow-up, and onboarding. MapLibre remains the only authoritative map/camera.
+
+### `pwa/ui-board.js`
+Owns selected Map board/bottom-sheet UI behavior:
+- selected board atom, board atom list, reply status, and reply draft UI state
+- opening, closing, and rendering `#map-board-sheet`
+- board click delegation for close, copy link, and Show in 3D
+- board reply form event handling
+- deterministic cleanup when navigating away
+
+It reuses `resolveBoardAtom()` and `renderBoardSheetHtml()` from `ui-text.js` so Text and Map share the same root/reply/thread model. App-level actions such as reply submission, map focus, panel state, atom refresh, and exact selection identity are injected callbacks.
 
 ---
 
@@ -178,10 +195,10 @@ Owns sync orchestration behavior:
 ### `pwa/app.js`
 `app.js` remains the integration point that:
 - imports and wires all layers
-- owns global runtime state (current page, map instance, sync timers, deep-link handling)
+- owns cross-layer runtime state such as current page, sync timers, deep-link handling, selected atom identity, create draft, and feed batches
 - sequences sync → storage → refresh UI
 - coordinates create flow and settings/network info updates
-- delegates rendering to UI modules
+- delegates Text, Map, and selected-board rendering to UI modules through small explicit callback interfaces
 
 This is currently the intentional place where cross-layer coordination lives.
 
@@ -215,7 +232,7 @@ Result: app runs as a plain web app without persistent SW caching.
 
 When editing, keep these constraints:
 
-- **UI work**: prefer `ui-shell.js`, `ui-text.js`, `ui-map.js`; keep Text and Map as two views of the same atoms.
+- **UI work**: prefer `ui-shell.js`, `ui-text.js`, `ui-map.js`, and `ui-board.js`; keep Text and Map as two views of the same atoms.
 - **Display/format logic**: prefer `core/display.js` and `core/atoms.js` before adding more logic in `app.js`.
 - **Location math/encoding**: prefer `core/location.js`.
 - **IndexedDB behavior**: prefer `storage/*`.

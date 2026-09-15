@@ -31,12 +31,61 @@ Approximate nav weighting:
 
 | Role | Owns |
 |---|---|
-| **ChatGPT** | Product direction, architecture review, spec review, PR review text — the second mind; reviews before code and after |
-| **AZ (Agent Zero)** | **Primary builder for Pilot 1** — specs, code implementation, tests, commits, PRs (`az/*` branches), deploy, Docker, Caddy, live-node verification, logs, OPS, security |
-| **Codex** | Optional overflow — independent, mechanical work packages only, when parallel capacity is wanted |
-| **Human** | Final decisions, direction overrides, manual testing |
+| **ChatGPT** | Product direction, architecture, implementation task contract, exact-SHA review, PR review text, deployment authorization |
+| **Codex** | **Primary implementation engineer** — reads `docs/agent/CODEX_CURRENT_TASK.md`, edits code, runs tests, commits focused changes, pushes the requested branch, reports exact SHA; never deploys |
+| **GitHub CI** | Exact-commit automated validation. `Pilot CI / PWA validation` is the hard pre-deploy gate for Pilot_1 |
+| **AZ (Agent Zero)** | **Deployment / operations engineer** — fetch/export only reviewed SHAs, test1/node deployment, Docker, Caddy, relay/runtime operations, live verification, logs, rollback, OPS/security; does not redesign or normally edit product code |
+| **Human** | Final decisions, direction overrides, manual UX/field acceptance |
 
-> Workflow change 2026-07-26 (human-approved): the builder and deployer roles are unified in AZ to eliminate handoff loss; the quality mechanism is preserved by moving review from "writer ≠ coder" to "builder (AZ) ≠ reviewer (ChatGPT)". The goal is a working and verified PWA. Same discipline as before: one PR per work package, task receipt in each PR, all checks green, canary before both nodes. If the review loop stops finding anything, that is a signal about the loop, not proof of perfection — keep the loop.
+### Required workflow
+
+The normal Pilot_1 path is:
+
+```text
+Human + ChatGPT
+      ↓
+ChatGPT writes CODEX_CURRENT_TASK.md
+      ↓
+Codex implements + tests + commits + pushes
+      ↓
+GitHub CI validates the exact pushed SHA
+      ↓
+ChatGPT reviews the exact SHA
+      ↓
+AZ deploys only the explicitly approved SHA
+      ↓
+Human accepts/rejects the live product
+```
+
+Rules:
+
+- **Git is the handoff layer.** Do not use prose reports as a substitute for inspecting the committed object.
+- **No deploy from a red or missing Pilot CI PWA validation check.**
+- AZ may make an application-code hotfix only when explicitly instructed for an incident. The fix must still be committed/pushed and pass the same review/CI path before normal deployment continues.
+- Codex does not deploy, edit server state, or independently change product direction.
+- ChatGPT does not approve deployment based only on an agent's local working-tree test; review the exact Git SHA.
+- Human manual testing remains the final product acceptance gate.
+
+---
+
+## Codex task handoff
+
+Canonical task file:
+
+`docs/agent/CODEX_CURRENT_TASK.md`
+
+- `Status: HOLD` means no implementation work is authorized.
+- An active task must define goal, base, scope, exclusions, acceptance criteria, checks, commit expectation, and stop condition.
+- Codex must read this file and `AGENTS.md` before editing.
+- Codex must stop after the scoped commit is pushed and the exact SHA is reported.
+
+Windows launcher:
+
+```powershell
+.\punkto-codex.ps1
+```
+
+The launcher refuses to run over a dirty working tree, updates `pilot-1` with `--ff-only`, reads the canonical task file, and launches local Codex only when the task is active.
 
 ---
 
@@ -44,7 +93,7 @@ Approximate nav weighting:
 
 - Be conservative.
 - Inspect before editing.
-- Prefer small, focused PRs.
+- Prefer small, focused commits/PRs.
 - Do not redesign while fixing bugs.
 - Do not change protocol/sync/storage/backend unless explicitly requested.
 - Do not replace MapLibre/deck.gl unless explicitly requested.
@@ -69,6 +118,7 @@ Approximate nav weighting:
 | `pwa/ui-map.js` | Map wrapper/focus/resize/lazy map boundary |
 | `pwa/app.js` | Lifecycle, sync, IndexedDB, protocol/network, atom creation, coordination |
 | `pwa/index.html` | Mostly static containers |
+| `pwa/ui-create.js` | Create flow UI / placement interaction |
 | `pwa/key-management.js` | Key/identity logic |
 | `pwa/sw.js` | Service worker (currently unregisters itself — plain web app) |
 
@@ -76,18 +126,28 @@ Approximate nav weighting:
 
 ## Required checks
 
-Before final response, run when relevant:
+Before committing PWA changes, run when relevant:
 
 ```bash
 node --check pwa/app.js
 node --check pwa/ui-shell.js
 node --check pwa/ui-text.js
 node --check pwa/ui-map.js
+node --check pwa/ui-create.js
 node --check pwa/key-management.js
 node --check pwa/sw.js
+node --input-type=module --check < pwa/app.js
 ```
 
-All must exit 0 before committing.
+All must exit 0 before committing. GitHub Pilot CI repeats these checks against the exact pushed SHA.
+
+Relay regression suite:
+
+```bash
+python3 relay/test_relay.py
+```
+
+The relay suite currently has known pre-existing baseline failures. `Pilot CI / Relay regression report` is therefore informational until that debt is repaired; any relay/protocol change still requires explicit review of the relay failures before approval.
 
 ---
 
@@ -95,10 +155,10 @@ All must exit 0 before committing.
 
 - Fresh InPrivate or `reset.html`
 - Confirm console hard marker matches commit
-- Confirm Text page opens by default
+- Confirm intended default page for the current Pilot slice
 - Confirm nav: `Text | Map | + | Settings`
 - Confirm settings panel closed on first load
-- Tap **Map** → map tiles load, location dot visible
+- Tap **Map** → map tiles load, location behavior works
 - Tap **Text** → text feed or empty state
 - Tap **+** → create atom modal opens
 - Tap **Settings** → settings panel slides up, button highlights
@@ -106,6 +166,7 @@ All must exit 0 before committing.
 - Tap **Show on map** on a Text card → switches to Map, focuses atom
 - Test `/p/<id>` deep link → opens Map, focuses atom
 - Test create with altitude if practical
+- Check browser console for uncaught syntax/runtime errors
 
 ---
 
@@ -113,14 +174,24 @@ All must exit 0 before committing.
 
 See `DEPLOYMENT_CHECKLIST.md` for full deploy procedure.
 
-Quick reference:
+Pilot rule:
+
+1. Confirm the exact approved SHA.
+2. Confirm `Pilot CI / PWA validation` is green for that SHA.
+3. Deploy that SHA only — do not deploy branch tip by name if it has moved.
+4. Verify the served version marker / hard marker and live browser behavior.
+5. Record SHA + host + result in the active PR.
+6. Stop for human/product acceptance when requested.
+
+Production nodes remain separate from test1. Never make node1/node2 the first integration test for an unaccepted Pilot slice.
+
+Quick production reference after an approved image build:
 
 ```bash
-# After GitHub Actions build completes
 docker compose pull && docker compose up -d --force-recreate
 ```
 
-Run on **both** nodes. Always verify with hard marker and `docker compose ps`.
+Always verify with hard marker and `docker compose ps`.
 
 ---
 
@@ -145,6 +216,6 @@ Two runnable services; no build step, no Docker needed for local dev. Python dep
 - Non-obvious: the PWA targets its relay at `window.location.origin` (`NODE_URL` in `app.js`), and **create-atom posts to the relay first and only stores locally on success** (`submitAtomFromModal`). A plain static server on `:8080` has no `/atom` endpoint, so the create flow silently falls back to the production seed nodes. To exercise create end-to-end against a *local* relay, serve the PWA behind a front that also reverse-proxies the relay API paths (`/atom`, `/latest`, `/feed`, `/info`, `/node`, `/health`, `/status`) to the relay on `:8000`, so they share one origin (this is what production Caddy does).
 
 ### Quick checks
-- PWA JS syntax: the `node --check` list under "Required checks" above.
-- Relay: `python3 relay/test_relay.py` (56 tests).
+- PWA JS syntax: the checks under "Required checks" above.
+- Relay: `python3 relay/test_relay.py`.
 - Core lib/CLI: `python3 -m core.cli make <lat> <lon> <alt>` / `decode <p:...>`.

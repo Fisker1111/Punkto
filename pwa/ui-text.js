@@ -8,6 +8,7 @@ let _onShowOnMap = null;
 let _onLeaveNote = null;
 let _onOpenBoard = null;
 let _onPostReply = null;
+let _onPrintAtom = null;
 let _helpers = null;
 let _replyStatus = null;
 let _replyDraft = '';
@@ -63,7 +64,7 @@ function _fmtAltLabel(alt){ return _helpers?.fmtAltitudeLabel ? _helpers.fmtAlti
 function _fmtDistance(m){ return _helpers?.fmtDistance ? _helpers.fmtDistance(m) : ''; }
 function _fmtTime(t){ return _helpers?.fmtTime ? _helpers.fmtTime(t) : ''; }
 export function getAtomStableId(atom) {
-  return String(atom?.atom_id || atom?.id || stripPunktoPrefix(atom?.punkto || '') || '').trim();
+  return String(atom?.atom_id || stripPunktoPrefix(atom?.punkto || '') || '').trim();
 }
 export function isReplyAtom(atom) {
   return String(atom?.relation || '').toLowerCase() === 'reply' || Boolean(atom?.parent_id);
@@ -93,6 +94,11 @@ function _findRootForReply(reply, atoms) {
   if (!_isReplyAtom(reply)) return null;
   const list = Array.isArray(atoms) ? atoms : [];
   return list.find((atom) => _isRootAtom(atom) && _replyBelongsToRoot(reply, atom)) || null;
+}
+export function resolveBoardAtom(atom, atoms = []) {
+  if (!atom) return null;
+  if (!_isReplyAtom(atom)) return atom;
+  return _findRootForReply(atom, atoms) || atom;
 }
 function _boardReplies(root, atoms) {
   return (Array.isArray(atoms) ? atoms : [])
@@ -127,11 +133,12 @@ function _importedSourceLine(atom) {
   return `Imported source data · ${details.join(' · ')}`;
 }
 
-export function initTextView({ onShowOnMap, onLeaveNote, onOpenBoard, onPostReply, helpers } = {}) {
+export function initTextView({ onShowOnMap, onLeaveNote, onOpenBoard, onPostReply, onPrintAtom, helpers } = {}) {
   _onShowOnMap = typeof onShowOnMap === 'function' ? onShowOnMap : null;
   _onLeaveNote = typeof onLeaveNote === 'function' ? onLeaveNote : null;
   _onOpenBoard = typeof onOpenBoard === 'function' ? onOpenBoard : null;
   _onPostReply = typeof onPostReply === 'function' ? onPostReply : null;
+  _onPrintAtom = typeof onPrintAtom === 'function' ? onPrintAtom : null;
   _helpers = helpers || null;
 
   _syncTabUi();
@@ -164,15 +171,22 @@ export function initTextView({ onShowOnMap, onLeaveNote, onOpenBoard, onPostRepl
         e.stopPropagation();
         const id = copyBtn.dataset.id || '';
         if (!id) return;
-        const origin = window.location.origin || '';
-        const link = origin + '/p/' + encodeURIComponent(id);
+        const link = window.location.origin + '/p/' + encodeURIComponent(id);
         navigator.clipboard?.writeText(link).then(() => {
           copyBtn.textContent = 'Copied';
-          window.setTimeout(() => { copyBtn.textContent = 'Copy board link'; }, 1400);
+          window.setTimeout(() => { copyBtn.textContent = 'Copy exact link'; }, 1400);
         }).catch(() => {
           copyBtn.textContent = 'Copy failed';
-          window.setTimeout(() => { copyBtn.textContent = 'Copy board link'; }, 1400);
+          window.setTimeout(() => { copyBtn.textContent = 'Copy exact link'; }, 1400);
         });
+        return;
+      }
+
+      const printBtn = e.target.closest('[data-action="print-punkti"]');
+      if (printBtn) {
+        e.preventDefault();
+        e.stopPropagation();
+        if (_selectedBoardAtom && _onPrintAtom) _onPrintAtom(_selectedBoardAtom, printBtn);
         return;
       }
 
@@ -299,7 +313,7 @@ function renderReplyList(root, replies) {
   }).join('') + '</div>';
 }
 
-function renderOrphanReplyDetail(reply) {
+function renderOrphanReplyDetail(reply, opts = {}) {
   const raw = String(reply?.x || '').trim();
   const cat = _categoryBadge(reply?.category || reply?.kind || _deriveCategory(reply));
   const author = _authorLabel(reply);
@@ -307,10 +321,11 @@ function renderOrphanReplyDetail(reply) {
   const trust = _trustLabel(reply);
   const parentId = String(reply?.parent_id || reply?.root_id || '').trim();
   const atomId = stripPunktoPrefix(reply?.punkto || '');
-  const backLabel = _boardReturnTab === 'activity' ? '← Back to Activity' : '← Visible here';
+  const backLabel = opts.backLabel || (_boardReturnTab === 'activity' ? '← Back to Activity' : '← Visible here');
+  const backAction = opts.backAction || 'board-back';
   return `<section class="board-detail ui-board-panel">
 ` +
-    `  <button class="board-back ui-btn" data-action="board-back">${_escHtml(backLabel)}</button>
+    `  <button class="board-back ui-btn" data-action="${_escHtml(backAction)}">${_escHtml(backLabel)}</button>
 ` +
     `  <div class="main-card ui-card board-root">
 ` +
@@ -332,7 +347,8 @@ function renderOrphanReplyDetail(reply) {
 ` +
     `</section>`;
 }
-function renderBoardDetail(atom) {
+function renderBoardDetail(atom, opts = {}) {
+  const atoms = Array.isArray(opts.atoms) ? opts.atoms : _mainFeedAtoms;
   const cat = _categoryBadge(atom.category || atom.kind || _deriveCategory(atom));
   const raw = String(atom.x || '').trim();
   const title = _escHtml(_deriveTitle(atom));
@@ -347,10 +363,12 @@ function renderBoardDetail(atom) {
   const meta = [timeMeta, floorMeta, distanceMeta].filter(Boolean).join(' · ');
   const atomId = stripPunktoPrefix(atom.punkto || _selectedBoardId || '');
   const stableId = _atomStableId(atom);
-  const replies = _boardReplies(atom, _mainFeedAtoms);
+  const replies = _boardReplies(atom, atoms);
   const canReply = Boolean(stableId);
-  const replyValue = _replyStatus?.type === 'error' ? _replyDraft : '';
-  const replyStatus = _replyStatus ? `<p id="board-reply-status" class="board-reply-status ${_replyStatus.type === 'error' ? 'error' : 'success'}">${_escHtml(_replyStatus.message)}</p>` : '<p id="board-reply-status" class="board-reply-status"></p>';
+  const replyStatusState = opts.replyStatus === undefined ? _replyStatus : opts.replyStatus;
+  const replyDraft = opts.replyDraft === undefined ? _replyDraft : opts.replyDraft;
+  const replyValue = replyStatusState?.type === 'error' ? replyDraft : '';
+  const replyStatus = replyStatusState ? `<p id="board-reply-status" class="board-reply-status ${replyStatusState.type === 'error' ? 'error' : 'success'}">${_escHtml(replyStatusState.message)}</p>` : '<p id="board-reply-status" class="board-reply-status"></p>';
   const disabledAttr = canReply ? '' : ' disabled';
   const orphanText = canReply ? '' : '<p class="board-reply-status error">Cannot reply: board id is missing.</p>';
   const trustLine = author ? `${trust} by ${author}` : `${trust} public post`;
@@ -358,13 +376,17 @@ function renderBoardDetail(atom) {
   const publicLine = importedLine || (trust === 'Unsigned' ? 'Unsigned public post' : 'Public board');
   const sourceBadge = _importedSourceBadge(atom);
   // Future: reply threads may include "Reply to unknown atom" when parent is missing.
-  const copyLinkBtn = atomId
-    ? '<button class="main-card-reply ui-btn" data-action="copy-board-link" data-id="' + _escHtml(atomId) + '">Copy board link</button>'
+  const copyLinkBtn = stableId
+    ? '<button class="main-card-reply ui-btn" data-action="copy-board-link" data-id="' + _escHtml(stableId) + '">Copy exact link</button>'
     : '';
-  const backLabel = _boardReturnTab === 'activity' ? '← Back to Activity' : '← Visible here';
+  const printBtn = stableId
+    ? '<button class="main-card-reply ui-btn" data-action="print-punkti" data-id="' + _escHtml(stableId) + '">Print this Punkti</button>'
+    : '';
+  const backLabel = opts.backLabel || (_boardReturnTab === 'activity' ? '← Back to Activity' : '← Visible here');
+  const backAction = opts.backAction || 'board-back';
   return `<section class="board-detail ui-board-panel">
 ` +
-    `  <button class="board-back ui-btn" data-action="board-back">${_escHtml(backLabel)}</button>
+    `  <button class="board-back ui-btn" data-action="${_escHtml(backAction)}">${_escHtml(backLabel)}</button>
 ` +
     `  <div class="main-card ui-card board-root${_isImportedSourceAtom(atom) ? ' main-card--imported-source' : ''}">
 ` +
@@ -383,7 +405,7 @@ function renderBoardDetail(atom) {
 ` +
     (meta ? `    <div class="main-card-meta"><span>${_escHtml(meta)}</span></div>
 ` : '') +
-    `    <div class="main-card-actions"><button class="main-card-show3d ui-btn" data-action="show-in-3d" data-id="${_escHtml(atomId)}">Show on map</button>${copyLinkBtn}</div>
+    `    <div class="main-card-actions"><button class="main-card-show3d ui-btn" data-action="show-in-3d" data-id="${_escHtml(atomId)}">Show on map</button>${copyLinkBtn}${printBtn}</div>
 ` +
     `  </div>
 ` +
@@ -393,6 +415,13 @@ function renderBoardDetail(atom) {
     `  <form class="main-card ui-card board-compose ui-reply-box" data-action="board-reply-form"><label for="board-reply-text">Public reply</label><textarea id="board-reply-text" placeholder="Write a public reply…"${disabledAttr}>${_escHtml(replyValue)}</textarea><p>Replies are public and anchored to this board’s exact location.</p>${orphanText}${replyStatus}<button class="main-card-show3d ui-btn" id="board-reply-submit" type="submit" data-action="post-board-reply"${disabledAttr}>Post public reply</button></form>
 ` +
     `</section>`;
+}
+
+export function renderBoardSheetHtml({ atom, atoms = [], replyStatus = null, replyDraft = '', backLabel = 'Close board', backAction = 'map-board-close' } = {}) {
+  const boardAtom = resolveBoardAtom(atom, atoms);
+  if (!boardAtom) return '';
+  if (_isReplyAtom(boardAtom)) return renderOrphanReplyDetail(boardAtom, { backLabel, backAction });
+  return renderBoardDetail(boardAtom, { atoms, replyStatus, replyDraft, backLabel, backAction });
 }
 
 export function renderTextFeed({ atoms = [], locationDenied = false, loadingVisibleAtoms = false } = {}) {

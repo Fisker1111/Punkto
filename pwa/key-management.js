@@ -2127,6 +2127,31 @@ async function generateIdentity() {
   };
 }
 
+async function identityFromMnemonic(words) {
+  const mnemonic = Array.isArray(words)
+    ? words.map((word) => String(word || '').trim().toLowerCase()).filter(Boolean)
+    : String(words || '').trim().toLowerCase().split(/\s+/).filter(Boolean);
+  if (mnemonic.length !== 12) throw new Error('Recovery words must be exactly 12 words.');
+  for (const word of mnemonic) {
+    if (!BIP39_WORDS.includes(word)) throw new Error(`Unknown recovery word: ${word}`);
+  }
+  const seed = await mnemonicToSeed(mnemonic);
+  const privKeySeed = seed.slice(0, 32);
+  const keypair = nacl.sign.keyPair.fromSeed(privKeySeed);
+  const pubkey = keypair.publicKey;
+  const pubkeyB64 = btoa(String.fromCharCode(...pubkey));
+  const pubkeyHashBuffer = await crypto.subtle.digest('SHA-256', pubkey);
+  const pubkeyHash = new Uint8Array(pubkeyHashBuffer);
+  const authorId = base32Geohash(pubkeyHash).slice(0, 12);
+  return {
+    mnemonic,
+    pubkey: pubkeyB64,
+    pubkeyBytes: Array.from(pubkey),
+    authorId,
+    secretKey: Array.from(keypair.secretKey)
+  };
+}
+
 // Custom Base32 encoding (matches Python tool's base32_geohash)
 function base32Geohash(data) {
   const alphabet = GEOHASH_ALPHABET;
@@ -2157,13 +2182,17 @@ function exportKeyJson(identity) {
 }
 
 // Import key from JSON
-function importKeyFromJson(jsonStr) {
+async function importKeyFromJson(jsonStr) {
   const data = JSON.parse(jsonStr);
-  return {
-    mnemonic: data.mnemonic ? data.mnemonic.split(' ') : null,
-    pubkey: data.pubkey,
-    authorId: data.author_id
-  };
+  if (!data.mnemonic) throw new Error('Backup JSON is missing recovery words.');
+  const identity = await identityFromMnemonic(data.mnemonic);
+  if (data.pubkey && data.pubkey !== identity.pubkey) {
+    throw new Error('Backup public key does not match the recovery words.');
+  }
+  if (data.author_id && data.author_id !== identity.authorId) {
+    throw new Error('Backup author ID does not match the recovery words.');
+  }
+  return identity;
 }
 
 // Canonical JSON for signing and atom_id — mirrors relay canonical_bytes().
@@ -2214,4 +2243,7 @@ if (typeof window !== 'undefined') {
   window.signAtom = signAtom;
   window.verifyAtom = verifyAtom;
   window.generateIdentity = generateIdentity;
+  window.identityFromMnemonic = identityFromMnemonic;
+  window.importKeyFromJson = importKeyFromJson;
+  window.exportKeyJson = exportKeyJson;
 }

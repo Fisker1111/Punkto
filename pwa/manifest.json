@@ -1,12 +1,12 @@
 {
   "name": "Punkto",
   "short_name": "Punkto",
-  "description": "Address points in 3D space",
+  "description": "Leave public Punktis at exact real-world places",
   "start_url": "/",
   "display": "standalone",
   "orientation": "any",
-  "theme_color": "#0a0a0a",
-  "background_color": "#0a0a0a",
+  "theme_color": "#111318",
+  "background_color": "#080b10",
   "lang": "en",
   "icons": [
     {
