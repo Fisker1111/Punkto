@@ -1110,11 +1110,11 @@ function orbPixelSize(d) {
 }
 
 function orbPickFillColor(d) {
-  return d.selectionId === 'draft' ? rgba(DRAFT_COLOR, 12) : mapColorForAtom(d.atom, d.selected ? 18 : 10);
+  return [0, 0, 0, 0];
 }
 
 function orbPickStrokeColor(d) {
-  return d.selectionId === 'draft' ? rgba(DRAFT_COLOR, 44) : mapColorForAtom(d.atom, d.selected ? 52 : 28);
+  return [0, 0, 0, 0];
 }
 
 function orbShadeColor(d) {
