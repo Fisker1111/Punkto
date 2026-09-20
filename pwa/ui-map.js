@@ -27,29 +27,30 @@ const ATOM_ORB_ICON_SIZE = 64;
 const ATOM_ORB_ICON_ATLAS = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(`
 <svg xmlns="http://www.w3.org/2000/svg" width="192" height="64" viewBox="0 0 192 64">
   <defs>
-    <radialGradient id="orbBody" cx="38%" cy="30%" r="58%">
-      <stop offset="0%" stop-color="white" stop-opacity="1"/>
-      <stop offset="34%" stop-color="white" stop-opacity=".98"/>
-      <stop offset="68%" stop-color="white" stop-opacity=".72"/>
-      <stop offset="100%" stop-color="white" stop-opacity=".18"/>
+    <radialGradient id="orbBody" cx="35%" cy="28%" r="68%">
+      <stop offset="0%" stop-color="#FFF4D6" stop-opacity="1"/>
+      <stop offset="34%" stop-color="#FFD17A" stop-opacity=".98"/>
+      <stop offset="68%" stop-color="#F5A623" stop-opacity=".84"/>
+      <stop offset="100%" stop-color="#9B4D12" stop-opacity=".48"/>
     </radialGradient>
     <radialGradient id="orbShade" cx="66%" cy="72%" r="54%">
-      <stop offset="0%" stop-color="white" stop-opacity=".72"/>
-      <stop offset="46%" stop-color="white" stop-opacity=".28"/>
-      <stop offset="100%" stop-color="white" stop-opacity="0"/>
+      <stop offset="0%" stop-color="#60300D" stop-opacity=".8"/>
+      <stop offset="46%" stop-color="#A65B16" stop-opacity=".36"/>
+      <stop offset="100%" stop-color="#C77B20" stop-opacity="0"/>
     </radialGradient>
-    <radialGradient id="orbLight" cx="38%" cy="30%" r="30%">
-      <stop offset="0%" stop-color="white" stop-opacity="1"/>
-      <stop offset="48%" stop-color="white" stop-opacity=".45"/>
-      <stop offset="100%" stop-color="white" stop-opacity="0"/>
+    <radialGradient id="orbLight" cx="35%" cy="28%" r="30%">
+      <stop offset="0%" stop-color="#FFFAEB" stop-opacity="1"/>
+      <stop offset="48%" stop-color="#FFE3A3" stop-opacity=".5"/>
+      <stop offset="100%" stop-color="#FFD17A" stop-opacity="0"/>
     </radialGradient>
   </defs>
   <circle cx="32" cy="32" r="27" fill="url(#orbBody)"/>
+  <circle cx="32" cy="32" r="26.5" fill="none" stroke="#FFE3A3" stroke-width="1" stroke-opacity=".2"/>
   <circle cx="96" cy="32" r="27" fill="url(#orbShade)"/>
   <circle cx="160" cy="32" r="27" fill="url(#orbLight)"/>
 </svg>` )}`;
 const ATOM_ORB_ICON_MAPPING = {
-  body: { x: 0, y: 0, width: ATOM_ORB_ICON_SIZE, height: ATOM_ORB_ICON_SIZE, mask: true },
+  body: { x: 0, y: 0, width: ATOM_ORB_ICON_SIZE, height: ATOM_ORB_ICON_SIZE, mask: false },
   shade: { x: ATOM_ORB_ICON_SIZE, y: 0, width: ATOM_ORB_ICON_SIZE, height: ATOM_ORB_ICON_SIZE, mask: true },
   light: { x: ATOM_ORB_ICON_SIZE * 2, y: 0, width: ATOM_ORB_ICON_SIZE, height: ATOM_ORB_ICON_SIZE, mask: true },
 };
@@ -439,7 +440,7 @@ export async function renderAtoms(newAtomIds = null) {
         iconMapping: ATOM_ORB_ICON_MAPPING,
         getIcon: () => 'body',
         getPosition: d => d.position,
-        getColor: d => d.color,
+        getColor: () => [255, 255, 255],
         getSize: d => orbPixelSize(d),
         sizeUnits: 'pixels',
         sizeMinPixels: 18,
@@ -1118,7 +1119,7 @@ function orbPickStrokeColor(d) {
 
 function orbShadeColor(d) {
   if (d.selectionId === 'draft') return [58, 38, 6, 86];
-  return d.selected ? [17, 17, 21, 82] : [12, 14, 18, 58];
+  return d.selected ? [72, 28, 6, 96] : [52, 20, 5, 72];
 }
 
 function orbHighlightColor(d) {
