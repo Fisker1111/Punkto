@@ -400,7 +400,7 @@ export async function renderAtoms(newAtomIds = null) {
       id: 'atom-category-halos',
       data: scatterData,
       getPosition: d => d.position,
-      getFillColor: d => d.haloColor,
+      getFillColor: () => [0, 0, 0, 0],
       getRadius: d => d.selectionId === 'draft' ? 25 : (d.selected ? 25 : 18),
       radiusUnits: 'pixels',
       radiusMinPixels: 13,
