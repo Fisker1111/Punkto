@@ -5,14 +5,11 @@ import { fixtureAdapter, FIXTURE_START, FIXTURE_END, type WorldAtom } from './at
 import { ThreeAtoms } from './threeAtoms';
 import { createUI } from './ui';
 
-// Keyless global CARTO dark raster context. Only the basemap uses the network.
-const style: StyleSpecification = {
-  version: 8,
-  sources: { geography: { type: 'raster', tiles: ['https://basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png?key=cb1_3xwb_1_a7ae0cc4063185819867e2f5'], tileSize: 256, maxzoom: 20,
-    attribution: '© <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors © <a href="https://carto.com/attributions" target="_blank" rel="noopener">CARTO</a>' } },
-  layers: [{ id: 'background', type: 'background', paint: { 'background-color': '#0c111b' } }, //v0.2 lighter navy backdrop
-    { id: 'geography', type: 'raster', source: 'geography', paint: { 'raster-opacity': 0.94, 'raster-saturation': -0.45 } }], //v0.2 restore subtle night-map color under the canvas brightness lift
-};
+// V0.4: OpenFreeMap dark vector basemap (loaded by URL so MapLibre resolves its
+// vector source), re-tinted to the tonal-separation palette via paint overrides
+// in the load handler below: charcoal land, mid-grey roads, darker navy water,
+// near-black background — atoms untouched and stay dominant.
+const style = 'https://tiles.openfreemap.org/styles/dark';
 const home = { center: [12.5683, 55.6761] as [number, number], zoom: 14.2, pitch: 58, bearing: -20 };
 const overlay = new ThreeAtoms();
 let map: maplibregl.Map;
@@ -48,7 +45,31 @@ try {
   map.addControl(new maplibregl.AttributionControl({ compact: true }), 'bottom-right');
   map.touchZoomRotate.enableRotation();
   map.touchPitch.enable();
-  map.on('load', () => { map.addLayer(overlay); ready = true; void refresh(); });
+  map.on('load', () => {
+    // V0.4 tonal-separation palette: raise land to charcoal and roads to clear
+    // mid-grey, keep water a darker navy than land, and anchor the background
+    // near-black — while atoms keep their designed luminance and stay dominant.
+    const T = (layer: string, prop: string, value: unknown) => { try { map.setPaintProperty(layer, prop, value); } catch { /* layer may be absent at some zooms */ } };
+    T('background', 'background-color', '#05070b');
+    T('water', 'fill-color', '#111927');
+    T('waterway', 'line-color', '#2e3948');
+    T('landuse_residential', 'fill-color', '#3a3f47'); T('landuse_residential', 'fill-opacity', 1);
+    T('landcover_wood', 'fill-color', '#32373f');
+    T('landcover_glacier', 'fill-color', '#32373f');
+    T('landuse_park', 'fill-color', '#343940');
+    T('building', 'fill-color', '#4a515a'); T('building', 'fill-outline-color', '#5d656f');
+    T('highway_minor', 'line-color', '#585f67');
+    T('highway_major_casing', 'line-color', '#5c636b');
+    T('highway_major_inner', 'line-color', '#687079');
+    T('highway_major_subtle', 'line-color', '#585f67');
+    T('highway_motorway_casing', 'line-color', '#626a71');
+    T('highway_motorway_inner', 'line-color', '#767e87');
+    T('highway_motorway_subtle', 'line-color', '#585f67');
+    T('road_oneway', 'line-color', '#687079');
+    T('road_oneway_opposite', 'line-color', '#687079');
+    T('railway', 'line-color', '#464c53');
+    map.addLayer(overlay); ready = true; void refresh();
+  });
   map.on('moveend', () => { void refresh(); });
   map.on('click', event => { if (ready) select(overlay.pick(event.point.x, event.point.y) ?? null); });
   map.on('mousemove', event => {
