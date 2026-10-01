@@ -11,7 +11,7 @@ const style: StyleSpecification = {
   sources: { geography: { type: 'raster', tiles: ['https://basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png?key=cb1_3xwb_1_a7ae0cc4063185819867e2f5'], tileSize: 256, maxzoom: 20,
     attribution: '© <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors © <a href="https://carto.com/attributions" target="_blank" rel="noopener">CARTO</a>' } },
   layers: [{ id: 'background', type: 'background', paint: { 'background-color': '#0c111b' } }, //v0.2 lighter navy backdrop
-    { id: 'geography', type: 'raster', source: 'geography', paint: { 'raster-opacity': 0.94, 'raster-saturation': -0.55 } }], //v0.2 clearer night-map detail and color
+    { id: 'geography', type: 'raster', source: 'geography', paint: { 'raster-opacity': 0.94, 'raster-saturation': -0.45 } }], //v0.2 restore subtle night-map color under the canvas brightness lift
 };
 const home = { center: [12.5683, 55.6761] as [number, number], zoom: 14.2, pitch: 58, bearing: -20 };
 const overlay = new ThreeAtoms();
