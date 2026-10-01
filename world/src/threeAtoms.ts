@@ -17,12 +17,17 @@ export class ThreeAtoms implements CustomLayerInterface {
   private targets: THREE.Mesh[] = [];
   private selected: string | null = null;
   private projectionReady = false;
-  private sphere = new THREE.SphereGeometry(1, 24, 16);
-  private column = new THREE.CylinderGeometry(1, 1, 1, 16);
-  private ring = new THREE.TorusGeometry(1, 0.025, 8, 48);
+  private sphere!: THREE.SphereGeometry;
+  private column!: THREE.CylinderGeometry;
+  private ring!: THREE.TorusGeometry;
 
   onAdd(map: WorldMap, gl: WebGLRenderingContext | WebGL2RenderingContext) {
     this.map = map;
+    this.projectionReady = false;
+    this.scene.clear();
+    this.sphere = new THREE.SphereGeometry(1, 24, 16);
+    this.column = new THREE.CylinderGeometry(1, 1, 1, 16);
+    this.ring = new THREE.TorusGeometry(1, 0.025, 8, 48);
     this.renderer = new THREE.WebGLRenderer({ canvas: map.getCanvas(), context: gl, antialias: true });
     this.renderer.autoClear = false;
     this.scene.add(this.root, new THREE.AmbientLight(0xffffff, 2));
@@ -109,8 +114,10 @@ export class ThreeAtoms implements CustomLayerInterface {
     this.targets = [];
   }
   onRemove() {
+    this.projectionReady = false;
     this.clear();
     this.sphere.dispose(); this.column.dispose(); this.ring.dispose();
     this.renderer.dispose();
+    this.scene.clear();
   }
 }
