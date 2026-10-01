@@ -40,13 +40,13 @@ export class ThreeAtoms implements CustomLayerInterface {
       // Adjust metre units for each atom's latitude; altitude is always metres above flat ground.
       group.scale.setScalar(coordinate.meterInMercatorCoordinateUnits() / this.unit);
       const orb = new THREE.Mesh(this.sphere, new THREE.MeshStandardMaterial({
-        color: atom.color, emissive: atom.color, emissiveIntensity: 0.65, roughness: 0.35, metalness: 0.15,
+        color: atom.color, emissive: atom.color, emissiveIntensity: 0.8, roughness: 0.35, metalness: 0.15, //v0.2 strengthen orb luminance
       }));
       orb.position.z = atom.altitudeM;
       orb.userData.atom = atom;
       group.add(orb);
       this.targets.push(orb);
-      const halo = new THREE.Mesh(this.sphere, new THREE.MeshBasicMaterial({ color: atom.color, transparent: true, opacity: 0.09, depthWrite: false, side: THREE.BackSide }));
+      const halo = new THREE.Mesh(this.sphere, new THREE.MeshBasicMaterial({ color: atom.color, transparent: true, opacity: 0.13, depthWrite: false, side: THREE.BackSide })); //v0.2 strengthen halo against brighter map
       halo.position.z = atom.altitudeM;
       halo.userData.halo = true;
       group.add(halo);
@@ -91,7 +91,7 @@ export class ThreeAtoms implements CustomLayerInterface {
     for (const orb of this.targets) {
       const selected = orb.userData.atom.id === this.selected;
       orb.scale.setScalar(radius * (selected ? 1.3 : 1));
-      (orb.material as THREE.MeshStandardMaterial).emissiveIntensity = selected ? 1.4 : 0.65;
+      (orb.material as THREE.MeshStandardMaterial).emissiveIntensity = selected ? 1.4 : 0.8; //v0.2 preserve brighter base luminance each frame
       orb.parent!.children.find(child => child.userData.halo)!.scale.setScalar(radius * (selected ? 2.4 : 1.9));
     }
     this.renderer.resetState();
