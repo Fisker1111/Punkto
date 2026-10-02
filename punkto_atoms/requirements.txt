@@ -1,0 +1,3 @@
+requests>=2.31,<3
+# Used by the optional test-atom signing helper.
+cryptography>=41
