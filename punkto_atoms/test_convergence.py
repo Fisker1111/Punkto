@@ -1,6 +1,7 @@
 """Deterministic real-HTTP convergence proof; run pytest -v -s to see steps."""
 import time
 import threading
+import sqlite3
 from contextlib import contextmanager
 
 import pytest
@@ -111,9 +112,17 @@ def test_convergence(tmp_path):
             assert mids(one) == mids(two) == expected
             assert one.sync_once() == two.sync_once() == 0
             passed()
+            saved_cursors = (one.store.cursors(), two.store.cursors())
+            assert saved_cursors == ({two.url: 8}, {one.url: 8})
         with node(path1) as one, node(path2) as two:
             assert mids(one) == expected and mids(two) == expected
             assert one.store.stats() == two.store.stats() == {'count': 8, 'head_seq': 8}
+            assert (one.store.cursors(), two.store.cursors()) == saved_cursors
+            for service, saved in zip((one, two), saved_cursors):
+                for peer, cursor in saved.items():
+                    assert service.store.get_cursor(peer + '/') == cursor
+                assert requests.get(service.url+'/atoms/v1/info', timeout=5).json()['cursors'] == saved
+            print('CURSOR RESTART: PASS — both persisted peer cursors remain 8 after reopening stores', flush=True)
             passed()
             assert mids(one) == mids(two) == expected
             passed()
@@ -126,17 +135,63 @@ def test_convergence(tmp_path):
     print('CONVERGENCE: PASS', flush=True)
 
 
-@pytest.mark.xfail(strict=True, reason='Specified local-head cursor misses independent writes at equal heads')
-def test_independent_writes_known_design_limitation(tmp_path):
+@pytest.mark.parametrize('counts', [(3, 3), (3, 2)])
+def test_independent_writes(tmp_path, counts):
+    with node(tmp_path/'a.db') as one, node(tmp_path/'b.db') as two:
+        one.config.peers = [two.url + '/']
+        two.config.peers = [one.url]
+        for service, prefix, count in zip((one, two), ('A', 'B'), counts):
+            for i in range(count):
+                submit(service, atom(f'independent {prefix}{i}'))
+        expected = mids(one) | mids(two)
+        assert len(expected) == sum(counts)
+        assert one.store.get_cursor(two.url) == two.store.get_cursor(one.url) == 0
+        assert one.sync_once() == counts[1]
+        assert two.sync_once() == counts[0]
+        assert mids(one) == mids(two) == expected
+        assert one.sync_once() == two.sync_once() == 0
+        assert one.store.get_cursor(two.url) == two.store.get_cursor(one.url) == len(expected)
+        print(f'STEP 11: PASS — independent writers, heads {counts[0]} vs {counts[1]}, full union {len(expected)}', flush=True)
+
+
+@pytest.mark.parametrize('failure', ['network', 'validation', 'insert'])
+def test_failed_pull_retains_cursor_and_retries(tmp_path, monkeypatch, failure):
     with node(tmp_path/'a.db') as one, node(tmp_path/'b.db') as two:
         one.config.peers = [two.url]
-        two.config.peers = [one.url]
-        submit(one, atom('independent A'))
-        submit(two, atom('independent B'))
-        expected = mids(one) | mids(two)
+        submit(two, atom('prefix'))
+        assert one.sync_once() == 1
+        submit(two, atom('next'))
+        submit(two, atom('last'))
+        cursor = one.store.get_cursor(two.url)
+        with monkeypatch.context() as patch:
+            if failure == 'insert':
+                insert = one.store.insert
+                def broken_insert(value):
+                    if value['x'] == 'last':
+                        raise sqlite3.OperationalError('simulated insert failure')
+                    return insert(value)
+                patch.setattr(one.store, 'insert', broken_insert)
+            else:
+                get = requests.get
+                def broken_get(url, **kwargs):
+                    if url.endswith('/sync'):
+                        if failure == 'network':
+                            raise requests.ConnectionError('simulated interruption')
+                        response = get(url, **kwargs)
+                        items = response.json()
+                        items[-1]['mid'] = '0'*64
+                        patch.setattr(response, 'json', lambda: items)
+                        return response
+                    return get(url, **kwargs)
+                patch.setattr(requests, 'get', broken_get)
+            one.sync_once()
+            assert one.last_sync_status == 'error'
+            assert one.store.get_cursor(two.url) == cursor
+            assert one.store.stats()['count'] == (2 if failure == 'insert' else 1)
         one.sync_once()
-        two.sync_once()
-        assert mids(one) == mids(two) == expected
+        assert one.last_sync_status == 'ok'
+        assert mids(one) == mids(two)
+        assert one.store.get_cursor(two.url) == 3
 
 
 def test_validation_feed_and_inventory(tmp_path):

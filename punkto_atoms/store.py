@@ -20,6 +20,9 @@ class AtomStore:
                 seq INTEGER PRIMARY KEY, mid TEXT NOT NULL UNIQUE,
                 t INTEGER NOT NULL, lat REAL NOT NULL, lon REAL NOT NULL,
                 alt REAL NOT NULL, atom BLOB NOT NULL);
+            CREATE TABLE IF NOT EXISTS sync_cursors (
+                peer TEXT PRIMARY KEY,
+                last_seq INTEGER NOT NULL DEFAULT 0);
             CREATE INDEX IF NOT EXISTS atoms_t ON atoms(t);
             CREATE INDEX IF NOT EXISTS atoms_position ON atoms(lat, lon);
             CREATE TRIGGER IF NOT EXISTS atoms_no_update BEFORE UPDATE ON atoms
@@ -59,6 +62,22 @@ class AtomStore:
         with self.lock:
             row = self.db.execute('SELECT COUNT(*), COALESCE(MAX(seq),0) FROM atoms').fetchone()
             return {'count': row[0], 'head_seq': row[1]}
+
+    def get_cursor(self, peer):
+        with self.lock:
+            row = self.db.execute('SELECT last_seq FROM sync_cursors WHERE peer=?',
+                                  (peer.strip().rstrip('/'),)).fetchone()
+            return row[0] if row else 0
+
+    def set_cursor(self, peer, last_seq):
+        with self.lock, self.db:
+            self.db.execute('''INSERT INTO sync_cursors(peer,last_seq) VALUES(?,?)
+                ON CONFLICT(peer) DO UPDATE SET last_seq=excluded.last_seq''',
+                (peer.strip().rstrip('/'), last_seq))
+
+    def cursors(self):
+        with self.lock:
+            return dict(self.db.execute('SELECT peer,last_seq FROM sync_cursors'))
 
     def feed(self, min_lat=-90, max_lat=90, min_lon=-180, max_lon=180,
              min_t=0, max_t=9223372036854775807, limit=100):

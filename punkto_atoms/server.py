@@ -6,6 +6,7 @@ import logging
 import math
 import os
 import socket
+import sqlite3
 import threading
 import time
 
@@ -60,26 +61,22 @@ class AtomService:
         return dict(self.store.stats(), peer=self.config.peers[0] if self.config.peers else '',
                     peers=list(self.config.peers), last_sync_status=self.last_sync_status,
                     last_sync_at=self.last_sync_at, last_sync_new=self.last_sync_new,
-                    version=__version__)
+                    version=__version__, cursors=self.store.cursors())
 
     def sync_once(self):
-        """One deterministic pull cycle using the design's local-head cursor.
-
-        This prescribed cursor is only safe when the stores share a common
-        prefix. Independent concurrent writes can create equal heads with
-        different contents; changing that requires a per-peer cursor contract.
-        """
+        """Pull using persistent cursors in each peer's own sequence space."""
         with self.sync_lock:
             added = 0
             failed = False
             for peer in list(self.config.peers):
+                peer = peer.strip().rstrip('/')
                 try:
                     response = requests.get(peer + '/atoms/v1/info', timeout=10)
                     response.raise_for_status()
                     head = response.json()['head_seq']
                     if type(head) is not int or head < 0:
                         raise ValueError('invalid peer head_seq')
-                    since = self.store.stats()['head_seq']
+                    since = self.store.get_cursor(peer)
                     if head > since:
                         response = requests.get(peer + '/atoms/v1/sync',
                                                 params={'since': since}, timeout=10)
@@ -88,14 +85,15 @@ class AtomService:
                         if not isinstance(items, list):
                             raise ValueError('peer inventory must be a list')
                         # Prevalidate the entire response before inserting anything.
-                        # A malformed later record must not advance our local head.
+                        # A malformed later record must not advance the peer cursor.
                         from .atoms_core import validate_atom
                         for item in items:
                             validate_atom(item)
                         for item in items:
                             _, inserted = self.store.insert(item)
                             added += int(inserted)
-                except (requests.RequestException, ValueError, KeyError, TypeError) as exc:
+                        self.store.set_cursor(peer, head)
+                except (requests.RequestException, ValueError, KeyError, TypeError, sqlite3.Error) as exc:
                     failed = True
                     LOG.warning('Peer sync failed for %s: %s', peer, exc)
             self.last_sync_status = 'error' if failed else 'ok'
