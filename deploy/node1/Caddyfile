@@ -1,8 +1,10 @@
-# Server 1: handles both punkto.xyz and app1.punkto.xyz
+# Server 1: punkto.xyz (World v1.0), explorer.punkto.xyz (preserved legacy),
+# app1.punkto.xyz, node1.punkto.xyz (legacy PWA), test1.punkto.xyz (staging World v0.5)
 # Caddy auto-HTTPS via Let's Encrypt
 
-(punkto_site) {
-    root * /srv
+# ── Reusable relay+static body. Root NOT set here; each site sets its own `root`
+#    immediately after importing so the correct static tree is served. ─────────
+(punkto_relay) {
     file_server
 
     # API / relay endpoints — proxy to relay container
@@ -62,18 +64,41 @@
     }
 }
 
+# ── Punkto 1.0 — World v1.0 flagship experience ──────────────────────────────
 punkto.xyz {
-    import punkto_site
+    root * /srv-punkto-v1
+    import punkto_relay
 }
 
 www.punkto.xyz {
     redir https://punkto.xyz{uri} permanent
 }
 
+# ── Explorer — preserved legacy Punkto client ────────────────────────────────
+explorer.punkto.xyz {
+    root * /srv-punkto-explorer
+    import punkto_relay
+}
+
+# ── Technical node hosts — legacy PWA from image ─────────────────────────────
 app1.punkto.xyz {
-    import punkto_site
+    root * /srv
+    import punkto_relay
 }
 
 node1.punkto.xyz {
-    import punkto_site
+    root * /srv
+    import punkto_relay
+}
+
+# ── test1 — Punkto World V0.5 static prototype (staging) ─────────────────────
+test1.punkto.xyz {
+    root * /srv-punkto-world
+    file_server
+    encode gzip
+    log {
+        output stderr
+        format console
+        level INFO
+    }
 }

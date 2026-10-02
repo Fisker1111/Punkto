@@ -1,5 +1,10 @@
-(punkto_site) {
-    root * /srv
+# Server 2: punkto.xyz (World v1.0), explorer.punkto.xyz (preserved legacy),
+# node2.punkto.xyz, app2.punkto.xyz (legacy PWA), test1.punkto.xyz (staging World v0.5)
+# Caddy auto-HTTPS via Let's Encrypt
+
+# ── Reusable relay+static body. Root NOT set here; each site sets its own `root`
+#    immediately after importing so the correct static tree is served. ─────────
+(punkto_relay) {
     file_server
 
     # API / relay endpoints — proxy to relay container
@@ -64,60 +69,38 @@ sunebech.com, www.sunebech.com {
     redir https://www.punkto.xyz{uri}
 }
 
-# app2.punkto.xyz — Punkto node 2
-# Caddy auto-HTTPS via Let's Encrypt
+# ── Punkto 1.0 — World v1.0 flagship experience ──────────────────────────────
+punkto.xyz {
+    root * /srv-punkto-v1
+    import punkto_relay
+}
 
+www.punkto.xyz {
+    redir https://punkto.xyz{uri} permanent
+}
+
+# ── Explorer — preserved legacy Punkto client ────────────────────────────────
+explorer.punkto.xyz {
+    root * /srv-punkto-explorer
+    import punkto_relay
+}
+
+# ── Technical node hosts — legacy PWA from image ─────────────────────────────
 node2.punkto.xyz {
-    import punkto_site
+    root * /srv
+    import punkto_relay
 }
 
 app2.punkto.xyz {
     root * /srv
+    import punkto_relay
+}
+
+# ── test1 — Punkto World V0.5 static prototype (staging) ─────────────────────
+test1.punkto.xyz {
+    root * /srv-punkto-world
     file_server
-
-    @relay_paths path /atom /atom/* /latest /stream /feed /health /info /status /node/info /node/info/* \
-        /llms.txt /robots.txt /sitemap.xml /openapi.json \
-        /punkto.ai.md /punkto.md /punkto.node.md /punkto.sync.md \
-        /punkto.manifest.md /punkto.identity.md /punkto.ui.md \
-        /.well-known/*
-    reverse_proxy @relay_paths relay:8000
-
-    @relay_patterns path_regexp relay ^/(punkto(/.*)?|p/.+)$
-    reverse_proxy @relay_patterns relay:8000
-
-    @is_relay {
-        path /atom /atom/* /latest /stream /feed /health /info /status /node/info /node/info/*
-        path /punkto* /p/*
-    }
-    header @is_relay Access-Control-Allow-Origin "*"
-    header @is_relay Access-Control-Allow-Methods "GET, POST, OPTIONS"
-    header @is_relay Access-Control-Allow-Headers "Content-Type, Authorization"
-
-    @sw path /sw.js
-    header @sw Cache-Control "no-cache, no-store, must-revalidate"
-    header @sw Pragma "no-cache"
-    header @sw Expires "0"
-
-    @app {
-        not path /lib/*
-        path *.html *.js
-    }
-    header @app Cache-Control "no-cache, no-store, must-revalidate"
-    header @app Pragma "no-cache"
-    header @app Expires "0"
-
-    @static_libs path /lib/*
-    header @static_libs Cache-Control "public, max-age=86400, immutable"
-
-    header {
-        X-Content-Type-Options  nosniff
-        X-Frame-Options         DENY
-        Referrer-Policy         strict-origin-when-cross-origin
-        -Server
-    }
-
     encode gzip
-
     log {
         output stderr
         format console

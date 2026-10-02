@@ -37,6 +37,15 @@ services:
       - caddy_data:/data
       # Persistent Caddy config: admin state
       - caddy_config:/config
+      # test1 AtomCloud PWA — static files only (no relay)
+      - /var/www/punkto-test1:/srv-test1:ro
+      # Punkto World V0 static (test1.punkto.xyz staging)
+      - /var/www/punkto-world-v0:/srv-punkto-world:ro
+      # Punkto World 1.0 static (punkto.xyz production)
+      - /var/www/punkto-v1:/srv-punkto-v1:ro
+      # Legacy Punkto client preserved as Explorer (explorer.punkto.xyz)
+      - /var/www/punkto-explorer:/srv-punkto-explorer:ro
+      - ./overrides/app.js:/srv/app.js:ro
     depends_on:
       relay:
         condition: service_healthy
