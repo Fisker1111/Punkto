@@ -7,6 +7,10 @@
 (punkto_relay) {
     file_server
 
+    # Punkti v0.5.1 canonical atom store API (World data source)
+    @atoms_paths path /atoms /atoms/* /atoms/v1 /atoms/v1/* /atoms/v1/mid/* /atoms/v1/feed /atoms/v1/sync /atoms/v1/info /atoms/v1/health
+    reverse_proxy @atoms_paths atoms:8020
+
     # API / relay endpoints — proxy to relay container
     @relay_paths path /atom /atom/* /latest /stream /feed /health /info /status /node/info /node/info/* \
         /llms.txt /robots.txt /sitemap.xml /openapi.json \
@@ -22,6 +26,7 @@
     # CORS headers on relay responses
     @is_relay {
         path /atom /atom/* /latest /stream /feed /health /info /status /node/info /node/info/*
+        path /atoms /atoms/* /atoms/v1 /atoms/v1/*
         path /punkto* /p/*
     }
     header @is_relay Access-Control-Allow-Origin "*"
@@ -96,9 +101,11 @@ app2.punkto.xyz {
     import punkto_relay
 }
 
-# ── test1 — Punkto World V0.5 static prototype (staging) ─────────────────────
+# ── test1 — Punkto World staging (real atom source) ──────────────────────────
 test1.punkto.xyz {
     root * /srv-punkto-world
+    @atoms_paths path /atoms /atoms/* /atoms/v1 /atoms/v1/*
+    reverse_proxy @atoms_paths atoms:8020
     file_server
     encode gzip
     log {
