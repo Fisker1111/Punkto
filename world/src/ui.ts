@@ -8,7 +8,7 @@ export function createUI(onTime: (to: number) => void, onHome: () => void, onSel
     <p id="status" class="status" role="status">Opening the world…</p>
     <aside id="detail" class="detail" aria-label="Atom details" hidden tabindex="-1"><button id="close" class="close" aria-label="Close atom details">×</button><p class="eyebrow">A MESSAGE EXISTS HERE</p><p id="message" class="message"></p><div class="byline"><span id="avatar"></span><span id="identity"></span><time id="timestamp"></time></div><div id="location" class="location"></div></aside>
     <section class="timeline" aria-label="Time exploration"><div class="timeline-top"><div><p class="eyebrow">EXPLORE THROUGH TIME</p><span class="day">25 September 2026</span></div><output id="time" for="time-slider"></output></div><label class="sr-only" for="time-slider">Show messages posted up to this time, Copenhagen time</label><input id="time-slider" type="range" min="0" max="17" value="17" step="1"><div class="timeline-bottom"><span>08:00</span><span id="count" aria-live="polite"></span><span>01:00 +1d</span></div><details class="nearby"><summary>Explore visible messages</summary><div id="atom-list"></div></details></section>
-    <p class="gesture-hint">Drag to wander · Scroll to explore · Right-drag to tilt & rotate · v0.5</p>`;
+    <p class="gesture-hint">Drag to wander · Scroll to explore · Right-drag to tilt & rotate · v1.0</p>`;
   const el = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
   const slider = el<HTMLInputElement>('time-slider');
   const updateTime = () => {
