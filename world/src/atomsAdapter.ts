@@ -1,3 +1,4 @@
+/// <reference types="vite/client" />
 export interface WorldAtom {
   id: string;
   x: number;
@@ -46,5 +47,35 @@ export const fixtureAdapter: AtomAdapter = {
   async getAtoms(bounds, time) {
     return fixtureAtoms.filter(a => a.x >= bounds.minLon && a.x <= bounds.maxLon &&
       a.y >= bounds.minLat && a.y <= bounds.maxLat && a.t >= time.from && a.t <= time.to);
+  },
+};
+
+const ATOM_BASE = import.meta.env.VITE_ATOM_URL || '';
+const palette = ['#f6bb78', '#8bd6cb', '#b8a4ef'];
+function mapAtom(item: unknown): WorldAtom {
+  if (!item || typeof item !== 'object') throw new Error('Invalid atom');
+  const atom = item as Record<string, unknown>;
+  if (typeof atom.mid !== 'string' || typeof atom.x !== 'string' || typeof atom.fp !== 'string' ||
+      ![atom.lon, atom.lat, atom.alt, atom.t].every(value => typeof value === 'number' && Number.isFinite(value))) {
+    throw new Error('Invalid atom fields');
+  }
+  let hash = 0;
+  for (const char of atom.mid) hash = (Math.imul(hash, 31) + char.charCodeAt(0)) >>> 0;
+  return { id: atom.mid, x: atom.lon as number, y: atom.lat as number,
+    altitudeM: atom.alt as number, t: atom.t as number, message: atom.x,
+    identity: atom.fp, color: palette[hash % palette.length] };
+}
+export const realAdapter: AtomAdapter = {
+  async getAtoms(bounds, time) {
+    const query = new URLSearchParams({
+      min_lat: String(bounds.minLat), max_lat: String(bounds.maxLat),
+      min_lon: String(bounds.minLon), max_lon: String(bounds.maxLon),
+      min_t: String(time.from), max_t: String(time.to), limit: '500',
+    });
+    const response = await fetch(`${ATOM_BASE.replace(/\/$/, '')}/atoms/v1/feed?${query}`);
+    if (!response.ok) throw new Error(`Atom feed failed: ${response.status}`);
+    const items: unknown = await response.json();
+    if (!Array.isArray(items)) throw new Error('Invalid atom feed');
+    return items.map(mapAtom);
   },
 };

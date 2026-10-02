@@ -50,3 +50,18 @@ Static `world/dist` is served behind `https://test1.punkto.xyz` on node1/node2
 via a dedicated Caddy `test1.punkto.xyz` site block + host bind mount, added
 alongside the existing `punkto.xyz` configuration. Rollback: remove the added
 site block/mount and reload Caddy; `punkto.xyz` configuration is untouched.
+### Atom source
+
+World reads `/atoms/v1/feed` on the same origin by default. Set
+`VITE_ATOM_URL=http://127.0.0.1:8020` before `npm run dev` or `npm run build`
+to use a separate atom store. Vite embeds this setting at build time.
+`VITE_USE_FIXTURES=1 npm run build` (or `npm run dev`) enables fixture mode.
+
+The live timeline uses the timestamp range of the first successful global
+feed query (up to the latest 500 atoms). An empty store uses the last 24 hours.
+The timeline range stays fixed for that page session; reload to rediscover it.
+
+From the repository root, run `python3 world/tests/atoms-smoke.py` after
+`cd world && npm install` to check the real adapter against a temporary local
+store containing two signed Copenhagen atoms. This prints the mapped objects
+and checks filtering, empty results, fixture queries, and error handling.
