@@ -1,29 +1,29 @@
 # BRTH reference implementation evidence
 
 Scope: `experimental/brth-layer4/` only. Proposal `brth/1`; no deployment,
-protocol freeze, push or PR. Commands below run from this directory.
+no protocol freeze, no PR, no change outside this directory.
 
-## Acceptance mapping
+## Acceptance mapping — GitHub Fisker1111/CEO-OS Issue #3
 
-The task references “Issue #3” without its repository or URL. The available
-`Fisker1111/Punkto#3` is **Prioritize nearby notes and enrich atom list UI**, not
-BRTH, and contains no BRTH acceptance list. Consequently the numbered mapping
-below is a **provisional specification-based mapping**, not a claim to quote
-that unavailable issue. Item 8 is explicitly identified in specification §0.
-The exact issue mapping needs the intended issue link; every supplied task test
-requirement is separately accounted for below.
+Issue #3 requires a return to Founder review with nine items. Each item is mapped
+to a named test in this checkout (branch `proposal/brth-layer4`):
 
-| Item | Specification requirement | Named test / command |
+| # | Issue #3 acceptance item | Evidence |
 |---|---|---|
-| 1 | Human actor from clean state | `human actor from clean words authorizes operational key and sets human claim`; `node --test test/authority.test.js` |
-| 2 | AI actor from clean state and signed assertion publication | `AI continuity, signed assertion, metadata changes, revocation, succession and historical evidence`; `AI signed assertion is published as an opaque carrier atom`; `node --test test/authority.test.js test/layering.test.js` |
-| 3 | Operational authority, revocation and succession | `scoped authorization, expiry, claim deletion and no self-widening`; `node --test test/authority.test.js` |
-| 4 | Offline deterministic 24-word recovery | `paper recovery in fresh process reproduces Birth and roots and appends fresh authority`; `node --test test/attest-recover.test.js` |
-| 5 | AI model/runtime/operator/key changes preserve ID | `AI continuity, signed assertion, metadata changes, revocation, succession and historical evidence`; `node --test test/authority.test.js` |
-| 6 | Dual-PQ root authority and independent verification | `independent OpenSSL ML-DSA and SLH-DSA interoperability both directions and exact sizes`; `node --test test/pq.test.js` |
-| 7 | Hash chain, hostile logs and explicit forks | `adversarial chain detects tampering, replay, forks, quorum and unknown fields`; `node --test test/authority.test.js` |
-| 8 | Continuity, personhood/legal attestations, reputation and current authority remain separate | `attestations verify issuer authority and keep subject identity/state separate`; `node --test test/attest-recover.test.js`. Birth validation rejects metadata; no reputation state or score is implemented. |
-| 9 | Layer-4-only, opaque byte-preserving carriage | `Punkti Layer-3 opaque BRTH bytes survive real carrier and mesh store/transport`; `node --test test/layering.test.js` |
+| 1 | Concise Layer-4 BRTH specification | `docs/BRTH_LAYER4_SPEC.md` — 12 sections; declares the four separated concerns, the authority log, recovery and the L3/L4 boundary |
+| 2 | Deterministic independent vectors/tests | `test/vectors.test.js` against committed `vectors/root.json` + `vectors/birth.json`; `test/cjson.test.js`; `test/authority.test.js` — every seed, word list and `iat` pinned; no wall clock, no network |
+| 3 | Real dual-PQ verification, not toy signatures | `test/pq.test.js` — FIPS 204 ML-DSA-87 (pk 2592 / sig 4627) and FIPS 205 SLH-DSA-SHAKE-256s (pk 64 / sig 29792), noble ↔ OpenSSL 3.5.5 in **both** directions for both families |
+| 4 | One human actor and one AI actor from clean state | `human actor from clean words authorizes operational key and sets human claim`; `AI continuity, signed assertion, metadata changes, revocation, succession and historical evidence` |
+| 5 | Operational key authorization + revocation/succession | `scoped authorization, expiry, claim deletion and no self-widening`; `root rotation uses prior dual policy, preserves ID and rejects old roots`; succession/revoke assertions inside the AI-continuity test |
+| 6 | Deterministic recovery from the 24-word secret path | `paper recovery in fresh process reproduces Birth and roots and appends fresh authority` — recovery runs in a **separate Node process** from the same 24 words and reproduces byte-identical Birth, roots and `IdentityID` |
+| 7 | AI runtime/model change does not change `IdentityID` | AI-continuity test changes `model.version`, `runtime` and `operator`, then revokes and succeeds the operational key, asserting the `IdentityID` is unchanged throughout |
+| 8 | Clean separation of continuity / personhood / reputation / current authority | `attestations verify issuer authority and keep subject identity/state separate` — continuity = Birth + chain; personhood/legal = third-party `brth.attest`; current authority = derived from the log only; **no reputation state or score exists in the identity model** |
+| 9 | No Punkti Layer-3 semantic dependency on BRTH | `Punkti Layer-3 opaque BRTH bytes survive real carrier and mesh store/transport` — real `carrier.py` + `mesh.py` nodes preserve atom bytes and `x` exactly, and also round-trip deliberately invalid BRTH text; no file outside `experimental/brth-layer4/` changed |
+
+Item 8's reputation component is demonstrated by absence: `deriveState` exposes
+only root, keys, claims and chain position. Reputation is left to L4 consumers
+over signed history and attestations, as specified in §§0 and 11.
+
 
 ## Full task coverage
 
@@ -82,3 +82,22 @@ ran (no skips), and the forced absent-OpenSSL noble fallback passed.
 ℹ todo 0
 ℹ duration_ms 201710.822649
 ```
+
+## Independent verification (Hermes, separate from Codex)
+
+Re-run by the Hermes worker on this branch, not trusted from the implementation
+report:
+
+- `npm test` re-executed: **18/18 pass, 0 fail, 0 skipped**, ~188 s.
+- `node tools/gen-vectors.js` re-executed, then `git status --short`: empty —
+  committed vectors reproduce byte-identically.
+- Vector independence: a throwaway Python/HKDF-SHA-512 + `cryptography`
+  ML-DSA-87 re-derivation from the published test entropy reproduced the
+  committed `mlPkHex` **and** recomputed `identity_id` as
+  `"b1:" + base32(sha3_256(cjsonHex))` for both committed cases — matching
+  `vectors/birth.json` exactly (`b1:n4xq6w26e76t5acvynw7dsf6c53pm6nc2detgqihszkcjqkvweja`,
+  `b1:fstdyaokzqulhvx7ust7h6jcnj4vem3kc7fges3dh2ac5eo22dna`).
+- Diff scope checked: every changed file is under `experimental/brth-layer4/`;
+  the Punkti carrier/mesh sources are untouched (used read-only by the
+  layering test).
+
