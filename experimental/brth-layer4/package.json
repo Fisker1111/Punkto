@@ -1,0 +1,13 @@
+{
+  "name": "brth-layer4-reference",
+  "version": "0.0.1",
+  "private": true,
+  "type": "commonjs",
+  "scripts": {
+    "test": "node --test test/",
+    "vectors": "node tools/gen-vectors.js"
+  },
+  "dependencies": {
+    "@noble/post-quantum": "0.7.1"
+  }
+}
