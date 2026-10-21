@@ -1,0 +1,4620 @@
+{
+  "environment": {
+    "python": "3.14.7",
+    "implementation": "CPython"
+  },
+  "implementations": {
+    "ref": {
+      "experimental/punkti-v0.6-mesh/src/carrier.py": "f0b1784e334ef1fbf31fa0b2d7994075eb1183dfb4eb555e84ab6d5a8b96245c",
+      "experimental/punkti-v0.6-mesh/src/mesh.py": "e4c8f1a7db0810ad5a218b0edf0f624cb040a5a847a179590a0b74eab62780ab",
+      "experimental/punkti-v0.6-mesh/src/spatial.py": "3abad81efb48c3e583279a813feb375618d378cd0f67883ef85d43cd079fe344"
+    },
+    "nb": {
+      "experimental/nairobidot-l3/src/nairobidot/__init__.py": "9201d2d42577b7529187e979f8d66a249a7fa82e3760507cb146925f5d74a40e",
+      "experimental/nairobidot-l3/src/nairobidot/carrier.py": "135bb403a7b7ded44e27bf6f6e2ca96a68a7ea0cf9b03adf1fb9713885594359",
+      "experimental/nairobidot-l3/src/nairobidot/node.py": "e1b417cb1d055f128fce5594d296251f50b2cbbc0dd111c88609515db669ae13",
+      "experimental/nairobidot-l3/src/nairobidot/serve.py": "3a16ce3cb979551633c679cba626824bdf6c112e2b0611e83793bc425d399f8f",
+      "experimental/nairobidot-l3/src/nairobidot/spatial.py": "1a38003bbe205523f5a950cb756215175e325d5eb4f26dad97eea43626d58c8e"
+    }
+  },
+  "source_manifest_sha256": {
+    "ref": "3967410ebc8ead848cd832f29d47bd1069b6b3a0143f4a63ca5f9f60a852a1dd",
+    "nb": "caf9d0c4b08b1904a100a1596fe6311895f2d7b20d0a1d6e39241b84676371b6"
+  },
+  "arrangement": "two clean-room nodes and one reference",
+  "totals": {
+    "PASS": 10,
+    "FAIL": 1
+  },
+  "vectors": [
+    {
+      "name": "unanchored",
+      "MID": "87bd4380e5580124d46e4a4a43192d8afa3b5a0855ae90e0b564d713e10abfa8",
+      "address": "punkti/0.6:87bd4380e5580124d46e4a4a43192d8afa3b5a0855ae90e0b564d713e10abfa8"
+    },
+    {
+      "name": "XY",
+      "MID": "7a1e1d6e9b4b1a0637bcacd771758619555f419c881797e1730d59e01f7f6301",
+      "address": "punkti/0.6:7a1e1d6e9b4b1a0637bcacd771758619555f419c881797e1730d59e01f7f6301"
+    },
+    {
+      "name": "XYZ",
+      "MID": "f7d9dafe4d2bbeaafe7367db1d9b40762760abae0a096ac624a60e9e27579fca",
+      "address": "punkti/0.6:f7d9dafe4d2bbeaafe7367db1d9b40762760abae0a096ac624a60e9e27579fca"
+    },
+    {
+      "name": "refs-order-duplicates",
+      "MID": "37016dd1af177b43a5f5a1991603dc9438bb8f149b729020b50d79e35d04049d",
+      "address": "punkti/0.6:37016dd1af177b43a5f5a1991603dc9438bb8f149b729020b50d79e35d04049d"
+    },
+    {
+      "name": "unicode-ext",
+      "MID": "8d72c892016d6db3e4017383bddc7a0acb9314e72ca69dab5c62fbc3294293cd",
+      "address": "punkti/0.6:8d72c892016d6db3e4017383bddc7a0acb9314e72ca69dab5c62fbc3294293cd"
+    },
+    {
+      "name": "unknown-alg",
+      "MID": "2dc0696a81f0afaf69dddc2da34cc867ea610f5f4717dfcefd0e730a42b9404b",
+      "address": "punkti/0.6:2dc0696a81f0afaf69dddc2da34cc867ea610f5f4717dfcefd0e730a42b9404b"
+    }
+  ],
+  "tests": {
+    "connect_both_initiators": {
+      "status": "PASS",
+      "summary": "Each implementation initiates full reciprocal connect over mixed atoms.",
+      "comparisons": [
+        {
+          "label": "ref isolated sys.path",
+          "actual": [],
+          "expected": []
+        },
+        {
+          "label": "adapter survives invalid command",
+          "actual": false,
+          "expected": false
+        },
+        {
+          "label": "adapter remains responsive",
+          "actual": true,
+          "expected": true
+        },
+        {
+          "label": "nb isolated sys.path",
+          "actual": [],
+          "expected": []
+        },
+        {
+          "label": "no reference modules loaded",
+          "actual": [],
+          "expected": []
+        },
+        {
+          "label": "adapter survives invalid command",
+          "actual": false,
+          "expected": false
+        },
+        {
+          "label": "adapter remains responsive",
+          "actual": true,
+          "expected": true
+        },
+        {
+          "label": "ref configure RPC error",
+          "actual": null,
+          "expected": null
+        },
+        {
+          "label": "nb configure RPC error",
+          "actual": null,
+          "expected": null
+        },
+        {
+          "label": "nb add RPC error",
+          "actual": null,
+          "expected": null
+        },
+        {
+          "label": "local seed admission",
+          "actual": true,
+          "expected": true
+        },
+        {
+          "label": "ref add RPC error",
+          "actual": null,
+          "expected": null
+        },
+        {
+          "label": "local seed admission",
+          "actual": true,
+          "expected": true
+        },
+        {
+          "label": "nb add RPC error",
+          "actual": null,
+          "expected": null
+        },
+        {
+          "label": "local seed admission",
+          "actual": true,
+          "expected": true
+        },
+        {
+          "label": "ref add RPC error",
+          "actual": null,
+          "expected": null
+        },
+        {
+          "label": "local seed admission",
+          "actual": true,
+          "expected": true
+        },
+        {
+          "label": "nb add RPC error",
+          "actual": null,
+          "expected": null
+        },
+        {
+          "label": "local seed admission",
+          "actual": true,
+          "expected": true
+        },
+        {
+          "label": "ref connect RPC error",
+          "actual": null,
+          "expected": null
+        },
+        {
+          "label": "ref state RPC error",
+          "actual": null,
+          "expected": null
+        },
+        {
+          "label": "ref initiator store",
+          "actual": [
+            "punkti/0.6:37016dd1af177b43a5f5a1991603dc9438bb8f149b729020b50d79e35d04049d",
+            "punkti/0.6:7a1e1d6e9b4b1a0637bcacd771758619555f419c881797e1730d59e01f7f6301",
+            "punkti/0.6:87bd4380e5580124d46e4a4a43192d8afa3b5a0855ae90e0b564d713e10abfa8",
+            "punkti/0.6:8d72c892016d6db3e4017383bddc7a0acb9314e72ca69dab5c62fbc3294293cd",
+            "punkti/0.6:f7d9dafe4d2bbeaafe7367db1d9b40762760abae0a096ac624a60e9e27579fca"
+          ],
+          "expected": [
+            "punkti/0.6:37016dd1af177b43a5f5a1991603dc9438bb8f149b729020b50d79e35d04049d",
+            "punkti/0.6:7a1e1d6e9b4b1a0637bcacd771758619555f419c881797e1730d59e01f7f6301",
+            "punkti/0.6:87bd4380e5580124d46e4a4a43192d8afa3b5a0855ae90e0b564d713e10abfa8",
+            "punkti/0.6:8d72c892016d6db3e4017383bddc7a0acb9314e72ca69dab5c62fbc3294293cd",
+            "punkti/0.6:f7d9dafe4d2bbeaafe7367db1d9b40762760abae0a096ac624a60e9e27579fca"
+          ]
+        },
+        {
+          "label": "nb state RPC error",
+          "actual": null,
+          "expected": null
+        },
+        {
+          "label": "ref receiver store",
+          "actual": [
+            "punkti/0.6:37016dd1af177b43a5f5a1991603dc9438bb8f149b729020b50d79e35d04049d",
+            "punkti/0.6:7a1e1d6e9b4b1a0637bcacd771758619555f419c881797e1730d59e01f7f6301",
+            "punkti/0.6:87bd4380e5580124d46e4a4a43192d8afa3b5a0855ae90e0b564d713e10abfa8",
+            "punkti/0.6:8d72c892016d6db3e4017383bddc7a0acb9314e72ca69dab5c62fbc3294293cd",
+            "punkti/0.6:f7d9dafe4d2bbeaafe7367db1d9b40762760abae0a096ac624a60e9e27579fca"
+          ],
+          "expected": [
+            "punkti/0.6:37016dd1af177b43a5f5a1991603dc9438bb8f149b729020b50d79e35d04049d",
+            "punkti/0.6:7a1e1d6e9b4b1a0637bcacd771758619555f419c881797e1730d59e01f7f6301",
+            "punkti/0.6:87bd4380e5580124d46e4a4a43192d8afa3b5a0855ae90e0b564d713e10abfa8",
+            "punkti/0.6:8d72c892016d6db3e4017383bddc7a0acb9314e72ca69dab5c62fbc3294293cd",
+            "punkti/0.6:f7d9dafe4d2bbeaafe7367db1d9b40762760abae0a096ac624a60e9e27579fca"
+          ]
+        },
+        {
+          "label": "nb isolated sys.path",
+          "actual": [],
+          "expected": []
+        },
+        {
+          "label": "no reference modules loaded",
+          "actual": [],
+          "expected": []
+        },
+        {
+          "label": "adapter survives invalid command",
+          "actual": false,
+          "expected": false
+        },
+        {
+          "label": "adapter remains responsive",
+          "actual": true,
+          "expected": true
+        },
+        {
+          "label": "ref isolated sys.path",
+          "actual": [],
+          "expected": []
+        },
+        {
+          "label": "adapter survives invalid command",
+          "actual": false,
+          "expected": false
+        },
+        {
+          "label": "adapter remains responsive",
+          "actual": true,
+          "expected": true
+        },
+        {
+          "label": "nb configure RPC error",
+          "actual": null,
+          "expected": null
+        },
+        {
+          "label": "ref configure RPC error",
+          "actual": null,
+          "expected": null
+        },
+        {
+          "label": "ref add RPC error",
+          "actual": null,
+          "expected": null
+        },
+        {
+          "label": "local seed admission",
+          "actual": true,
+          "expected": true
+        },
+        {
+          "label": "nb add RPC error",
+          "actual": null,
+          "expected": null
+        },
+        {
+          "label": "local seed admission",
+          "actual": true,
+          "expected": true
+        },
+        {
+          "label": "ref add RPC error",
+          "actual": null,
+          "expected": null
+        },
+        {
+          "label": "local seed admission",
+          "actual": true,
+          "expected": true
+        },
+        {
+          "label": "nb add RPC error",
+          "actual": null,
+          "expected": null
+        },
+        {
+          "label": "local seed admission",
+          "actual": true,
+          "expected": true
+        },
+        {
+          "label": "ref add RPC error",
+          "actual": null,
+          "expected": null
+        },
+        {
+          "label": "local seed admission",
+          "actual": true,
+          "expected": true
+        },
+        {
+          "label": "nb connect RPC error",
+          "actual": null,
+          "expected": null
+        },
+        {
+          "label": "nb state RPC error",
+          "actual": null,
+          "expected": null
+        },
+        {
+          "label": "nb initiator store",
+          "actual": [
+            "punkti/0.6:37016dd1af177b43a5f5a1991603dc9438bb8f149b729020b50d79e35d04049d",
+            "punkti/0.6:7a1e1d6e9b4b1a0637bcacd771758619555f419c881797e1730d59e01f7f6301",
+            "punkti/0.6:87bd4380e5580124d46e4a4a43192d8afa3b5a0855ae90e0b564d713e10abfa8",
+            "punkti/0.6:8d72c892016d6db3e4017383bddc7a0acb9314e72ca69dab5c62fbc3294293cd",
+            "punkti/0.6:f7d9dafe4d2bbeaafe7367db1d9b40762760abae0a096ac624a60e9e27579fca"
+          ],
+          "expected": [
+            "punkti/0.6:37016dd1af177b43a5f5a1991603dc9438bb8f149b729020b50d79e35d04049d",
+            "punkti/0.6:7a1e1d6e9b4b1a0637bcacd771758619555f419c881797e1730d59e01f7f6301",
+            "punkti/0.6:87bd4380e5580124d46e4a4a43192d8afa3b5a0855ae90e0b564d713e10abfa8",
+            "punkti/0.6:8d72c892016d6db3e4017383bddc7a0acb9314e72ca69dab5c62fbc3294293cd",
+            "punkti/0.6:f7d9dafe4d2bbeaafe7367db1d9b40762760abae0a096ac624a60e9e27579fca"
+          ]
+        },
+        {
+          "label": "ref state RPC error",
+          "actual": null,
+          "expected": null
+        },
+        {
+          "label": "nb receiver store",
+          "actual": [
+            "punkti/0.6:37016dd1af177b43a5f5a1991603dc9438bb8f149b729020b50d79e35d04049d",
+            "punkti/0.6:7a1e1d6e9b4b1a0637bcacd771758619555f419c881797e1730d59e01f7f6301",
+            "punkti/0.6:87bd4380e5580124d46e4a4a43192d8afa3b5a0855ae90e0b564d713e10abfa8",
+            "punkti/0.6:8d72c892016d6db3e4017383bddc7a0acb9314e72ca69dab5c62fbc3294293cd",
+            "punkti/0.6:f7d9dafe4d2bbeaafe7367db1d9b40762760abae0a096ac624a60e9e27579fca"
+          ],
+          "expected": [
+            "punkti/0.6:37016dd1af177b43a5f5a1991603dc9438bb8f149b729020b50d79e35d04049d",
+            "punkti/0.6:7a1e1d6e9b4b1a0637bcacd771758619555f419c881797e1730d59e01f7f6301",
+            "punkti/0.6:87bd4380e5580124d46e4a4a43192d8afa3b5a0855ae90e0b564d713e10abfa8",
+            "punkti/0.6:8d72c892016d6db3e4017383bddc7a0acb9314e72ca69dab5c62fbc3294293cd",
+            "punkti/0.6:f7d9dafe4d2bbeaafe7367db1d9b40762760abae0a096ac624a60e9e27579fca"
+          ]
+        }
+      ],
+      "failures": []
+    },
+    "convergence_orders_and_subsets": {
+      "status": "PASS",
+      "summary": "Two clean-room plus one reference converge after two fair sync rounds.",
+      "comparisons": [
+        {
+          "label": "nb isolated sys.path",
+          "actual": [],
+          "expected": []
+        },
+        {
+          "label": "no reference modules loaded",
+          "actual": [],
+          "expected": []
+        },
+        {
+          "label": "adapter survives invalid command",
+          "actual": false,
+          "expected": false
+        },
+        {
+          "label": "adapter remains responsive",
+          "actual": true,
+          "expected": true
+        },
+        {
+          "label": "nb isolated sys.path",
+          "actual": [],
+          "expected": []
+        },
+        {
+          "label": "no reference modules loaded",
+          "actual": [],
+          "expected": []
+        },
+        {
+          "label": "adapter survives invalid command",
+          "actual": false,
+          "expected": false
+        },
+        {
+          "label": "adapter remains responsive",
+          "actual": true,
+          "expected": true
+        },
+        {
+          "label": "ref isolated sys.path",
+          "actual": [],
+          "expected": []
+        },
+        {
+          "label": "adapter survives invalid command",
+          "actual": false,
+          "expected": false
+        },
+        {
+          "label": "adapter remains responsive",
+          "actual": true,
+          "expected": true
+        },
+        {
+          "label": "nb configure RPC error",
+          "actual": null,
+          "expected": null
+        },
+        {
+          "label": "nb configure RPC error",
+          "actual": null,
+          "expected": null
+        },
+        {
+          "label": "ref configure RPC error",
+          "actual": null,
+          "expected": null
+        },
+        {
+          "label": "nb add RPC error",
+          "actual": null,
+          "expected": null
+        },
+        {
+          "label": "local seed admission",
+          "actual": true,
+          "expected": true
+        },
+        {
+          "label": "nb add RPC error",
+          "actual": null,
+          "expected": null
+        },
+        {
+          "label": "local seed admission",
+          "actual": true,
+          "expected": true
+        },
+        {
+          "label": "nb add RPC error",
+          "actual": null,
+          "expected": null
+        },
+        {
+          "label": "local seed admission",
+          "actual": true,
+          "expected": true
+        },
+        {
+          "label": "nb add RPC error",
+          "actual": null,
+          "expected": null
+        },
+        {
+          "label": "local seed admission",
+          "actual": true,
+          "expected": true
+        },
+        {
+          "label": "nb add RPC error",
+          "actual": null,
+          "expected": null
+        },
+        {
+          "label": "local seed admission",
+          "actual": true,
+          "expected": true
+        },
+        {
+          "label": "nb add RPC error",
+          "actual": null,
+          "expected": null
+        },
+        {
+          "label": "local seed admission",
+          "actual": true,
+          "expected": true
+        },
+        {
+          "label": "ref add RPC error",
+          "actual": null,
+          "expected": null
+        },
+        {
+          "label": "local seed admission",
+          "actual": true,
+          "expected": true
+        },
+        {
+          "label": "ref add RPC error",
+          "actual": null,
+          "expected": null
+        },
+        {
+          "label": "local seed admission",
+          "actual": true,
+          "expected": true
+        },
+        {
+          "label": "ref add RPC error",
+          "actual": null,
+          "expected": null
+        },
+        {
+          "label": "local seed admission",
+          "actual": true,
+          "expected": true
+        },
+        {
+          "label": "nb connect RPC error",
+          "actual": null,
+          "expected": null
+        },
+        {
+          "label": "nb connect RPC error",
+          "actual": null,
+          "expected": null
+        },
+        {
+          "label": "nb connect RPC error",
+          "actual": null,
+          "expected": null
+        },
+        {
+          "label": "nb connect RPC error",
+          "actual": null,
+          "expected": null
+        },
+        {
+          "label": "ref connect RPC error",
+          "actual": null,
+          "expected": null
+        },
+        {
+          "label": "ref connect RPC error",
+          "actual": null,
+          "expected": null
+        },
+        {
+          "label": "nb connect RPC error",
+          "actual": null,
+          "expected": null
+        },
+        {
+          "label": "nb connect RPC error",
+          "actual": null,
+          "expected": null
+        },
+        {
+          "label": "nb connect RPC error",
+          "actual": null,
+          "expected": null
+        },
+        {
+          "label": "nb connect RPC error",
+          "actual": null,
+          "expected": null
+        },
+        {
+          "label": "ref connect RPC error",
+          "actual": null,
+          "expected": null
+        },
+        {
+          "label": "ref connect RPC error",
+          "actual": null,
+          "expected": null
+        },
+        {
+          "label": "nb state RPC error",
+          "actual": null,
+          "expected": null
+        },
+        {
+          "label": "converged nb",
+          "actual": [
+            "punkti/0.6:0effe23563561f9ab0652675634269ba8a5d17f98eaf938d34f884bc6b082f90",
+            "punkti/0.6:25d9cf5c7c355d7f9a467d2ad7fd339433c1192c6e791c91788afe48fe2fdbd3",
+            "punkti/0.6:2663db2812ff9e1e385063a8bbfec6770281b05dd5f522e3844c41e021e69d17",
+            "punkti/0.6:5700a703b6df075389d8910746402a53657e7cefc8f71898d56ebc87f234e90a",
+            "punkti/0.6:8498c3e00b1cd41663ce7340f179fd39f44629b2f056301235d4f77b236846e5",
+            "punkti/0.6:d3eb44f0256d868766df89c7a15f2b17f08a63aa9d8267f7a9134f2afe747909"
+          ],
+          "expected": [
+            "punkti/0.6:0effe23563561f9ab0652675634269ba8a5d17f98eaf938d34f884bc6b082f90",
+            "punkti/0.6:25d9cf5c7c355d7f9a467d2ad7fd339433c1192c6e791c91788afe48fe2fdbd3",
+            "punkti/0.6:2663db2812ff9e1e385063a8bbfec6770281b05dd5f522e3844c41e021e69d17",
+            "punkti/0.6:5700a703b6df075389d8910746402a53657e7cefc8f71898d56ebc87f234e90a",
+            "punkti/0.6:8498c3e00b1cd41663ce7340f179fd39f44629b2f056301235d4f77b236846e5",
+            "punkti/0.6:d3eb44f0256d868766df89c7a15f2b17f08a63aa9d8267f7a9134f2afe747909"
+          ]
+        },
+        {
+          "label": "nb state RPC error",
+          "actual": null,
+          "expected": null
+        },
+        {
+          "label": "converged nb",
+          "actual": [
+            "punkti/0.6:0effe23563561f9ab0652675634269ba8a5d17f98eaf938d34f884bc6b082f90",
+            "punkti/0.6:25d9cf5c7c355d7f9a467d2ad7fd339433c1192c6e791c91788afe48fe2fdbd3",
+            "punkti/0.6:2663db2812ff9e1e385063a8bbfec6770281b05dd5f522e3844c41e021e69d17",
+            "punkti/0.6:5700a703b6df075389d8910746402a53657e7cefc8f71898d56ebc87f234e90a",
+            "punkti/0.6:8498c3e00b1cd41663ce7340f179fd39f44629b2f056301235d4f77b236846e5",
+            "punkti/0.6:d3eb44f0256d868766df89c7a15f2b17f08a63aa9d8267f7a9134f2afe747909"
+          ],
+          "expected": [
+            "punkti/0.6:0effe23563561f9ab0652675634269ba8a5d17f98eaf938d34f884bc6b082f90",
+            "punkti/0.6:25d9cf5c7c355d7f9a467d2ad7fd339433c1192c6e791c91788afe48fe2fdbd3",
+            "punkti/0.6:2663db2812ff9e1e385063a8bbfec6770281b05dd5f522e3844c41e021e69d17",
+            "punkti/0.6:5700a703b6df075389d8910746402a53657e7cefc8f71898d56ebc87f234e90a",
+            "punkti/0.6:8498c3e00b1cd41663ce7340f179fd39f44629b2f056301235d4f77b236846e5",
+            "punkti/0.6:d3eb44f0256d868766df89c7a15f2b17f08a63aa9d8267f7a9134f2afe747909"
+          ]
+        },
+        {
+          "label": "ref state RPC error",
+          "actual": null,
+          "expected": null
+        },
+        {
+          "label": "converged ref",
+          "actual": [
+            "punkti/0.6:0effe23563561f9ab0652675634269ba8a5d17f98eaf938d34f884bc6b082f90",
+            "punkti/0.6:25d9cf5c7c355d7f9a467d2ad7fd339433c1192c6e791c91788afe48fe2fdbd3",
+            "punkti/0.6:2663db2812ff9e1e385063a8bbfec6770281b05dd5f522e3844c41e021e69d17",
+            "punkti/0.6:5700a703b6df075389d8910746402a53657e7cefc8f71898d56ebc87f234e90a",
+            "punkti/0.6:8498c3e00b1cd41663ce7340f179fd39f44629b2f056301235d4f77b236846e5",
+            "punkti/0.6:d3eb44f0256d868766df89c7a15f2b17f08a63aa9d8267f7a9134f2afe747909"
+          ],
+          "expected": [
+            "punkti/0.6:0effe23563561f9ab0652675634269ba8a5d17f98eaf938d34f884bc6b082f90",
+            "punkti/0.6:25d9cf5c7c355d7f9a467d2ad7fd339433c1192c6e791c91788afe48fe2fdbd3",
+            "punkti/0.6:2663db2812ff9e1e385063a8bbfec6770281b05dd5f522e3844c41e021e69d17",
+            "punkti/0.6:5700a703b6df075389d8910746402a53657e7cefc8f71898d56ebc87f234e90a",
+            "punkti/0.6:8498c3e00b1cd41663ce7340f179fd39f44629b2f056301235d4f77b236846e5",
+            "punkti/0.6:d3eb44f0256d868766df89c7a15f2b17f08a63aa9d8267f7a9134f2afe747909"
+          ]
+        }
+      ],
+      "failures": []
+    },
+    "decode_parity": {
+      "status": "PASS",
+      "summary": "Both standalone adapters decode the other implementation's records.",
+      "comparisons": [
+        {
+          "label": "ref isolated sys.path",
+          "actual": [],
+          "expected": []
+        },
+        {
+          "label": "adapter survives invalid command",
+          "actual": false,
+          "expected": false
+        },
+        {
+          "label": "adapter remains responsive",
+          "actual": true,
+          "expected": true
+        },
+        {
+          "label": "nb isolated sys.path",
+          "actual": [],
+          "expected": []
+        },
+        {
+          "label": "no reference modules loaded",
+          "actual": [],
+          "expected": []
+        },
+        {
+          "label": "adapter survives invalid command",
+          "actual": false,
+          "expected": false
+        },
+        {
+          "label": "adapter remains responsive",
+          "actual": true,
+          "expected": true
+        },
+        {
+          "label": "ref mint RPC error",
+          "actual": null,
+          "expected": null
+        },
+        {
+          "label": "nb decode RPC error",
+          "actual": null,
+          "expected": null
+        },
+        {
+          "label": "ref\u2192nb:C",
+          "actual": "0000000a70756e6b74692f302e360000000d3137303030303030303030303000000000000000086f70617175652d3000000007656432353531390000002064fc93dcc1d5b198cc086e89f0f6c6885f9ca5d38994f4930c2cf3d775e02e240000000000000000",
+          "expected": "0000000a70756e6b74692f302e360000000d3137303030303030303030303000000000000000086f70617175652d3000000007656432353531390000002064fc93dcc1d5b198cc086e89f0f6c6885f9ca5d38994f4930c2cf3d775e02e240000000000000000"
+        },
+        {
+          "label": "ref\u2192nb:S",
+          "actual": "50554e4b54492d4c332d5349474e000000000a70756e6b74692f302e360000000d3137303030303030303030303000000000000000086f70617175652d3000000007656432353531390000002064fc93dcc1d5b198cc086e89f0f6c6885f9ca5d38994f4930c2cf3d775e02e240000000000000000",
+          "expected": "50554e4b54492d4c332d5349474e000000000a70756e6b74692f302e360000000d3137303030303030303030303000000000000000086f70617175652d3000000007656432353531390000002064fc93dcc1d5b198cc086e89f0f6c6885f9ca5d38994f4930c2cf3d775e02e240000000000000000"
+        },
+        {
+          "label": "ref\u2192nb:MID",
+          "actual": "87bd4380e5580124d46e4a4a43192d8afa3b5a0855ae90e0b564d713e10abfa8",
+          "expected": "87bd4380e5580124d46e4a4a43192d8afa3b5a0855ae90e0b564d713e10abfa8"
+        },
+        {
+          "label": "ref\u2192nb:address",
+          "actual": "punkti/0.6:87bd4380e5580124d46e4a4a43192d8afa3b5a0855ae90e0b564d713e10abfa8",
+          "expected": "punkti/0.6:87bd4380e5580124d46e4a4a43192d8afa3b5a0855ae90e0b564d713e10abfa8"
+        },
+        {
+          "label": "ref\u2192nb:state",
+          "actual": "VALID",
+          "expected": "VALID"
+        },
+        {
+          "label": "expected validation",
+          "actual": "VALID",
+          "expected": "VALID"
+        },
+        {
+          "label": "nb mint RPC error",
+          "actual": null,
+          "expected": null
+        },
+        {
+          "label": "ref decode RPC error",
+          "actual": null,
+          "expected": null
+        },
+        {
+          "label": "nb\u2192ref:C",
+          "actual": "0000000a70756e6b74692f302e360000000d3137303030303030303030303000000000000000086f70617175652d3000000007656432353531390000002064fc93dcc1d5b198cc086e89f0f6c6885f9ca5d38994f4930c2cf3d775e02e240000000000000000",
+          "expected": "0000000a70756e6b74692f302e360000000d3137303030303030303030303000000000000000086f70617175652d3000000007656432353531390000002064fc93dcc1d5b198cc086e89f0f6c6885f9ca5d38994f4930c2cf3d775e02e240000000000000000"
+        },
+        {
+          "label": "nb\u2192ref:S",
+          "actual": "50554e4b54492d4c332d5349474e000000000a70756e6b74692f302e360000000d3137303030303030303030303000000000000000086f70617175652d3000000007656432353531390000002064fc93dcc1d5b198cc086e89f0f6c6885f9ca5d38994f4930c2cf3d775e02e240000000000000000",
+          "expected": "50554e4b54492d4c332d5349474e000000000a70756e6b74692f302e360000000d3137303030303030303030303000000000000000086f70617175652d3000000007656432353531390000002064fc93dcc1d5b198cc086e89f0f6c6885f9ca5d38994f4930c2cf3d775e02e240000000000000000"
+        },
+        {
+          "label": "nb\u2192ref:MID",
+          "actual": "87bd4380e5580124d46e4a4a43192d8afa3b5a0855ae90e0b564d713e10abfa8",
+          "expected": "87bd4380e5580124d46e4a4a43192d8afa3b5a0855ae90e0b564d713e10abfa8"
+        },
+        {
+          "label": "nb\u2192ref:address",
+          "actual": "punkti/0.6:87bd4380e5580124d46e4a4a43192d8afa3b5a0855ae90e0b564d713e10abfa8",
+          "expected": "punkti/0.6:87bd4380e5580124d46e4a4a43192d8afa3b5a0855ae90e0b564d713e10abfa8"
+        },
+        {
+          "label": "nb\u2192ref:state",
+          "actual": "VALID",
+          "expected": "VALID"
+        },
+        {
+          "label": "expected validation",
+          "actual": "VALID",
+          "expected": "VALID"
+        },
+        {
+          "label": "ref mint RPC error",
+          "actual": null,
+          "expected": null
+        },
+        {
+          "label": "nb decode RPC error",
+          "actual": null,
+          "expected": null
+        },
+        {
+          "label": "ref\u2192nb:C",
+          "actual": "0000000a70756e6b74692f302e360000000d313730303030303030303030310000000c733030303030303030303030000000086f70617175652d310000000765643235353139000000207b5b6b16555400fd9ef4b064e33c6ab3ce5fe81c142a674135f84f2f926984bd0000000000000000",
+          "expected": "0000000a70756e6b74692f302e360000000d313730303030303030303030310000000c733030303030303030303030000000086f70617175652d310000000765643235353139000000207b5b6b16555400fd9ef4b064e33c6ab3ce5fe81c142a674135f84f2f926984bd0000000000000000"
+        },
+        {
+          "label": "ref\u2192nb:S",
+          "actual": "50554e4b54492d4c332d5349474e000000000a70756e6b74692f302e360000000d313730303030303030303030310000000c733030303030303030303030000000086f70617175652d310000000765643235353139000000207b5b6b16555400fd9ef4b064e33c6ab3ce5fe81c142a674135f84f2f926984bd0000000000000000",
+          "expected": "50554e4b54492d4c332d5349474e000000000a70756e6b74692f302e360000000d313730303030303030303030310000000c733030303030303030303030000000086f70617175652d310000000765643235353139000000207b5b6b16555400fd9ef4b064e33c6ab3ce5fe81c142a674135f84f2f926984bd0000000000000000"
+        },
+        {
+          "label": "ref\u2192nb:MID",
+          "actual": "7a1e1d6e9b4b1a0637bcacd771758619555f419c881797e1730d59e01f7f6301",
+          "expected": "7a1e1d6e9b4b1a0637bcacd771758619555f419c881797e1730d59e01f7f6301"
+        },
+        {
+          "label": "ref\u2192nb:address",
+          "actual": "punkti/0.6:7a1e1d6e9b4b1a0637bcacd771758619555f419c881797e1730d59e01f7f6301",
+          "expected": "punkti/0.6:7a1e1d6e9b4b1a0637bcacd771758619555f419c881797e1730d59e01f7f6301"
+        },
+        {
+          "label": "ref\u2192nb:state",
+          "actual": "VALID",
+          "expected": "VALID"
+        },
+        {
+          "label": "expected validation",
+          "actual": "VALID",
+          "expected": "VALID"
+        },
+        {
+          "label": "nb mint RPC error",
+          "actual": null,
+          "expected": null
+        },
+        {
+          "label": "ref decode RPC error",
+          "actual": null,
+          "expected": null
+        },
+        {
+          "label": "nb\u2192ref:C",
+          "actual": "0000000a70756e6b74692f302e360000000d313730303030303030303030310000000c733030303030303030303030000000086f70617175652d310000000765643235353139000000207b5b6b16555400fd9ef4b064e33c6ab3ce5fe81c142a674135f84f2f926984bd0000000000000000",
+          "expected": "0000000a70756e6b74692f302e360000000d313730303030303030303030310000000c733030303030303030303030000000086f70617175652d310000000765643235353139000000207b5b6b16555400fd9ef4b064e33c6ab3ce5fe81c142a674135f84f2f926984bd0000000000000000"
+        },
+        {
+          "label": "nb\u2192ref:S",
+          "actual": "50554e4b54492d4c332d5349474e000000000a70756e6b74692f302e360000000d313730303030303030303030310000000c733030303030303030303030000000086f70617175652d310000000765643235353139000000207b5b6b16555400fd9ef4b064e33c6ab3ce5fe81c142a674135f84f2f926984bd0000000000000000",
+          "expected": "50554e4b54492d4c332d5349474e000000000a70756e6b74692f302e360000000d313730303030303030303030310000000c733030303030303030303030000000086f70617175652d310000000765643235353139000000207b5b6b16555400fd9ef4b064e33c6ab3ce5fe81c142a674135f84f2f926984bd0000000000000000"
+        },
+        {
+          "label": "nb\u2192ref:MID",
+          "actual": "7a1e1d6e9b4b1a0637bcacd771758619555f419c881797e1730d59e01f7f6301",
+          "expected": "7a1e1d6e9b4b1a0637bcacd771758619555f419c881797e1730d59e01f7f6301"
+        },
+        {
+          "label": "nb\u2192ref:address",
+          "actual": "punkti/0.6:7a1e1d6e9b4b1a0637bcacd771758619555f419c881797e1730d59e01f7f6301",
+          "expected": "punkti/0.6:7a1e1d6e9b4b1a0637bcacd771758619555f419c881797e1730d59e01f7f6301"
+        },
+        {
+          "label": "nb\u2192ref:state",
+          "actual": "VALID",
+          "expected": "VALID"
+        },
+        {
+          "label": "expected validation",
+          "actual": "VALID",
+          "expected": "VALID"
+        },
+        {
+          "label": "ref mint RPC error",
+          "actual": null,
+          "expected": null
+        },
+        {
+          "label": "nb decode RPC error",
+          "actual": null,
+          "expected": null
+        },
+        {
+          "label": "ref\u2192nb:C",
+          "actual": "0000000a70756e6b74692f302e360000000d313730303030303030303030320000000c733030303030303030303031000000086f70617175652d32000000076564323535313900000020187cdc65b047f9bb4dc436f3d9337c9e6259373601d892e061b97d9d4329f70a0000000000000000",
+          "expected": "0000000a70756e6b74692f302e360000000d313730303030303030303030320000000c733030303030303030303031000000086f70617175652d32000000076564323535313900000020187cdc65b047f9bb4dc436f3d9337c9e6259373601d892e061b97d9d4329f70a0000000000000000"
+        },
+        {
+          "label": "ref\u2192nb:S",
+          "actual": "50554e4b54492d4c332d5349474e000000000a70756e6b74692f302e360000000d313730303030303030303030320000000c733030303030303030303031000000086f70617175652d32000000076564323535313900000020187cdc65b047f9bb4dc436f3d9337c9e6259373601d892e061b97d9d4329f70a0000000000000000",
+          "expected": "50554e4b54492d4c332d5349474e000000000a70756e6b74692f302e360000000d313730303030303030303030320000000c733030303030303030303031000000086f70617175652d32000000076564323535313900000020187cdc65b047f9bb4dc436f3d9337c9e6259373601d892e061b97d9d4329f70a0000000000000000"
+        },
+        {
+          "label": "ref\u2192nb:MID",
+          "actual": "f7d9dafe4d2bbeaafe7367db1d9b40762760abae0a096ac624a60e9e27579fca",
+          "expected": "f7d9dafe4d2bbeaafe7367db1d9b40762760abae0a096ac624a60e9e27579fca"
+        },
+        {
+          "label": "ref\u2192nb:address",
+          "actual": "punkti/0.6:f7d9dafe4d2bbeaafe7367db1d9b40762760abae0a096ac624a60e9e27579fca",
+          "expected": "punkti/0.6:f7d9dafe4d2bbeaafe7367db1d9b40762760abae0a096ac624a60e9e27579fca"
+        },
+        {
+          "label": "ref\u2192nb:state",
+          "actual": "VALID",
+          "expected": "VALID"
+        },
+        {
+          "label": "expected validation",
+          "actual": "VALID",
+          "expected": "VALID"
+        },
+        {
+          "label": "nb mint RPC error",
+          "actual": null,
+          "expected": null
+        },
+        {
+          "label": "ref decode RPC error",
+          "actual": null,
+          "expected": null
+        },
+        {
+          "label": "nb\u2192ref:C",
+          "actual": "0000000a70756e6b74692f302e360000000d313730303030303030303030320000000c733030303030303030303031000000086f70617175652d32000000076564323535313900000020187cdc65b047f9bb4dc436f3d9337c9e6259373601d892e061b97d9d4329f70a0000000000000000",
+          "expected": "0000000a70756e6b74692f302e360000000d313730303030303030303030320000000c733030303030303030303031000000086f70617175652d32000000076564323535313900000020187cdc65b047f9bb4dc436f3d9337c9e6259373601d892e061b97d9d4329f70a0000000000000000"
+        },
+        {
+          "label": "nb\u2192ref:S",
+          "actual": "50554e4b54492d4c332d5349474e000000000a70756e6b74692f302e360000000d313730303030303030303030320000000c733030303030303030303031000000086f70617175652d32000000076564323535313900000020187cdc65b047f9bb4dc436f3d9337c9e6259373601d892e061b97d9d4329f70a0000000000000000",
+          "expected": "50554e4b54492d4c332d5349474e000000000a70756e6b74692f302e360000000d313730303030303030303030320000000c733030303030303030303031000000086f70617175652d32000000076564323535313900000020187cdc65b047f9bb4dc436f3d9337c9e6259373601d892e061b97d9d4329f70a0000000000000000"
+        },
+        {
+          "label": "nb\u2192ref:MID",
+          "actual": "f7d9dafe4d2bbeaafe7367db1d9b40762760abae0a096ac624a60e9e27579fca",
+          "expected": "f7d9dafe4d2bbeaafe7367db1d9b40762760abae0a096ac624a60e9e27579fca"
+        },
+        {
+          "label": "nb\u2192ref:address",
+          "actual": "punkti/0.6:f7d9dafe4d2bbeaafe7367db1d9b40762760abae0a096ac624a60e9e27579fca",
+          "expected": "punkti/0.6:f7d9dafe4d2bbeaafe7367db1d9b40762760abae0a096ac624a60e9e27579fca"
+        },
+        {
+          "label": "nb\u2192ref:state",
+          "actual": "VALID",
+          "expected": "VALID"
+        },
+        {
+          "label": "expected validation",
+          "actual": "VALID",
+          "expected": "VALID"
+        },
+        {
+          "label": "ref mint RPC error",
+          "actual": null,
+          "expected": null
+        },
+        {
+          "label": "nb decode RPC error",
+          "actual": null,
+          "expected": null
+        },
+        {
+          "label": "ref\u2192nb:C",
+          "actual": "0000000a70756e6b74692f302e360000000d313730303030303030303030330000000c676767683030303030303030000000086f70617175652d33000000076564323535313900000020c3e4ae357bc2d4fc59673d375ac0cfce81c72b6debcd0aee60cf223abd6c6ed8000000030000000e756e6b6e6f776e2f613a3030666600000013756e7265636f676e697a65642fe585b3e7b3bb0000000b6675747572653a61626364000000000000000e756e6b6e6f776e2f613a3030666600000013756e7265636f676e697a65642fe585b3e7b3bb00000000",
+          "expected": "0000000a70756e6b74692f302e360000000d313730303030303030303030330000000c676767683030303030303030000000086f70617175652d33000000076564323535313900000020c3e4ae357bc2d4fc59673d375ac0cfce81c72b6debcd0aee60cf223abd6c6ed8000000030000000e756e6b6e6f776e2f613a3030666600000013756e7265636f676e697a65642fe585b3e7b3bb0000000b6675747572653a61626364000000000000000e756e6b6e6f776e2f613a3030666600000013756e7265636f676e697a65642fe585b3e7b3bb00000000"
+        },
+        {
+          "label": "ref\u2192nb:S",
+          "actual": "50554e4b54492d4c332d5349474e000000000a70756e6b74692f302e360000000d313730303030303030303030330000000c676767683030303030303030000000086f70617175652d33000000076564323535313900000020c3e4ae357bc2d4fc59673d375ac0cfce81c72b6debcd0aee60cf223abd6c6ed8000000030000000e756e6b6e6f776e2f613a3030666600000013756e7265636f676e697a65642fe585b3e7b3bb0000000b6675747572653a61626364000000000000000e756e6b6e6f776e2f613a3030666600000013756e7265636f676e697a65642fe585b3e7b3bb00000000",
+          "expected": "50554e4b54492d4c332d5349474e000000000a70756e6b74692f302e360000000d313730303030303030303030330000000c676767683030303030303030000000086f70617175652d33000000076564323535313900000020c3e4ae357bc2d4fc59673d375ac0cfce81c72b6debcd0aee60cf223abd6c6ed8000000030000000e756e6b6e6f776e2f613a3030666600000013756e7265636f676e697a65642fe585b3e7b3bb0000000b6675747572653a61626364000000000000000e756e6b6e6f776e2f613a3030666600000013756e7265636f676e697a65642fe585b3e7b3bb00000000"
+        },
+        {
+          "label": "ref\u2192nb:MID",
+          "actual": "37016dd1af177b43a5f5a1991603dc9438bb8f149b729020b50d79e35d04049d",
+          "expected": "37016dd1af177b43a5f5a1991603dc9438bb8f149b729020b50d79e35d04049d"
+        },
+        {
+          "label": "ref\u2192nb:address",
+          "actual": "punkti/0.6:37016dd1af177b43a5f5a1991603dc9438bb8f149b729020b50d79e35d04049d",
+          "expected": "punkti/0.6:37016dd1af177b43a5f5a1991603dc9438bb8f149b729020b50d79e35d04049d"
+        },
+        {
+          "label": "ref\u2192nb:state",
+          "actual": "VALID",
+          "expected": "VALID"
+        },
+        {
+          "label": "expected validation",
+          "actual": "VALID",
+          "expected": "VALID"
+        },
+        {
+          "label": "nb mint RPC error",
+          "actual": null,
+          "expected": null
+        },
+        {
+          "label": "ref decode RPC error",
+          "actual": null,
+          "expected": null
+        },
+        {
+          "label": "nb\u2192ref:C",
+          "actual": "0000000a70756e6b74692f302e360000000d313730303030303030303030330000000c676767683030303030303030000000086f70617175652d33000000076564323535313900000020c3e4ae357bc2d4fc59673d375ac0cfce81c72b6debcd0aee60cf223abd6c6ed8000000030000000e756e6b6e6f776e2f613a3030666600000013756e7265636f676e697a65642fe585b3e7b3bb0000000b6675747572653a61626364000000000000000e756e6b6e6f776e2f613a3030666600000013756e7265636f676e697a65642fe585b3e7b3bb00000000",
+          "expected": "0000000a70756e6b74692f302e360000000d313730303030303030303030330000000c676767683030303030303030000000086f70617175652d33000000076564323535313900000020c3e4ae357bc2d4fc59673d375ac0cfce81c72b6debcd0aee60cf223abd6c6ed8000000030000000e756e6b6e6f776e2f613a3030666600000013756e7265636f676e697a65642fe585b3e7b3bb0000000b6675747572653a61626364000000000000000e756e6b6e6f776e2f613a3030666600000013756e7265636f676e697a65642fe585b3e7b3bb00000000"
+        },
+        {
+          "label": "nb\u2192ref:S",
+          "actual": "50554e4b54492d4c332d5349474e000000000a70756e6b74692f302e360000000d313730303030303030303030330000000c676767683030303030303030000000086f70617175652d33000000076564323535313900000020c3e4ae357bc2d4fc59673d375ac0cfce81c72b6debcd0aee60cf223abd6c6ed8000000030000000e756e6b6e6f776e2f613a3030666600000013756e7265636f676e697a65642fe585b3e7b3bb0000000b6675747572653a61626364000000000000000e756e6b6e6f776e2f613a3030666600000013756e7265636f676e697a65642fe585b3e7b3bb00000000",
+          "expected": "50554e4b54492d4c332d5349474e000000000a70756e6b74692f302e360000000d313730303030303030303030330000000c676767683030303030303030000000086f70617175652d33000000076564323535313900000020c3e4ae357bc2d4fc59673d375ac0cfce81c72b6debcd0aee60cf223abd6c6ed8000000030000000e756e6b6e6f776e2f613a3030666600000013756e7265636f676e697a65642fe585b3e7b3bb0000000b6675747572653a61626364000000000000000e756e6b6e6f776e2f613a3030666600000013756e7265636f676e697a65642fe585b3e7b3bb00000000"
+        },
+        {
+          "label": "nb\u2192ref:MID",
+          "actual": "37016dd1af177b43a5f5a1991603dc9438bb8f149b729020b50d79e35d04049d",
+          "expected": "37016dd1af177b43a5f5a1991603dc9438bb8f149b729020b50d79e35d04049d"
+        },
+        {
+          "label": "nb\u2192ref:address",
+          "actual": "punkti/0.6:37016dd1af177b43a5f5a1991603dc9438bb8f149b729020b50d79e35d04049d",
+          "expected": "punkti/0.6:37016dd1af177b43a5f5a1991603dc9438bb8f149b729020b50d79e35d04049d"
+        },
+        {
+          "label": "nb\u2192ref:state",
+          "actual": "VALID",
+          "expected": "VALID"
+        },
+        {
+          "label": "expected validation",
+          "actual": "VALID",
+          "expected": "VALID"
+        },
+        {
+          "label": "ref mint RPC error",
+          "actual": null,
+          "expected": null
+        },
+        {
+          "label": "nb decode RPC error",
+          "actual": null,
+          "expected": null
+        },
+        {
+          "label": "ref\u2192nb:C",
+          "actual": "0000000a70756e6b74692f302e360000000d313730303030303030303030340000000c676767683030303030303030000000184e6169726f626920f09f8c8d002065cc8120e6bca2e5ad97000000076564323535313900000020a27b782766cb0bbbf1124817aa337b72886cc79b03b75972e2d1e4bb8e94153f0000000000000100000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f404142434445464748494a4b4c4d4e4f505152535455565758595a5b5c5d5e5f606162636465666768696a6b6c6d6e6f707172737475767778797a7b7c7d7e7f808182838485868788898a8b8c8d8e8f909192939495969798999a9b9c9d9e9fa0a1a2a3a4a5a6a7a8a9aaabacadaeafb0b1b2b3b4b5b6b7b8b9babbbcbdbebfc0c1c2c3c4c5c6c7c8c9cacbcccdcecfd0d1d2d3d4d5d6d7d8d9dadbdcdddedfe0e1e2e3e4e5e6e7e8e9eaebecedeeeff0f1f2f3f4f5f6f7f8f9fafbfcfdfeff",
+          "expected": "0000000a70756e6b74692f302e360000000d313730303030303030303030340000000c676767683030303030303030000000184e6169726f626920f09f8c8d002065cc8120e6bca2e5ad97000000076564323535313900000020a27b782766cb0bbbf1124817aa337b72886cc79b03b75972e2d1e4bb8e94153f0000000000000100000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f404142434445464748494a4b4c4d4e4f505152535455565758595a5b5c5d5e5f606162636465666768696a6b6c6d6e6f707172737475767778797a7b7c7d7e7f808182838485868788898a8b8c8d8e8f909192939495969798999a9b9c9d9e9fa0a1a2a3a4a5a6a7a8a9aaabacadaeafb0b1b2b3b4b5b6b7b8b9babbbcbdbebfc0c1c2c3c4c5c6c7c8c9cacbcccdcecfd0d1d2d3d4d5d6d7d8d9dadbdcdddedfe0e1e2e3e4e5e6e7e8e9eaebecedeeeff0f1f2f3f4f5f6f7f8f9fafbfcfdfeff"
+        },
+        {
+          "label": "ref\u2192nb:S",
+          "actual": "50554e4b54492d4c332d5349474e000000000a70756e6b74692f302e360000000d313730303030303030303030340000000c676767683030303030303030000000184e6169726f626920f09f8c8d002065cc8120e6bca2e5ad97000000076564323535313900000020a27b782766cb0bbbf1124817aa337b72886cc79b03b75972e2d1e4bb8e94153f0000000000000100000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f404142434445464748494a4b4c4d4e4f505152535455565758595a5b5c5d5e5f606162636465666768696a6b6c6d6e6f707172737475767778797a7b7c7d7e7f808182838485868788898a8b8c8d8e8f909192939495969798999a9b9c9d9e9fa0a1a2a3a4a5a6a7a8a9aaabacadaeafb0b1b2b3b4b5b6b7b8b9babbbcbdbebfc0c1c2c3c4c5c6c7c8c9cacbcccdcecfd0d1d2d3d4d5d6d7d8d9dadbdcdddedfe0e1e2e3e4e5e6e7e8e9eaebecedeeeff0f1f2f3f4f5f6f7f8f9fafbfcfdfeff",
+          "expected": "50554e4b54492d4c332d5349474e000000000a70756e6b74692f302e360000000d313730303030303030303030340000000c676767683030303030303030000000184e6169726f626920f09f8c8d002065cc8120e6bca2e5ad97000000076564323535313900000020a27b782766cb0bbbf1124817aa337b72886cc79b03b75972e2d1e4bb8e94153f0000000000000100000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f404142434445464748494a4b4c4d4e4f505152535455565758595a5b5c5d5e5f606162636465666768696a6b6c6d6e6f707172737475767778797a7b7c7d7e7f808182838485868788898a8b8c8d8e8f909192939495969798999a9b9c9d9e9fa0a1a2a3a4a5a6a7a8a9aaabacadaeafb0b1b2b3b4b5b6b7b8b9babbbcbdbebfc0c1c2c3c4c5c6c7c8c9cacbcccdcecfd0d1d2d3d4d5d6d7d8d9dadbdcdddedfe0e1e2e3e4e5e6e7e8e9eaebecedeeeff0f1f2f3f4f5f6f7f8f9fafbfcfdfeff"
+        },
+        {
+          "label": "ref\u2192nb:MID",
+          "actual": "8d72c892016d6db3e4017383bddc7a0acb9314e72ca69dab5c62fbc3294293cd",
+          "expected": "8d72c892016d6db3e4017383bddc7a0acb9314e72ca69dab5c62fbc3294293cd"
+        },
+        {
+          "label": "ref\u2192nb:address",
+          "actual": "punkti/0.6:8d72c892016d6db3e4017383bddc7a0acb9314e72ca69dab5c62fbc3294293cd",
+          "expected": "punkti/0.6:8d72c892016d6db3e4017383bddc7a0acb9314e72ca69dab5c62fbc3294293cd"
+        },
+        {
+          "label": "ref\u2192nb:state",
+          "actual": "VALID",
+          "expected": "VALID"
+        },
+        {
+          "label": "expected validation",
+          "actual": "VALID",
+          "expected": "VALID"
+        },
+        {
+          "label": "nb mint RPC error",
+          "actual": null,
+          "expected": null
+        },
+        {
+          "label": "ref decode RPC error",
+          "actual": null,
+          "expected": null
+        },
+        {
+          "label": "nb\u2192ref:C",
+          "actual": "0000000a70756e6b74692f302e360000000d313730303030303030303030340000000c676767683030303030303030000000184e6169726f626920f09f8c8d002065cc8120e6bca2e5ad97000000076564323535313900000020a27b782766cb0bbbf1124817aa337b72886cc79b03b75972e2d1e4bb8e94153f0000000000000100000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f404142434445464748494a4b4c4d4e4f505152535455565758595a5b5c5d5e5f606162636465666768696a6b6c6d6e6f707172737475767778797a7b7c7d7e7f808182838485868788898a8b8c8d8e8f909192939495969798999a9b9c9d9e9fa0a1a2a3a4a5a6a7a8a9aaabacadaeafb0b1b2b3b4b5b6b7b8b9babbbcbdbebfc0c1c2c3c4c5c6c7c8c9cacbcccdcecfd0d1d2d3d4d5d6d7d8d9dadbdcdddedfe0e1e2e3e4e5e6e7e8e9eaebecedeeeff0f1f2f3f4f5f6f7f8f9fafbfcfdfeff",
+          "expected": "0000000a70756e6b74692f302e360000000d313730303030303030303030340000000c676767683030303030303030000000184e6169726f626920f09f8c8d002065cc8120e6bca2e5ad97000000076564323535313900000020a27b782766cb0bbbf1124817aa337b72886cc79b03b75972e2d1e4bb8e94153f0000000000000100000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f404142434445464748494a4b4c4d4e4f505152535455565758595a5b5c5d5e5f606162636465666768696a6b6c6d6e6f707172737475767778797a7b7c7d7e7f808182838485868788898a8b8c8d8e8f909192939495969798999a9b9c9d9e9fa0a1a2a3a4a5a6a7a8a9aaabacadaeafb0b1b2b3b4b5b6b7b8b9babbbcbdbebfc0c1c2c3c4c5c6c7c8c9cacbcccdcecfd0d1d2d3d4d5d6d7d8d9dadbdcdddedfe0e1e2e3e4e5e6e7e8e9eaebecedeeeff0f1f2f3f4f5f6f7f8f9fafbfcfdfeff"
+        },
+        {
+          "label": "nb\u2192ref:S",
+          "actual": "50554e4b54492d4c332d5349474e000000000a70756e6b74692f302e360000000d313730303030303030303030340000000c676767683030303030303030000000184e6169726f626920f09f8c8d002065cc8120e6bca2e5ad97000000076564323535313900000020a27b782766cb0bbbf1124817aa337b72886cc79b03b75972e2d1e4bb8e94153f0000000000000100000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f404142434445464748494a4b4c4d4e4f505152535455565758595a5b5c5d5e5f606162636465666768696a6b6c6d6e6f707172737475767778797a7b7c7d7e7f808182838485868788898a8b8c8d8e8f909192939495969798999a9b9c9d9e9fa0a1a2a3a4a5a6a7a8a9aaabacadaeafb0b1b2b3b4b5b6b7b8b9babbbcbdbebfc0c1c2c3c4c5c6c7c8c9cacbcccdcecfd0d1d2d3d4d5d6d7d8d9dadbdcdddedfe0e1e2e3e4e5e6e7e8e9eaebecedeeeff0f1f2f3f4f5f6f7f8f9fafbfcfdfeff",
+          "expected": "50554e4b54492d4c332d5349474e000000000a70756e6b74692f302e360000000d313730303030303030303030340000000c676767683030303030303030000000184e6169726f626920f09f8c8d002065cc8120e6bca2e5ad97000000076564323535313900000020a27b782766cb0bbbf1124817aa337b72886cc79b03b75972e2d1e4bb8e94153f0000000000000100000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f404142434445464748494a4b4c4d4e4f505152535455565758595a5b5c5d5e5f606162636465666768696a6b6c6d6e6f707172737475767778797a7b7c7d7e7f808182838485868788898a8b8c8d8e8f909192939495969798999a9b9c9d9e9fa0a1a2a3a4a5a6a7a8a9aaabacadaeafb0b1b2b3b4b5b6b7b8b9babbbcbdbebfc0c1c2c3c4c5c6c7c8c9cacbcccdcecfd0d1d2d3d4d5d6d7d8d9dadbdcdddedfe0e1e2e3e4e5e6e7e8e9eaebecedeeeff0f1f2f3f4f5f6f7f8f9fafbfcfdfeff"
+        },
+        {
+          "label": "nb\u2192ref:MID",
+          "actual": "8d72c892016d6db3e4017383bddc7a0acb9314e72ca69dab5c62fbc3294293cd",
+          "expected": "8d72c892016d6db3e4017383bddc7a0acb9314e72ca69dab5c62fbc3294293cd"
+        },
+        {
+          "label": "nb\u2192ref:address",
+          "actual": "punkti/0.6:8d72c892016d6db3e4017383bddc7a0acb9314e72ca69dab5c62fbc3294293cd",
+          "expected": "punkti/0.6:8d72c892016d6db3e4017383bddc7a0acb9314e72ca69dab5c62fbc3294293cd"
+        },
+        {
+          "label": "nb\u2192ref:state",
+          "actual": "VALID",
+          "expected": "VALID"
+        },
+        {
+          "label": "expected validation",
+          "actual": "VALID",
+          "expected": "VALID"
+        },
+        {
+          "label": "ref mint RPC error",
+          "actual": null,
+          "expected": null
+        },
+        {
+          "label": "nb decode RPC error",
+          "actual": null,
+          "expected": null
+        },
+        {
+          "label": "ref\u2192nb:C",
+          "actual": "0000000a70756e6b74692f302e360000000d313730303030303030303030350000000c676767683030303030303030000000086f70617175652d35000000106675747572652d7369676e61747572650000002049a715e3357365eee03ba803a0c51c27985f9ab7c835a32ae5e1757fd94a3e940000000000000000",
+          "expected": "0000000a70756e6b74692f302e360000000d313730303030303030303030350000000c676767683030303030303030000000086f70617175652d35000000106675747572652d7369676e61747572650000002049a715e3357365eee03ba803a0c51c27985f9ab7c835a32ae5e1757fd94a3e940000000000000000"
+        },
+        {
+          "label": "ref\u2192nb:S",
+          "actual": "50554e4b54492d4c332d5349474e000000000a70756e6b74692f302e360000000d313730303030303030303030350000000c676767683030303030303030000000086f70617175652d35000000106675747572652d7369676e61747572650000002049a715e3357365eee03ba803a0c51c27985f9ab7c835a32ae5e1757fd94a3e940000000000000000",
+          "expected": "50554e4b54492d4c332d5349474e000000000a70756e6b74692f302e360000000d313730303030303030303030350000000c676767683030303030303030000000086f70617175652d35000000106675747572652d7369676e61747572650000002049a715e3357365eee03ba803a0c51c27985f9ab7c835a32ae5e1757fd94a3e940000000000000000"
+        },
+        {
+          "label": "ref\u2192nb:MID",
+          "actual": "2dc0696a81f0afaf69dddc2da34cc867ea610f5f4717dfcefd0e730a42b9404b",
+          "expected": "2dc0696a81f0afaf69dddc2da34cc867ea610f5f4717dfcefd0e730a42b9404b"
+        },
+        {
+          "label": "ref\u2192nb:address",
+          "actual": "punkti/0.6:2dc0696a81f0afaf69dddc2da34cc867ea610f5f4717dfcefd0e730a42b9404b",
+          "expected": "punkti/0.6:2dc0696a81f0afaf69dddc2da34cc867ea610f5f4717dfcefd0e730a42b9404b"
+        },
+        {
+          "label": "ref\u2192nb:state",
+          "actual": "UNVERIFIABLE-alg",
+          "expected": "UNVERIFIABLE-alg"
+        },
+        {
+          "label": "expected validation",
+          "actual": "UNVERIFIABLE-alg",
+          "expected": "UNVERIFIABLE-alg"
+        },
+        {
+          "label": "nb mint RPC error",
+          "actual": null,
+          "expected": null
+        },
+        {
+          "label": "ref decode RPC error",
+          "actual": null,
+          "expected": null
+        },
+        {
+          "label": "nb\u2192ref:C",
+          "actual": "0000000a70756e6b74692f302e360000000d313730303030303030303030350000000c676767683030303030303030000000086f70617175652d35000000106675747572652d7369676e61747572650000002049a715e3357365eee03ba803a0c51c27985f9ab7c835a32ae5e1757fd94a3e940000000000000000",
+          "expected": "0000000a70756e6b74692f302e360000000d313730303030303030303030350000000c676767683030303030303030000000086f70617175652d35000000106675747572652d7369676e61747572650000002049a715e3357365eee03ba803a0c51c27985f9ab7c835a32ae5e1757fd94a3e940000000000000000"
+        },
+        {
+          "label": "nb\u2192ref:S",
+          "actual": "50554e4b54492d4c332d5349474e000000000a70756e6b74692f302e360000000d313730303030303030303030350000000c676767683030303030303030000000086f70617175652d35000000106675747572652d7369676e61747572650000002049a715e3357365eee03ba803a0c51c27985f9ab7c835a32ae5e1757fd94a3e940000000000000000",
+          "expected": "50554e4b54492d4c332d5349474e000000000a70756e6b74692f302e360000000d313730303030303030303030350000000c676767683030303030303030000000086f70617175652d35000000106675747572652d7369676e61747572650000002049a715e3357365eee03ba803a0c51c27985f9ab7c835a32ae5e1757fd94a3e940000000000000000"
+        },
+        {
+          "label": "nb\u2192ref:MID",
+          "actual": "2dc0696a81f0afaf69dddc2da34cc867ea610f5f4717dfcefd0e730a42b9404b",
+          "expected": "2dc0696a81f0afaf69dddc2da34cc867ea610f5f4717dfcefd0e730a42b9404b"
+        },
+        {
+          "label": "nb\u2192ref:address",
+          "actual": "punkti/0.6:2dc0696a81f0afaf69dddc2da34cc867ea610f5f4717dfcefd0e730a42b9404b",
+          "expected": "punkti/0.6:2dc0696a81f0afaf69dddc2da34cc867ea610f5f4717dfcefd0e730a42b9404b"
+        },
+        {
+          "label": "nb\u2192ref:state",
+          "actual": "UNVERIFIABLE-alg",
+          "expected": "UNVERIFIABLE-alg"
+        },
+        {
+          "label": "expected validation",
+          "actual": "UNVERIFIABLE-alg",
+          "expected": "UNVERIFIABLE-alg"
+        }
+      ],
+      "failures": []
+    },
+    "disconnect_rejoin_cursor_catchup": {
+      "status": "PASS",
+      "summary": "Both initiators survive refused proxy, reuse cursor, pull only new records.",
+      "comparisons": [
+        {
+          "label": "ref isolated sys.path",
+          "actual": [],
+          "expected": []
+        },
+        {
+          "label": "adapter survives invalid command",
+          "actual": false,
+          "expected": false
+        },
+        {
+          "label": "adapter remains responsive",
+          "actual": true,
+          "expected": true
+        },
+        {
+          "label": "nb isolated sys.path",
+          "actual": [],
+          "expected": []
+        },
+        {
+          "label": "no reference modules loaded",
+          "actual": [],
+          "expected": []
+        },
+        {
+          "label": "adapter survives invalid command",
+          "actual": false,
+          "expected": false
+        },
+        {
+          "label": "adapter remains responsive",
+          "actual": true,
+          "expected": true
+        },
+        {
+          "label": "ref configure RPC error",
+          "actual": null,
+          "expected": null
+        },
+        {
+          "label": "nb configure RPC error",
+          "actual": null,
+          "expected": null
+        },
+        {
+          "label": "nb add RPC error",
+          "actual": null,
+          "expected": null
+        },
+        {
+          "label": "local seed admission",
+          "actual": true,
+          "expected": true
+        },
+        {
+          "label": "nb add RPC error",
+          "actual": null,
+          "expected": null
+        },
+        {
+          "label": "local seed admission",
+          "actual": true,
+          "expected": true
+        },
+        {
+          "label": "nb add RPC error",
+          "actual": null,
+          "expected": null
+        },
+        {
+          "label": "local seed admission",
+          "actual": true,
+          "expected": true
+        },
+        {
+          "label": "ref sync_known RPC error",
+          "actual": null,
+          "expected": null
+        },
+        {
+          "label": "ref state RPC error",
+          "actual": null,
+          "expected": null
+        },
+        {
+          "label": "initial sync",
+          "actual": [
+            "punkti/0.6:a788544f92e489f40aea380927cb2ce4e95882ef8dd5a77bc91f044dc34aa744",
+            "punkti/0.6:cd32844b69ab2d273e40fe251e7b4f942878c67837b1349b8373973e5c48159d",
+            "punkti/0.6:f69cf67523b81db871b1fdede318c8bfe4dc17c2f8aeac2703be7680af514c2f"
+          ],
+          "expected": [
+            "punkti/0.6:a788544f92e489f40aea380927cb2ce4e95882ef8dd5a77bc91f044dc34aa744",
+            "punkti/0.6:cd32844b69ab2d273e40fe251e7b4f942878c67837b1349b8373973e5c48159d",
+            "punkti/0.6:f69cf67523b81db871b1fdede318c8bfe4dc17c2f8aeac2703be7680af514c2f"
+          ]
+        },
+        {
+          "label": "ref sync_known RPC error",
+          "actual": null,
+          "expected": null
+        },
+        {
+          "label": "connection refusal observed",
+          "actual": true,
+          "expected": true
+        },
+        {
+          "label": "nb add RPC error",
+          "actual": null,
+          "expected": null
+        },
+        {
+          "label": "local seed admission",
+          "actual": true,
+          "expected": true
+        },
+        {
+          "label": "nb add RPC error",
+          "actual": null,
+          "expected": null
+        },
+        {
+          "label": "local seed admission",
+          "actual": true,
+          "expected": true
+        },
+        {
+          "label": "ref sync_known RPC error",
+          "actual": null,
+          "expected": null
+        },
+        {
+          "label": "ref state RPC error",
+          "actual": null,
+          "expected": null
+        },
+        {
+          "label": "rejoined store",
+          "actual": [
+            "punkti/0.6:a74cbad8c9ccf1fcd7b46c5b07b1b04f9f6fa4852e6c140d332c72eaacfbc54f",
+            "punkti/0.6:a788544f92e489f40aea380927cb2ce4e95882ef8dd5a77bc91f044dc34aa744",
+            "punkti/0.6:bf7d32c0036201d746a0bdf33bbeaffac98c6a946972fb1d33a38bead4e65d87",
+            "punkti/0.6:cd32844b69ab2d273e40fe251e7b4f942878c67837b1349b8373973e5c48159d",
+            "punkti/0.6:f69cf67523b81db871b1fdede318c8bfe4dc17c2f8aeac2703be7680af514c2f"
+          ],
+          "expected": [
+            "punkti/0.6:a74cbad8c9ccf1fcd7b46c5b07b1b04f9f6fa4852e6c140d332c72eaacfbc54f",
+            "punkti/0.6:a788544f92e489f40aea380927cb2ce4e95882ef8dd5a77bc91f044dc34aa744",
+            "punkti/0.6:bf7d32c0036201d746a0bdf33bbeaffac98c6a946972fb1d33a38bead4e65d87",
+            "punkti/0.6:cd32844b69ab2d273e40fe251e7b4f942878c67837b1349b8373973e5c48159d",
+            "punkti/0.6:f69cf67523b81db871b1fdede318c8bfe4dc17c2f8aeac2703be7680af514c2f"
+          ]
+        },
+        {
+          "label": "captured proxy PULL exchanges ref",
+          "actual": [
+            {
+              "query": {
+                "cursor": {
+                  "after": 3,
+                  "ceiling": 3,
+                  "epoch": "e8f42c2f69474e8c8bc73993cae7f584",
+                  "scope": "c6747acb328a79c07e24f7c1401f39b941bc5f8407a06acfb166b24d6ec98659"
+                },
+                "hi": null,
+                "limit": 32,
+                "lo": null,
+                "mode": "spatial",
+                "scope": {
+                  "h_hi": null,
+                  "h_lo": null,
+                  "z_max": null,
+                  "z_min": null
+                }
+              },
+              "response": {
+                "cursor": {
+                  "after": 5,
+                  "ceiling": 5,
+                  "epoch": "e8f42c2f69474e8c8bc73993cae7f584",
+                  "scope": "c6747acb328a79c07e24f7c1401f39b941bc5f8407a06acfb166b24d6ec98659"
+                },
+                "end": true,
+                "records": [
+                  {
+                    "address": "punkti/0.6:bf7d32c0036201d746a0bdf33bbeaffac98c6a946972fb1d33a38bead4e65d87",
+                    "record": "AAAAcwAAAApwdW5rdGkvMC42AAAADTE3MDAwMDAwMDAwNzAAAAAMZ2dnaDAwMDAwMDAwAAAACW9wYXF1ZS03MAAAAAdlZDI1NTE5AAAAIEISpu2McjiHjEz5bgej/6r6V8hBR4p+9yu2gPu3GyxNAAAAAAAAAAAAAABA6WLzXEurBPXdtEniNfgUDSNzPZstp/DORUa6zMv0u/TK1B1add7B76k3DFTsLRmhye6nHYcwHyPu4+7278nvAQ==",
+                    "sha256": "a0c84d63242a49ac1ad8c3f70bcb502f8e65d6dd6b627f1bca809292d50225d4"
+                  },
+                  {
+                    "address": "punkti/0.6:a74cbad8c9ccf1fcd7b46c5b07b1b04f9f6fa4852e6c140d332c72eaacfbc54f",
+                    "record": "AAAAcwAAAApwdW5rdGkvMC42AAAADTE3MDAwMDAwMDAwNzEAAAAMZ2dnaDAwMDAwMDAwAAAACW9wYXF1ZS03MQAAAAdlZDI1NTE5AAAAIDID6nyPbqAtSL1cVH/I2guu5FZgE6UBKktOmbnGhHF0AAAAAAAAAAAAAABAGez5pNy9YvsSggTXW90TUNST8gbzHjo1CJpdyK+KN1o2hkbEhYQxj4Tk/DluCDw1GecnwtttUfrz6MGK5r65BA==",
+                    "sha256": "fe5a142d3264950ee89efb74125b68e86036538698833dd445c6dbf076892a99"
+                  }
+                ]
+              }
+            }
+          ],
+          "expected": "resumed after=3; exactly 2 new records"
+        },
+        {
+          "label": "nonempty cursor reused",
+          "actual": [
+            3
+          ],
+          "expected": [
+            3
+          ]
+        },
+        {
+          "label": "only new records transferred by PULL",
+          "actual": [
+            "punkti/0.6:a74cbad8c9ccf1fcd7b46c5b07b1b04f9f6fa4852e6c140d332c72eaacfbc54f",
+            "punkti/0.6:bf7d32c0036201d746a0bdf33bbeaffac98c6a946972fb1d33a38bead4e65d87"
+          ],
+          "expected": [
+            "punkti/0.6:a74cbad8c9ccf1fcd7b46c5b07b1b04f9f6fa4852e6c140d332c72eaacfbc54f",
+            "punkti/0.6:bf7d32c0036201d746a0bdf33bbeaffac98c6a946972fb1d33a38bead4e65d87"
+          ]
+        },
+        {
+          "label": "nb isolated sys.path",
+          "actual": [],
+          "expected": []
+        },
+        {
+          "label": "no reference modules loaded",
+          "actual": [],
+          "expected": []
+        },
+        {
+          "label": "adapter survives invalid command",
+          "actual": false,
+          "expected": false
+        },
+        {
+          "label": "adapter remains responsive",
+          "actual": true,
+          "expected": true
+        },
+        {
+          "label": "ref isolated sys.path",
+          "actual": [],
+          "expected": []
+        },
+        {
+          "label": "adapter survives invalid command",
+          "actual": false,
+          "expected": false
+        },
+        {
+          "label": "adapter remains responsive",
+          "actual": true,
+          "expected": true
+        },
+        {
+          "label": "nb configure RPC error",
+          "actual": null,
+          "expected": null
+        },
+        {
+          "label": "ref configure RPC error",
+          "actual": null,
+          "expected": null
+        },
+        {
+          "label": "ref add RPC error",
+          "actual": null,
+          "expected": null
+        },
+        {
+          "label": "local seed admission",
+          "actual": true,
+          "expected": true
+        },
+        {
+          "label": "ref add RPC error",
+          "actual": null,
+          "expected": null
+        },
+        {
+          "label": "local seed admission",
+          "actual": true,
+          "expected": true
+        },
+        {
+          "label": "ref add RPC error",
+          "actual": null,
+          "expected": null
+        },
+        {
+          "label": "local seed admission",
+          "actual": true,
+          "expected": true
+        },
+        {
+          "label": "nb sync_known RPC error",
+          "actual": null,
+          "expected": null
+        },
+        {
+          "label": "nb state RPC error",
+          "actual": null,
+          "expected": null
+        },
+        {
+          "label": "initial sync",
+          "actual": [
+            "punkti/0.6:a788544f92e489f40aea380927cb2ce4e95882ef8dd5a77bc91f044dc34aa744",
+            "punkti/0.6:cd32844b69ab2d273e40fe251e7b4f942878c67837b1349b8373973e5c48159d",
+            "punkti/0.6:f69cf67523b81db871b1fdede318c8bfe4dc17c2f8aeac2703be7680af514c2f"
+          ],
+          "expected": [
+            "punkti/0.6:a788544f92e489f40aea380927cb2ce4e95882ef8dd5a77bc91f044dc34aa744",
+            "punkti/0.6:cd32844b69ab2d273e40fe251e7b4f942878c67837b1349b8373973e5c48159d",
+            "punkti/0.6:f69cf67523b81db871b1fdede318c8bfe4dc17c2f8aeac2703be7680af514c2f"
+          ]
+        },
+        {
+          "label": "nb sync_known RPC error",
+          "actual": null,
+          "expected": null
+        },
+        {
+          "label": "connection refusal observed",
+          "actual": true,
+          "expected": true
+        },
+        {
+          "label": "ref add RPC error",
+          "actual": null,
+          "expected": null
+        },
+        {
+          "label": "local seed admission",
+          "actual": true,
+          "expected": true
+        },
+        {
+          "label": "ref add RPC error",
+          "actual": null,
+          "expected": null
+        },
+        {
+          "label": "local seed admission",
+          "actual": true,
+          "expected": true
+        },
+        {
+          "label": "nb sync_known RPC error",
+          "actual": null,
+          "expected": null
+        },
+        {
+          "label": "nb state RPC error",
+          "actual": null,
+          "expected": null
+        },
+        {
+          "label": "rejoined store",
+          "actual": [
+            "punkti/0.6:a74cbad8c9ccf1fcd7b46c5b07b1b04f9f6fa4852e6c140d332c72eaacfbc54f",
+            "punkti/0.6:a788544f92e489f40aea380927cb2ce4e95882ef8dd5a77bc91f044dc34aa744",
+            "punkti/0.6:bf7d32c0036201d746a0bdf33bbeaffac98c6a946972fb1d33a38bead4e65d87",
+            "punkti/0.6:cd32844b69ab2d273e40fe251e7b4f942878c67837b1349b8373973e5c48159d",
+            "punkti/0.6:f69cf67523b81db871b1fdede318c8bfe4dc17c2f8aeac2703be7680af514c2f"
+          ],
+          "expected": [
+            "punkti/0.6:a74cbad8c9ccf1fcd7b46c5b07b1b04f9f6fa4852e6c140d332c72eaacfbc54f",
+            "punkti/0.6:a788544f92e489f40aea380927cb2ce4e95882ef8dd5a77bc91f044dc34aa744",
+            "punkti/0.6:bf7d32c0036201d746a0bdf33bbeaffac98c6a946972fb1d33a38bead4e65d87",
+            "punkti/0.6:cd32844b69ab2d273e40fe251e7b4f942878c67837b1349b8373973e5c48159d",
+            "punkti/0.6:f69cf67523b81db871b1fdede318c8bfe4dc17c2f8aeac2703be7680af514c2f"
+          ]
+        },
+        {
+          "label": "captured proxy PULL exchanges nb",
+          "actual": [
+            {
+              "query": {
+                "cursor": {
+                  "after": 3,
+                  "ceiling": 3,
+                  "epoch": "e873110318ac495882bf5c4855bec348",
+                  "scope": "c6747acb328a79c07e24f7c1401f39b941bc5f8407a06acfb166b24d6ec98659"
+                },
+                "hi": null,
+                "limit": 32,
+                "lo": null,
+                "mode": "spatial",
+                "scope": {
+                  "h_hi": null,
+                  "h_lo": null,
+                  "z_max": null,
+                  "z_min": null
+                }
+              },
+              "response": {
+                "cursor": {
+                  "after": 5,
+                  "ceiling": 5,
+                  "epoch": "e873110318ac495882bf5c4855bec348",
+                  "scope": "c6747acb328a79c07e24f7c1401f39b941bc5f8407a06acfb166b24d6ec98659"
+                },
+                "end": true,
+                "records": [
+                  {
+                    "address": "punkti/0.6:bf7d32c0036201d746a0bdf33bbeaffac98c6a946972fb1d33a38bead4e65d87",
+                    "record": "AAAAcwAAAApwdW5rdGkvMC42AAAADTE3MDAwMDAwMDAwNzAAAAAMZ2dnaDAwMDAwMDAwAAAACW9wYXF1ZS03MAAAAAdlZDI1NTE5AAAAIEISpu2McjiHjEz5bgej/6r6V8hBR4p+9yu2gPu3GyxNAAAAAAAAAAAAAABA6WLzXEurBPXdtEniNfgUDSNzPZstp/DORUa6zMv0u/TK1B1add7B76k3DFTsLRmhye6nHYcwHyPu4+7278nvAQ==",
+                    "sha256": "a0c84d63242a49ac1ad8c3f70bcb502f8e65d6dd6b627f1bca809292d50225d4"
+                  },
+                  {
+                    "address": "punkti/0.6:a74cbad8c9ccf1fcd7b46c5b07b1b04f9f6fa4852e6c140d332c72eaacfbc54f",
+                    "record": "AAAAcwAAAApwdW5rdGkvMC42AAAADTE3MDAwMDAwMDAwNzEAAAAMZ2dnaDAwMDAwMDAwAAAACW9wYXF1ZS03MQAAAAdlZDI1NTE5AAAAIDID6nyPbqAtSL1cVH/I2guu5FZgE6UBKktOmbnGhHF0AAAAAAAAAAAAAABAGez5pNy9YvsSggTXW90TUNST8gbzHjo1CJpdyK+KN1o2hkbEhYQxj4Tk/DluCDw1GecnwtttUfrz6MGK5r65BA==",
+                    "sha256": "fe5a142d3264950ee89efb74125b68e86036538698833dd445c6dbf076892a99"
+                  }
+                ]
+              }
+            }
+          ],
+          "expected": "resumed after=3; exactly 2 new records"
+        },
+        {
+          "label": "nonempty cursor reused",
+          "actual": [
+            3
+          ],
+          "expected": [
+            3
+          ]
+        },
+        {
+          "label": "only new records transferred by PULL",
+          "actual": [
+            "punkti/0.6:a74cbad8c9ccf1fcd7b46c5b07b1b04f9f6fa4852e6c140d332c72eaacfbc54f",
+            "punkti/0.6:bf7d32c0036201d746a0bdf33bbeaffac98c6a946972fb1d33a38bead4e65d87"
+          ],
+          "expected": [
+            "punkti/0.6:a74cbad8c9ccf1fcd7b46c5b07b1b04f9f6fa4852e6c140d332c72eaacfbc54f",
+            "punkti/0.6:bf7d32c0036201d746a0bdf33bbeaffac98c6a946972fb1d33a38bead4e65d87"
+          ]
+        }
+      ],
+      "failures": []
+    },
+    "no_reference_imports": {
+      "status": "PASS",
+      "summary": "Static scan and isolated import prove clean-room source independence.",
+      "comparisons": [
+        {
+          "label": "experimental/nairobidot-l3/src/nairobidot/__init__.py:import carrier",
+          "actual": false,
+          "expected": false
+        },
+        {
+          "label": "experimental/nairobidot-l3/src/nairobidot/__init__.py:import mesh",
+          "actual": false,
+          "expected": false
+        },
+        {
+          "label": "experimental/nairobidot-l3/src/nairobidot/__init__.py:import spatial",
+          "actual": false,
+          "expected": false
+        },
+        {
+          "label": "experimental/nairobidot-l3/src/nairobidot/__init__.py:punkti-v0.6-mesh",
+          "actual": false,
+          "expected": false
+        },
+        {
+          "label": "experimental/nairobidot-l3/src/nairobidot/carrier.py:import carrier",
+          "actual": false,
+          "expected": false
+        },
+        {
+          "label": "experimental/nairobidot-l3/src/nairobidot/carrier.py:import mesh",
+          "actual": false,
+          "expected": false
+        },
+        {
+          "label": "experimental/nairobidot-l3/src/nairobidot/carrier.py:import spatial",
+          "actual": false,
+          "expected": false
+        },
+        {
+          "label": "experimental/nairobidot-l3/src/nairobidot/carrier.py:punkti-v0.6-mesh",
+          "actual": false,
+          "expected": false
+        },
+        {
+          "label": "experimental/nairobidot-l3/src/nairobidot/node.py:import carrier",
+          "actual": false,
+          "expected": false
+        },
+        {
+          "label": "experimental/nairobidot-l3/src/nairobidot/node.py:import mesh",
+          "actual": false,
+          "expected": false
+        },
+        {
+          "label": "experimental/nairobidot-l3/src/nairobidot/node.py:import spatial",
+          "actual": false,
+          "expected": false
+        },
+        {
+          "label": "experimental/nairobidot-l3/src/nairobidot/node.py:punkti-v0.6-mesh",
+          "actual": false,
+          "expected": false
+        },
+        {
+          "label": "experimental/nairobidot-l3/src/nairobidot/serve.py:import carrier",
+          "actual": false,
+          "expected": false
+        },
+        {
+          "label": "experimental/nairobidot-l3/src/nairobidot/serve.py:import mesh",
+          "actual": false,
+          "expected": false
+        },
+        {
+          "label": "experimental/nairobidot-l3/src/nairobidot/serve.py:import spatial",
+          "actual": false,
+          "expected": false
+        },
+        {
+          "label": "experimental/nairobidot-l3/src/nairobidot/serve.py:punkti-v0.6-mesh",
+          "actual": false,
+          "expected": false
+        },
+        {
+          "label": "experimental/nairobidot-l3/src/nairobidot/spatial.py:import carrier",
+          "actual": false,
+          "expected": false
+        },
+        {
+          "label": "experimental/nairobidot-l3/src/nairobidot/spatial.py:import mesh",
+          "actual": false,
+          "expected": false
+        },
+        {
+          "label": "experimental/nairobidot-l3/src/nairobidot/spatial.py:import spatial",
+          "actual": false,
+          "expected": false
+        },
+        {
+          "label": "experimental/nairobidot-l3/src/nairobidot/spatial.py:punkti-v0.6-mesh",
+          "actual": false,
+          "expected": false
+        },
+        {
+          "label": "isolated package import exit",
+          "actual": 0,
+          "expected": 0
+        },
+        {
+          "label": "isolated package path",
+          "actual": "/home/hermes/.hermes/kanban/workspaces/t_0307c488/repo/experimental/nairobidot-l3/src/nairobidot/__init__.py",
+          "expected": "/home/hermes/.hermes/kanban/workspaces/t_0307c488/repo/experimental/nairobidot-l3/src/nairobidot/__init__.py"
+        },
+        {
+          "label": "nb isolated sys.path",
+          "actual": [],
+          "expected": []
+        },
+        {
+          "label": "no reference modules loaded",
+          "actual": [],
+          "expected": []
+        },
+        {
+          "label": "adapter survives invalid command",
+          "actual": false,
+          "expected": false
+        },
+        {
+          "label": "adapter remains responsive",
+          "actual": true,
+          "expected": true
+        },
+        {
+          "label": "ref isolated sys.path",
+          "actual": [],
+          "expected": []
+        },
+        {
+          "label": "adapter survives invalid command",
+          "actual": false,
+          "expected": false
+        },
+        {
+          "label": "adapter remains responsive",
+          "actual": true,
+          "expected": true
+        },
+        {
+          "label": "harness imported no implementation",
+          "actual": [],
+          "expected": []
+        }
+      ],
+      "failures": []
+    },
+    "push_both_directions": {
+      "status": "PASS",
+      "summary": "Both HTTP push directions admit VALID and return identical R/digests.",
+      "comparisons": [
+        {
+          "label": "ref isolated sys.path",
+          "actual": [],
+          "expected": []
+        },
+        {
+          "label": "adapter survives invalid command",
+          "actual": false,
+          "expected": false
+        },
+        {
+          "label": "adapter remains responsive",
+          "actual": true,
+          "expected": true
+        },
+        {
+          "label": "nb isolated sys.path",
+          "actual": [],
+          "expected": []
+        },
+        {
+          "label": "no reference modules loaded",
+          "actual": [],
+          "expected": []
+        },
+        {
+          "label": "adapter survives invalid command",
+          "actual": false,
+          "expected": false
+        },
+        {
+          "label": "adapter remains responsive",
+          "actual": true,
+          "expected": true
+        },
+        {
+          "label": "ref add RPC error",
+          "actual": null,
+          "expected": null
+        },
+        {
+          "label": "local seed admission",
+          "actual": true,
+          "expected": true
+        },
+        {
+          "label": "push status",
+          "actual": 200,
+          "expected": 200
+        },
+        {
+          "label": "receiver classification",
+          "actual": "VALID",
+          "expected": "VALID"
+        },
+        {
+          "label": "receiver admission",
+          "actual": true,
+          "expected": true
+        },
+        {
+          "label": "nb state RPC error",
+          "actual": null,
+          "expected": null
+        },
+        {
+          "label": "stored digest",
+          "actual": "3fc0efe2be8ae22a6794761dc2b6e3feb6a090b89f6dacfc7e99f7b4ce0f6eb2",
+          "expected": "3fc0efe2be8ae22a6794761dc2b6e3feb6a090b89f6dacfc7e99f7b4ce0f6eb2"
+        },
+        {
+          "label": "pull HTTP status",
+          "actual": 200,
+          "expected": 200
+        },
+        {
+          "label": "exact R round trip",
+          "actual": {
+            "address": "punkti/0.6:8795f8c0180755d21791c02d6cf2483b0573064fefa30e64bba3d7a9e40c8ab9",
+            "record": "AAAAcwAAAApwdW5rdGkvMC42AAAADTE3MDAwMDAwMDAwMTAAAAAMZ2dnaDAwMDAwMDAwAAAACW9wYXF1ZS0xMAAAAAdlZDI1NTE5AAAAIKDKck4bF76NwBGPkZC2dPwr6bkJI7ocCRtspUjZ0rZxAAAAAAAAAAAAAABABaktv70T/y3EXjN+s3oonW8nsvgare9f8D6M1tRCLExCSN7aTDYJ8krqSRTHDoz4GNgezBljgy8bIHS029t4BA==",
+            "sha256": "3fc0efe2be8ae22a6794761dc2b6e3feb6a090b89f6dacfc7e99f7b4ce0f6eb2"
+          },
+          "expected": {
+            "address": "punkti/0.6:8795f8c0180755d21791c02d6cf2483b0573064fefa30e64bba3d7a9e40c8ab9",
+            "sha256": "3fc0efe2be8ae22a6794761dc2b6e3feb6a090b89f6dacfc7e99f7b4ce0f6eb2",
+            "record": "AAAAcwAAAApwdW5rdGkvMC42AAAADTE3MDAwMDAwMDAwMTAAAAAMZ2dnaDAwMDAwMDAwAAAACW9wYXF1ZS0xMAAAAAdlZDI1NTE5AAAAIKDKck4bF76NwBGPkZC2dPwr6bkJI7ocCRtspUjZ0rZxAAAAAAAAAAAAAABABaktv70T/y3EXjN+s3oonW8nsvgare9f8D6M1tRCLExCSN7aTDYJ8krqSRTHDoz4GNgezBljgy8bIHS029t4BA=="
+          }
+        },
+        {
+          "label": "nb decode RPC error",
+          "actual": null,
+          "expected": null
+        },
+        {
+          "label": "opaque x",
+          "actual": "opaque-10",
+          "expected": "opaque-10"
+        },
+        {
+          "label": "opaque ext",
+          "actual": "",
+          "expected": ""
+        },
+        {
+          "label": "opaque refs",
+          "actual": [],
+          "expected": []
+        },
+        {
+          "label": "nb add RPC error",
+          "actual": null,
+          "expected": null
+        },
+        {
+          "label": "local seed admission",
+          "actual": true,
+          "expected": true
+        },
+        {
+          "label": "push status",
+          "actual": 200,
+          "expected": 200
+        },
+        {
+          "label": "receiver classification",
+          "actual": "VALID",
+          "expected": "VALID"
+        },
+        {
+          "label": "receiver admission",
+          "actual": true,
+          "expected": true
+        },
+        {
+          "label": "ref state RPC error",
+          "actual": null,
+          "expected": null
+        },
+        {
+          "label": "stored digest",
+          "actual": "9d381ab78a5bf1b8e31b83b051938dba3240f17523b690708a2935f529f0889a",
+          "expected": "9d381ab78a5bf1b8e31b83b051938dba3240f17523b690708a2935f529f0889a"
+        },
+        {
+          "label": "pull HTTP status",
+          "actual": 200,
+          "expected": 200
+        },
+        {
+          "label": "exact R round trip",
+          "actual": {
+            "address": "punkti/0.6:bba98a8b1d9b2e18fb1f1cdcc9f8d10d3e7593ff720a3b806b3e8d98c628879d",
+            "record": "AAAAcwAAAApwdW5rdGkvMC42AAAADTE3MDAwMDAwMDAwMTEAAAAMZ2dnaDAwMDAwMDAwAAAACW9wYXF1ZS0xMQAAAAdlZDI1NTE5AAAAIOSkLHqOysao0uH7PzGXTvDRCcV8cBAk6v8DcFbuEHD5AAAAAAAAAAAAAABALzg2x/ZLnb7Jncnlg6LSq6+nglFQaS/dTx+vmYEr3NH9+PnAGd5esehCAhgPzctsvGdH51+7sK8dranHnLo3Dg==",
+            "sha256": "9d381ab78a5bf1b8e31b83b051938dba3240f17523b690708a2935f529f0889a"
+          },
+          "expected": {
+            "address": "punkti/0.6:bba98a8b1d9b2e18fb1f1cdcc9f8d10d3e7593ff720a3b806b3e8d98c628879d",
+            "sha256": "9d381ab78a5bf1b8e31b83b051938dba3240f17523b690708a2935f529f0889a",
+            "record": "AAAAcwAAAApwdW5rdGkvMC42AAAADTE3MDAwMDAwMDAwMTEAAAAMZ2dnaDAwMDAwMDAwAAAACW9wYXF1ZS0xMQAAAAdlZDI1NTE5AAAAIOSkLHqOysao0uH7PzGXTvDRCcV8cBAk6v8DcFbuEHD5AAAAAAAAAAAAAABALzg2x/ZLnb7Jncnlg6LSq6+nglFQaS/dTx+vmYEr3NH9+PnAGd5esehCAhgPzctsvGdH51+7sK8dranHnLo3Dg=="
+          }
+        },
+        {
+          "label": "ref decode RPC error",
+          "actual": null,
+          "expected": null
+        },
+        {
+          "label": "opaque x",
+          "actual": "opaque-11",
+          "expected": "opaque-11"
+        },
+        {
+          "label": "opaque ext",
+          "actual": "",
+          "expected": ""
+        },
+        {
+          "label": "opaque refs",
+          "actual": [],
+          "expected": []
+        }
+      ],
+      "failures": []
+    },
+    "rejection_consistency": {
+      "status": "FAIL",
+      "summary": "Malformed/forged records stay out of main store; valid later wins.",
+      "comparisons": [
+        {
+          "label": "ref isolated sys.path",
+          "actual": [],
+          "expected": []
+        },
+        {
+          "label": "adapter survives invalid command",
+          "actual": false,
+          "expected": false
+        },
+        {
+          "label": "adapter remains responsive",
+          "actual": true,
+          "expected": true
+        },
+        {
+          "label": "nb isolated sys.path",
+          "actual": [],
+          "expected": []
+        },
+        {
+          "label": "no reference modules loaded",
+          "actual": [],
+          "expected": []
+        },
+        {
+          "label": "adapter survives invalid command",
+          "actual": false,
+          "expected": false
+        },
+        {
+          "label": "adapter remains responsive",
+          "actual": true,
+          "expected": true
+        },
+        {
+          "label": "ref mint RPC error",
+          "actual": null,
+          "expected": null
+        },
+        {
+          "label": "ref mint RPC error",
+          "actual": null,
+          "expected": null
+        },
+        {
+          "label": "forged signature status",
+          "actual": 200,
+          "expected": 200
+        },
+        {
+          "label": "forged signature classification ref",
+          "actual": "INVALID-provenance",
+          "expected": "INVALID-provenance"
+        },
+        {
+          "label": "forged signature admission ref",
+          "actual": false,
+          "expected": false
+        },
+        {
+          "label": "ref state RPC error",
+          "actual": null,
+          "expected": null
+        },
+        {
+          "label": "main store remains empty",
+          "actual": [],
+          "expected": []
+        },
+        {
+          "label": "ref state RPC error",
+          "actual": null,
+          "expected": null
+        },
+        {
+          "label": "forged signature candidate retention",
+          "actual": false,
+          "expected": false
+        },
+        {
+          "label": "ref decode RPC error",
+          "actual": null,
+          "expected": null
+        },
+        {
+          "label": "forged signature decoder classification ref",
+          "actual": "INVALID-provenance",
+          "expected": "INVALID-provenance"
+        },
+        {
+          "label": "forged signature status",
+          "actual": 200,
+          "expected": 200
+        },
+        {
+          "label": "forged signature classification nb",
+          "actual": "INVALID-provenance",
+          "expected": "INVALID-provenance"
+        },
+        {
+          "label": "forged signature admission nb",
+          "actual": false,
+          "expected": false
+        },
+        {
+          "label": "nb state RPC error",
+          "actual": null,
+          "expected": null
+        },
+        {
+          "label": "main store remains empty",
+          "actual": [],
+          "expected": []
+        },
+        {
+          "label": "nb state RPC error",
+          "actual": null,
+          "expected": null
+        },
+        {
+          "label": "forged signature candidate retention",
+          "actual": false,
+          "expected": false
+        },
+        {
+          "label": "nb decode RPC error",
+          "actual": null,
+          "expected": null
+        },
+        {
+          "label": "forged signature decoder classification nb",
+          "actual": "INVALID-provenance",
+          "expected": "INVALID-provenance"
+        },
+        {
+          "label": "forged signature classification parity",
+          "actual": "INVALID-provenance",
+          "expected": "INVALID-provenance"
+        },
+        {
+          "label": "byte-flipped R status",
+          "actual": 200,
+          "expected": 200
+        },
+        {
+          "label": "byte-flipped R classification ref",
+          "actual": "INVALID-structural",
+          "expected": "INVALID-structural"
+        },
+        {
+          "label": "byte-flipped R admission ref",
+          "actual": false,
+          "expected": false
+        },
+        {
+          "label": "ref state RPC error",
+          "actual": null,
+          "expected": null
+        },
+        {
+          "label": "main store remains empty",
+          "actual": [],
+          "expected": []
+        },
+        {
+          "label": "ref state RPC error",
+          "actual": null,
+          "expected": null
+        },
+        {
+          "label": "byte-flipped R candidate retention",
+          "actual": false,
+          "expected": false
+        },
+        {
+          "label": "ref decode RPC error",
+          "actual": null,
+          "expected": null
+        },
+        {
+          "label": "byte-flipped R decoder classification ref",
+          "actual": "INVALID-structural",
+          "expected": "INVALID-structural"
+        },
+        {
+          "label": "byte-flipped R status",
+          "actual": 200,
+          "expected": 200
+        },
+        {
+          "label": "byte-flipped R classification nb",
+          "actual": "INVALID-structural",
+          "expected": "INVALID-structural"
+        },
+        {
+          "label": "byte-flipped R admission nb",
+          "actual": false,
+          "expected": false
+        },
+        {
+          "label": "nb state RPC error",
+          "actual": null,
+          "expected": null
+        },
+        {
+          "label": "main store remains empty",
+          "actual": [],
+          "expected": []
+        },
+        {
+          "label": "nb state RPC error",
+          "actual": null,
+          "expected": null
+        },
+        {
+          "label": "byte-flipped R candidate retention",
+          "actual": false,
+          "expected": false
+        },
+        {
+          "label": "nb decode RPC error",
+          "actual": null,
+          "expected": null
+        },
+        {
+          "label": "byte-flipped R decoder classification nb",
+          "actual": "INVALID-structural",
+          "expected": "INVALID-structural"
+        },
+        {
+          "label": "byte-flipped R classification parity",
+          "actual": "INVALID-structural",
+          "expected": "INVALID-structural"
+        },
+        {
+          "label": "trailing R status",
+          "actual": 200,
+          "expected": 200
+        },
+        {
+          "label": "trailing R classification ref",
+          "actual": "INVALID-structural",
+          "expected": "INVALID-structural"
+        },
+        {
+          "label": "trailing R admission ref",
+          "actual": false,
+          "expected": false
+        },
+        {
+          "label": "ref state RPC error",
+          "actual": null,
+          "expected": null
+        },
+        {
+          "label": "main store remains empty",
+          "actual": [],
+          "expected": []
+        },
+        {
+          "label": "ref state RPC error",
+          "actual": null,
+          "expected": null
+        },
+        {
+          "label": "trailing R candidate retention",
+          "actual": false,
+          "expected": false
+        },
+        {
+          "label": "ref decode RPC error",
+          "actual": null,
+          "expected": null
+        },
+        {
+          "label": "trailing R decoder classification ref",
+          "actual": "INVALID-structural",
+          "expected": "INVALID-structural"
+        },
+        {
+          "label": "trailing R status",
+          "actual": 200,
+          "expected": 200
+        },
+        {
+          "label": "trailing R classification nb",
+          "actual": "INVALID-structural",
+          "expected": "INVALID-structural"
+        },
+        {
+          "label": "trailing R admission nb",
+          "actual": false,
+          "expected": false
+        },
+        {
+          "label": "nb state RPC error",
+          "actual": null,
+          "expected": null
+        },
+        {
+          "label": "main store remains empty",
+          "actual": [],
+          "expected": []
+        },
+        {
+          "label": "nb state RPC error",
+          "actual": null,
+          "expected": null
+        },
+        {
+          "label": "trailing R candidate retention",
+          "actual": false,
+          "expected": false
+        },
+        {
+          "label": "nb decode RPC error",
+          "actual": null,
+          "expected": null
+        },
+        {
+          "label": "trailing R decoder classification nb",
+          "actual": "INVALID-structural",
+          "expected": "INVALID-structural"
+        },
+        {
+          "label": "trailing R classification parity",
+          "actual": "INVALID-structural",
+          "expected": "INVALID-structural"
+        },
+        {
+          "label": "truncated R status",
+          "actual": 200,
+          "expected": 200
+        },
+        {
+          "label": "truncated R classification ref",
+          "actual": "INVALID-structural",
+          "expected": "INVALID-structural"
+        },
+        {
+          "label": "truncated R admission ref",
+          "actual": false,
+          "expected": false
+        },
+        {
+          "label": "ref state RPC error",
+          "actual": null,
+          "expected": null
+        },
+        {
+          "label": "main store remains empty",
+          "actual": [],
+          "expected": []
+        },
+        {
+          "label": "ref state RPC error",
+          "actual": null,
+          "expected": null
+        },
+        {
+          "label": "truncated R candidate retention",
+          "actual": false,
+          "expected": false
+        },
+        {
+          "label": "ref decode RPC error",
+          "actual": null,
+          "expected": null
+        },
+        {
+          "label": "truncated R decoder classification ref",
+          "actual": "INVALID-structural",
+          "expected": "INVALID-structural"
+        },
+        {
+          "label": "truncated R status",
+          "actual": 200,
+          "expected": 200
+        },
+        {
+          "label": "truncated R classification nb",
+          "actual": "INVALID-structural",
+          "expected": "INVALID-structural"
+        },
+        {
+          "label": "truncated R admission nb",
+          "actual": false,
+          "expected": false
+        },
+        {
+          "label": "nb state RPC error",
+          "actual": null,
+          "expected": null
+        },
+        {
+          "label": "main store remains empty",
+          "actual": [],
+          "expected": []
+        },
+        {
+          "label": "nb state RPC error",
+          "actual": null,
+          "expected": null
+        },
+        {
+          "label": "truncated R candidate retention",
+          "actual": false,
+          "expected": false
+        },
+        {
+          "label": "nb decode RPC error",
+          "actual": null,
+          "expected": null
+        },
+        {
+          "label": "truncated R decoder classification nb",
+          "actual": "INVALID-structural",
+          "expected": "INVALID-structural"
+        },
+        {
+          "label": "truncated R classification parity",
+          "actual": "INVALID-structural",
+          "expected": "INVALID-structural"
+        },
+        {
+          "label": "unsupported alg status",
+          "actual": 200,
+          "expected": 200
+        },
+        {
+          "label": "unsupported alg classification ref",
+          "actual": "UNVERIFIABLE-alg",
+          "expected": "UNVERIFIABLE-alg"
+        },
+        {
+          "label": "unsupported alg admission ref",
+          "actual": true,
+          "expected": true
+        },
+        {
+          "label": "ref state RPC error",
+          "actual": null,
+          "expected": null
+        },
+        {
+          "label": "main store remains empty",
+          "actual": [],
+          "expected": []
+        },
+        {
+          "label": "ref state RPC error",
+          "actual": null,
+          "expected": null
+        },
+        {
+          "label": "unsupported alg candidate retention",
+          "actual": true,
+          "expected": true
+        },
+        {
+          "label": "ref decode RPC error",
+          "actual": null,
+          "expected": null
+        },
+        {
+          "label": "unsupported alg decoder classification ref",
+          "actual": "UNVERIFIABLE-alg",
+          "expected": "UNVERIFIABLE-alg"
+        },
+        {
+          "label": "unsupported alg status",
+          "actual": 200,
+          "expected": 200
+        },
+        {
+          "label": "unsupported alg classification nb",
+          "actual": "UNVERIFIABLE-alg",
+          "expected": "UNVERIFIABLE-alg"
+        },
+        {
+          "label": "unsupported alg admission nb",
+          "actual": true,
+          "expected": true
+        },
+        {
+          "label": "nb state RPC error",
+          "actual": null,
+          "expected": null
+        },
+        {
+          "label": "main store remains empty",
+          "actual": [],
+          "expected": []
+        },
+        {
+          "label": "nb state RPC error",
+          "actual": null,
+          "expected": null
+        },
+        {
+          "label": "unsupported alg candidate retention",
+          "actual": true,
+          "expected": true
+        },
+        {
+          "label": "nb decode RPC error",
+          "actual": null,
+          "expected": null
+        },
+        {
+          "label": "unsupported alg decoder classification nb",
+          "actual": "UNVERIFIABLE-alg",
+          "expected": "UNVERIFIABLE-alg"
+        },
+        {
+          "label": "unsupported alg classification parity",
+          "actual": "UNVERIFIABLE-alg",
+          "expected": "UNVERIFIABLE-alg"
+        },
+        {
+          "label": "future wrapper status",
+          "actual": 200,
+          "expected": 200
+        },
+        {
+          "label": "future wrapper classification ref",
+          "actual": "OPAQUE-version",
+          "expected": "OPAQUE-version"
+        },
+        {
+          "label": "future wrapper admission ref",
+          "actual": true,
+          "expected": true
+        },
+        {
+          "label": "ref state RPC error",
+          "actual": null,
+          "expected": null
+        },
+        {
+          "label": "main store remains empty",
+          "actual": [],
+          "expected": []
+        },
+        {
+          "label": "ref state RPC error",
+          "actual": null,
+          "expected": null
+        },
+        {
+          "label": "future wrapper candidate retention",
+          "actual": true,
+          "expected": true
+        },
+        {
+          "label": "future wrapper status",
+          "actual": 200,
+          "expected": 200
+        },
+        {
+          "label": "future wrapper classification nb",
+          "actual": "OPAQUE-version",
+          "expected": "OPAQUE-version"
+        },
+        {
+          "label": "future wrapper admission nb",
+          "actual": true,
+          "expected": true
+        },
+        {
+          "label": "nb state RPC error",
+          "actual": null,
+          "expected": null
+        },
+        {
+          "label": "main store remains empty",
+          "actual": [],
+          "expected": []
+        },
+        {
+          "label": "nb state RPC error",
+          "actual": null,
+          "expected": null
+        },
+        {
+          "label": "future wrapper candidate retention",
+          "actual": true,
+          "expected": true
+        },
+        {
+          "label": "future wrapper classification parity",
+          "actual": "OPAQUE-version",
+          "expected": "OPAQUE-version"
+        },
+        {
+          "label": "later valid HTTP",
+          "actual": 200,
+          "expected": 200
+        },
+        {
+          "label": "later valid admission",
+          "actual": true,
+          "expected": true
+        },
+        {
+          "label": "ref state RPC error",
+          "actual": null,
+          "expected": null
+        },
+        {
+          "label": "later valid store",
+          "actual": [
+            "punkti/0.6:fc23a2470534663943f5dc50e909a4e793accc3cf80586d16505a3733af95012"
+          ],
+          "expected": [
+            "punkti/0.6:fc23a2470534663943f5dc50e909a4e793accc3cf80586d16505a3733af95012"
+          ]
+        },
+        {
+          "label": "later valid HTTP",
+          "actual": 200,
+          "expected": 200
+        },
+        {
+          "label": "later valid admission",
+          "actual": true,
+          "expected": true
+        },
+        {
+          "label": "nb state RPC error",
+          "actual": null,
+          "expected": null
+        },
+        {
+          "label": "later valid store",
+          "actual": [
+            "punkti/0.6:fc23a2470534663943f5dc50e909a4e793accc3cf80586d16505a3733af95012"
+          ],
+          "expected": [
+            "punkti/0.6:fc23a2470534663943f5dc50e909a4e793accc3cf80586d16505a3733af95012"
+          ]
+        },
+        {
+          "label": "ref isolated sys.path",
+          "actual": [],
+          "expected": []
+        },
+        {
+          "label": "adapter survives invalid command",
+          "actual": false,
+          "expected": false
+        },
+        {
+          "label": "adapter remains responsive",
+          "actual": true,
+          "expected": true
+        },
+        {
+          "label": "nb isolated sys.path",
+          "actual": [],
+          "expected": []
+        },
+        {
+          "label": "no reference modules loaded",
+          "actual": [],
+          "expected": []
+        },
+        {
+          "label": "adapter survives invalid command",
+          "actual": false,
+          "expected": false
+        },
+        {
+          "label": "adapter remains responsive",
+          "actual": true,
+          "expected": true
+        },
+        {
+          "label": "ref state RPC error",
+          "actual": null,
+          "expected": null
+        },
+        {
+          "label": "nb state RPC error",
+          "actual": null,
+          "expected": null
+        },
+        {
+          "label": "duplicate JSON keys raw HTTP responses",
+          "actual": [
+            [
+              200,
+              {
+                "results": [
+                  {
+                    "admitted": true,
+                    "state": "VALID"
+                  }
+                ]
+              }
+            ],
+            [
+              400,
+              {
+                "kind": "request",
+                "reason": "json"
+              }
+            ]
+          ],
+          "expected": "HTTP 400; empty main stores"
+        },
+        {
+          "label": "duplicate JSON keys stores (ref, nb)",
+          "actual": [
+            [
+              "punkti/0.6:fc23a2470534663943f5dc50e909a4e793accc3cf80586d16505a3733af95012"
+            ],
+            []
+          ],
+          "expected": [
+            [],
+            []
+          ]
+        },
+        {
+          "label": "duplicate JSON keys HTTP rejection ref",
+          "actual": 200,
+          "expected": 400
+        },
+        {
+          "label": "duplicate JSON keys main store ref",
+          "actual": [
+            "punkti/0.6:fc23a2470534663943f5dc50e909a4e793accc3cf80586d16505a3733af95012"
+          ],
+          "expected": []
+        },
+        {
+          "label": "duplicate JSON keys HTTP rejection nb",
+          "actual": 400,
+          "expected": 400
+        },
+        {
+          "label": "duplicate JSON keys main store nb",
+          "actual": [],
+          "expected": []
+        },
+        {
+          "label": "ref isolated sys.path",
+          "actual": [],
+          "expected": []
+        },
+        {
+          "label": "adapter survives invalid command",
+          "actual": false,
+          "expected": false
+        },
+        {
+          "label": "adapter remains responsive",
+          "actual": true,
+          "expected": true
+        },
+        {
+          "label": "nb isolated sys.path",
+          "actual": [],
+          "expected": []
+        },
+        {
+          "label": "no reference modules loaded",
+          "actual": [],
+          "expected": []
+        },
+        {
+          "label": "adapter survives invalid command",
+          "actual": false,
+          "expected": false
+        },
+        {
+          "label": "adapter remains responsive",
+          "actual": true,
+          "expected": true
+        },
+        {
+          "label": "ref state RPC error",
+          "actual": null,
+          "expected": null
+        },
+        {
+          "label": "nb state RPC error",
+          "actual": null,
+          "expected": null
+        },
+        {
+          "label": "noncanonical base64 raw HTTP responses",
+          "actual": [
+            [
+              400,
+              {
+                "error": "Only base64 data is allowed"
+              }
+            ],
+            [
+              400,
+              {
+                "kind": "request",
+                "reason": "base64"
+              }
+            ]
+          ],
+          "expected": "HTTP 400; empty main stores"
+        },
+        {
+          "label": "noncanonical base64 stores (ref, nb)",
+          "actual": [
+            [],
+            []
+          ],
+          "expected": [
+            [],
+            []
+          ]
+        },
+        {
+          "label": "noncanonical base64 HTTP rejection ref",
+          "actual": 400,
+          "expected": 400
+        },
+        {
+          "label": "noncanonical base64 main store ref",
+          "actual": [],
+          "expected": []
+        },
+        {
+          "label": "noncanonical base64 HTTP rejection nb",
+          "actual": 400,
+          "expected": 400
+        },
+        {
+          "label": "noncanonical base64 main store nb",
+          "actual": [],
+          "expected": []
+        }
+      ],
+      "failures": [
+        "duplicate JSON keys HTTP rejection ref: actual=200; expected=400",
+        "duplicate JSON keys main store ref: actual=['punkti/0.6:fc23a2470534663943f5dc50e909a4e793accc3cf80586d16505a3733af95012']; expected=[]",
+        "Traceback (most recent call last):\n  File \"/home/hermes/.hermes/kanban/workspaces/t_0307c488/repo/experimental/nairobidot-l3/interop/test_interop.py\", line 354, in test_rejection_consistency\n    self.eq(name + ' HTTP rejection ' + a.kind, status, 400)\n    ~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/hermes/.hermes/kanban/workspaces/t_0307c488/repo/experimental/nairobidot-l3/interop/test_interop.py\", line 104, in eq\n    self.assertEqual(actual, expected, label)\n    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError: 200 != 400 : duplicate JSON keys HTTP rejection ref\n",
+        "Traceback (most recent call last):\n  File \"/home/hermes/.hermes/kanban/workspaces/t_0307c488/repo/experimental/nairobidot-l3/interop/test_interop.py\", line 356, in test_rejection_consistency\n    self.eq(name + ' main store ' + a.kind, addresses, [])\n    ~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/hermes/.hermes/kanban/workspaces/t_0307c488/repo/experimental/nairobidot-l3/interop/test_interop.py\", line 104, in eq\n    self.assertEqual(actual, expected, label)\n    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError: Lists differ: ['punkti/0.6:fc23a2470534663943f5dc50e909a4e793accc3cf80586d16505a3733af95012'] != []\n\nFirst list contains 1 additional elements.\nFirst extra element 0:\n'punkti/0.6:fc23a2470534663943f5dc50e909a4e793accc3cf80586d16505a3733af95012'\n\n- ['punkti/0.6:fc23a2470534663943f5dc50e909a4e793accc3cf80586d16505a3733af95012']\n+ [] : duplicate JSON keys main store ref\n"
+      ]
+    },
+    "spatial_range_selection": {
+      "status": "PASS",
+      "summary": "Literal half-open h bounds filter push admission and peer PULL.",
+      "comparisons": [
+        {
+          "label": "nb isolated sys.path",
+          "actual": [],
+          "expected": []
+        },
+        {
+          "label": "no reference modules loaded",
+          "actual": [],
+          "expected": []
+        },
+        {
+          "label": "adapter survives invalid command",
+          "actual": false,
+          "expected": false
+        },
+        {
+          "label": "adapter remains responsive",
+          "actual": true,
+          "expected": true
+        },
+        {
+          "label": "ref isolated sys.path",
+          "actual": [],
+          "expected": []
+        },
+        {
+          "label": "adapter survives invalid command",
+          "actual": false,
+          "expected": false
+        },
+        {
+          "label": "adapter remains responsive",
+          "actual": true,
+          "expected": true
+        },
+        {
+          "label": "nb add RPC error",
+          "actual": null,
+          "expected": null
+        },
+        {
+          "label": "local seed admission",
+          "actual": true,
+          "expected": true
+        },
+        {
+          "label": "spatial push HTTP",
+          "actual": 200,
+          "expected": 200
+        },
+        {
+          "label": "spatial admission ",
+          "actual": false,
+          "expected": false
+        },
+        {
+          "label": "spatial rejection reason",
+          "actual": "out-of-scope",
+          "expected": "out-of-scope"
+        },
+        {
+          "label": "nb add RPC error",
+          "actual": null,
+          "expected": null
+        },
+        {
+          "label": "local seed admission",
+          "actual": true,
+          "expected": true
+        },
+        {
+          "label": "spatial push HTTP",
+          "actual": 200,
+          "expected": 200
+        },
+        {
+          "label": "spatial admission ggggzzzzzzzz",
+          "actual": false,
+          "expected": false
+        },
+        {
+          "label": "spatial rejection reason",
+          "actual": "out-of-scope",
+          "expected": "out-of-scope"
+        },
+        {
+          "label": "nb add RPC error",
+          "actual": null,
+          "expected": null
+        },
+        {
+          "label": "local seed admission",
+          "actual": true,
+          "expected": true
+        },
+        {
+          "label": "spatial push HTTP",
+          "actual": 200,
+          "expected": 200
+        },
+        {
+          "label": "spatial admission gggh00000000",
+          "actual": true,
+          "expected": true
+        },
+        {
+          "label": "nb add RPC error",
+          "actual": null,
+          "expected": null
+        },
+        {
+          "label": "local seed admission",
+          "actual": true,
+          "expected": true
+        },
+        {
+          "label": "spatial push HTTP",
+          "actual": 200,
+          "expected": 200
+        },
+        {
+          "label": "spatial admission ggghzzzzzzzz",
+          "actual": true,
+          "expected": true
+        },
+        {
+          "label": "nb add RPC error",
+          "actual": null,
+          "expected": null
+        },
+        {
+          "label": "local seed admission",
+          "actual": true,
+          "expected": true
+        },
+        {
+          "label": "spatial push HTTP",
+          "actual": 200,
+          "expected": 200
+        },
+        {
+          "label": "spatial admission gggj00000000",
+          "actual": false,
+          "expected": false
+        },
+        {
+          "label": "spatial rejection reason",
+          "actual": "out-of-scope",
+          "expected": "out-of-scope"
+        },
+        {
+          "label": "ref pull RPC error",
+          "actual": null,
+          "expected": null
+        },
+        {
+          "label": "ref state RPC error",
+          "actual": null,
+          "expected": null
+        },
+        {
+          "label": "subscribed store",
+          "actual": [
+            "punkti/0.6:60cc34cf3006c0b4978bab799f6aa1a16575cbd4aa764f50ed5dca38519ea1a6",
+            "punkti/0.6:ccf13b29ea81e7a8dbfd53d7105db4a70bcd77aec804981cbdca8f7ddc8315a8"
+          ],
+          "expected": [
+            "punkti/0.6:60cc34cf3006c0b4978bab799f6aa1a16575cbd4aa764f50ed5dca38519ea1a6",
+            "punkti/0.6:ccf13b29ea81e7a8dbfd53d7105db4a70bcd77aec804981cbdca8f7ddc8315a8"
+          ]
+        },
+        {
+          "label": "pull HTTP status",
+          "actual": 200,
+          "expected": 200
+        },
+        {
+          "label": "source scoped PULL",
+          "actual": [
+            "punkti/0.6:60cc34cf3006c0b4978bab799f6aa1a16575cbd4aa764f50ed5dca38519ea1a6",
+            "punkti/0.6:ccf13b29ea81e7a8dbfd53d7105db4a70bcd77aec804981cbdca8f7ddc8315a8"
+          ],
+          "expected": [
+            "punkti/0.6:60cc34cf3006c0b4978bab799f6aa1a16575cbd4aa764f50ed5dca38519ea1a6",
+            "punkti/0.6:ccf13b29ea81e7a8dbfd53d7105db4a70bcd77aec804981cbdca8f7ddc8315a8"
+          ]
+        },
+        {
+          "label": "pull HTTP status",
+          "actual": 200,
+          "expected": 200
+        },
+        {
+          "label": "target PULL",
+          "actual": [
+            "punkti/0.6:60cc34cf3006c0b4978bab799f6aa1a16575cbd4aa764f50ed5dca38519ea1a6",
+            "punkti/0.6:ccf13b29ea81e7a8dbfd53d7105db4a70bcd77aec804981cbdca8f7ddc8315a8"
+          ],
+          "expected": [
+            "punkti/0.6:60cc34cf3006c0b4978bab799f6aa1a16575cbd4aa764f50ed5dca38519ea1a6",
+            "punkti/0.6:ccf13b29ea81e7a8dbfd53d7105db4a70bcd77aec804981cbdca8f7ddc8315a8"
+          ]
+        },
+        {
+          "label": "ref isolated sys.path",
+          "actual": [],
+          "expected": []
+        },
+        {
+          "label": "adapter survives invalid command",
+          "actual": false,
+          "expected": false
+        },
+        {
+          "label": "adapter remains responsive",
+          "actual": true,
+          "expected": true
+        },
+        {
+          "label": "nb isolated sys.path",
+          "actual": [],
+          "expected": []
+        },
+        {
+          "label": "no reference modules loaded",
+          "actual": [],
+          "expected": []
+        },
+        {
+          "label": "adapter survives invalid command",
+          "actual": false,
+          "expected": false
+        },
+        {
+          "label": "adapter remains responsive",
+          "actual": true,
+          "expected": true
+        },
+        {
+          "label": "ref add RPC error",
+          "actual": null,
+          "expected": null
+        },
+        {
+          "label": "local seed admission",
+          "actual": true,
+          "expected": true
+        },
+        {
+          "label": "spatial push HTTP",
+          "actual": 200,
+          "expected": 200
+        },
+        {
+          "label": "spatial admission ",
+          "actual": false,
+          "expected": false
+        },
+        {
+          "label": "spatial rejection reason",
+          "actual": "out-of-scope",
+          "expected": "out-of-scope"
+        },
+        {
+          "label": "ref add RPC error",
+          "actual": null,
+          "expected": null
+        },
+        {
+          "label": "local seed admission",
+          "actual": true,
+          "expected": true
+        },
+        {
+          "label": "spatial push HTTP",
+          "actual": 200,
+          "expected": 200
+        },
+        {
+          "label": "spatial admission ggggzzzzzzzz",
+          "actual": false,
+          "expected": false
+        },
+        {
+          "label": "spatial rejection reason",
+          "actual": "out-of-scope",
+          "expected": "out-of-scope"
+        },
+        {
+          "label": "ref add RPC error",
+          "actual": null,
+          "expected": null
+        },
+        {
+          "label": "local seed admission",
+          "actual": true,
+          "expected": true
+        },
+        {
+          "label": "spatial push HTTP",
+          "actual": 200,
+          "expected": 200
+        },
+        {
+          "label": "spatial admission gggh00000000",
+          "actual": true,
+          "expected": true
+        },
+        {
+          "label": "ref add RPC error",
+          "actual": null,
+          "expected": null
+        },
+        {
+          "label": "local seed admission",
+          "actual": true,
+          "expected": true
+        },
+        {
+          "label": "spatial push HTTP",
+          "actual": 200,
+          "expected": 200
+        },
+        {
+          "label": "spatial admission ggghzzzzzzzz",
+          "actual": true,
+          "expected": true
+        },
+        {
+          "label": "ref add RPC error",
+          "actual": null,
+          "expected": null
+        },
+        {
+          "label": "local seed admission",
+          "actual": true,
+          "expected": true
+        },
+        {
+          "label": "spatial push HTTP",
+          "actual": 200,
+          "expected": 200
+        },
+        {
+          "label": "spatial admission gggj00000000",
+          "actual": false,
+          "expected": false
+        },
+        {
+          "label": "spatial rejection reason",
+          "actual": "out-of-scope",
+          "expected": "out-of-scope"
+        },
+        {
+          "label": "nb pull RPC error",
+          "actual": null,
+          "expected": null
+        },
+        {
+          "label": "nb state RPC error",
+          "actual": null,
+          "expected": null
+        },
+        {
+          "label": "subscribed store",
+          "actual": [
+            "punkti/0.6:60cc34cf3006c0b4978bab799f6aa1a16575cbd4aa764f50ed5dca38519ea1a6",
+            "punkti/0.6:ccf13b29ea81e7a8dbfd53d7105db4a70bcd77aec804981cbdca8f7ddc8315a8"
+          ],
+          "expected": [
+            "punkti/0.6:60cc34cf3006c0b4978bab799f6aa1a16575cbd4aa764f50ed5dca38519ea1a6",
+            "punkti/0.6:ccf13b29ea81e7a8dbfd53d7105db4a70bcd77aec804981cbdca8f7ddc8315a8"
+          ]
+        },
+        {
+          "label": "pull HTTP status",
+          "actual": 200,
+          "expected": 200
+        },
+        {
+          "label": "source scoped PULL",
+          "actual": [
+            "punkti/0.6:60cc34cf3006c0b4978bab799f6aa1a16575cbd4aa764f50ed5dca38519ea1a6",
+            "punkti/0.6:ccf13b29ea81e7a8dbfd53d7105db4a70bcd77aec804981cbdca8f7ddc8315a8"
+          ],
+          "expected": [
+            "punkti/0.6:60cc34cf3006c0b4978bab799f6aa1a16575cbd4aa764f50ed5dca38519ea1a6",
+            "punkti/0.6:ccf13b29ea81e7a8dbfd53d7105db4a70bcd77aec804981cbdca8f7ddc8315a8"
+          ]
+        },
+        {
+          "label": "pull HTTP status",
+          "actual": 200,
+          "expected": 200
+        },
+        {
+          "label": "target PULL",
+          "actual": [
+            "punkti/0.6:60cc34cf3006c0b4978bab799f6aa1a16575cbd4aa764f50ed5dca38519ea1a6",
+            "punkti/0.6:ccf13b29ea81e7a8dbfd53d7105db4a70bcd77aec804981cbdca8f7ddc8315a8"
+          ],
+          "expected": [
+            "punkti/0.6:60cc34cf3006c0b4978bab799f6aa1a16575cbd4aa764f50ed5dca38519ea1a6",
+            "punkti/0.6:ccf13b29ea81e7a8dbfd53d7105db4a70bcd77aec804981cbdca8f7ddc8315a8"
+          ]
+        }
+      ],
+      "failures": []
+    },
+    "unknown_l4_byte_preservation": {
+      "status": "PASS",
+      "summary": "Unicode, JSON-looking text, unknown refs/ext/alg survive exact transfer.",
+      "comparisons": [
+        {
+          "label": "ref isolated sys.path",
+          "actual": [],
+          "expected": []
+        },
+        {
+          "label": "adapter survives invalid command",
+          "actual": false,
+          "expected": false
+        },
+        {
+          "label": "adapter remains responsive",
+          "actual": true,
+          "expected": true
+        },
+        {
+          "label": "nb isolated sys.path",
+          "actual": [],
+          "expected": []
+        },
+        {
+          "label": "no reference modules loaded",
+          "actual": [],
+          "expected": []
+        },
+        {
+          "label": "adapter survives invalid command",
+          "actual": false,
+          "expected": false
+        },
+        {
+          "label": "adapter remains responsive",
+          "actual": true,
+          "expected": true
+        },
+        {
+          "label": "ref add RPC error",
+          "actual": null,
+          "expected": null
+        },
+        {
+          "label": "local seed admission",
+          "actual": true,
+          "expected": true
+        },
+        {
+          "label": "push status",
+          "actual": 200,
+          "expected": 200
+        },
+        {
+          "label": "receiver classification",
+          "actual": "VALID",
+          "expected": "VALID"
+        },
+        {
+          "label": "receiver admission",
+          "actual": true,
+          "expected": true
+        },
+        {
+          "label": "nb state RPC error",
+          "actual": null,
+          "expected": null
+        },
+        {
+          "label": "stored digest",
+          "actual": "c00cce76e48dd5fade3ab410b4c801183cfef34818bfdab82a77bbd3072e6558",
+          "expected": "c00cce76e48dd5fade3ab410b4c801183cfef34818bfdab82a77bbd3072e6558"
+        },
+        {
+          "label": "pull HTTP status",
+          "actual": 200,
+          "expected": 200
+        },
+        {
+          "label": "exact R round trip",
+          "actual": {
+            "address": "punkti/0.6:c1bd709444b1092cb216d77ccf61c3262249a96cb0312e0de0d674c6a94a7ee0",
+            "record": "AAABXgAAAApwdW5rdGkvMC42AAAADTE3MDAwMDAwMDAwNDAAAAAMZ2dnaDAwMDAwMDAwAAAAD/CfjI0A5ryi5a2XIGXMgQAAAAdlZDI1NTE5AAAAIDr7rzrUY+Fkcg18lBXrQQUvdFue4oSJNG/lwxlFhV2yAAAAAwAAAA51bmtub3duL2E6MDBmZgAAABN1bnJlY29nbml6ZWQv5YWz57O7AAAAC2Z1dHVyZTphYmNkAAAAAAAAAA51bmtub3duL2E6MDBmZgAAABN1bnJlY29nbml6ZWQv5YWz57O7AAAAgBy53rNE6PPnU1yaCarTrTHHLtQj/W0RbUnb2qVC2gAmW984ursotyUZpptzpq93/2KiMOLlDAocGOlWAB2ZrAwi2gxHt3fjRgKSo+/I68B/1Sxd0ta2JW22x0+lrQsQBXcOIGX9G+xjOCPeBzP5EJOi3PLOc8R5T1xlmRjJi/8MAAAAQB+9vJ02IwDlv4enQb7dMRX7w+5Grk64BWVQVpcQiPtWbSx8ln6zAkgGM2qZxe09GhKDuRxI0if/5oZb6JHjWAw=",
+            "sha256": "c00cce76e48dd5fade3ab410b4c801183cfef34818bfdab82a77bbd3072e6558"
+          },
+          "expected": {
+            "address": "punkti/0.6:c1bd709444b1092cb216d77ccf61c3262249a96cb0312e0de0d674c6a94a7ee0",
+            "sha256": "c00cce76e48dd5fade3ab410b4c801183cfef34818bfdab82a77bbd3072e6558",
+            "record": "AAABXgAAAApwdW5rdGkvMC42AAAADTE3MDAwMDAwMDAwNDAAAAAMZ2dnaDAwMDAwMDAwAAAAD/CfjI0A5ryi5a2XIGXMgQAAAAdlZDI1NTE5AAAAIDr7rzrUY+Fkcg18lBXrQQUvdFue4oSJNG/lwxlFhV2yAAAAAwAAAA51bmtub3duL2E6MDBmZgAAABN1bnJlY29nbml6ZWQv5YWz57O7AAAAC2Z1dHVyZTphYmNkAAAAAAAAAA51bmtub3duL2E6MDBmZgAAABN1bnJlY29nbml6ZWQv5YWz57O7AAAAgBy53rNE6PPnU1yaCarTrTHHLtQj/W0RbUnb2qVC2gAmW984ursotyUZpptzpq93/2KiMOLlDAocGOlWAB2ZrAwi2gxHt3fjRgKSo+/I68B/1Sxd0ta2JW22x0+lrQsQBXcOIGX9G+xjOCPeBzP5EJOi3PLOc8R5T1xlmRjJi/8MAAAAQB+9vJ02IwDlv4enQb7dMRX7w+5Grk64BWVQVpcQiPtWbSx8ln6zAkgGM2qZxe09GhKDuRxI0if/5oZb6JHjWAw="
+          }
+        },
+        {
+          "label": "nb decode RPC error",
+          "actual": null,
+          "expected": null
+        },
+        {
+          "label": "opaque x",
+          "actual": "\ud83c\udf0d\u0000\u6f22\u5b57 e\u0301",
+          "expected": "\ud83c\udf0d\u0000\u6f22\u5b57 e\u0301"
+        },
+        {
+          "label": "opaque ext",
+          "actual": "HLnes0To8+dTXJoJqtOtMccu1CP9bRFtSdvapULaACZb3zi6uyi3JRmmm3Omr3f/YqIw4uUMChwY6VYAHZmsDCLaDEe3d+NGApKj78jrwH/VLF3S1rYlbbbHT6WtCxAFdw4gZf0b7GM4I94HM/kQk6Lc8s5zxHlPXGWZGMmL/ww=",
+          "expected": "HLnes0To8+dTXJoJqtOtMccu1CP9bRFtSdvapULaACZb3zi6uyi3JRmmm3Omr3f/YqIw4uUMChwY6VYAHZmsDCLaDEe3d+NGApKj78jrwH/VLF3S1rYlbbbHT6WtCxAFdw4gZf0b7GM4I94HM/kQk6Lc8s5zxHlPXGWZGMmL/ww="
+        },
+        {
+          "label": "opaque refs",
+          "actual": [
+            {
+              "target": "unknown/a:00ff",
+              "rel": "unrecognized/\u5173\u7cfb"
+            },
+            {
+              "target": "future:abcd",
+              "rel": ""
+            },
+            {
+              "target": "unknown/a:00ff",
+              "rel": "unrecognized/\u5173\u7cfb"
+            }
+          ],
+          "expected": [
+            {
+              "target": "unknown/a:00ff",
+              "rel": "unrecognized/\u5173\u7cfb"
+            },
+            {
+              "target": "future:abcd",
+              "rel": ""
+            },
+            {
+              "target": "unknown/a:00ff",
+              "rel": "unrecognized/\u5173\u7cfb"
+            }
+          ]
+        },
+        {
+          "label": "ref add RPC error",
+          "actual": null,
+          "expected": null
+        },
+        {
+          "label": "local seed admission",
+          "actual": true,
+          "expected": true
+        },
+        {
+          "label": "push status",
+          "actual": 200,
+          "expected": 200
+        },
+        {
+          "label": "receiver classification",
+          "actual": "VALID",
+          "expected": "VALID"
+        },
+        {
+          "label": "receiver admission",
+          "actual": true,
+          "expected": true
+        },
+        {
+          "label": "nb state RPC error",
+          "actual": null,
+          "expected": null
+        },
+        {
+          "label": "stored digest",
+          "actual": "1f0e5fd0d19088ff7258de429662fe5718803275304382e3db7b57be1dce62c5",
+          "expected": "1f0e5fd0d19088ff7258de429662fe5718803275304382e3db7b57be1dce62c5"
+        },
+        {
+          "label": "pull HTTP status",
+          "actual": 200,
+          "expected": 200
+        },
+        {
+          "label": "exact R round trip",
+          "actual": {
+            "address": "punkti/0.6:6f51a3201582d3bb480578c8a9b7bd9d529e4323ee0a55f22e437bfee2e5b77f",
+            "record": "AAABewAAAApwdW5rdGkvMC42AAAADTE3MDAwMDAwMDAwNDEAAAAMZ2dnaDAwMDAwMDAwAAAALHsibG9va3MiOiJqc29uIiwiZHVwbGljYXRlIjoxLCJkdXBsaWNhdGUiOjJ9AAAAB2VkMjU1MTkAAAAgZGNDLHrvLgzJBKwyLSPs/tlJq9E5jODwAXqFdWI3sS4AAAADAAAADnVua25vd24vYTowMGZmAAAAE3VucmVjb2duaXplZC/lhbPns7sAAAALZnV0dXJlOmFiY2QAAAAAAAAADnVua25vd24vYTowMGZmAAAAE3VucmVjb2duaXplZC/lhbPns7sAAACAJBOU0+y+4rSQzHcssR31JukQejQhReqizkMTZS7+dmChaGmVMOQT07XOdiKmsPHxFaI99tgTXX/P893+6X6JZpiVxiqrBoPAi0uFakUGBqRSrNO5bsC+p2ModkbB7YHnIlCX7gks9+1F+tuV8FGfIk5tCprBaweeVRQXe2gU/5IAAABAsemWqsQoGN6Fvn4M2zQUxmtEDoYAnRD0wfVZLI6v1wURriOkmUSqfvzHmrqy1iMjgVg2Gk5RTetz6PYf2QS3Aw==",
+            "sha256": "1f0e5fd0d19088ff7258de429662fe5718803275304382e3db7b57be1dce62c5"
+          },
+          "expected": {
+            "address": "punkti/0.6:6f51a3201582d3bb480578c8a9b7bd9d529e4323ee0a55f22e437bfee2e5b77f",
+            "sha256": "1f0e5fd0d19088ff7258de429662fe5718803275304382e3db7b57be1dce62c5",
+            "record": "AAABewAAAApwdW5rdGkvMC42AAAADTE3MDAwMDAwMDAwNDEAAAAMZ2dnaDAwMDAwMDAwAAAALHsibG9va3MiOiJqc29uIiwiZHVwbGljYXRlIjoxLCJkdXBsaWNhdGUiOjJ9AAAAB2VkMjU1MTkAAAAgZGNDLHrvLgzJBKwyLSPs/tlJq9E5jODwAXqFdWI3sS4AAAADAAAADnVua25vd24vYTowMGZmAAAAE3VucmVjb2duaXplZC/lhbPns7sAAAALZnV0dXJlOmFiY2QAAAAAAAAADnVua25vd24vYTowMGZmAAAAE3VucmVjb2duaXplZC/lhbPns7sAAACAJBOU0+y+4rSQzHcssR31JukQejQhReqizkMTZS7+dmChaGmVMOQT07XOdiKmsPHxFaI99tgTXX/P893+6X6JZpiVxiqrBoPAi0uFakUGBqRSrNO5bsC+p2ModkbB7YHnIlCX7gks9+1F+tuV8FGfIk5tCprBaweeVRQXe2gU/5IAAABAsemWqsQoGN6Fvn4M2zQUxmtEDoYAnRD0wfVZLI6v1wURriOkmUSqfvzHmrqy1iMjgVg2Gk5RTetz6PYf2QS3Aw=="
+          }
+        },
+        {
+          "label": "nb decode RPC error",
+          "actual": null,
+          "expected": null
+        },
+        {
+          "label": "opaque x",
+          "actual": "{\"looks\":\"json\",\"duplicate\":1,\"duplicate\":2}",
+          "expected": "{\"looks\":\"json\",\"duplicate\":1,\"duplicate\":2}"
+        },
+        {
+          "label": "opaque ext",
+          "actual": "JBOU0+y+4rSQzHcssR31JukQejQhReqizkMTZS7+dmChaGmVMOQT07XOdiKmsPHxFaI99tgTXX/P893+6X6JZpiVxiqrBoPAi0uFakUGBqRSrNO5bsC+p2ModkbB7YHnIlCX7gks9+1F+tuV8FGfIk5tCprBaweeVRQXe2gU/5I=",
+          "expected": "JBOU0+y+4rSQzHcssR31JukQejQhReqizkMTZS7+dmChaGmVMOQT07XOdiKmsPHxFaI99tgTXX/P893+6X6JZpiVxiqrBoPAi0uFakUGBqRSrNO5bsC+p2ModkbB7YHnIlCX7gks9+1F+tuV8FGfIk5tCprBaweeVRQXe2gU/5I="
+        },
+        {
+          "label": "opaque refs",
+          "actual": [
+            {
+              "target": "unknown/a:00ff",
+              "rel": "unrecognized/\u5173\u7cfb"
+            },
+            {
+              "target": "future:abcd",
+              "rel": ""
+            },
+            {
+              "target": "unknown/a:00ff",
+              "rel": "unrecognized/\u5173\u7cfb"
+            }
+          ],
+          "expected": [
+            {
+              "target": "unknown/a:00ff",
+              "rel": "unrecognized/\u5173\u7cfb"
+            },
+            {
+              "target": "future:abcd",
+              "rel": ""
+            },
+            {
+              "target": "unknown/a:00ff",
+              "rel": "unrecognized/\u5173\u7cfb"
+            }
+          ]
+        },
+        {
+          "label": "ref add RPC error",
+          "actual": null,
+          "expected": null
+        },
+        {
+          "label": "local seed admission",
+          "actual": true,
+          "expected": true
+        },
+        {
+          "label": "push status",
+          "actual": 200,
+          "expected": 200
+        },
+        {
+          "label": "receiver classification",
+          "actual": "UNVERIFIABLE-alg",
+          "expected": "UNVERIFIABLE-alg"
+        },
+        {
+          "label": "receiver admission",
+          "actual": true,
+          "expected": true
+        },
+        {
+          "label": "nb state RPC error",
+          "actual": null,
+          "expected": null
+        },
+        {
+          "label": "stored digest",
+          "actual": "bfbf90b781bc31aa9022629385ca88ab3916d3982b034ce5bbfaf0772ea842b2",
+          "expected": "bfbf90b781bc31aa9022629385ca88ab3916d3982b034ce5bbfaf0772ea842b2"
+        },
+        {
+          "label": "pull HTTP status",
+          "actual": 200,
+          "expected": 200
+        },
+        {
+          "label": "exact R round trip",
+          "actual": {
+            "address": "punkti/0.6:23990446a282a68b885f9ab485f118867bd946c654590fd206004611a2b3dd6e",
+            "record": "AAABdQAAAApwdW5rdGkvMC42AAAADTE3MDAwMDAwMDAwNDIAAAAMZ2dnaDAwMDAwMDAwAAAACFtvcGFxdWVdAAAACnVua25vd24vbDQAAAAgxDrMQ/lQFNAdlCCiIfRHf5XxMN1MmS1UQdspHnLnRmYAAAAAAAABAAABAgMEBQYHCAkKCwwNDg8QERITFBUWFxgZGhscHR4fICEiIyQlJicoKSorLC0uLzAxMjM0NTY3ODk6Ozw9Pj9AQUJDREVGR0hJSktMTU5PUFFSU1RVVldYWVpbXF1eX2BhYmNkZWZnaGlqa2xtbm9wcXJzdHV2d3h5ent8fX5/gIGCg4SFhoeIiYqLjI2Oj5CRkpOUlZaXmJmam5ydnp+goaKjpKWmp6ipqqusra6vsLGys7S1tre4ubq7vL2+v8DBwsPExcbHyMnKy8zNzs/Q0dLT1NXW19jZ2tvc3d7f4OHi4+Tl5ufo6err7O3u7/Dx8vP09fb3+Pn6+/z9/v8AAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+            "sha256": "bfbf90b781bc31aa9022629385ca88ab3916d3982b034ce5bbfaf0772ea842b2"
+          },
+          "expected": {
+            "address": "punkti/0.6:23990446a282a68b885f9ab485f118867bd946c654590fd206004611a2b3dd6e",
+            "sha256": "bfbf90b781bc31aa9022629385ca88ab3916d3982b034ce5bbfaf0772ea842b2",
+            "record": "AAABdQAAAApwdW5rdGkvMC42AAAADTE3MDAwMDAwMDAwNDIAAAAMZ2dnaDAwMDAwMDAwAAAACFtvcGFxdWVdAAAACnVua25vd24vbDQAAAAgxDrMQ/lQFNAdlCCiIfRHf5XxMN1MmS1UQdspHnLnRmYAAAAAAAABAAABAgMEBQYHCAkKCwwNDg8QERITFBUWFxgZGhscHR4fICEiIyQlJicoKSorLC0uLzAxMjM0NTY3ODk6Ozw9Pj9AQUJDREVGR0hJSktMTU5PUFFSU1RVVldYWVpbXF1eX2BhYmNkZWZnaGlqa2xtbm9wcXJzdHV2d3h5ent8fX5/gIGCg4SFhoeIiYqLjI2Oj5CRkpOUlZaXmJmam5ydnp+goaKjpKWmp6ipqqusra6vsLGys7S1tre4ubq7vL2+v8DBwsPExcbHyMnKy8zNzs/Q0dLT1NXW19jZ2tvc3d7f4OHi4+Tl5ufo6err7O3u7/Dx8vP09fb3+Pn6+/z9/v8AAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=="
+          }
+        },
+        {
+          "label": "nb decode RPC error",
+          "actual": null,
+          "expected": null
+        },
+        {
+          "label": "opaque x",
+          "actual": "[opaque]",
+          "expected": "[opaque]"
+        },
+        {
+          "label": "opaque ext",
+          "actual": "AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8gISIjJCUmJygpKissLS4vMDEyMzQ1Njc4OTo7PD0+P0BBQkNERUZHSElKS0xNTk9QUVJTVFVWV1hZWltcXV5fYGFiY2RlZmdoaWprbG1ub3BxcnN0dXZ3eHl6e3x9fn+AgYKDhIWGh4iJiouMjY6PkJGSk5SVlpeYmZqbnJ2en6ChoqOkpaanqKmqq6ytrq+wsbKztLW2t7i5uru8vb6/wMHCw8TFxsfIycrLzM3Oz9DR0tPU1dbX2Nna29zd3t/g4eLj5OXm5+jp6uvs7e7v8PHy8/T19vf4+fr7/P3+/w==",
+          "expected": "AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8gISIjJCUmJygpKissLS4vMDEyMzQ1Njc4OTo7PD0+P0BBQkNERUZHSElKS0xNTk9QUVJTVFVWV1hZWltcXV5fYGFiY2RlZmdoaWprbG1ub3BxcnN0dXZ3eHl6e3x9fn+AgYKDhIWGh4iJiouMjY6PkJGSk5SVlpeYmZqbnJ2en6ChoqOkpaanqKmqq6ytrq+wsbKztLW2t7i5uru8vb6/wMHCw8TFxsfIycrLzM3Oz9DR0tPU1dbX2Nna29zd3t/g4eLj5OXm5+jp6uvs7e7v8PHy8/T19vf4+fr7/P3+/w=="
+        },
+        {
+          "label": "opaque refs",
+          "actual": [],
+          "expected": []
+        },
+        {
+          "label": "nb add RPC error",
+          "actual": null,
+          "expected": null
+        },
+        {
+          "label": "local seed admission",
+          "actual": true,
+          "expected": true
+        },
+        {
+          "label": "push status",
+          "actual": 200,
+          "expected": 200
+        },
+        {
+          "label": "receiver classification",
+          "actual": "VALID",
+          "expected": "VALID"
+        },
+        {
+          "label": "receiver admission",
+          "actual": true,
+          "expected": true
+        },
+        {
+          "label": "ref state RPC error",
+          "actual": null,
+          "expected": null
+        },
+        {
+          "label": "stored digest",
+          "actual": "db473f2937746f4da07df9a31a98a0793e4b45bfdb242d96f4f52ca44093f737",
+          "expected": "db473f2937746f4da07df9a31a98a0793e4b45bfdb242d96f4f52ca44093f737"
+        },
+        {
+          "label": "pull HTTP status",
+          "actual": 200,
+          "expected": 200
+        },
+        {
+          "label": "exact R round trip",
+          "actual": {
+            "address": "punkti/0.6:56cbb9a1cbda51a60cb0963f9503ed99135f370089a9ae145b1d53d4aa5e0b15",
+            "record": "AAABXgAAAApwdW5rdGkvMC42AAAADTE3MDAwMDAwMDAwNTAAAAAMZ2dnaDAwMDAwMDAwAAAAD/CfjI0A5ryi5a2XIGXMgQAAAAdlZDI1NTE5AAAAIANtO8PX8znIW5vo89vknqNKpK6CqDwezLiNA0UFLCv3AAAAAwAAAA51bmtub3duL2E6MDBmZgAAABN1bnJlY29nbml6ZWQv5YWz57O7AAAAC2Z1dHVyZTphYmNkAAAAAAAAAA51bmtub3duL2E6MDBmZgAAABN1bnJlY29nbml6ZWQv5YWz57O7AAAAgKZ3G6Mikx75qutL4k7MD8N0plzva8BEZZa41Bt8BgnomRYMzwheO2L0/imdFoaoyHMF3riCtYnai+y0dgftgw0f+12F4BimTqHZVmxfYPRj9pw1s6j4JCXY82giDZVzvxdFmGXgLKtV/n/izrrOLz56muSl6KvmMeQR+OboC4e0AAAAQATK6N0KGC0EriihpqGXgvPDyU6aExKLKWQ6AEk8IwRUmMpn4QijEui7hAG7X4YF+SpPXg/yiNicgwKcS4OK6ww=",
+            "sha256": "db473f2937746f4da07df9a31a98a0793e4b45bfdb242d96f4f52ca44093f737"
+          },
+          "expected": {
+            "address": "punkti/0.6:56cbb9a1cbda51a60cb0963f9503ed99135f370089a9ae145b1d53d4aa5e0b15",
+            "sha256": "db473f2937746f4da07df9a31a98a0793e4b45bfdb242d96f4f52ca44093f737",
+            "record": "AAABXgAAAApwdW5rdGkvMC42AAAADTE3MDAwMDAwMDAwNTAAAAAMZ2dnaDAwMDAwMDAwAAAAD/CfjI0A5ryi5a2XIGXMgQAAAAdlZDI1NTE5AAAAIANtO8PX8znIW5vo89vknqNKpK6CqDwezLiNA0UFLCv3AAAAAwAAAA51bmtub3duL2E6MDBmZgAAABN1bnJlY29nbml6ZWQv5YWz57O7AAAAC2Z1dHVyZTphYmNkAAAAAAAAAA51bmtub3duL2E6MDBmZgAAABN1bnJlY29nbml6ZWQv5YWz57O7AAAAgKZ3G6Mikx75qutL4k7MD8N0plzva8BEZZa41Bt8BgnomRYMzwheO2L0/imdFoaoyHMF3riCtYnai+y0dgftgw0f+12F4BimTqHZVmxfYPRj9pw1s6j4JCXY82giDZVzvxdFmGXgLKtV/n/izrrOLz56muSl6KvmMeQR+OboC4e0AAAAQATK6N0KGC0EriihpqGXgvPDyU6aExKLKWQ6AEk8IwRUmMpn4QijEui7hAG7X4YF+SpPXg/yiNicgwKcS4OK6ww="
+          }
+        },
+        {
+          "label": "ref decode RPC error",
+          "actual": null,
+          "expected": null
+        },
+        {
+          "label": "opaque x",
+          "actual": "\ud83c\udf0d\u0000\u6f22\u5b57 e\u0301",
+          "expected": "\ud83c\udf0d\u0000\u6f22\u5b57 e\u0301"
+        },
+        {
+          "label": "opaque ext",
+          "actual": "pncboyKTHvmq60viTswPw3SmXO9rwERllrjUG3wGCeiZFgzPCF47YvT+KZ0WhqjIcwXeuIK1idqL7LR2B+2DDR/7XYXgGKZOodlWbF9g9GP2nDWzqPgkJdjzaCINlXO/F0WYZeAsq1X+f+LOus4vPnqa5KXoq+Yx5BH45ugLh7Q=",
+          "expected": "pncboyKTHvmq60viTswPw3SmXO9rwERllrjUG3wGCeiZFgzPCF47YvT+KZ0WhqjIcwXeuIK1idqL7LR2B+2DDR/7XYXgGKZOodlWbF9g9GP2nDWzqPgkJdjzaCINlXO/F0WYZeAsq1X+f+LOus4vPnqa5KXoq+Yx5BH45ugLh7Q="
+        },
+        {
+          "label": "opaque refs",
+          "actual": [
+            {
+              "target": "unknown/a:00ff",
+              "rel": "unrecognized/\u5173\u7cfb"
+            },
+            {
+              "target": "future:abcd",
+              "rel": ""
+            },
+            {
+              "target": "unknown/a:00ff",
+              "rel": "unrecognized/\u5173\u7cfb"
+            }
+          ],
+          "expected": [
+            {
+              "target": "unknown/a:00ff",
+              "rel": "unrecognized/\u5173\u7cfb"
+            },
+            {
+              "target": "future:abcd",
+              "rel": ""
+            },
+            {
+              "target": "unknown/a:00ff",
+              "rel": "unrecognized/\u5173\u7cfb"
+            }
+          ]
+        },
+        {
+          "label": "nb add RPC error",
+          "actual": null,
+          "expected": null
+        },
+        {
+          "label": "local seed admission",
+          "actual": true,
+          "expected": true
+        },
+        {
+          "label": "push status",
+          "actual": 200,
+          "expected": 200
+        },
+        {
+          "label": "receiver classification",
+          "actual": "VALID",
+          "expected": "VALID"
+        },
+        {
+          "label": "receiver admission",
+          "actual": true,
+          "expected": true
+        },
+        {
+          "label": "ref state RPC error",
+          "actual": null,
+          "expected": null
+        },
+        {
+          "label": "stored digest",
+          "actual": "e3b8f78fd8e2a1697b672117c674995628350884744c8ac9bc8fdb850adb75ed",
+          "expected": "e3b8f78fd8e2a1697b672117c674995628350884744c8ac9bc8fdb850adb75ed"
+        },
+        {
+          "label": "pull HTTP status",
+          "actual": 200,
+          "expected": 200
+        },
+        {
+          "label": "exact R round trip",
+          "actual": {
+            "address": "punkti/0.6:033b9b339c0fff95f1de51fea87bab7d24621824eb827089f7b41b8774bb1950",
+            "record": "AAABewAAAApwdW5rdGkvMC42AAAADTE3MDAwMDAwMDAwNTEAAAAMZ2dnaDAwMDAwMDAwAAAALHsibG9va3MiOiJqc29uIiwiZHVwbGljYXRlIjoxLCJkdXBsaWNhdGUiOjJ9AAAAB2VkMjU1MTkAAAAgQY/oJklJwTLd/kI0Iu545hxmYYGfMsjANPKRVMk/FsYAAAADAAAADnVua25vd24vYTowMGZmAAAAE3VucmVjb2duaXplZC/lhbPns7sAAAALZnV0dXJlOmFiY2QAAAAAAAAADnVua25vd24vYTowMGZmAAAAE3VucmVjb2duaXplZC/lhbPns7sAAACAc7DJCT8Nb2xYWKegEsyrsVdLnAUFc9BMBRNc5yJPPDTmsBYzduwMvN/6USQiRfaTDTcAzWACR9o9dTE4bBUMbGC/oPIB+o2mmPOcBWNdc7kvT9kamxqiuwbKaUBYM+NLG9NnEeEu6cm58MFVDt3wdGpDkkJBwKaiCPI9eB27ktYAAABA46RYQXMFIVobKb6ePJFyVRXnrOHy7/D3cHkDMY+jbIP99EwhEBWUFxUoWZRBJX2JlOU+GuV86dYWhHIPJSLoCA==",
+            "sha256": "e3b8f78fd8e2a1697b672117c674995628350884744c8ac9bc8fdb850adb75ed"
+          },
+          "expected": {
+            "address": "punkti/0.6:033b9b339c0fff95f1de51fea87bab7d24621824eb827089f7b41b8774bb1950",
+            "sha256": "e3b8f78fd8e2a1697b672117c674995628350884744c8ac9bc8fdb850adb75ed",
+            "record": "AAABewAAAApwdW5rdGkvMC42AAAADTE3MDAwMDAwMDAwNTEAAAAMZ2dnaDAwMDAwMDAwAAAALHsibG9va3MiOiJqc29uIiwiZHVwbGljYXRlIjoxLCJkdXBsaWNhdGUiOjJ9AAAAB2VkMjU1MTkAAAAgQY/oJklJwTLd/kI0Iu545hxmYYGfMsjANPKRVMk/FsYAAAADAAAADnVua25vd24vYTowMGZmAAAAE3VucmVjb2duaXplZC/lhbPns7sAAAALZnV0dXJlOmFiY2QAAAAAAAAADnVua25vd24vYTowMGZmAAAAE3VucmVjb2duaXplZC/lhbPns7sAAACAc7DJCT8Nb2xYWKegEsyrsVdLnAUFc9BMBRNc5yJPPDTmsBYzduwMvN/6USQiRfaTDTcAzWACR9o9dTE4bBUMbGC/oPIB+o2mmPOcBWNdc7kvT9kamxqiuwbKaUBYM+NLG9NnEeEu6cm58MFVDt3wdGpDkkJBwKaiCPI9eB27ktYAAABA46RYQXMFIVobKb6ePJFyVRXnrOHy7/D3cHkDMY+jbIP99EwhEBWUFxUoWZRBJX2JlOU+GuV86dYWhHIPJSLoCA=="
+          }
+        },
+        {
+          "label": "ref decode RPC error",
+          "actual": null,
+          "expected": null
+        },
+        {
+          "label": "opaque x",
+          "actual": "{\"looks\":\"json\",\"duplicate\":1,\"duplicate\":2}",
+          "expected": "{\"looks\":\"json\",\"duplicate\":1,\"duplicate\":2}"
+        },
+        {
+          "label": "opaque ext",
+          "actual": "c7DJCT8Nb2xYWKegEsyrsVdLnAUFc9BMBRNc5yJPPDTmsBYzduwMvN/6USQiRfaTDTcAzWACR9o9dTE4bBUMbGC/oPIB+o2mmPOcBWNdc7kvT9kamxqiuwbKaUBYM+NLG9NnEeEu6cm58MFVDt3wdGpDkkJBwKaiCPI9eB27ktY=",
+          "expected": "c7DJCT8Nb2xYWKegEsyrsVdLnAUFc9BMBRNc5yJPPDTmsBYzduwMvN/6USQiRfaTDTcAzWACR9o9dTE4bBUMbGC/oPIB+o2mmPOcBWNdc7kvT9kamxqiuwbKaUBYM+NLG9NnEeEu6cm58MFVDt3wdGpDkkJBwKaiCPI9eB27ktY="
+        },
+        {
+          "label": "opaque refs",
+          "actual": [
+            {
+              "target": "unknown/a:00ff",
+              "rel": "unrecognized/\u5173\u7cfb"
+            },
+            {
+              "target": "future:abcd",
+              "rel": ""
+            },
+            {
+              "target": "unknown/a:00ff",
+              "rel": "unrecognized/\u5173\u7cfb"
+            }
+          ],
+          "expected": [
+            {
+              "target": "unknown/a:00ff",
+              "rel": "unrecognized/\u5173\u7cfb"
+            },
+            {
+              "target": "future:abcd",
+              "rel": ""
+            },
+            {
+              "target": "unknown/a:00ff",
+              "rel": "unrecognized/\u5173\u7cfb"
+            }
+          ]
+        },
+        {
+          "label": "nb add RPC error",
+          "actual": null,
+          "expected": null
+        },
+        {
+          "label": "local seed admission",
+          "actual": true,
+          "expected": true
+        },
+        {
+          "label": "push status",
+          "actual": 200,
+          "expected": 200
+        },
+        {
+          "label": "receiver classification",
+          "actual": "UNVERIFIABLE-alg",
+          "expected": "UNVERIFIABLE-alg"
+        },
+        {
+          "label": "receiver admission",
+          "actual": true,
+          "expected": true
+        },
+        {
+          "label": "ref state RPC error",
+          "actual": null,
+          "expected": null
+        },
+        {
+          "label": "stored digest",
+          "actual": "a3333a25ecda15cd3efd889e72289e6ac92e2c0514a4fa14d25e9fdc828a00c6",
+          "expected": "a3333a25ecda15cd3efd889e72289e6ac92e2c0514a4fa14d25e9fdc828a00c6"
+        },
+        {
+          "label": "pull HTTP status",
+          "actual": 200,
+          "expected": 200
+        },
+        {
+          "label": "exact R round trip",
+          "actual": {
+            "address": "punkti/0.6:f4b86fe8e1137b6e32287523bc6b3cd82a81dbebdb576c062b740a7f9e9979c2",
+            "record": "AAABdQAAAApwdW5rdGkvMC42AAAADTE3MDAwMDAwMDAwNTIAAAAMZ2dnaDAwMDAwMDAwAAAACFtvcGFxdWVdAAAACnVua25vd24vbDQAAAAge2jsxp+ZmDIzHRRvHVDpLhtlHqyoGOi4f57rG0G7bVQAAAAAAAABAAABAgMEBQYHCAkKCwwNDg8QERITFBUWFxgZGhscHR4fICEiIyQlJicoKSorLC0uLzAxMjM0NTY3ODk6Ozw9Pj9AQUJDREVGR0hJSktMTU5PUFFSU1RVVldYWVpbXF1eX2BhYmNkZWZnaGlqa2xtbm9wcXJzdHV2d3h5ent8fX5/gIGCg4SFhoeIiYqLjI2Oj5CRkpOUlZaXmJmam5ydnp+goaKjpKWmp6ipqqusra6vsLGys7S1tre4ubq7vL2+v8DBwsPExcbHyMnKy8zNzs/Q0dLT1NXW19jZ2tvc3d7f4OHi4+Tl5ufo6err7O3u7/Dx8vP09fb3+Pn6+/z9/v8AAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+            "sha256": "a3333a25ecda15cd3efd889e72289e6ac92e2c0514a4fa14d25e9fdc828a00c6"
+          },
+          "expected": {
+            "address": "punkti/0.6:f4b86fe8e1137b6e32287523bc6b3cd82a81dbebdb576c062b740a7f9e9979c2",
+            "sha256": "a3333a25ecda15cd3efd889e72289e6ac92e2c0514a4fa14d25e9fdc828a00c6",
+            "record": "AAABdQAAAApwdW5rdGkvMC42AAAADTE3MDAwMDAwMDAwNTIAAAAMZ2dnaDAwMDAwMDAwAAAACFtvcGFxdWVdAAAACnVua25vd24vbDQAAAAge2jsxp+ZmDIzHRRvHVDpLhtlHqyoGOi4f57rG0G7bVQAAAAAAAABAAABAgMEBQYHCAkKCwwNDg8QERITFBUWFxgZGhscHR4fICEiIyQlJicoKSorLC0uLzAxMjM0NTY3ODk6Ozw9Pj9AQUJDREVGR0hJSktMTU5PUFFSU1RVVldYWVpbXF1eX2BhYmNkZWZnaGlqa2xtbm9wcXJzdHV2d3h5ent8fX5/gIGCg4SFhoeIiYqLjI2Oj5CRkpOUlZaXmJmam5ydnp+goaKjpKWmp6ipqqusra6vsLGys7S1tre4ubq7vL2+v8DBwsPExcbHyMnKy8zNzs/Q0dLT1NXW19jZ2tvc3d7f4OHi4+Tl5ufo6err7O3u7/Dx8vP09fb3+Pn6+/z9/v8AAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=="
+          }
+        },
+        {
+          "label": "ref decode RPC error",
+          "actual": null,
+          "expected": null
+        },
+        {
+          "label": "opaque x",
+          "actual": "[opaque]",
+          "expected": "[opaque]"
+        },
+        {
+          "label": "opaque ext",
+          "actual": "AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8gISIjJCUmJygpKissLS4vMDEyMzQ1Njc4OTo7PD0+P0BBQkNERUZHSElKS0xNTk9QUVJTVFVWV1hZWltcXV5fYGFiY2RlZmdoaWprbG1ub3BxcnN0dXZ3eHl6e3x9fn+AgYKDhIWGh4iJiouMjY6PkJGSk5SVlpeYmZqbnJ2en6ChoqOkpaanqKmqq6ytrq+wsbKztLW2t7i5uru8vb6/wMHCw8TFxsfIycrLzM3Oz9DR0tPU1dbX2Nna29zd3t/g4eLj5OXm5+jp6uvs7e7v8PHy8/T19vf4+fr7/P3+/w==",
+          "expected": "AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8gISIjJCUmJygpKissLS4vMDEyMzQ1Njc4OTo7PD0+P0BBQkNERUZHSElKS0xNTk9QUVJTVFVWV1hZWltcXV5fYGFiY2RlZmdoaWprbG1ub3BxcnN0dXZ3eHl6e3x9fn+AgYKDhIWGh4iJiouMjY6PkJGSk5SVlpeYmZqbnJ2en6ChoqOkpaanqKmqq6ytrq+wsbKztLW2t7i5uru8vb6/wMHCw8TFxsfIycrLzM3Oz9DR0tPU1dbX2Nna29zd3t/g4eLj5OXm5+jp6uvs7e7v8PHy8/T19vf4+fr7/P3+/w=="
+        },
+        {
+          "label": "opaque refs",
+          "actual": [],
+          "expected": []
+        }
+      ],
+      "failures": []
+    },
+    "vector_parity": {
+      "status": "PASS",
+      "summary": "Six deterministic vectors compare all canonical and framed bytes.",
+      "comparisons": [
+        {
+          "label": "ref isolated sys.path",
+          "actual": [],
+          "expected": []
+        },
+        {
+          "label": "adapter survives invalid command",
+          "actual": false,
+          "expected": false
+        },
+        {
+          "label": "adapter remains responsive",
+          "actual": true,
+          "expected": true
+        },
+        {
+          "label": "nb isolated sys.path",
+          "actual": [],
+          "expected": []
+        },
+        {
+          "label": "no reference modules loaded",
+          "actual": [],
+          "expected": []
+        },
+        {
+          "label": "adapter survives invalid command",
+          "actual": false,
+          "expected": false
+        },
+        {
+          "label": "adapter remains responsive",
+          "actual": true,
+          "expected": true
+        },
+        {
+          "label": "ref mint RPC error",
+          "actual": null,
+          "expected": null
+        },
+        {
+          "label": "nb mint RPC error",
+          "actual": null,
+          "expected": null
+        },
+        {
+          "label": "unanchored:C",
+          "actual": "0000000a70756e6b74692f302e360000000d3137303030303030303030303000000000000000086f70617175652d3000000007656432353531390000002064fc93dcc1d5b198cc086e89f0f6c6885f9ca5d38994f4930c2cf3d775e02e240000000000000000",
+          "expected": "0000000a70756e6b74692f302e360000000d3137303030303030303030303000000000000000086f70617175652d3000000007656432353531390000002064fc93dcc1d5b198cc086e89f0f6c6885f9ca5d38994f4930c2cf3d775e02e240000000000000000"
+        },
+        {
+          "label": "unanchored:S",
+          "actual": "50554e4b54492d4c332d5349474e000000000a70756e6b74692f302e360000000d3137303030303030303030303000000000000000086f70617175652d3000000007656432353531390000002064fc93dcc1d5b198cc086e89f0f6c6885f9ca5d38994f4930c2cf3d775e02e240000000000000000",
+          "expected": "50554e4b54492d4c332d5349474e000000000a70756e6b74692f302e360000000d3137303030303030303030303000000000000000086f70617175652d3000000007656432353531390000002064fc93dcc1d5b198cc086e89f0f6c6885f9ca5d38994f4930c2cf3d775e02e240000000000000000"
+        },
+        {
+          "label": "unanchored:MID",
+          "actual": "87bd4380e5580124d46e4a4a43192d8afa3b5a0855ae90e0b564d713e10abfa8",
+          "expected": "87bd4380e5580124d46e4a4a43192d8afa3b5a0855ae90e0b564d713e10abfa8"
+        },
+        {
+          "label": "unanchored:address",
+          "actual": "punkti/0.6:87bd4380e5580124d46e4a4a43192d8afa3b5a0855ae90e0b564d713e10abfa8",
+          "expected": "punkti/0.6:87bd4380e5580124d46e4a4a43192d8afa3b5a0855ae90e0b564d713e10abfa8"
+        },
+        {
+          "label": "unanchored:R",
+          "actual": "AAAAZgAAAApwdW5rdGkvMC42AAAADTE3MDAwMDAwMDAwMDAAAAAAAAAACG9wYXF1ZS0wAAAAB2VkMjU1MTkAAAAgZPyT3MHVsZjMCG6J8PbGiF+cpdOJlPSTDCzz13XgLiQAAAAAAAAAAAAAAEBZru+S774/lYYGQN8ELZT3fSrNvZi0y1gc1vsbCUM5Hrus8WZm9Djqqyxj33VGTB+9QXtoM2MeHZ0nuJg0NvED",
+          "expected": "AAAAZgAAAApwdW5rdGkvMC42AAAADTE3MDAwMDAwMDAwMDAAAAAAAAAACG9wYXF1ZS0wAAAAB2VkMjU1MTkAAAAgZPyT3MHVsZjMCG6J8PbGiF+cpdOJlPSTDCzz13XgLiQAAAAAAAAAAAAAAEBZru+S774/lYYGQN8ELZT3fSrNvZi0y1gc1vsbCUM5Hrus8WZm9Djqqyxj33VGTB+9QXtoM2MeHZ0nuJg0NvED"
+        },
+        {
+          "label": "unanchored:sig",
+          "actual": "Wa7vku++P5WGBkDfBC2U930qzb2YtMtYHNb7GwlDOR67rPFmZvQ46qssY991RkwfvUF7aDNjHh2dJ7iYNDbxAw==",
+          "expected": "Wa7vku++P5WGBkDfBC2U930qzb2YtMtYHNb7GwlDOR67rPFmZvQ46qssY991RkwfvUF7aDNjHh2dJ7iYNDbxAw=="
+        },
+        {
+          "label": "unanchored:state",
+          "actual": "VALID",
+          "expected": "VALID"
+        },
+        {
+          "label": "unanchored:state parity",
+          "actual": "VALID",
+          "expected": "VALID"
+        },
+        {
+          "label": "ref mint RPC error",
+          "actual": null,
+          "expected": null
+        },
+        {
+          "label": "nb mint RPC error",
+          "actual": null,
+          "expected": null
+        },
+        {
+          "label": "XY:C",
+          "actual": "0000000a70756e6b74692f302e360000000d313730303030303030303030310000000c733030303030303030303030000000086f70617175652d310000000765643235353139000000207b5b6b16555400fd9ef4b064e33c6ab3ce5fe81c142a674135f84f2f926984bd0000000000000000",
+          "expected": "0000000a70756e6b74692f302e360000000d313730303030303030303030310000000c733030303030303030303030000000086f70617175652d310000000765643235353139000000207b5b6b16555400fd9ef4b064e33c6ab3ce5fe81c142a674135f84f2f926984bd0000000000000000"
+        },
+        {
+          "label": "XY:S",
+          "actual": "50554e4b54492d4c332d5349474e000000000a70756e6b74692f302e360000000d313730303030303030303030310000000c733030303030303030303030000000086f70617175652d310000000765643235353139000000207b5b6b16555400fd9ef4b064e33c6ab3ce5fe81c142a674135f84f2f926984bd0000000000000000",
+          "expected": "50554e4b54492d4c332d5349474e000000000a70756e6b74692f302e360000000d313730303030303030303030310000000c733030303030303030303030000000086f70617175652d310000000765643235353139000000207b5b6b16555400fd9ef4b064e33c6ab3ce5fe81c142a674135f84f2f926984bd0000000000000000"
+        },
+        {
+          "label": "XY:MID",
+          "actual": "7a1e1d6e9b4b1a0637bcacd771758619555f419c881797e1730d59e01f7f6301",
+          "expected": "7a1e1d6e9b4b1a0637bcacd771758619555f419c881797e1730d59e01f7f6301"
+        },
+        {
+          "label": "XY:address",
+          "actual": "punkti/0.6:7a1e1d6e9b4b1a0637bcacd771758619555f419c881797e1730d59e01f7f6301",
+          "expected": "punkti/0.6:7a1e1d6e9b4b1a0637bcacd771758619555f419c881797e1730d59e01f7f6301"
+        },
+        {
+          "label": "XY:R",
+          "actual": "AAAAcgAAAApwdW5rdGkvMC42AAAADTE3MDAwMDAwMDAwMDEAAAAMczAwMDAwMDAwMDAwAAAACG9wYXF1ZS0xAAAAB2VkMjU1MTkAAAAge1trFlVUAP2e9LBk4zxqs85f6BwUKmdBNfhPL5JphL0AAAAAAAAAAAAAAECueOsOyLXW+Wt1tx2ke4VhAZltcnxyskxnL0hvCjegSFeCA4QkR42rJd4hqzwxUX5MzVY6Y7cM+ymDwO6z9q4I",
+          "expected": "AAAAcgAAAApwdW5rdGkvMC42AAAADTE3MDAwMDAwMDAwMDEAAAAMczAwMDAwMDAwMDAwAAAACG9wYXF1ZS0xAAAAB2VkMjU1MTkAAAAge1trFlVUAP2e9LBk4zxqs85f6BwUKmdBNfhPL5JphL0AAAAAAAAAAAAAAECueOsOyLXW+Wt1tx2ke4VhAZltcnxyskxnL0hvCjegSFeCA4QkR42rJd4hqzwxUX5MzVY6Y7cM+ymDwO6z9q4I"
+        },
+        {
+          "label": "XY:sig",
+          "actual": "rnjrDsi11vlrdbcdpHuFYQGZbXJ8crJMZy9Ibwo3oEhXggOEJEeNqyXeIas8MVF+TM1WOmO3DPspg8Dus/auCA==",
+          "expected": "rnjrDsi11vlrdbcdpHuFYQGZbXJ8crJMZy9Ibwo3oEhXggOEJEeNqyXeIas8MVF+TM1WOmO3DPspg8Dus/auCA=="
+        },
+        {
+          "label": "XY:state",
+          "actual": "VALID",
+          "expected": "VALID"
+        },
+        {
+          "label": "XY:state parity",
+          "actual": "VALID",
+          "expected": "VALID"
+        },
+        {
+          "label": "ref mint RPC error",
+          "actual": null,
+          "expected": null
+        },
+        {
+          "label": "nb mint RPC error",
+          "actual": null,
+          "expected": null
+        },
+        {
+          "label": "XYZ:C",
+          "actual": "0000000a70756e6b74692f302e360000000d313730303030303030303030320000000c733030303030303030303031000000086f70617175652d32000000076564323535313900000020187cdc65b047f9bb4dc436f3d9337c9e6259373601d892e061b97d9d4329f70a0000000000000000",
+          "expected": "0000000a70756e6b74692f302e360000000d313730303030303030303030320000000c733030303030303030303031000000086f70617175652d32000000076564323535313900000020187cdc65b047f9bb4dc436f3d9337c9e6259373601d892e061b97d9d4329f70a0000000000000000"
+        },
+        {
+          "label": "XYZ:S",
+          "actual": "50554e4b54492d4c332d5349474e000000000a70756e6b74692f302e360000000d313730303030303030303030320000000c733030303030303030303031000000086f70617175652d32000000076564323535313900000020187cdc65b047f9bb4dc436f3d9337c9e6259373601d892e061b97d9d4329f70a0000000000000000",
+          "expected": "50554e4b54492d4c332d5349474e000000000a70756e6b74692f302e360000000d313730303030303030303030320000000c733030303030303030303031000000086f70617175652d32000000076564323535313900000020187cdc65b047f9bb4dc436f3d9337c9e6259373601d892e061b97d9d4329f70a0000000000000000"
+        },
+        {
+          "label": "XYZ:MID",
+          "actual": "f7d9dafe4d2bbeaafe7367db1d9b40762760abae0a096ac624a60e9e27579fca",
+          "expected": "f7d9dafe4d2bbeaafe7367db1d9b40762760abae0a096ac624a60e9e27579fca"
+        },
+        {
+          "label": "XYZ:address",
+          "actual": "punkti/0.6:f7d9dafe4d2bbeaafe7367db1d9b40762760abae0a096ac624a60e9e27579fca",
+          "expected": "punkti/0.6:f7d9dafe4d2bbeaafe7367db1d9b40762760abae0a096ac624a60e9e27579fca"
+        },
+        {
+          "label": "XYZ:R",
+          "actual": "AAAAcgAAAApwdW5rdGkvMC42AAAADTE3MDAwMDAwMDAwMDIAAAAMczAwMDAwMDAwMDAxAAAACG9wYXF1ZS0yAAAAB2VkMjU1MTkAAAAgGHzcZbBH+btNxDbz2TN8nmJZNzYB2JLgYbl9nUMp9woAAAAAAAAAAAAAAEDzB82nl1YfTCJ/57I3DzP/oVIj7VqP+oGNIDOva2E1xYtq6w095ESEAqQBqE/xkkQkSLpsSQuQ60FMY0igRPoF",
+          "expected": "AAAAcgAAAApwdW5rdGkvMC42AAAADTE3MDAwMDAwMDAwMDIAAAAMczAwMDAwMDAwMDAxAAAACG9wYXF1ZS0yAAAAB2VkMjU1MTkAAAAgGHzcZbBH+btNxDbz2TN8nmJZNzYB2JLgYbl9nUMp9woAAAAAAAAAAAAAAEDzB82nl1YfTCJ/57I3DzP/oVIj7VqP+oGNIDOva2E1xYtq6w095ESEAqQBqE/xkkQkSLpsSQuQ60FMY0igRPoF"
+        },
+        {
+          "label": "XYZ:sig",
+          "actual": "8wfNp5dWH0wif+eyNw8z/6FSI+1aj/qBjSAzr2thNcWLausNPeREhAKkAahP8ZJEJEi6bEkLkOtBTGNIoET6BQ==",
+          "expected": "8wfNp5dWH0wif+eyNw8z/6FSI+1aj/qBjSAzr2thNcWLausNPeREhAKkAahP8ZJEJEi6bEkLkOtBTGNIoET6BQ=="
+        },
+        {
+          "label": "XYZ:state",
+          "actual": "VALID",
+          "expected": "VALID"
+        },
+        {
+          "label": "XYZ:state parity",
+          "actual": "VALID",
+          "expected": "VALID"
+        },
+        {
+          "label": "ref mint RPC error",
+          "actual": null,
+          "expected": null
+        },
+        {
+          "label": "nb mint RPC error",
+          "actual": null,
+          "expected": null
+        },
+        {
+          "label": "refs-order-duplicates:C",
+          "actual": "0000000a70756e6b74692f302e360000000d313730303030303030303030330000000c676767683030303030303030000000086f70617175652d33000000076564323535313900000020c3e4ae357bc2d4fc59673d375ac0cfce81c72b6debcd0aee60cf223abd6c6ed8000000030000000e756e6b6e6f776e2f613a3030666600000013756e7265636f676e697a65642fe585b3e7b3bb0000000b6675747572653a61626364000000000000000e756e6b6e6f776e2f613a3030666600000013756e7265636f676e697a65642fe585b3e7b3bb00000000",
+          "expected": "0000000a70756e6b74692f302e360000000d313730303030303030303030330000000c676767683030303030303030000000086f70617175652d33000000076564323535313900000020c3e4ae357bc2d4fc59673d375ac0cfce81c72b6debcd0aee60cf223abd6c6ed8000000030000000e756e6b6e6f776e2f613a3030666600000013756e7265636f676e697a65642fe585b3e7b3bb0000000b6675747572653a61626364000000000000000e756e6b6e6f776e2f613a3030666600000013756e7265636f676e697a65642fe585b3e7b3bb00000000"
+        },
+        {
+          "label": "refs-order-duplicates:S",
+          "actual": "50554e4b54492d4c332d5349474e000000000a70756e6b74692f302e360000000d313730303030303030303030330000000c676767683030303030303030000000086f70617175652d33000000076564323535313900000020c3e4ae357bc2d4fc59673d375ac0cfce81c72b6debcd0aee60cf223abd6c6ed8000000030000000e756e6b6e6f776e2f613a3030666600000013756e7265636f676e697a65642fe585b3e7b3bb0000000b6675747572653a61626364000000000000000e756e6b6e6f776e2f613a3030666600000013756e7265636f676e697a65642fe585b3e7b3bb00000000",
+          "expected": "50554e4b54492d4c332d5349474e000000000a70756e6b74692f302e360000000d313730303030303030303030330000000c676767683030303030303030000000086f70617175652d33000000076564323535313900000020c3e4ae357bc2d4fc59673d375ac0cfce81c72b6debcd0aee60cf223abd6c6ed8000000030000000e756e6b6e6f776e2f613a3030666600000013756e7265636f676e697a65642fe585b3e7b3bb0000000b6675747572653a61626364000000000000000e756e6b6e6f776e2f613a3030666600000013756e7265636f676e697a65642fe585b3e7b3bb00000000"
+        },
+        {
+          "label": "refs-order-duplicates:MID",
+          "actual": "37016dd1af177b43a5f5a1991603dc9438bb8f149b729020b50d79e35d04049d",
+          "expected": "37016dd1af177b43a5f5a1991603dc9438bb8f149b729020b50d79e35d04049d"
+        },
+        {
+          "label": "refs-order-duplicates:address",
+          "actual": "punkti/0.6:37016dd1af177b43a5f5a1991603dc9438bb8f149b729020b50d79e35d04049d",
+          "expected": "punkti/0.6:37016dd1af177b43a5f5a1991603dc9438bb8f149b729020b50d79e35d04049d"
+        },
+        {
+          "label": "refs-order-duplicates:R",
+          "actual": "AAAA1wAAAApwdW5rdGkvMC42AAAADTE3MDAwMDAwMDAwMDMAAAAMZ2dnaDAwMDAwMDAwAAAACG9wYXF1ZS0zAAAAB2VkMjU1MTkAAAAgw+SuNXvC1PxZZz03WsDPzoHHK23rzQruYM8iOr1sbtgAAAADAAAADnVua25vd24vYTowMGZmAAAAE3VucmVjb2duaXplZC/lhbPns7sAAAALZnV0dXJlOmFiY2QAAAAAAAAADnVua25vd24vYTowMGZmAAAAE3VucmVjb2duaXplZC/lhbPns7sAAAAAAAAAQF8eyK9JHBrPR6omEr67peqWnvvPOkVtUL7bfDpa7KhOACjUd6v2QaBNIgDC3O5JbQMP9TZegNMTkhK4mNhM0Qg=",
+          "expected": "AAAA1wAAAApwdW5rdGkvMC42AAAADTE3MDAwMDAwMDAwMDMAAAAMZ2dnaDAwMDAwMDAwAAAACG9wYXF1ZS0zAAAAB2VkMjU1MTkAAAAgw+SuNXvC1PxZZz03WsDPzoHHK23rzQruYM8iOr1sbtgAAAADAAAADnVua25vd24vYTowMGZmAAAAE3VucmVjb2duaXplZC/lhbPns7sAAAALZnV0dXJlOmFiY2QAAAAAAAAADnVua25vd24vYTowMGZmAAAAE3VucmVjb2duaXplZC/lhbPns7sAAAAAAAAAQF8eyK9JHBrPR6omEr67peqWnvvPOkVtUL7bfDpa7KhOACjUd6v2QaBNIgDC3O5JbQMP9TZegNMTkhK4mNhM0Qg="
+        },
+        {
+          "label": "refs-order-duplicates:sig",
+          "actual": "Xx7Ir0kcGs9HqiYSvrul6pae+886RW1Qvtt8OlrsqE4AKNR3q/ZBoE0iAMLc7kltAw/1Nl6A0xOSEriY2EzRCA==",
+          "expected": "Xx7Ir0kcGs9HqiYSvrul6pae+886RW1Qvtt8OlrsqE4AKNR3q/ZBoE0iAMLc7kltAw/1Nl6A0xOSEriY2EzRCA=="
+        },
+        {
+          "label": "refs-order-duplicates:state",
+          "actual": "VALID",
+          "expected": "VALID"
+        },
+        {
+          "label": "refs-order-duplicates:state parity",
+          "actual": "VALID",
+          "expected": "VALID"
+        },
+        {
+          "label": "ref mint RPC error",
+          "actual": null,
+          "expected": null
+        },
+        {
+          "label": "nb mint RPC error",
+          "actual": null,
+          "expected": null
+        },
+        {
+          "label": "unicode-ext:C",
+          "actual": "0000000a70756e6b74692f302e360000000d313730303030303030303030340000000c676767683030303030303030000000184e6169726f626920f09f8c8d002065cc8120e6bca2e5ad97000000076564323535313900000020a27b782766cb0bbbf1124817aa337b72886cc79b03b75972e2d1e4bb8e94153f0000000000000100000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f404142434445464748494a4b4c4d4e4f505152535455565758595a5b5c5d5e5f606162636465666768696a6b6c6d6e6f707172737475767778797a7b7c7d7e7f808182838485868788898a8b8c8d8e8f909192939495969798999a9b9c9d9e9fa0a1a2a3a4a5a6a7a8a9aaabacadaeafb0b1b2b3b4b5b6b7b8b9babbbcbdbebfc0c1c2c3c4c5c6c7c8c9cacbcccdcecfd0d1d2d3d4d5d6d7d8d9dadbdcdddedfe0e1e2e3e4e5e6e7e8e9eaebecedeeeff0f1f2f3f4f5f6f7f8f9fafbfcfdfeff",
+          "expected": "0000000a70756e6b74692f302e360000000d313730303030303030303030340000000c676767683030303030303030000000184e6169726f626920f09f8c8d002065cc8120e6bca2e5ad97000000076564323535313900000020a27b782766cb0bbbf1124817aa337b72886cc79b03b75972e2d1e4bb8e94153f0000000000000100000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f404142434445464748494a4b4c4d4e4f505152535455565758595a5b5c5d5e5f606162636465666768696a6b6c6d6e6f707172737475767778797a7b7c7d7e7f808182838485868788898a8b8c8d8e8f909192939495969798999a9b9c9d9e9fa0a1a2a3a4a5a6a7a8a9aaabacadaeafb0b1b2b3b4b5b6b7b8b9babbbcbdbebfc0c1c2c3c4c5c6c7c8c9cacbcccdcecfd0d1d2d3d4d5d6d7d8d9dadbdcdddedfe0e1e2e3e4e5e6e7e8e9eaebecedeeeff0f1f2f3f4f5f6f7f8f9fafbfcfdfeff"
+        },
+        {
+          "label": "unicode-ext:S",
+          "actual": "50554e4b54492d4c332d5349474e000000000a70756e6b74692f302e360000000d313730303030303030303030340000000c676767683030303030303030000000184e6169726f626920f09f8c8d002065cc8120e6bca2e5ad97000000076564323535313900000020a27b782766cb0bbbf1124817aa337b72886cc79b03b75972e2d1e4bb8e94153f0000000000000100000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f404142434445464748494a4b4c4d4e4f505152535455565758595a5b5c5d5e5f606162636465666768696a6b6c6d6e6f707172737475767778797a7b7c7d7e7f808182838485868788898a8b8c8d8e8f909192939495969798999a9b9c9d9e9fa0a1a2a3a4a5a6a7a8a9aaabacadaeafb0b1b2b3b4b5b6b7b8b9babbbcbdbebfc0c1c2c3c4c5c6c7c8c9cacbcccdcecfd0d1d2d3d4d5d6d7d8d9dadbdcdddedfe0e1e2e3e4e5e6e7e8e9eaebecedeeeff0f1f2f3f4f5f6f7f8f9fafbfcfdfeff",
+          "expected": "50554e4b54492d4c332d5349474e000000000a70756e6b74692f302e360000000d313730303030303030303030340000000c676767683030303030303030000000184e6169726f626920f09f8c8d002065cc8120e6bca2e5ad97000000076564323535313900000020a27b782766cb0bbbf1124817aa337b72886cc79b03b75972e2d1e4bb8e94153f0000000000000100000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f404142434445464748494a4b4c4d4e4f505152535455565758595a5b5c5d5e5f606162636465666768696a6b6c6d6e6f707172737475767778797a7b7c7d7e7f808182838485868788898a8b8c8d8e8f909192939495969798999a9b9c9d9e9fa0a1a2a3a4a5a6a7a8a9aaabacadaeafb0b1b2b3b4b5b6b7b8b9babbbcbdbebfc0c1c2c3c4c5c6c7c8c9cacbcccdcecfd0d1d2d3d4d5d6d7d8d9dadbdcdddedfe0e1e2e3e4e5e6e7e8e9eaebecedeeeff0f1f2f3f4f5f6f7f8f9fafbfcfdfeff"
+        },
+        {
+          "label": "unicode-ext:MID",
+          "actual": "8d72c892016d6db3e4017383bddc7a0acb9314e72ca69dab5c62fbc3294293cd",
+          "expected": "8d72c892016d6db3e4017383bddc7a0acb9314e72ca69dab5c62fbc3294293cd"
+        },
+        {
+          "label": "unicode-ext:address",
+          "actual": "punkti/0.6:8d72c892016d6db3e4017383bddc7a0acb9314e72ca69dab5c62fbc3294293cd",
+          "expected": "punkti/0.6:8d72c892016d6db3e4017383bddc7a0acb9314e72ca69dab5c62fbc3294293cd"
+        },
+        {
+          "label": "unicode-ext:R",
+          "actual": "AAABggAAAApwdW5rdGkvMC42AAAADTE3MDAwMDAwMDAwMDQAAAAMZ2dnaDAwMDAwMDAwAAAAGE5haXJvYmkg8J+MjQAgZcyBIOa8ouWtlwAAAAdlZDI1NTE5AAAAIKJ7eCdmywu78RJIF6oze3KIbMebA7dZcuLR5LuOlBU/AAAAAAAAAQAAAQIDBAUGBwgJCgsMDQ4PEBESExQVFhcYGRobHB0eHyAhIiMkJSYnKCkqKywtLi8wMTIzNDU2Nzg5Ojs8PT4/QEFCQ0RFRkdISUpLTE1OT1BRUlNUVVZXWFlaW1xdXl9gYWJjZGVmZ2hpamtsbW5vcHFyc3R1dnd4eXp7fH1+f4CBgoOEhYaHiImKi4yNjo+QkZKTlJWWl5iZmpucnZ6foKGio6SlpqeoqaqrrK2ur7CxsrO0tba3uLm6u7y9vr/AwcLDxMXGx8jJysvMzc7P0NHS09TV1tfY2drb3N3e3+Dh4uPk5ebn6Onq6+zt7u/w8fLz9PX29/j5+vv8/f7/AAAAQOMmM+VH3USyzhXp35Xd6fboQ54SWKkIAGYfXW+Klb51/Zhs7ORVv+EHgR5sftU9/avJMh+TF6dPwqB5J8n9bQo=",
+          "expected": "AAABggAAAApwdW5rdGkvMC42AAAADTE3MDAwMDAwMDAwMDQAAAAMZ2dnaDAwMDAwMDAwAAAAGE5haXJvYmkg8J+MjQAgZcyBIOa8ouWtlwAAAAdlZDI1NTE5AAAAIKJ7eCdmywu78RJIF6oze3KIbMebA7dZcuLR5LuOlBU/AAAAAAAAAQAAAQIDBAUGBwgJCgsMDQ4PEBESExQVFhcYGRobHB0eHyAhIiMkJSYnKCkqKywtLi8wMTIzNDU2Nzg5Ojs8PT4/QEFCQ0RFRkdISUpLTE1OT1BRUlNUVVZXWFlaW1xdXl9gYWJjZGVmZ2hpamtsbW5vcHFyc3R1dnd4eXp7fH1+f4CBgoOEhYaHiImKi4yNjo+QkZKTlJWWl5iZmpucnZ6foKGio6SlpqeoqaqrrK2ur7CxsrO0tba3uLm6u7y9vr/AwcLDxMXGx8jJysvMzc7P0NHS09TV1tfY2drb3N3e3+Dh4uPk5ebn6Onq6+zt7u/w8fLz9PX29/j5+vv8/f7/AAAAQOMmM+VH3USyzhXp35Xd6fboQ54SWKkIAGYfXW+Klb51/Zhs7ORVv+EHgR5sftU9/avJMh+TF6dPwqB5J8n9bQo="
+        },
+        {
+          "label": "unicode-ext:sig",
+          "actual": "4yYz5UfdRLLOFenfld3p9uhDnhJYqQgAZh9db4qVvnX9mGzs5FW/4QeBHmx+1T39q8kyH5MXp0/CoHknyf1tCg==",
+          "expected": "4yYz5UfdRLLOFenfld3p9uhDnhJYqQgAZh9db4qVvnX9mGzs5FW/4QeBHmx+1T39q8kyH5MXp0/CoHknyf1tCg=="
+        },
+        {
+          "label": "unicode-ext:state",
+          "actual": "VALID",
+          "expected": "VALID"
+        },
+        {
+          "label": "unicode-ext:state parity",
+          "actual": "VALID",
+          "expected": "VALID"
+        },
+        {
+          "label": "ref mint RPC error",
+          "actual": null,
+          "expected": null
+        },
+        {
+          "label": "nb mint RPC error",
+          "actual": null,
+          "expected": null
+        },
+        {
+          "label": "unknown-alg:C",
+          "actual": "0000000a70756e6b74692f302e360000000d313730303030303030303030350000000c676767683030303030303030000000086f70617175652d35000000106675747572652d7369676e61747572650000002049a715e3357365eee03ba803a0c51c27985f9ab7c835a32ae5e1757fd94a3e940000000000000000",
+          "expected": "0000000a70756e6b74692f302e360000000d313730303030303030303030350000000c676767683030303030303030000000086f70617175652d35000000106675747572652d7369676e61747572650000002049a715e3357365eee03ba803a0c51c27985f9ab7c835a32ae5e1757fd94a3e940000000000000000"
+        },
+        {
+          "label": "unknown-alg:S",
+          "actual": "50554e4b54492d4c332d5349474e000000000a70756e6b74692f302e360000000d313730303030303030303030350000000c676767683030303030303030000000086f70617175652d35000000106675747572652d7369676e61747572650000002049a715e3357365eee03ba803a0c51c27985f9ab7c835a32ae5e1757fd94a3e940000000000000000",
+          "expected": "50554e4b54492d4c332d5349474e000000000a70756e6b74692f302e360000000d313730303030303030303030350000000c676767683030303030303030000000086f70617175652d35000000106675747572652d7369676e61747572650000002049a715e3357365eee03ba803a0c51c27985f9ab7c835a32ae5e1757fd94a3e940000000000000000"
+        },
+        {
+          "label": "unknown-alg:MID",
+          "actual": "2dc0696a81f0afaf69dddc2da34cc867ea610f5f4717dfcefd0e730a42b9404b",
+          "expected": "2dc0696a81f0afaf69dddc2da34cc867ea610f5f4717dfcefd0e730a42b9404b"
+        },
+        {
+          "label": "unknown-alg:address",
+          "actual": "punkti/0.6:2dc0696a81f0afaf69dddc2da34cc867ea610f5f4717dfcefd0e730a42b9404b",
+          "expected": "punkti/0.6:2dc0696a81f0afaf69dddc2da34cc867ea610f5f4717dfcefd0e730a42b9404b"
+        },
+        {
+          "label": "unknown-alg:R",
+          "actual": "AAAAewAAAApwdW5rdGkvMC42AAAADTE3MDAwMDAwMDAwMDUAAAAMZ2dnaDAwMDAwMDAwAAAACG9wYXF1ZS01AAAAEGZ1dHVyZS1zaWduYXR1cmUAAAAgSacV4zVzZe7gO6gDoMUcJ5hfmrfINaMq5eF1f9lKPpQAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+          "expected": "AAAAewAAAApwdW5rdGkvMC42AAAADTE3MDAwMDAwMDAwMDUAAAAMZ2dnaDAwMDAwMDAwAAAACG9wYXF1ZS01AAAAEGZ1dHVyZS1zaWduYXR1cmUAAAAgSacV4zVzZe7gO6gDoMUcJ5hfmrfINaMq5eF1f9lKPpQAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+        },
+        {
+          "label": "unknown-alg:sig",
+          "actual": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+          "expected": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=="
+        },
+        {
+          "label": "unknown-alg:state",
+          "actual": "UNVERIFIABLE-alg",
+          "expected": "UNVERIFIABLE-alg"
+        },
+        {
+          "label": "unknown-alg:state parity",
+          "actual": "UNVERIFIABLE-alg",
+          "expected": "UNVERIFIABLE-alg"
+        }
+      ],
+      "failures": []
+    },
+    "xy_z_selection": {
+      "status": "PASS",
+      "summary": "Fixed XY bits with varying Z agree at exact altitude boundaries.",
+      "comparisons": [
+        {
+          "label": "ref isolated sys.path",
+          "actual": [],
+          "expected": []
+        },
+        {
+          "label": "adapter survives invalid command",
+          "actual": false,
+          "expected": false
+        },
+        {
+          "label": "adapter remains responsive",
+          "actual": true,
+          "expected": true
+        },
+        {
+          "label": "nb isolated sys.path",
+          "actual": [],
+          "expected": []
+        },
+        {
+          "label": "no reference modules loaded",
+          "actual": [],
+          "expected": []
+        },
+        {
+          "label": "adapter survives invalid command",
+          "actual": false,
+          "expected": false
+        },
+        {
+          "label": "adapter remains responsive",
+          "actual": true,
+          "expected": true
+        },
+        {
+          "label": "ref add RPC error",
+          "actual": null,
+          "expected": null
+        },
+        {
+          "label": "local seed admission",
+          "actual": true,
+          "expected": true
+        },
+        {
+          "label": "ref add RPC error",
+          "actual": null,
+          "expected": null
+        },
+        {
+          "label": "local seed admission",
+          "actual": true,
+          "expected": true
+        },
+        {
+          "label": "ref add RPC error",
+          "actual": null,
+          "expected": null
+        },
+        {
+          "label": "local seed admission",
+          "actual": true,
+          "expected": true
+        },
+        {
+          "label": "ref add RPC error",
+          "actual": null,
+          "expected": null
+        },
+        {
+          "label": "local seed admission",
+          "actual": true,
+          "expected": true
+        },
+        {
+          "label": "ref add RPC error",
+          "actual": null,
+          "expected": null
+        },
+        {
+          "label": "local seed admission",
+          "actual": true,
+          "expected": true
+        },
+        {
+          "label": "pull HTTP status",
+          "actual": 200,
+          "expected": 200
+        },
+        {
+          "label": "Z bounded PULL ref",
+          "actual": [
+            "punkti/0.6:20e6cb6735adda71ddfcdd47d557527896590cc6f5d834ed58eeb81f29f30a8a",
+            "punkti/0.6:ec0dd6f7c43f5550a73519d7d0ceee19ff6daf39b5ce8de445d1ed596aeb2e40"
+          ],
+          "expected": [
+            "punkti/0.6:20e6cb6735adda71ddfcdd47d557527896590cc6f5d834ed58eeb81f29f30a8a",
+            "punkti/0.6:ec0dd6f7c43f5550a73519d7d0ceee19ff6daf39b5ce8de445d1ed596aeb2e40"
+          ]
+        },
+        {
+          "label": "pull HTTP status",
+          "actual": 200,
+          "expected": 200
+        },
+        {
+          "label": "z_min only 0",
+          "actual": [
+            "punkti/0.6:00bc6105a343ba92b66c9014c8ebf5c1854c3a795411d92c44aaefdd164c9e30",
+            "punkti/0.6:20e6cb6735adda71ddfcdd47d557527896590cc6f5d834ed58eeb81f29f30a8a",
+            "punkti/0.6:6d2bc59f56300b823971b6287ae226e0e8943380b88a1dbbd0517435f3a2d2b0",
+            "punkti/0.6:8552eb61619bd9b5ac6d1be8ea77416f3abec698d7962a510f12793557224c95",
+            "punkti/0.6:ec0dd6f7c43f5550a73519d7d0ceee19ff6daf39b5ce8de445d1ed596aeb2e40"
+          ],
+          "expected": [
+            "punkti/0.6:00bc6105a343ba92b66c9014c8ebf5c1854c3a795411d92c44aaefdd164c9e30",
+            "punkti/0.6:20e6cb6735adda71ddfcdd47d557527896590cc6f5d834ed58eeb81f29f30a8a",
+            "punkti/0.6:6d2bc59f56300b823971b6287ae226e0e8943380b88a1dbbd0517435f3a2d2b0",
+            "punkti/0.6:8552eb61619bd9b5ac6d1be8ea77416f3abec698d7962a510f12793557224c95",
+            "punkti/0.6:ec0dd6f7c43f5550a73519d7d0ceee19ff6daf39b5ce8de445d1ed596aeb2e40"
+          ]
+        },
+        {
+          "label": "pull HTTP status",
+          "actual": 200,
+          "expected": 200
+        },
+        {
+          "label": "z_min only 1",
+          "actual": [
+            "punkti/0.6:00bc6105a343ba92b66c9014c8ebf5c1854c3a795411d92c44aaefdd164c9e30",
+            "punkti/0.6:20e6cb6735adda71ddfcdd47d557527896590cc6f5d834ed58eeb81f29f30a8a",
+            "punkti/0.6:8552eb61619bd9b5ac6d1be8ea77416f3abec698d7962a510f12793557224c95",
+            "punkti/0.6:ec0dd6f7c43f5550a73519d7d0ceee19ff6daf39b5ce8de445d1ed596aeb2e40"
+          ],
+          "expected": [
+            "punkti/0.6:00bc6105a343ba92b66c9014c8ebf5c1854c3a795411d92c44aaefdd164c9e30",
+            "punkti/0.6:20e6cb6735adda71ddfcdd47d557527896590cc6f5d834ed58eeb81f29f30a8a",
+            "punkti/0.6:8552eb61619bd9b5ac6d1be8ea77416f3abec698d7962a510f12793557224c95",
+            "punkti/0.6:ec0dd6f7c43f5550a73519d7d0ceee19ff6daf39b5ce8de445d1ed596aeb2e40"
+          ]
+        },
+        {
+          "label": "pull HTTP status",
+          "actual": 200,
+          "expected": 200
+        },
+        {
+          "label": "z_min only 2",
+          "actual": [
+            "punkti/0.6:00bc6105a343ba92b66c9014c8ebf5c1854c3a795411d92c44aaefdd164c9e30",
+            "punkti/0.6:8552eb61619bd9b5ac6d1be8ea77416f3abec698d7962a510f12793557224c95",
+            "punkti/0.6:ec0dd6f7c43f5550a73519d7d0ceee19ff6daf39b5ce8de445d1ed596aeb2e40"
+          ],
+          "expected": [
+            "punkti/0.6:00bc6105a343ba92b66c9014c8ebf5c1854c3a795411d92c44aaefdd164c9e30",
+            "punkti/0.6:8552eb61619bd9b5ac6d1be8ea77416f3abec698d7962a510f12793557224c95",
+            "punkti/0.6:ec0dd6f7c43f5550a73519d7d0ceee19ff6daf39b5ce8de445d1ed596aeb2e40"
+          ]
+        },
+        {
+          "label": "pull HTTP status",
+          "actual": 200,
+          "expected": 200
+        },
+        {
+          "label": "z_min only 3",
+          "actual": [
+            "punkti/0.6:00bc6105a343ba92b66c9014c8ebf5c1854c3a795411d92c44aaefdd164c9e30",
+            "punkti/0.6:8552eb61619bd9b5ac6d1be8ea77416f3abec698d7962a510f12793557224c95"
+          ],
+          "expected": [
+            "punkti/0.6:00bc6105a343ba92b66c9014c8ebf5c1854c3a795411d92c44aaefdd164c9e30",
+            "punkti/0.6:8552eb61619bd9b5ac6d1be8ea77416f3abec698d7962a510f12793557224c95"
+          ]
+        },
+        {
+          "label": "pull HTTP status",
+          "actual": 200,
+          "expected": 200
+        },
+        {
+          "label": "z_min only 100",
+          "actual": [
+            "punkti/0.6:8552eb61619bd9b5ac6d1be8ea77416f3abec698d7962a510f12793557224c95"
+          ],
+          "expected": [
+            "punkti/0.6:8552eb61619bd9b5ac6d1be8ea77416f3abec698d7962a510f12793557224c95"
+          ]
+        },
+        {
+          "label": "nb add RPC error",
+          "actual": null,
+          "expected": null
+        },
+        {
+          "label": "local seed admission",
+          "actual": true,
+          "expected": true
+        },
+        {
+          "label": "nb add RPC error",
+          "actual": null,
+          "expected": null
+        },
+        {
+          "label": "local seed admission",
+          "actual": true,
+          "expected": true
+        },
+        {
+          "label": "nb add RPC error",
+          "actual": null,
+          "expected": null
+        },
+        {
+          "label": "local seed admission",
+          "actual": true,
+          "expected": true
+        },
+        {
+          "label": "nb add RPC error",
+          "actual": null,
+          "expected": null
+        },
+        {
+          "label": "local seed admission",
+          "actual": true,
+          "expected": true
+        },
+        {
+          "label": "nb add RPC error",
+          "actual": null,
+          "expected": null
+        },
+        {
+          "label": "local seed admission",
+          "actual": true,
+          "expected": true
+        },
+        {
+          "label": "pull HTTP status",
+          "actual": 200,
+          "expected": 200
+        },
+        {
+          "label": "Z bounded PULL nb",
+          "actual": [
+            "punkti/0.6:20e6cb6735adda71ddfcdd47d557527896590cc6f5d834ed58eeb81f29f30a8a",
+            "punkti/0.6:ec0dd6f7c43f5550a73519d7d0ceee19ff6daf39b5ce8de445d1ed596aeb2e40"
+          ],
+          "expected": [
+            "punkti/0.6:20e6cb6735adda71ddfcdd47d557527896590cc6f5d834ed58eeb81f29f30a8a",
+            "punkti/0.6:ec0dd6f7c43f5550a73519d7d0ceee19ff6daf39b5ce8de445d1ed596aeb2e40"
+          ]
+        },
+        {
+          "label": "pull HTTP status",
+          "actual": 200,
+          "expected": 200
+        },
+        {
+          "label": "z_min only 0",
+          "actual": [
+            "punkti/0.6:00bc6105a343ba92b66c9014c8ebf5c1854c3a795411d92c44aaefdd164c9e30",
+            "punkti/0.6:20e6cb6735adda71ddfcdd47d557527896590cc6f5d834ed58eeb81f29f30a8a",
+            "punkti/0.6:6d2bc59f56300b823971b6287ae226e0e8943380b88a1dbbd0517435f3a2d2b0",
+            "punkti/0.6:8552eb61619bd9b5ac6d1be8ea77416f3abec698d7962a510f12793557224c95",
+            "punkti/0.6:ec0dd6f7c43f5550a73519d7d0ceee19ff6daf39b5ce8de445d1ed596aeb2e40"
+          ],
+          "expected": [
+            "punkti/0.6:00bc6105a343ba92b66c9014c8ebf5c1854c3a795411d92c44aaefdd164c9e30",
+            "punkti/0.6:20e6cb6735adda71ddfcdd47d557527896590cc6f5d834ed58eeb81f29f30a8a",
+            "punkti/0.6:6d2bc59f56300b823971b6287ae226e0e8943380b88a1dbbd0517435f3a2d2b0",
+            "punkti/0.6:8552eb61619bd9b5ac6d1be8ea77416f3abec698d7962a510f12793557224c95",
+            "punkti/0.6:ec0dd6f7c43f5550a73519d7d0ceee19ff6daf39b5ce8de445d1ed596aeb2e40"
+          ]
+        },
+        {
+          "label": "pull HTTP status",
+          "actual": 200,
+          "expected": 200
+        },
+        {
+          "label": "z_min only 1",
+          "actual": [
+            "punkti/0.6:00bc6105a343ba92b66c9014c8ebf5c1854c3a795411d92c44aaefdd164c9e30",
+            "punkti/0.6:20e6cb6735adda71ddfcdd47d557527896590cc6f5d834ed58eeb81f29f30a8a",
+            "punkti/0.6:8552eb61619bd9b5ac6d1be8ea77416f3abec698d7962a510f12793557224c95",
+            "punkti/0.6:ec0dd6f7c43f5550a73519d7d0ceee19ff6daf39b5ce8de445d1ed596aeb2e40"
+          ],
+          "expected": [
+            "punkti/0.6:00bc6105a343ba92b66c9014c8ebf5c1854c3a795411d92c44aaefdd164c9e30",
+            "punkti/0.6:20e6cb6735adda71ddfcdd47d557527896590cc6f5d834ed58eeb81f29f30a8a",
+            "punkti/0.6:8552eb61619bd9b5ac6d1be8ea77416f3abec698d7962a510f12793557224c95",
+            "punkti/0.6:ec0dd6f7c43f5550a73519d7d0ceee19ff6daf39b5ce8de445d1ed596aeb2e40"
+          ]
+        },
+        {
+          "label": "pull HTTP status",
+          "actual": 200,
+          "expected": 200
+        },
+        {
+          "label": "z_min only 2",
+          "actual": [
+            "punkti/0.6:00bc6105a343ba92b66c9014c8ebf5c1854c3a795411d92c44aaefdd164c9e30",
+            "punkti/0.6:8552eb61619bd9b5ac6d1be8ea77416f3abec698d7962a510f12793557224c95",
+            "punkti/0.6:ec0dd6f7c43f5550a73519d7d0ceee19ff6daf39b5ce8de445d1ed596aeb2e40"
+          ],
+          "expected": [
+            "punkti/0.6:00bc6105a343ba92b66c9014c8ebf5c1854c3a795411d92c44aaefdd164c9e30",
+            "punkti/0.6:8552eb61619bd9b5ac6d1be8ea77416f3abec698d7962a510f12793557224c95",
+            "punkti/0.6:ec0dd6f7c43f5550a73519d7d0ceee19ff6daf39b5ce8de445d1ed596aeb2e40"
+          ]
+        },
+        {
+          "label": "pull HTTP status",
+          "actual": 200,
+          "expected": 200
+        },
+        {
+          "label": "z_min only 3",
+          "actual": [
+            "punkti/0.6:00bc6105a343ba92b66c9014c8ebf5c1854c3a795411d92c44aaefdd164c9e30",
+            "punkti/0.6:8552eb61619bd9b5ac6d1be8ea77416f3abec698d7962a510f12793557224c95"
+          ],
+          "expected": [
+            "punkti/0.6:00bc6105a343ba92b66c9014c8ebf5c1854c3a795411d92c44aaefdd164c9e30",
+            "punkti/0.6:8552eb61619bd9b5ac6d1be8ea77416f3abec698d7962a510f12793557224c95"
+          ]
+        },
+        {
+          "label": "pull HTTP status",
+          "actual": 200,
+          "expected": 200
+        },
+        {
+          "label": "z_min only 100",
+          "actual": [
+            "punkti/0.6:8552eb61619bd9b5ac6d1be8ea77416f3abec698d7962a510f12793557224c95"
+          ],
+          "expected": [
+            "punkti/0.6:8552eb61619bd9b5ac6d1be8ea77416f3abec698d7962a510f12793557224c95"
+          ]
+        },
+        {
+          "label": "ref isolated sys.path",
+          "actual": [],
+          "expected": []
+        },
+        {
+          "label": "adapter survives invalid command",
+          "actual": false,
+          "expected": false
+        },
+        {
+          "label": "adapter remains responsive",
+          "actual": true,
+          "expected": true
+        },
+        {
+          "label": "nb push_to RPC error",
+          "actual": null,
+          "expected": null
+        },
+        {
+          "label": "ref pull RPC error",
+          "actual": null,
+          "expected": null
+        },
+        {
+          "label": "ref state RPC error",
+          "actual": null,
+          "expected": null
+        },
+        {
+          "label": "Z subscribed store ref",
+          "actual": [
+            "punkti/0.6:20e6cb6735adda71ddfcdd47d557527896590cc6f5d834ed58eeb81f29f30a8a",
+            "punkti/0.6:ec0dd6f7c43f5550a73519d7d0ceee19ff6daf39b5ce8de445d1ed596aeb2e40"
+          ],
+          "expected": [
+            "punkti/0.6:20e6cb6735adda71ddfcdd47d557527896590cc6f5d834ed58eeb81f29f30a8a",
+            "punkti/0.6:ec0dd6f7c43f5550a73519d7d0ceee19ff6daf39b5ce8de445d1ed596aeb2e40"
+          ]
+        },
+        {
+          "label": "nb isolated sys.path",
+          "actual": [],
+          "expected": []
+        },
+        {
+          "label": "no reference modules loaded",
+          "actual": [],
+          "expected": []
+        },
+        {
+          "label": "adapter survives invalid command",
+          "actual": false,
+          "expected": false
+        },
+        {
+          "label": "adapter remains responsive",
+          "actual": true,
+          "expected": true
+        },
+        {
+          "label": "ref push_to RPC error",
+          "actual": null,
+          "expected": null
+        },
+        {
+          "label": "nb pull RPC error",
+          "actual": null,
+          "expected": null
+        },
+        {
+          "label": "nb state RPC error",
+          "actual": null,
+          "expected": null
+        },
+        {
+          "label": "Z subscribed store nb",
+          "actual": [
+            "punkti/0.6:20e6cb6735adda71ddfcdd47d557527896590cc6f5d834ed58eeb81f29f30a8a",
+            "punkti/0.6:ec0dd6f7c43f5550a73519d7d0ceee19ff6daf39b5ce8de445d1ed596aeb2e40"
+          ],
+          "expected": [
+            "punkti/0.6:20e6cb6735adda71ddfcdd47d557527896590cc6f5d834ed58eeb81f29f30a8a",
+            "punkti/0.6:ec0dd6f7c43f5550a73519d7d0ceee19ff6daf39b5ce8de445d1ed596aeb2e40"
+          ]
+        }
+      ],
+      "failures": []
+    }
+  },
+  "divergences": [
+    {
+      "test": "rejection_consistency",
+      "failures": [
+        "duplicate JSON keys HTTP rejection ref: actual=200; expected=400",
+        "duplicate JSON keys main store ref: actual=['punkti/0.6:fc23a2470534663943f5dc50e909a4e793accc3cf80586d16505a3733af95012']; expected=[]",
+        "Traceback (most recent call last):\n  File \"/home/hermes/.hermes/kanban/workspaces/t_0307c488/repo/experimental/nairobidot-l3/interop/test_interop.py\", line 354, in test_rejection_consistency\n    self.eq(name + ' HTTP rejection ' + a.kind, status, 400)\n    ~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/hermes/.hermes/kanban/workspaces/t_0307c488/repo/experimental/nairobidot-l3/interop/test_interop.py\", line 104, in eq\n    self.assertEqual(actual, expected, label)\n    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError: 200 != 400 : duplicate JSON keys HTTP rejection ref\n",
+        "Traceback (most recent call last):\n  File \"/home/hermes/.hermes/kanban/workspaces/t_0307c488/repo/experimental/nairobidot-l3/interop/test_interop.py\", line 356, in test_rejection_consistency\n    self.eq(name + ' main store ' + a.kind, addresses, [])\n    ~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/hermes/.hermes/kanban/workspaces/t_0307c488/repo/experimental/nairobidot-l3/interop/test_interop.py\", line 104, in eq\n    self.assertEqual(actual, expected, label)\n    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError: Lists differ: ['punkti/0.6:fc23a2470534663943f5dc50e909a4e793accc3cf80586d16505a3733af95012'] != []\n\nFirst list contains 1 additional elements.\nFirst extra element 0:\n'punkti/0.6:fc23a2470534663943f5dc50e909a4e793accc3cf80586d16505a3733af95012'\n\n- ['punkti/0.6:fc23a2470534663943f5dc50e909a4e793accc3cf80586d16505a3733af95012']\n+ [] : duplicate JSON keys main store ref\n"
+      ]
+    }
+  ]
+}
