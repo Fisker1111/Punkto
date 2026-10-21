@@ -78,6 +78,8 @@ def write_report():
             lines.append(f"- {name}: " + '; '.join(f for f in row['failures'] if not f.startswith('Traceback')).replace('\n', ' '))
     for divergence in divergences:
         lines.append(f"- {divergence['test']}: {divergence['explanation']}")
+        for line in REPORT[divergence['test']].get('divergence_lines', []):
+            lines.append(f"  - {line}")
         for label, key in [('Reference', 'reference_behaviour'), ('Clean-room', 'clean_room_behaviour')]:
             lines.append(f"  - {label}: `" + json.dumps(divergence[key], sort_keys=True) + "`.")
     if not totals['FAIL'] and not divergences:
@@ -388,6 +390,55 @@ class Interop(unittest.TestCase):
         self.eq('clean-room log empty', nb['log'], [])
         self.eq('HTTP outcomes differ', ref['http_status'] != nb['http_status'], True)
         self.eq('stored addresses differ', ref['addresses'] != nb['addresses'], True)
+
+    def test_request_validation_divergences(self):
+        """Pin six request-validation differences without requiring parity."""
+        reference, clean_room = self.adapter('ref'), self.adapter('nb')
+        m = self.call(reference, 'mint', spec=spec(110))
+        for node in (reference, clean_room):
+            self.eq('wrong-address fixture VALID ' + node.kind,
+                    self.call(node, 'decode', record=m['R'])['state'], 'VALID')
+        wrong_address = 'punkti/0.6:' + ('0' if m['MID'][0] != '0' else '1') + m['MID'][1:]
+        cases = [
+            ('equal h bounds', dict(mode='spatial', scope=dict(h_lo='g', h_hi='g')), None,
+             400, {'error': 'empty/reversed h interval'}, 200, {'records': [], 'end': True},
+             "GET /pull scope {h_lo:'g',h_hi:'g'}: reference HTTP 400, error 'empty/reversed h interval'; clean-room HTTP 200, records=[], end=true."),
+            ('reversed elevation', dict(mode='spatial', scope=dict(z_min=100, z_max=-100)), None,
+             400, {'error': 'empty/reversed z interval'}, 200, {'records': [], 'end': True},
+             "GET /pull scope {z_min:100,z_max:-100}: reference HTTP 400, error 'empty/reversed z interval'; clean-room HTTP 200, records=[], end=true."),
+            ('equal elevation', dict(mode='spatial', scope=dict(z_min=1, z_max=1)), None,
+             400, {'error': 'empty/reversed z interval'}, 200, {'records': [], 'end': True},
+             "GET /pull scope {z_min:1,z_max:1}: reference HTTP 400, error 'empty/reversed z interval'; clean-room HTTP 200, records=[], end=true."),
+            ('unknown query member', dict(mode='spatial', extra=1), None,
+             200, {'records': [], 'end': True}, 400, {'kind': 'request', 'reason': 'query-fields'},
+             "GET /pull query {mode:'spatial',extra:1}: reference HTTP 200, member ignored; clean-room HTTP 400, kind='request', reason='query-fields'."),
+            ('wrong address for VALID record', None, {'records': [item(m, address=wrong_address)]},
+             400, {'error': 'address mismatch'}, 200,
+             {'results': [{'state': 'INVALID-structural', 'reason': 'address-mismatch', 'admitted': False}]},
+             "POST /push wrong address for a VALID record: reference HTTP 400 for the whole request, error 'address mismatch'; clean-room HTTP 200, per-record state='INVALID-structural', reason='address-mismatch', admitted=false."),
+            ('empty push batch', None, {'records': []},
+             400, {'error': 'push batch size'}, 200, {'results': []},
+             "POST /push {records:[]}: reference HTTP 400, error 'push batch size'; clean-room HTTP 200, {results:[]}."),
+        ]
+        self.row['divergence'] = 'Six pinned request-validation divergences: interval bounds, unknown query member, wrong address, and empty push batch.'
+        self.row['divergence_lines'] = [case[-1] for case in cases]
+        self.row['reference_behaviour'] = {}
+        self.row['clean_room_behaviour'] = {}
+        for label, query, payload, ref_status, ref_body, nb_status, nb_body, _ in cases:
+            path = '/pull?' + urlencode({'q': json.dumps(query)}) if query is not None else '/push'
+            for node, key, expected_status, expected_body in (
+                    (reference, 'reference_behaviour', ref_status, ref_body),
+                    (clean_room, 'clean_room_behaviour', nb_status, nb_body)):
+                with self.subTest(case=label, implementation=node.kind):
+                    status, response = http(node.url, path, payload)
+                    self.row[key][label] = dict(http_status=status, response=response)
+                    self.eq(label + ' HTTP status ' + node.kind, status, expected_status)
+                    for field, expected in expected_body.items():
+                        self.eq(label + ' ' + field + ' ' + node.kind, response.get(field), expected)
+                    if label == 'empty push batch' and node is clean_room:
+                        self.eq(label + ' exact response nb', response, {'results': []})
+                    if label == 'unknown query member' and node is reference:
+                        self.eq(label + ' ignored by reference', response, self.pullpage(reference))
 
     def test_no_reference_imports(self):
         """Static scan and isolated import prove clean-room source independence."""
