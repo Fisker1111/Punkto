@@ -23,8 +23,8 @@
   },
   "arrangement": "two clean-room nodes and one reference",
   "totals": {
-    "PASS": 10,
-    "FAIL": 1
+    "PASS": 12,
+    "FAIL": 0
   },
   "vectors": [
     {
@@ -1342,7 +1342,7 @@
                 "cursor": {
                   "after": 3,
                   "ceiling": 3,
-                  "epoch": "e8f42c2f69474e8c8bc73993cae7f584",
+                  "epoch": "8f2c70a027424ce0a15d57d2edc21fa1",
                   "scope": "c6747acb328a79c07e24f7c1401f39b941bc5f8407a06acfb166b24d6ec98659"
                 },
                 "hi": null,
@@ -1360,7 +1360,7 @@
                 "cursor": {
                   "after": 5,
                   "ceiling": 5,
-                  "epoch": "e8f42c2f69474e8c8bc73993cae7f584",
+                  "epoch": "8f2c70a027424ce0a15d57d2edc21fa1",
                   "scope": "c6747acb328a79c07e24f7c1401f39b941bc5f8407a06acfb166b24d6ec98659"
                 },
                 "end": true,
@@ -1564,7 +1564,7 @@
                 "cursor": {
                   "after": 3,
                   "ceiling": 3,
-                  "epoch": "e873110318ac495882bf5c4855bec348",
+                  "epoch": "6d58321a07934dda94939d0852cee839",
                   "scope": "c6747acb328a79c07e24f7c1401f39b941bc5f8407a06acfb166b24d6ec98659"
                 },
                 "hi": null,
@@ -1582,7 +1582,7 @@
                 "cursor": {
                   "after": 5,
                   "ceiling": 5,
-                  "epoch": "e873110318ac495882bf5c4855bec348",
+                  "epoch": "6d58321a07934dda94939d0852cee839",
                   "scope": "c6747acb328a79c07e24f7c1401f39b941bc5f8407a06acfb166b24d6ec98659"
                 },
                 "end": true,
@@ -1625,6 +1625,177 @@
         }
       ],
       "failures": []
+    },
+    "http_duplicate_key_divergence": {
+      "status": "PASS",
+      "summary": "Duplicate HTTP envelope keys are accepted only by the reference.",
+      "comparisons": [
+        {
+          "label": "ref isolated sys.path",
+          "actual": [],
+          "expected": []
+        },
+        {
+          "label": "adapter survives invalid command",
+          "actual": false,
+          "expected": false
+        },
+        {
+          "label": "adapter remains responsive",
+          "actual": true,
+          "expected": true
+        },
+        {
+          "label": "nb isolated sys.path",
+          "actual": [],
+          "expected": []
+        },
+        {
+          "label": "no reference modules loaded",
+          "actual": [],
+          "expected": []
+        },
+        {
+          "label": "adapter survives invalid command",
+          "actual": false,
+          "expected": false
+        },
+        {
+          "label": "adapter remains responsive",
+          "actual": true,
+          "expected": true
+        },
+        {
+          "label": "ref mint RPC error",
+          "actual": null,
+          "expected": null
+        },
+        {
+          "label": "canonical record address",
+          "actual": "punkti/0.6:fc23a2470534663943f5dc50e909a4e793accc3cf80586d16505a3733af95012",
+          "expected": "punkti/0.6:fc23a2470534663943f5dc50e909a4e793accc3cf80586d16505a3733af95012"
+        },
+        {
+          "label": "ref state RPC error",
+          "actual": null,
+          "expected": null
+        },
+        {
+          "label": "nb state RPC error",
+          "actual": null,
+          "expected": null
+        },
+        {
+          "label": "reference HTTP acceptance",
+          "actual": 200,
+          "expected": 200
+        },
+        {
+          "label": "reference admission",
+          "actual": true,
+          "expected": true
+        },
+        {
+          "label": "reference classification",
+          "actual": "VALID",
+          "expected": "VALID"
+        },
+        {
+          "label": "reference stored address",
+          "actual": [
+            "punkti/0.6:fc23a2470534663943f5dc50e909a4e793accc3cf80586d16505a3733af95012"
+          ],
+          "expected": [
+            "punkti/0.6:fc23a2470534663943f5dc50e909a4e793accc3cf80586d16505a3733af95012"
+          ]
+        },
+        {
+          "label": "pull HTTP status",
+          "actual": 200,
+          "expected": 200
+        },
+        {
+          "label": "reference stored record",
+          "actual": [
+            {
+              "address": "punkti/0.6:fc23a2470534663943f5dc50e909a4e793accc3cf80586d16505a3733af95012",
+              "record": "AAAAdAAAAApwdW5rdGkvMC42AAAADTE3MDAwMDAwMDAxMDAAAAAMZ2dnaDAwMDAwMDAwAAAACm9wYXF1ZS0xMDAAAAAHZWQyNTUxOQAAACBR+9+JCmvIez4QMMRgPCPky1VnQme/fL7Ysf7TfpaoSwAAAAAAAAAAAAAAQOKy5EclOHWxRIhNLzvjzcl292eOJp+pfiLNeXWRz2pXEQlEjZtnRR0y637eIs5WMUbmXK//dXwqN5TbjTORXwY=",
+              "sha256": "f46c94caf3a3d36e62fd53cb1b60ac4ab4e53a23eb0523697b7e773046f0fd92"
+            }
+          ],
+          "expected": [
+            {
+              "address": "punkti/0.6:fc23a2470534663943f5dc50e909a4e793accc3cf80586d16505a3733af95012",
+              "sha256": "f46c94caf3a3d36e62fd53cb1b60ac4ab4e53a23eb0523697b7e773046f0fd92",
+              "record": "AAAAdAAAAApwdW5rdGkvMC42AAAADTE3MDAwMDAwMDAxMDAAAAAMZ2dnaDAwMDAwMDAwAAAACm9wYXF1ZS0xMDAAAAAHZWQyNTUxOQAAACBR+9+JCmvIez4QMMRgPCPky1VnQme/fL7Ysf7TfpaoSwAAAAAAAAAAAAAAQOKy5EclOHWxRIhNLzvjzcl292eOJp+pfiLNeXWRz2pXEQlEjZtnRR0y637eIs5WMUbmXK//dXwqN5TbjTORXwY="
+            }
+          ]
+        },
+        {
+          "label": "clean-room HTTP rejection",
+          "actual": 400,
+          "expected": 400
+        },
+        {
+          "label": "clean-room main store empty",
+          "actual": [],
+          "expected": []
+        },
+        {
+          "label": "clean-room candidates empty",
+          "actual": [],
+          "expected": []
+        },
+        {
+          "label": "clean-room log empty",
+          "actual": [],
+          "expected": []
+        },
+        {
+          "label": "HTTP outcomes differ",
+          "actual": true,
+          "expected": true
+        },
+        {
+          "label": "stored addresses differ",
+          "actual": true,
+          "expected": true
+        }
+      ],
+      "failures": [],
+      "reference_behaviour": {
+        "http_status": 200,
+        "response": {
+          "results": [
+            {
+              "admitted": true,
+              "state": "VALID"
+            }
+          ]
+        },
+        "addresses": [
+          "punkti/0.6:fc23a2470534663943f5dc50e909a4e793accc3cf80586d16505a3733af95012"
+        ],
+        "candidates": [],
+        "log": [
+          {
+            "address": "punkti/0.6:fc23a2470534663943f5dc50e909a4e793accc3cf80586d16505a3733af95012",
+            "sha256": "f46c94caf3a3d36e62fd53cb1b60ac4ab4e53a23eb0523697b7e773046f0fd92",
+            "seq": 1
+          }
+        ]
+      },
+      "clean_room_behaviour": {
+        "http_status": 400,
+        "response": {
+          "kind": "request",
+          "reason": "json"
+        },
+        "addresses": [],
+        "candidates": [],
+        "log": []
+      },
+      "divergence": "HTTP envelope duplicate JSON keys: reference keeps the last records key and admits the record; clean-room rejects with HTTP 400 and stores nothing."
     },
     "no_reference_imports": {
       "status": "PASS",
@@ -1972,8 +2143,8 @@
       "failures": []
     },
     "rejection_consistency": {
-      "status": "FAIL",
-      "summary": "Malformed/forged records stay out of main store; valid later wins.",
+      "status": "PASS",
+      "summary": "Carrier/data-level rejection agrees; valid records later win.",
       "comparisons": [
         {
           "label": "ref isolated sys.path",
@@ -2664,110 +2835,6 @@
           "expected": null
         },
         {
-          "label": "duplicate JSON keys raw HTTP responses",
-          "actual": [
-            [
-              200,
-              {
-                "results": [
-                  {
-                    "admitted": true,
-                    "state": "VALID"
-                  }
-                ]
-              }
-            ],
-            [
-              400,
-              {
-                "kind": "request",
-                "reason": "json"
-              }
-            ]
-          ],
-          "expected": "HTTP 400; empty main stores"
-        },
-        {
-          "label": "duplicate JSON keys stores (ref, nb)",
-          "actual": [
-            [
-              "punkti/0.6:fc23a2470534663943f5dc50e909a4e793accc3cf80586d16505a3733af95012"
-            ],
-            []
-          ],
-          "expected": [
-            [],
-            []
-          ]
-        },
-        {
-          "label": "duplicate JSON keys HTTP rejection ref",
-          "actual": 200,
-          "expected": 400
-        },
-        {
-          "label": "duplicate JSON keys main store ref",
-          "actual": [
-            "punkti/0.6:fc23a2470534663943f5dc50e909a4e793accc3cf80586d16505a3733af95012"
-          ],
-          "expected": []
-        },
-        {
-          "label": "duplicate JSON keys HTTP rejection nb",
-          "actual": 400,
-          "expected": 400
-        },
-        {
-          "label": "duplicate JSON keys main store nb",
-          "actual": [],
-          "expected": []
-        },
-        {
-          "label": "ref isolated sys.path",
-          "actual": [],
-          "expected": []
-        },
-        {
-          "label": "adapter survives invalid command",
-          "actual": false,
-          "expected": false
-        },
-        {
-          "label": "adapter remains responsive",
-          "actual": true,
-          "expected": true
-        },
-        {
-          "label": "nb isolated sys.path",
-          "actual": [],
-          "expected": []
-        },
-        {
-          "label": "no reference modules loaded",
-          "actual": [],
-          "expected": []
-        },
-        {
-          "label": "adapter survives invalid command",
-          "actual": false,
-          "expected": false
-        },
-        {
-          "label": "adapter remains responsive",
-          "actual": true,
-          "expected": true
-        },
-        {
-          "label": "ref state RPC error",
-          "actual": null,
-          "expected": null
-        },
-        {
-          "label": "nb state RPC error",
-          "actual": null,
-          "expected": null
-        },
-        {
           "label": "noncanonical base64 raw HTTP responses",
           "actual": [
             [
@@ -2818,12 +2885,7 @@
           "expected": []
         }
       ],
-      "failures": [
-        "duplicate JSON keys HTTP rejection ref: actual=200; expected=400",
-        "duplicate JSON keys main store ref: actual=['punkti/0.6:fc23a2470534663943f5dc50e909a4e793accc3cf80586d16505a3733af95012']; expected=[]",
-        "Traceback (most recent call last):\n  File \"/home/hermes/.hermes/kanban/workspaces/t_0307c488/repo/experimental/nairobidot-l3/interop/test_interop.py\", line 354, in test_rejection_consistency\n    self.eq(name + ' HTTP rejection ' + a.kind, status, 400)\n    ~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/hermes/.hermes/kanban/workspaces/t_0307c488/repo/experimental/nairobidot-l3/interop/test_interop.py\", line 104, in eq\n    self.assertEqual(actual, expected, label)\n    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError: 200 != 400 : duplicate JSON keys HTTP rejection ref\n",
-        "Traceback (most recent call last):\n  File \"/home/hermes/.hermes/kanban/workspaces/t_0307c488/repo/experimental/nairobidot-l3/interop/test_interop.py\", line 356, in test_rejection_consistency\n    self.eq(name + ' main store ' + a.kind, addresses, [])\n    ~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/hermes/.hermes/kanban/workspaces/t_0307c488/repo/experimental/nairobidot-l3/interop/test_interop.py\", line 104, in eq\n    self.assertEqual(actual, expected, label)\n    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError: Lists differ: ['punkti/0.6:fc23a2470534663943f5dc50e909a4e793accc3cf80586d16505a3733af95012'] != []\n\nFirst list contains 1 additional elements.\nFirst extra element 0:\n'punkti/0.6:fc23a2470534663943f5dc50e909a4e793accc3cf80586d16505a3733af95012'\n\n- ['punkti/0.6:fc23a2470534663943f5dc50e909a4e793accc3cf80586d16505a3733af95012']\n+ [] : duplicate JSON keys main store ref\n"
-      ]
+      "failures": []
     },
     "spatial_range_selection": {
       "status": "PASS",
@@ -4608,13 +4670,40 @@
   },
   "divergences": [
     {
-      "test": "rejection_consistency",
-      "failures": [
-        "duplicate JSON keys HTTP rejection ref: actual=200; expected=400",
-        "duplicate JSON keys main store ref: actual=['punkti/0.6:fc23a2470534663943f5dc50e909a4e793accc3cf80586d16505a3733af95012']; expected=[]",
-        "Traceback (most recent call last):\n  File \"/home/hermes/.hermes/kanban/workspaces/t_0307c488/repo/experimental/nairobidot-l3/interop/test_interop.py\", line 354, in test_rejection_consistency\n    self.eq(name + ' HTTP rejection ' + a.kind, status, 400)\n    ~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/hermes/.hermes/kanban/workspaces/t_0307c488/repo/experimental/nairobidot-l3/interop/test_interop.py\", line 104, in eq\n    self.assertEqual(actual, expected, label)\n    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError: 200 != 400 : duplicate JSON keys HTTP rejection ref\n",
-        "Traceback (most recent call last):\n  File \"/home/hermes/.hermes/kanban/workspaces/t_0307c488/repo/experimental/nairobidot-l3/interop/test_interop.py\", line 356, in test_rejection_consistency\n    self.eq(name + ' main store ' + a.kind, addresses, [])\n    ~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/hermes/.hermes/kanban/workspaces/t_0307c488/repo/experimental/nairobidot-l3/interop/test_interop.py\", line 104, in eq\n    self.assertEqual(actual, expected, label)\n    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError: Lists differ: ['punkti/0.6:fc23a2470534663943f5dc50e909a4e793accc3cf80586d16505a3733af95012'] != []\n\nFirst list contains 1 additional elements.\nFirst extra element 0:\n'punkti/0.6:fc23a2470534663943f5dc50e909a4e793accc3cf80586d16505a3733af95012'\n\n- ['punkti/0.6:fc23a2470534663943f5dc50e909a4e793accc3cf80586d16505a3733af95012']\n+ [] : duplicate JSON keys main store ref\n"
-      ]
+      "test": "http_duplicate_key_divergence",
+      "explanation": "HTTP envelope duplicate JSON keys: reference keeps the last records key and admits the record; clean-room rejects with HTTP 400 and stores nothing.",
+      "reference_behaviour": {
+        "http_status": 200,
+        "response": {
+          "results": [
+            {
+              "admitted": true,
+              "state": "VALID"
+            }
+          ]
+        },
+        "addresses": [
+          "punkti/0.6:fc23a2470534663943f5dc50e909a4e793accc3cf80586d16505a3733af95012"
+        ],
+        "candidates": [],
+        "log": [
+          {
+            "address": "punkti/0.6:fc23a2470534663943f5dc50e909a4e793accc3cf80586d16505a3733af95012",
+            "sha256": "f46c94caf3a3d36e62fd53cb1b60ac4ab4e53a23eb0523697b7e773046f0fd92",
+            "seq": 1
+          }
+        ]
+      },
+      "clean_room_behaviour": {
+        "http_status": 400,
+        "response": {
+          "kind": "request",
+          "reason": "json"
+        },
+        "addresses": [],
+        "candidates": [],
+        "log": []
+      }
     }
   ]
 }

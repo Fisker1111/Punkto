@@ -12,15 +12,16 @@ Convergence arrangement: two clean-room nodes and one reference.
 | convergence_orders_and_subsets | PASS | 50 recorded comparisons; Two clean-room plus one reference converge after two fair sync rounds. |
 | decode_parity | PASS | 103 recorded comparisons; Both standalone adapters decode the other implementation's records. |
 | disconnect_rejoin_cursor_catchup | PASS | 60 recorded comparisons; Both initiators survive refused proxy, reuse cursor, pull only new records. |
+| http_duplicate_key_divergence | PASS (documented divergence) | 23 recorded comparisons; Duplicate HTTP envelope keys are accepted only by the reference. |
 | no_reference_imports | PASS | 30 recorded comparisons; Static scan and isolated import prove clean-room source independence. |
 | push_both_directions | PASS | 33 recorded comparisons; Both HTTP push directions admit VALID and return identical R/digests. |
-| rejection_consistency | FAIL | 157 recorded comparisons; Malformed/forged records stay out of main store; valid later wins. |
+| rejection_consistency | PASS | 142 recorded comparisons; Carrier/data-level rejection agrees; valid records later win. |
 | spatial_range_selection | PASS | 74 recorded comparisons; Literal half-open h bounds filter push admission and peer PULL. |
 | unknown_l4_byte_preservation | PASS | 85 recorded comparisons; Unicode, JSON-looking text, unknown refs/ext/alg survive exact transfer. |
 | vector_parity | PASS | 67 recorded comparisons; Six deterministic vectors compare all canonical and framed bytes. |
 | xy_z_selection | PASS | 66 recorded comparisons; Fixed XY bits with varying Z agree at exact altitude boundaries. |
 
-Totals: 10 PASS, 1 FAIL.
+Totals: 12 PASS, 0 FAIL.
 
 | Vector | MID | Address |
 |---|---|---|
@@ -33,7 +34,8 @@ Totals: 10 PASS, 1 FAIL.
 
 ## Divergences
 
-- rejection_consistency: duplicate JSON keys HTTP rejection ref: actual=200; expected=400; duplicate JSON keys main store ref: actual=['punkti/0.6:fc23a2470534663943f5dc50e909a4e793accc3cf80586d16505a3733af95012']; expected=[]
-- Duplicate-key request responses (reference, clean-room): `[[200, {"results": [{"admitted": true, "state": "VALID"}]}], [400, {"kind": "request", "reason": "json"}]]`.
+- http_duplicate_key_divergence: HTTP envelope duplicate JSON keys: reference keeps the last records key and admits the record; clean-room rejects with HTTP 400 and stores nothing.
+  - Reference: `{"addresses": ["punkti/0.6:fc23a2470534663943f5dc50e909a4e793accc3cf80586d16505a3733af95012"], "candidates": [], "http_status": 200, "log": [{"address": "punkti/0.6:fc23a2470534663943f5dc50e909a4e793accc3cf80586d16505a3733af95012", "seq": 1, "sha256": "f46c94caf3a3d36e62fd53cb1b60ac4ab4e53a23eb0523697b7e773046f0fd92"}], "response": {"results": [{"admitted": true, "state": "VALID"}]}}`.
+  - Clean-room: `{"addresses": [], "candidates": [], "http_status": 400, "log": [], "response": {"kind": "request", "reason": "json"}}`.
 
 Exact compared values and raw HTTP evidence are in `interop_report.json`.

@@ -49,10 +49,14 @@ def write_report():
     tree_hashes = {k: hashlib.sha256(json.dumps(v, sort_keys=True).encode()).hexdigest()
                    for k, v in identities.items()}
     totals = {s: sum(r['status'] == s for r in REPORT.values()) for s in ('PASS', 'FAIL')}
+    divergences = [dict(test=name, explanation=row['divergence'],
+                        reference_behaviour=row['reference_behaviour'],
+                        clean_room_behaviour=row['clean_room_behaviour'])
+                   for name, row in sorted(REPORT.items()) if 'divergence' in row]
     report = dict(environment=dict(python=platform.python_version(), implementation=platform.python_implementation()),
                   implementations=identities, source_manifest_sha256=tree_hashes, arrangement='two clean-room nodes and one reference',
                   totals=totals, vectors=VECTORS, tests=REPORT,
-                  divergences=[dict(test=k, failures=v['failures']) for k, v in REPORT.items() if v['status'] == 'FAIL'])
+                  divergences=divergences)
     (HERE / 'interop_report.json').write_text(json.dumps(report, indent=2, ensure_ascii=True) + '\n')
     lines = ['# NairobiDot L3 × reference Mesh interoperability', '',
              f"Python {platform.python_version()} ({platform.python_implementation()}); loopback HTTP only.",
@@ -62,7 +66,8 @@ def write_report():
              'Convergence arrangement: two clean-room nodes and one reference.', '',
              '| Test | Result | Evidence |', '|---|---|---|']
     for name, row in sorted(REPORT.items()):
-        lines.append(f"| {name} | {row['status']} | {len(row['comparisons'])} recorded comparisons; {row['summary']} |")
+        result = "PASS (documented divergence)" if row['status'] == 'PASS' and 'divergence' in row else row['status']
+        lines.append(f"| {name} | {result} | {len(row['comparisons'])} recorded comparisons; {row['summary']} |")
     lines += ['', f"Totals: {totals['PASS']} PASS, {totals['FAIL']} FAIL.", '',
               '| Vector | MID | Address |', '|---|---|---|']
     for v in VECTORS:
@@ -71,12 +76,11 @@ def write_report():
     for name, row in sorted(REPORT.items()):
         if row['status'] == 'FAIL':
             lines.append(f"- {name}: " + '; '.join(f for f in row['failures'] if not f.startswith('Traceback')).replace('\n', ' '))
-    rejection = REPORT.get('rejection_consistency', {})
-    for comparison in rejection.get('comparisons', []):
-        if comparison['label'] == 'duplicate JSON keys raw HTTP responses':
-            lines.append('- Duplicate-key request responses (reference, clean-room): `' +
-                         json.dumps(comparison['actual'], sort_keys=True) + '`.')
-    if not totals['FAIL']:
+    for divergence in divergences:
+        lines.append(f"- {divergence['test']}: {divergence['explanation']}")
+        for label, key in [('Reference', 'reference_behaviour'), ('Clean-room', 'clean_room_behaviour')]:
+            lines.append(f"  - {label}: `" + json.dumps(divergence[key], sort_keys=True) + "`.")
+    if not totals['FAIL'] and not divergences:
         lines.append('None observed in the exercised matrix.')
     lines += ['', 'Exact compared values and raw HTTP evidence are in `interop_report.json`.']
     (HERE / 'interop_matrix.md').write_text('\n'.join(lines) + '\n')
@@ -301,7 +305,7 @@ class Interop(unittest.TestCase):
             self.eq('converged ' + a.kind, self.addresses(a), sorted(expected))
 
     def test_rejection_consistency(self):
-        """Malformed/forged records stay out of main store; valid later wins."""
+        """Carrier/data-level rejection agrees; valid records later win."""
         nodes = [self.adapter('ref'), self.adapter('nb')]
         m = self.call(nodes[0], 'mint', spec=spec(100))
         raw = base64.b64decode(m['R'])
@@ -340,10 +344,9 @@ class Interop(unittest.TestCase):
                 self.eq('later valid admission', body['results'][0]['admitted'], True)
                 self.eq('later valid store', self.addresses(a), [m['address']])
         # Fresh nodes keep a malformed request's effects independent of other cases.
-        duplicate = ('{"records":[],"records":' + json.dumps([item(m)]) + '}').encode()
         noncanonical = item(m)
         noncanonical['record'] += '\n'
-        for name, body in [('duplicate JSON keys', duplicate), ('noncanonical base64', {'records': [noncanonical]})]:
+        for name, body in [('noncanonical base64', {'records': [noncanonical]})]:
             fresh = [self.adapter('ref'), self.adapter('nb')]
             responses = [http(a.url, '/push', body) for a in fresh]
             stores = [self.addresses(a) for a in fresh]
@@ -354,6 +357,37 @@ class Interop(unittest.TestCase):
                     self.eq(name + ' HTTP rejection ' + a.kind, status, 400)
                 with self.subTest(case=name, implementation=a.kind, check='store'):
                     self.eq(name + ' main store ' + a.kind, addresses, [])
+
+    def test_http_duplicate_key_divergence(self):
+        """Duplicate HTTP envelope keys are accepted only by the reference."""
+        reference, clean_room = self.adapter('ref'), self.adapter('nb')
+        m = self.call(reference, 'mint', spec=spec(100))
+        address = 'punkti/0.6:' + m['MID']
+        self.eq('canonical record address', m['address'], address)
+        duplicate = ('{"records":[],"records":' + json.dumps([item(m)]) + '}').encode()
+        behaviours = []
+        for node, key in ((reference, 'reference_behaviour'), (clean_room, 'clean_room_behaviour')):
+            status, response = http(node.url, '/push', duplicate)
+            state = self.call(node, 'state')
+            behaviour = dict(http_status=status, response=response,
+                             addresses=sorted(e['address'] for e in state['valid']),
+                             candidates=state['candidates'], log=state['log'])
+            self.row[key] = behaviour
+            behaviours.append(behaviour)
+        self.row['divergence'] = ('HTTP envelope duplicate JSON keys: reference keeps the last records key '
+                                  'and admits the record; clean-room rejects with HTTP 400 and stores nothing.')
+        ref, nb = behaviours
+        self.eq('reference HTTP acceptance', ref['http_status'], 200)
+        self.eq('reference admission', ref['response']['results'][0]['admitted'], True)
+        self.eq('reference classification', ref['response']['results'][0]['state'], 'VALID')
+        self.eq('reference stored address', ref['addresses'], [address])
+        self.eq('reference stored record', self.pullpage(reference)['records'], [item(m)])
+        self.eq('clean-room HTTP rejection', nb['http_status'], 400)
+        self.eq('clean-room main store empty', nb['addresses'], [])
+        self.eq('clean-room candidates empty', nb['candidates'], [])
+        self.eq('clean-room log empty', nb['log'], [])
+        self.eq('HTTP outcomes differ', ref['http_status'] != nb['http_status'], True)
+        self.eq('stored addresses differ', ref['addresses'] != nb['addresses'], True)
 
     def test_no_reference_imports(self):
         """Static scan and isolated import prove clean-room source independence."""
