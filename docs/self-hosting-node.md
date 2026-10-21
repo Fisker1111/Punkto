@@ -250,8 +250,9 @@ its consistent backup if a future release changes storage compatibility; the dra
 protocol and storage are not promised frozen.
 
 The `Node image` workflow tests the original 27-test suite and operational suite,
-then builds amd64/arm64. Only `v*` tag pushes and manual dispatch publish. Tags
-produce semver/sha tags and `latest`; manual dispatch produces `preview`/sha.
+then builds amd64/arm64. Only `v*` tag pushes and manual dispatch publish. Release
+tags produce semver/sha tags and `latest`; prerelease tags (containing `-`) and
+manual dispatch do not move `latest`. Manual dispatch produces `preview`/sha.
 There is no main-branch push trigger. A manual run may be selected on any branch;
 review its exact SHA before use.
 
