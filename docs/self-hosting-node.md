@@ -238,10 +238,12 @@ docker compose -f docker-compose.node.yml pull
 docker compose -f docker-compose.node.yml up -d
 curl -fsS http://localhost:8000/node/info
 docker image inspect "$PUNKTO_NODE_IMAGE" --format '{{json .RepoDigests}} {{json .Config.Labels}}'
-docker compose -f docker-compose.node.yml exec node python -c 'import os; print(os.getuid(), os.getgid())'
+docker compose -f docker-compose.node.yml exec node sh -c 'grep -E "^Uid|^Gid" /proc/1/status'
 ```
 
-The UID/GID check should show `10001 10001`. Compare the info build version/revision
+The UID/GID check should show `10001 10001` for PID 1 (the service process; a bare
+`docker compose exec` shell itself still runs as root because the image entrypoint
+is what drops privileges). Compare the info build version/revision
 and OCI labels with the reviewed release SHA; a tag alone can move. The build image
 field is empty unless `PUNKTO_BUILD_IMAGE` is supplied by the operator; the container
 cannot discover its own registry digest. Use registry/inspect evidence for digest
@@ -285,3 +287,9 @@ DNS/TLS and a reverse proxy from `https://punkto.xyz` to port 8000, configure co
 reciprocal peers, and run the same generic image and Compose file. It contains no
 secrets and does not assume existing production nodes speak this draft. No domain,
 branding, seed list or operator-specific identity is baked into the image.
+
+## Release evidence
+
+The Founder-review record for the first published draft image (image digest, CI
+run, two-node proof, restart and isolation evidence) is
+[`node-release-evidence.md`](node-release-evidence.md).
