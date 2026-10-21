@@ -54,26 +54,19 @@ nodes and one reference with overlapping subscriptions, seeded entirely within
 the common subscribed region. Proxy catch-up is checked with both implementations
 as initiator: the resumed PULL reuses `after=3` and transfers exactly two new atoms.
 
-## Result and retained divergence
+## Result and retained divergences
 
-Clean-room tests: **23 passed**. Interop matrix: **10 PASS, 1 FAIL** across 11 test
-methods. The failing rejection row has two assertions describing one divergence:
-
-- A raw `/push` body contains duplicate `records` keys: first an empty list, then
-  a list containing a valid record.
-- Reference: HTTP **200**, `VALID`, `admitted=true`; the record enters its main store.
-- Clean-room: HTTP **400**, `kind=request`, `reason=json`; its main store stays empty.
-
-The test requires rejection and an unchanged store. It remains failing; there is
-no expected-failure decorator or softened assertion. Each malformed-request case
-uses fresh nodes, so the accepted duplicate-key request cannot contaminate the
-noncanonical-base64 or forged-before-valid checks. Those checks pass. Both
-implementations also agree on forged/truncated/flipped/trailing records,
-unsupported algorithms, and future-version wrappers.
-
-Neither implementation's `src/` nor `docs/` was changed. At task start the
-clean-room sources, tests, and project metadata were present but **untracked**,
-contrary to the brief's committed-source premise. This harness commit includes
-only `interop/` and this README; reproducing it requires those existing clean-room
-files with the source hashes recorded in the report. No browser verification is
-applicable to this process/HTTP-only experiment.
+Clean-room tests: **23 passed**. Interop matrix: **13 rows, 0 failures**, of which two
+rows are pinned documented divergences covering seven request-validation behaviours.
+Both implementations agree on every carrier byte (`C`, `S`, `MID`, address, `R`,
+signature) for all six vectors, on validation classifications for invalid data, on
+spatial and Z selection, on unknown-payload preservation, on cursor catch-up after a
+real TCP partition, and on convergence from different orders and subsets. Divergences
+are limited to HTTP request validation that `PUNKTI_0_6_MESH.md` does not specify:
+duplicate envelope keys, equal `h` bounds, equal or reversed elevation bounds, unknown
+query members, declared-address mismatch, and empty PUSH batches. They are pinned by
+`test_http_duplicate_key_divergence` and `test_request_validation_divergences` and listed
+with exact values in [the matrix](interop/interop_matrix.md) and
+[the proof report](docs/PROOF_REPORT.md). Neither implementation's `src/` was changed by
+the harness. See [docs/PROOF_REPORT.md](docs/PROOF_REPORT.md) for the architecture-test
+answer, the proposed minimal spec corrections and the unfrozen list.

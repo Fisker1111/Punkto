@@ -179,3 +179,32 @@ The three full positive candidate vectors, including input seed/envelopes and
 C/S/MID/address/R/signature bytes, are in `tests/vectors.json`; regenerate with
 `python3 tests/vectors.py`. They are pinned regression data for this independent
 implementation. External cross-implementation verification remains pending.
+
+## Cross-implementation divergences (post-hoc, from the interop harness)
+
+The interpretations above were recorded before any interoperability run. The harness then
+exercised the same edges against the reference implementation and found seven
+HTTP-request-validation differences, itemised in [../interop/interop_matrix.md](../interop/interop_matrix.md) and
+[PROOF_REPORT.md](PROOF_REPORT.md):
+
+1. duplicate JSON member names in a `/push` body (this implementation rejects with 400;
+   the reference accepts, last key wins);
+2. equal `h_lo == h_hi` bounds in a spatial query (this implementation answers with an
+   empty page; the reference returns 400);
+3. reversed elevation bounds (this implementation answers with an empty page; the
+   reference returns 400);
+4. equal elevation bounds (this implementation answers with an empty page; the reference
+   returns 400);
+5. an unknown query member (this implementation returns 400; the reference ignores it);
+6. a declared address that does not match the record on `/push` (this implementation
+   returns a per-record `INVALID-structural`; the reference returns 400 for the whole
+   request);
+7. an empty `records` batch (this implementation returns 200 with empty results; the
+   reference returns 400).
+
+Items 2-4 partially contradict interpretation 6 above, which expected literal comparison
+for every bound pair: reversed `h` bounds are in fact rejected by both implementations,
+while equal `h` bounds and equal/reversed elevation bounds are accepted here and rejected
+by the reference. Items 1, 5, 6 and 7 correspond to interpretations 8 and 12. No carrier
+byte, MID, address, signature, validation state of a well-formed record, or spatial
+selection of valid records differs as a result.
