@@ -70,3 +70,5 @@ with exact values in [the matrix](interop/interop_matrix.md) and
 [the proof report](docs/PROOF_REPORT.md). Neither implementation's `src/` was changed by
 the harness. See [docs/PROOF_REPORT.md](docs/PROOF_REPORT.md) for the architecture-test
 answer, the proposed minimal spec corrections and the unfrozen list.
+
+How the implementation was kept clean-room, and what is verifiable versus procedural about that claim, is recorded in [docs/CLEANROOM_PROVENANCE.md](docs/CLEANROOM_PROVENANCE.md).
