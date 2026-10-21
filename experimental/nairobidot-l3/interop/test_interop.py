@@ -40,6 +40,16 @@ def item(m, raw=None, address=None):
     return dict(address=address or m['address'], sha256=hashlib.sha256(raw).hexdigest(), record=b64(raw))
 
 
+def evidence(value):
+    """Copy recorded values, hiding runtime epochs without changing assertions."""
+    if isinstance(value, dict):
+        return {key: '<epoch>' if key == 'epoch' and isinstance(item, str) else evidence(item)
+                for key, item in value.items()}
+    if isinstance(value, (list, tuple)):
+        return [evidence(item) for item in value]
+    return value
+
+
 def write_report():
     identities = {}
     for name, folder in [('ref', ROOT / 'experimental/punkti-v0.6-mesh/src'),
@@ -102,11 +112,14 @@ class Interop(unittest.TestCase):
                 self.row['failures'].append(trace)
         write_report()
 
+    def record_comparison(self, label, actual, expected):
+        self.row['comparisons'].append(evidence(dict(label=label, actual=actual, expected=expected)))
+
     def eq(self, label, actual, expected):
-        self.row['comparisons'].append(dict(label=label, actual=actual, expected=expected))
+        self.record_comparison(label, actual, expected)
         if actual != expected:
             self.row['status'] = 'FAIL'
-            self.row['failures'].append(f'{label}: actual={actual!r}; expected={expected!r}')
+            self.row['failures'].append(f'{label}: actual={evidence(actual)!r}; expected={evidence(expected)!r}')
         self.assertEqual(actual, expected, label)
 
     def adapter(self, kind, scopes=None, serve=True):
@@ -283,7 +296,7 @@ class Interop(unittest.TestCase):
                     query = json.loads(parse_qs(urlsplit(path).query)['q'][0])
                     body = json.loads(response.split(b'\r\n\r\n', 1)[1])
                     pulls.append(dict(query=query, response=body))
-            self.row['comparisons'].append(dict(label='captured proxy PULL exchanges ' + kind, actual=pulls, expected='resumed after=3; exactly 2 new records'))
+            self.record_comparison('captured proxy PULL exchanges ' + kind, pulls, 'resumed after=3; exactly 2 new records')
             self.eq('nonempty cursor reused', [p['query']['cursor']['after'] for p in pulls], [3])
             self.eq('only new records transferred by PULL', sorted(r['address'] for p in pulls for r in p['response']['records']), sorted(new))
 
@@ -352,8 +365,8 @@ class Interop(unittest.TestCase):
             fresh = [self.adapter('ref'), self.adapter('nb')]
             responses = [http(a.url, '/push', body) for a in fresh]
             stores = [self.addresses(a) for a in fresh]
-            self.row['comparisons'].append(dict(label=name + ' raw HTTP responses', actual=responses, expected='HTTP 400; empty main stores'))
-            self.row['comparisons'].append(dict(label=name + ' stores (ref, nb)', actual=stores, expected=[[], []]))
+            self.record_comparison(name + ' raw HTTP responses', responses, 'HTTP 400; empty main stores')
+            self.record_comparison(name + ' stores (ref, nb)', stores, [[], []])
             for a, (status, response), addresses in zip(fresh, responses, stores):
                 with self.subTest(case=name, implementation=a.kind, check='status'):
                     self.eq(name + ' HTTP rejection ' + a.kind, status, 400)
@@ -374,7 +387,7 @@ class Interop(unittest.TestCase):
             behaviour = dict(http_status=status, response=response,
                              addresses=sorted(e['address'] for e in state['valid']),
                              candidates=state['candidates'], log=state['log'])
-            self.row[key] = behaviour
+            self.row[key] = evidence(behaviour)
             behaviours.append(behaviour)
         self.row['divergence'] = ('HTTP envelope duplicate JSON keys: reference keeps the last records key '
                                   'and admits the record; clean-room rejects with HTTP 400 and stores nothing.')
@@ -431,7 +444,7 @@ class Interop(unittest.TestCase):
                     (clean_room, 'clean_room_behaviour', nb_status, nb_body)):
                 with self.subTest(case=label, implementation=node.kind):
                     status, response = http(node.url, path, payload)
-                    self.row[key][label] = dict(http_status=status, response=response)
+                    self.row[key][label] = evidence(dict(http_status=status, response=response))
                     self.eq(label + ' HTTP status ' + node.kind, status, expected_status)
                     for field, expected in expected_body.items():
                         self.eq(label + ' ' + field + ' ' + node.kind, response.get(field), expected)
