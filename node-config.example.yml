@@ -1,0 +1,25 @@
+# Canonical operator configuration. ENV overrides YAML; YAML overrides defaults.
+node:
+  name: alice-node                  # Local display label, not protocol identity.
+  public_url: ""                    # Public http(s) origin; empty derives from listen.
+  description: ""                   # Public operational description.
+  operator_contact: ""              # Local-only; omitted from public info.
+network:
+  listen_host: 0.0.0.0               # Bind interface (IPv4 address or hostname).
+  listen_port: 8000                 # Published Compose port must match.
+  advertise_url: ""                 # Callback origin; takes precedence over public_url.
+  peers: []                         # Explicit origins, e.g. ["http://node-b:8000"].
+  sync_interval_seconds: 30         # First attempt after 2 seconds; then this interval.
+# Omitted subscriptions = one global subscription; [] = ACCEPT NOTHING.
+# Bounds are lower-inclusive, upper-exclusive; null means unbounded.
+subscriptions:
+  - h_lo: null                      # Geohash alphabet, 1–12 characters.
+    h_hi: null                      # Lexicographic spatial upper bound.
+    z_min: null                     # Minimum decoded altitude in meters.
+    z_max: null                     # Exclusive maximum decoded altitude in meters.
+storage:
+  data_path: /data                  # Persistent mounted directory; one writer only.
+logging:
+  level: info                      # debug | info | warning | error; stdout.
+branding:
+  display_name: Punkti Node         # Public status display only.

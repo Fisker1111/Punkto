@@ -1,0 +1,16 @@
+# Allowlist: runtime package and image scaffolding only.
+**
+!node/
+!node/Dockerfile
+!node/entrypoint.py
+!node/requirements.txt
+!punkti_node/
+!punkti_node/*.py
+**/__pycache__
+**/*.pyc
+.env
+.env.*
+node-config/
+node-data/
+**/*.pem
+**/*.key
