@@ -47,7 +47,7 @@ subscriptions specify the protocol's spatial admission policy.
 | `branding.display_name` | `Punkti Node`; public UI/about label |
 | `web.enabled` | `true`; node-only examples explicitly use false |
 | `web.root` | `/srv/pwa`; absolute existing directory when enabled |
-| `web.spa_fallback` | `false`; combined example enables exact-link navigation |
+| `web.spa_fallback` | `false`; when true, client routes under `/p/` get the PWA, other unknown paths 404 |
 
 Overrides: `PUNKTO_NODE_CONFIG`, `PUNKTO_HOST`, `PUNKTO_PORT`, `PUNKTO_NODE_NAME`,
 `PUNKTO_PEERS` (comma-separated), `PUNKTO_DATA_DIR`, `PUNKTO_SYNC_INTERVAL`,

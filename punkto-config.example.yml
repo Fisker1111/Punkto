@@ -29,4 +29,4 @@ branding:
 web:
   enabled: true
   root: /srv/pwa
-  spa_fallback: true
+  spa_fallback: true                # Serve the PWA for client routes under /p/ only.

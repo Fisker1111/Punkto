@@ -51,6 +51,9 @@ class WebTests(unittest.TestCase):
         self.assertEqual(headers['Content-Length'], '6')
         self.assertEqual(self.get('/dir/')[2], b'directory')
         self.assertEqual(self.get('/p/exact-link')[2], b'index.html')
+        # SPA fallback must not turn unknown API-like paths into HTML 200s.
+        for path in ['/atom', '/feed', '/latest', '/atoms/v1/info', '/missing']:
+            self.assertEqual(self.get(path)[0], 404, path)
         self.node.web.spa_fallback = False
         self.assertEqual(self.get('/missing')[0], 404)
 

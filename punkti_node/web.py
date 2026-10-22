@@ -4,6 +4,7 @@ from urllib.parse import unquote
 
 
 class StaticWeb:
+    SPA_PREFIXES = ('/p/',)
     MIME = {'.html': 'text/html', '.js': 'text/javascript', '.mjs': 'text/javascript',
             '.css': 'text/css', '.json': 'application/json', '.png': 'image/png',
             '.svg': 'image/svg+xml', '.ico': 'image/x-icon', '.webmanifest': 'application/manifest+json',
@@ -29,7 +30,10 @@ class StaticWeb:
             return True
         if decoded.endswith('/'):
             target = (target / 'index.html').resolve()
-        if not target.is_file() and not target.suffix and self.spa_fallback:
+        # SPA fallback is limited to client-side routes (exact links) so that
+        # unknown operational/API-looking paths still 404 instead of returning
+        # HTML with a 200.
+        if not target.is_file() and self.spa_fallback and decoded.startswith(self.SPA_PREFIXES):
             target = (self.root / 'index.html').resolve()
         if not target.is_relative_to(self.root) or not target.is_file():
             handler.send_error(404)
