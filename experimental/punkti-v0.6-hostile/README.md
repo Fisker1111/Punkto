@@ -24,13 +24,32 @@ PYTHONPATH="$PWD/experimental/nairobidot-l3/src" python3 -m unittest discover -s
 python3 -m unittest discover -s experimental/nairobidot-l3/interop -v
 ```
 
-The hostile suite has 30 test methods: ten scenarios plus those same ten with
-each implementation as initiator. The partition test executes its body three
-times with fresh runners and requires identical status, admitted addresses and
-store sizes. Thus there are 32 scenario executions, not 32 test methods.
+The hostile suite has 125 test methods in six modules:
+
+- `test_network_hostile.py` / `test_cross_impl_network.py`: ten real-HTTP fault
+  scenarios, each also run with both implementations as initiator.
+- `test_envelope_adversarial.py`: 79 envelope/framing cases per implementation.
+- `test_replay_provenance.py`: provenance, replay, unknown algorithm and opaque
+  version cases.
+- `test_cursor_spatial.py`: cursor, ordering, XY+Z and overlapping-scope cases.
+- `test_coverage_eclipse.py`: hello capabilities, stale coverage, withholding and
+  discovery/eclipse manipulation.
+
+The partition test executes its body three times with fresh runners and requires
+identical status, admitted addresses and store sizes. Each adversarial case is
+recorded in `evidence/protocol.json` and classified AGREE / DIVERGE / DEFECT for
+both implementations; divergences are pinned by tests and explained in FINDINGS.
 Baselines contain 27 reference, 23 clean-room and 13 interop tests.
 Interop regenerates its own report; restore incidental report changes before
 committing this experiment.
+
+Scale measurement (real loopback HTTP, no reconciliation protocol):
+
+```sh
+python3 experimental/punkti-v0.6-hostile/src/hostile/measure_scale.py
+```
+
+It rewrites `evidence/scale.json` and `docs/SCALE_MEASUREMENT.md`.
 
 ## Layout and faults
 
