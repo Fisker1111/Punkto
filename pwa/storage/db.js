@@ -1,29 +1,10 @@
-const db = new Dexie('punkto');
+// Isolated L3-backed cache: legacy relay atoms are never loaded.
+// Identity recovery remains in localStorage and is imported by app.js.
+const db = new Dexie('punkto-v06');
 
 db.version(1).stores({
-  atoms: '++id, punkto, t, lat, lon, alt',
-  meta:  'key',
-});
-// v2: clear stale atoms from old feed (forces re-sync from server)
-db.version(2).stores({
-  atoms: '++id, punkto, t, lat, lon, alt',
-  meta:  'key',
-}).upgrade(tx => tx.table('atoms').clear());
-db.version(3).stores({
-  atoms: '++id, punkto, t, lat, lon, alt',
-  meta:  'key',
-}).upgrade(tx => tx.table('atoms').clear());
-// v4: add nodes table for per-node sync cursors and peer discovery
-db.version(4).stores({
-  atoms: '++id, punkto, t, lat, lon, alt',
-  meta:  'key',
-  nodes: 'url',
-});
-// v5: index canonical relay atom ids for exact /p/<atom_id> lookup.
-db.version(5).stores({
   atoms: '++id, atom_id, punkto, t, lat, lon, alt',
-  meta:  'key',
-  nodes: 'url',
+  meta: 'key',
 });
 
 export { db };

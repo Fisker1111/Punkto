@@ -148,7 +148,7 @@ function buildContent({ message, meta, url }) {
   }
   commands.push('/F1 8 Tf');
   commands.push('0.25 0.25 0.25 rg');
-  commands.push(`1 0 0 1 ${MARGIN} ${36} Tm (${pdfEscape('punkto.xyz · leave a message here')}) Tj`);
+  commands.push(`1 0 0 1 ${MARGIN} ${36} Tm (${pdfEscape('Punkto · leave a message here')}) Tj`);
   return commands.join('\n');
 }
 

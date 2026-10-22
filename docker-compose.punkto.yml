@@ -1,0 +1,9 @@
+services:
+  punkto:
+    image: ${PUNKTO_IMAGE:?Set PUNKTO_IMAGE to an image reference, preferably pinned by digest}
+    ports: ["8000:8000"]
+    volumes:
+      - ./config.yml:/config/punkto-node.yml:ro
+      - ./data:/data
+    restart: unless-stopped
+    stop_grace_period: 60s

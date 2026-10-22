@@ -1,0 +1,20 @@
+services:
+  node:
+    image: ${PUNKTO_NODE_IMAGE:-ghcr.io/fisker1111/punkto-node:latest}
+    # Local build alternative: uncomment these lines, then use compose up --build.
+    # build:
+    #   context: .
+    #   dockerfile: node/Dockerfile
+    volumes:
+      - ./node-config:/config:ro
+      - ./node-data:/data
+    ports:
+      - "8000:8000"
+    restart: unless-stopped
+    stop_grace_period: 60s
+    healthcheck:
+      test: ["CMD", "python", "-c", "from punkti_node.config import load_config; from urllib.request import urlopen; c=load_config(); h=c['network']['listen_host']; urlopen('http://'+('127.0.0.1' if h=='0.0.0.0' else h)+':'+str(c['network']['listen_port'])+'/health', timeout=3).close()"]
+      interval: 30s
+      timeout: 5s
+      start_period: 10s
+      retries: 3

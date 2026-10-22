@@ -1701,10 +1701,10 @@
       <div data-testid="settings-network-row-sync-status"><span class="k" id="settings-network-label-sync-status" data-testid="settings-network-label-sync-status">Sync status</span>   <span class="v" id="settings-network-sync-status" data-testid="settings-network-sync-status">checking…</span></div>
       <div data-testid="settings-network-row-last-sync"><span class="k" id="settings-network-label-last-sync" data-testid="settings-network-label-last-sync">Last sync</span>     <span class="v" id="settings-network-last-sync" data-testid="settings-network-last-sync">not synced yet</span></div>
       <div data-testid="settings-network-row-cached-punktis"><span class="k" id="settings-network-label-cached-punktis" data-testid="settings-network-label-cached-punktis">Cached Punktis</span> <span class="v" id="settings-network-cached-count" data-testid="settings-network-cached-count">unknown</span></div>
-      <div data-testid="settings-network-row-known-peers"><span class="k" id="settings-network-label-known-peers" data-testid="settings-network-label-known-peers">Known peers</span>   <span class="v" id="settings-network-peer-count" data-testid="settings-network-peer-count">no peers discovered yet</span></div>
+      <div data-testid="settings-network-row-known-peers"><span class="k" id="settings-network-label-known-peers" data-testid="settings-network-label-known-peers">Configured peers</span>   <span class="v" id="settings-network-peer-count" data-testid="settings-network-peer-count">checking…</span></div>
       <div>
-        <span class="k" id="settings-network-label-known-nodes" data-testid="settings-network-label-known-nodes">Known nodes</span>
-        <div class="settings-network-known-nodes mono" id="settings-network-known-nodes" data-testid="settings-network-known-nodes">no known nodes yet</div>
+        <span class="k" id="settings-network-label-known-nodes" data-testid="settings-network-label-known-nodes">Node details</span>
+        <div class="settings-network-known-nodes mono" id="settings-network-known-nodes" data-testid="settings-network-known-nodes">checking…</div>
       </div>
       <div style="display:none"><span class="k">Cached atoms</span> <span class="v" id="settings-atom-count">0</span></div>
       <div style="display:none"><span class="k">Node</span>  <span class="v" id="settings-node">—</span></div>
@@ -1718,19 +1718,16 @@
     <div class="settings-section-title">Node</div>
     <div class="settings-info" id="settings-node-section" data-testid="settings-node-section">
       <div><span class="k">Public node status</span><span class="v" id="settings-node-status">checking…</span></div>
-      <div><span class="k">Mode</span><span class="v">Read-only</span></div>
       <div><span class="k">Name</span><span class="v" id="settings-node-name">—</span></div>
       <div><span class="k">Public URL</span><span class="v mono" id="settings-node-public-url">—</span></div>
-      <div><span class="k">Domain/hostnames</span><span class="v mono multiline" id="settings-node-domain-hostnames">—</span></div>
-      <div><span class="k">Fingerprint</span><span class="v mono" id="settings-node-fingerprint">—</span></div>
+      <div><span class="k">Store epoch</span><span class="v mono" id="settings-node-fingerprint">—</span></div>
       <div><span class="k">Version</span><span class="v" id="settings-node-version">—</span></div>
       <div><span class="k">Config loaded</span><span class="v" id="settings-node-config-loaded">—</span></div>
-      <div><span class="k">Roles</span><span class="v multiline" id="settings-node-roles">—</span></div>
-      <div><span class="k">Serving policy</span><span class="v multiline" id="settings-node-serving">—</span></div>
-      <div><span class="k">Seed nodes</span><span class="v mono multiline" id="settings-node-seed-nodes">—</span></div>
-      <div><span class="k">Known nodes</span><span class="v mono multiline" id="settings-node-known-nodes">—</span></div>
-      <div><span class="k">DB/feed stats</span><span class="v multiline" id="settings-node-stats">—</span></div>
-      <div><span class="k">Relay health</span><span class="v" id="settings-node-health">—</span></div>
+      <div><span class="k">Protocol</span><span class="v multiline" id="settings-node-roles">—</span></div>
+      <div><span class="k">Build revision</span><span class="v multiline" id="settings-node-serving">—</span></div>
+      <div><span class="k">Node details</span><span class="v mono multiline" id="settings-node-known-nodes">—</span></div>
+      <div><span class="k">Stored records</span><span class="v multiline" id="settings-node-stats">—</span></div>
+      <div><span class="k">Node health</span><span class="v" id="settings-node-health">—</span></div>
     </div>
     <p class="settings-note">This page exposes public node information only. Configuration changes are made on the server.</p>
     <p class="settings-note">Config is edited on the server by the operator.</p>
@@ -2072,5 +2069,6 @@
   </script>
   <script type="module" src="/app.js"></script>
 
+<footer id="node-about" class="dim" style="position:fixed;bottom:0;right:8px;font-size:10px;pointer-events:none">Punkto</footer>
 </body>
 </html>

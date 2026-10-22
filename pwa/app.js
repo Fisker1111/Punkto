@@ -41,14 +41,13 @@ import { initSettingsView, renderSettingsView } from './ui-settings.js';
 import { decodeAtomLocation, encodeLocation, haversineMeters } from './core/location.js';
 import { db } from './storage/db.js';
 import { upsertAtom, getAllAtomsNewestFirst, getAllAtoms } from './storage/atom-store.js';
-import { ensureNode } from './storage/node-store.js';
-import { fmtTime, fmtRelativeTime, fmtCoords, fmtDistance, fmtAltitudeLabel, deriveTitle, deriveCategory, getCategoryMeta, escHtml, renderAtomText } from './core/display.js';
+import { fmtTime, fmtCoords, fmtDistance, fmtAltitudeLabel, deriveTitle, deriveCategory, getCategoryMeta, escHtml, renderAtomText } from './core/display.js';
 import { isHiddenAtom, isVerifiedAtom } from './core/atoms.js';
 import { ensurePunktoPrefix, stripPunktoPrefix, parseDeepLinkPunktoId as parseDeepLinkPunktoIdFromPath } from './protocol/punkto-id.js';
 import { canonicalAtomId, parsePublicPPath } from './protocol/exact-link.js';
 import { downloadPunktiPdf } from './print-pdf.js';
-import { createNodeRegistry } from './sync/node-registry.js';
-import { postAtomToNetwork, fetchNodeInfo, fetchNodeCursor } from './sync/network-client.js';
+import { createPunktiClient } from './sync/punkti-client.js';
+
 import { createSyncEngine } from './sync/sync-engine.js';
 
 // ---------------------------------------------------------------------------
@@ -59,14 +58,8 @@ const NODE_URL = window.location.origin;
 const SYNC_INTERVAL_MS = 30_000;
 const MAP_STYLE = 'https://tiles.openfreemap.org/styles/liberty';
 
-// Seed nodes for protocol-native load balancing (punkto.sync.md §5b)
-const SEED_NODES = [
-  'https://node1.punkto.xyz',
-  'https://node2.punkto.xyz',
-];
-
-// Node registry + write round-robin (extracted sync ownership)
-const nodeRegistry = createNodeRegistry({ nodeUrl: NODE_URL, seedNodes: SEED_NODES });
+// The local origin is the only browser data source; mesh sync belongs to the node.
+const punktiClient = createPunktiClient({ baseUrl: NODE_URL, identity: () => ensureIdentity() });
 let syncEngine = null;
 let lastSyncAtMs = null;
 let syncBootPromise = null;
@@ -179,8 +172,6 @@ const elMapEl       = document.getElementById('map');
 const elMapBoardSheet = document.getElementById('map-board-sheet');
 const elModalLocation = document.getElementById('modal-location');
 const elToggle3D    = document.getElementById('toggle-3d');
-const elSettingsNode = document.getElementById('settings-node');
-const elSettingsPeers = document.getElementById('settings-peers');
 const elSettingsCount = document.getElementById('settings-count');
 const elOnboardingHint = document.getElementById('onboarding-hint');
 const elMapEmptyHint = document.getElementById('map-empty-hint');
@@ -200,10 +191,8 @@ function setSyncStatus(state) {
 function ensureSyncEngine() {
   if (syncEngine) return syncEngine;
   syncEngine = createSyncEngine({
-    nodeUrl: NODE_URL,
-    seedNodes: SEED_NODES,
+    client: punktiClient,
     syncIntervalMs: SYNC_INTERVAL_MS,
-    nodeRegistry,
     isHiddenAtom,
     callbacks: {
       onSyncStart: () => setSyncStatus('syncing'),
@@ -213,7 +202,6 @@ function ensureSyncEngine() {
       },
       onSyncError: () => setSyncStatus('error'),
       onAtomsChanged: (newAtomIds) => queueRefreshUI(newAtomIds, 50),
-      onPeersChanged: () => refreshSettingsNetworkInfo().catch(() => {}),
     },
   });
   return syncEngine;
@@ -243,14 +231,8 @@ async function startSyncBoot() {
   syncBootPromise = (async () => {
     const engine = ensureSyncEngine();
     try {
-      nodeRegistry.initNodeRegistry();
-      for (const url of SEED_NODES) {
-        const seeded = await ensureNode(url, 0);
-        if (seeded) console.log('[lb] seeded node:', url);
-      }
-
-      await engine.discoverPeers();
       await engine.syncFeed();
+      await refreshSettingsNetworkInfo();
     } catch (err) {
       console.warn('[sync] boot sync failed:', err);
       setSyncStatus('error');
@@ -542,8 +524,8 @@ function readableReplyError(err) {
 function readablePublishError(err) {
   const code = err?.code || err?.detail?.error;
   if (code === 'rate_limited') return 'Publish was rate limited. Your draft is still here; wait a moment and try again.';
-  if (code === 'atom_too_old') return 'The relay rejected this timestamp. Your draft is still here; try publishing again.';
-  if (code === 'invalid_signature') return 'The relay rejected the signature. Your draft is still here; check your identity or import it again.';
+  if (code === 'atom_too_old') return 'The node rejected this timestamp. Your draft is still here; try publishing again.';
+  if (code === 'invalid_signature') return 'The node rejected the signature. Your draft is still here; check your identity or import it again.';
   if (err?.name === 'TimeoutError') return 'Network timed out. Your draft is still here; try again when the connection returns.';
   return `Could not publish yet. Your draft is still here. ${err?.message || 'Check your connection and try again.'}`;
 }
@@ -575,7 +557,7 @@ async function submitBoardReply({ boardAtom, text }) {
 
   try {
     const signedReply = await signAtomForSubmit(reply);
-    const result = await postAtomToNetwork(signedReply, nodeRegistry);
+    const result = await punktiClient.pushAtom(signedReply);
     if (result?.atom_id) signedReply.atom_id = result.atom_id;
     if (!signedReply.atom_id) signedReply.atom_id = await canonicalAtomId(signedReply);
     await upsertAtom(signedReply);
@@ -629,26 +611,17 @@ async function loadPersistedIdentity() {
   return null;
 }
 
-// Load the active local identity for signing. Publishing may continue unsigned
-// when no identity exists, but Punkto never silently creates or replaces keys.
+// Publishing requires the existing local identity; never silently replace keys.
 async function ensureIdentity() {
   return loadPersistedIdentity();
 }
 
-// Sign an atom before network submission. Falls back to unsigned if no identity
-// could be obtained (relay with require_sig will then reject with 403).
 async function signAtomForSubmit(atom) {
   const identity = await ensureIdentity();
   if (!identity || typeof window.signAtom !== 'function') {
-    console.warn('[sign] no identity or signAtom unavailable — submitting unsigned');
-    return atom;
+    throw new Error('Create or import an identity in Settings before publishing.');
   }
-  try {
-    return await window.signAtom(atom, identity.secretKey, identity.pubkey);
-  } catch (err) {
-    console.error('[sign] signing failed:', err);
-    return atom;
-  }
+  return window.signAtom(atom, identity.secretKey, identity.pubkey);
 }
 
 async function submitAtomFromModal({ text, author, category, draft }) {
@@ -678,7 +651,7 @@ async function submitAtomFromModal({ text, author, category, draft }) {
   try {
     if (author) setStoredAuthorName(author);
     const signedAtom = await signAtomForSubmit(atom);
-    const result = await postAtomToNetwork(signedAtom, nodeRegistry);
+    const result = await punktiClient.pushAtom(signedAtom);
     if (result?.atom_id) signedAtom.atom_id = result.atom_id;
     if (!signedAtom.atom_id) signedAtom.atom_id = await canonicalAtomId(signedAtom);
     await upsertAtom(signedAtom);
@@ -823,10 +796,6 @@ function showOnboarding() {
 // Settings menu
 // ---------------------------------------------------------------------------
 
-function hostOf(url) {
-  try { return new URL(url).host; } catch { return url; }
-}
-
 // ---------------------------------------------------------------------------
 // Mnemonic modal — shows generated key words in-app (no window.alert)
 // ---------------------------------------------------------------------------
@@ -866,183 +835,32 @@ function updateSettingsCount(count) {
   renderSettingsView({ network: { atomCount: count, cachedCount: count }, syncStatus: count });
 }
 
-/**
- * Refresh the node + peer info block in the settings menu. Runs on-demand
- * (each time the menu opens) so we never poll. Updates topbar sync-indicator
- * to reflect lag status. Gracefully degrades when peers are unreachable or
- * when /info doesn't advertise a peer list.
- */
-
-
-function yesNo(value) {
-  if (value === true) return 'yes';
-  if (value === false) return 'no';
-  return 'unknown';
-}
-
-function formatBooleanMap(obj) {
-  if (!obj || typeof obj !== 'object') return '—';
-  const rows = Object.entries(obj).map(([key, value]) => `${key}: ${yesNo(value)}`);
-  return rows.length ? rows.join('\n') : '—';
-}
-
-function formatNodeList(list) {
-  return Array.isArray(list) && list.length ? list.join('\n') : 'none';
-}
-
-function formatNodeStats(stats) {
-  if (!stats || typeof stats !== 'object') return '—';
-  const oldest = stats.oldest_t ? fmtTime(stats.oldest_t) : 'none';
-  const newest = stats.newest_t ? fmtTime(stats.newest_t) : 'none';
-  return [`buffer_size: ${stats.buffer_size ?? 0}`, `oldest_t: ${oldest}`, `newest_t: ${newest}`].join('\n');
-}
-
-function nodeStatusViewFromInfo(info) {
-  const node = info?.node || {};
-  const software = info?.software || {};
-  const config = info?.config || {};
-  const domainParts = [];
-  if (node.domain_dns) domainParts.push(node.domain_dns);
-  if (Array.isArray(node.hostnames) && node.hostnames.length) domainParts.push(...node.hostnames);
-  return {
-    status: info?.ok ? 'online' : 'unavailable',
-    name: node.name,
-    publicUrl: node.public_url,
-    domainHostnames: domainParts.length ? domainParts.join('\n') : '—',
-    fingerprint: node.fingerprint,
-    version: [software.name || 'Punkto', software.version || 'unknown', software.runtime ? `(${software.runtime})` : ''].filter(Boolean).join(' '),
-    configLoaded: `${yesNo(config.loaded)}${config.path ? ` (${config.path})` : ''}`,
-    roles: formatBooleanMap(info?.roles),
-    serving: formatBooleanMap(info?.serving),
-    seedNodes: formatNodeList(info?.network?.seed_nodes),
-    knownNodes: formatNodeList(info?.network?.known_nodes),
-    stats: formatNodeStats(info?.stats),
-    health: info?.health?.status || 'unknown',
-  };
-}
-
 async function refreshPublicNodeStatus() {
-  renderSettingsView({ nodeStatus: { status: 'checking…' } });
-  try {
-    const res = await fetch(`${NODE_URL}/node/info`, { signal: AbortSignal.timeout(6000) });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const info = await res.json();
-    renderSettingsView({ nodeStatus: nodeStatusViewFromInfo(info) });
-  } catch (err) {
-    renderSettingsView({
-      nodeStatus: {
-        status: 'unavailable',
-        health: 'unreachable',
-      },
-    });
-    console.warn('[node] public status unavailable:', err);
-  }
+  return refreshSettingsNetworkInfo();
 }
 
-function healthToNetworkStatus(health) {
-  if (health === 'ok') return 'online';
-  if (health === 'failing') return 'failing';
-  if (health === 'recovering') return 'sleeping';
-  if (health === 'unavailable') return 'stale';
-  return 'unknown';
-}
-
-function buildKnownNodesHtml(localCursor, peerUrls, peerCursors) {
-  const snapshot = typeof nodeRegistry.getNodeSnapshot === 'function' ? nodeRegistry.getNodeSnapshot() : [];
-  const cursorByUrl = new Map([[NODE_URL, localCursor], ...peerUrls.map((url, i) => [url, peerCursors[i]])]);
-  const snapshotUrls = snapshot.map((entry) => entry.url).filter(Boolean);
-  const urls = [...snapshotUrls, NODE_URL, ...SEED_NODES];
-  const uniqueUrls = [...new Set(urls.map((url) => String(url).replace(/\/$/, '')).filter(Boolean))];
-  if (!uniqueUrls.length) return '<span class="dim">no known nodes yet</span>';
-  return uniqueUrls.map((url) => {
-    const nodeEntry = snapshot.find((entry) => entry.url === url);
-    const health = nodeEntry?.health;
-    const unavailableSince = nodeEntry?.unavailableSince;
-    const status = healthToNetworkStatus(health);
-    const cursor = cursorByUrl.get(url);
-    const cursorText = typeof cursor === 'number' ? `cursor ${cursor}` : 'cursor unknown';
-    const lastSeen = unavailableSince ? fmtRelativeTime(unavailableSince) : 'unknown';
-    return [
-      '<div class="settings-network-node-card">',
-      `<div class="settings-network-node-url mono">${escHtml(url)}</div>`,
-      `<div class="settings-network-node-meta">status: ${escHtml(status)} · ${escHtml(cursorText)} · last seen: ${escHtml(lastSeen)}</div>`,
-      '</div>',
-    ].join('');
-  }).join('');
-}
 async function refreshSettingsNetworkInfo() {
-  if (!elSettingsNode) return;
-
-  // Render the node row immediately with a "…" cursor placeholder so the menu
-  // feels responsive while fetches are in flight.
-  renderSettingsView({
-    network: {
-      nodeHtml: `${escHtml(hostOf(NODE_URL))} <span class="dim">(cursor …)</span>`,
-      peersHtml: '<span class="dim">checking…</span>',
-      currentNode: NODE_URL,
-      syncStatus: (syncEngine && syncEngine.isSyncing()) ? 'syncing' : 'idle',
-      lastSync: lastSyncAtMs ? fmtTime(lastSyncAtMs) : 'not synced yet',
-      peerCount: 'checking…',
-      knownNodesHtml: '<span class="dim">checking…</span>',
-    },
-  });
-
-  // 1. Get local /info → peer URLs (fall back to SEED_NODES if absent).
-  const localInfo = await fetchNodeInfo(NODE_URL);
-  let peerUrls = Array.isArray(localInfo?.peers) ? localInfo.peers.slice() : [];
-  if (peerUrls.length === 0) {
-    // Fall back to seed nodes minus current origin
-    peerUrls = SEED_NODES.filter(u => u.replace(/\/$/, '') !== NODE_URL.replace(/\/$/, ''));
-  }
-  peerUrls = peerUrls.map(u => u.replace(/\/$/, ''));
-
-  // 2. Fetch cursors in parallel: local + each peer.
-  const [localCursor, ...peerCursors] = await Promise.all([
-    fetchNodeCursor(NODE_URL),
-    ...peerUrls.map(fetchNodeCursor),
-  ]);
-
-  // 3. Compute lag (local behind highest peer).
-  const reachablePeerCursors = peerCursors.filter(c => typeof c === 'number');
-  const maxPeerCursor = reachablePeerCursors.length
-    ? Math.max(...reachablePeerCursors) : 0;
-  const lag = (typeof localCursor === 'number' && maxPeerCursor > localCursor)
-    ? (maxPeerCursor - localCursor) : 0;
-
-  // 4. Render node row
-  const warnIcon = lag > 0 ? ' <span class="lag-warn" title="This node is behind peers">⚠</span>' : '';
-  const localCursorStr = typeof localCursor === 'number'
-    ? `cursor ${localCursor}` : 'unreachable';
-  const nodeHtml = `${escHtml(hostOf(NODE_URL))} <span class="dim">(${localCursorStr})</span>${warnIcon}`;
-
-  // 5. Render peers list
-  if (elSettingsPeers) {
-    if (peerUrls.length === 0) {
-      renderSettingsView({ network: { peersHtml: '<span class="dim">none</span>' } });
-    } else {
-      const rows = peerUrls.map((url, i) => {
-        const c = peerCursors[i];
-        if (typeof c !== 'number') {
-          return `${escHtml(hostOf(url))} <span class="dim">(unreachable)</span>`;
-        }
-        const diff = typeof localCursor === 'number' ? (c - localCursor) : 0;
-        let diffStr = '';
-        if (diff > 0) diffStr = ` <span class="lag-warn">↓${diff} behind</span>`;
-        else if (diff < 0) diffStr = ` <span class="dim">↑${-diff} ahead</span>`;
-        return `${escHtml(hostOf(url))} <span class="dim">(cursor ${c}${diffStr ? '' : ''})</span>${diffStr}`;
-      });
-      renderSettingsView({ network: { peersHtml: rows.join('<br>') } });
-    }
-  }
-  const knownPeersCount = peerUrls.length ? String(peerUrls.length) : 'no peers discovered yet';
-  const knownNodesHtml = buildKnownNodesHtml(localCursor, peerUrls, peerCursors);
-  renderSettingsView({ network: { nodeHtml, currentNode: NODE_URL, peerCount: knownPeersCount, knownNodesHtml, syncStatus: (syncEngine && syncEngine.isSyncing()) ? 'syncing' : 'idle', lastSync: lastSyncAtMs ? fmtTime(lastSyncAtMs) : 'not synced yet' } });
-
-  // 6. Topbar indicator: amber dot when behind, regardless of sync state
-  if (elSyncDot) {
-    elSyncDot.classList.toggle('lagging', lag > 0);
-    if (lag > 0) elSyncDot.title = `Behind peers by ${lag} bytes`;
-    else elSyncDot.title = 'sync status';
+  try {
+    const info = await punktiClient.nodeInfo();
+    const name = info.branding?.display_name || info.node.name;
+    const about = `${name} · ${info.version}`;
+    const footer = document.getElementById('node-about');
+    if (footer) footer.textContent = about;
+    renderSettingsView({
+      nodeStatus: { status: 'online', name: info.node.name, publicUrl: info.node.public_url || NODE_URL,
+        version: info.version, fingerprint: info.epoch, health: 'online',
+        configLoaded: info.config_loaded ? 'yes' : 'defaults',
+        knownNodes: info.peers.join('\n') || 'none', stats: `${info.store.valid} records`,
+        roles: info.protocol, serving: info.build.revision || 'unknown' },
+      network: { nodeHtml: escHtml(`${about} · ${info.store.valid} records`),
+        currentNode: NODE_URL, peersHtml: info.peers.map(escHtml).join('<br>') || 'none',
+        peerCount: String(info.peers.length), knownNodesHtml: escHtml(info.protocol + ' · epoch ' + info.epoch),
+        syncStatus: syncEngine?.isSyncing() ? 'syncing' : 'idle',
+        lastSync: lastSyncAtMs ? fmtTime(lastSyncAtMs) : 'not synced yet' },
+    });
+  } catch (err) {
+    renderSettingsView({ nodeStatus: { status: 'unavailable', health: 'unreachable' },
+      network: { nodeHtml: 'Node unavailable', syncStatus: 'error' } });
   }
 }
 
