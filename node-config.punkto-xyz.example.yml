@@ -1,0 +1,24 @@
+# Public-safe future deployment example; requires operator DNS/TLS/proxy setup.
+# Uses exactly the generic image. No seed nodes or secrets are embedded.
+node:
+  name: punkto-xyz
+  public_url: https://punkto.xyz
+  description: Punkti draft Mesh node operated at punkto.xyz
+  operator_contact: ""
+network:
+  listen_host: 0.0.0.0
+  listen_port: 8000
+  advertise_url: https://punkto.xyz
+  peers: [] # Add mutually configured compatible draft Mesh origins when available.
+  sync_interval_seconds: 30
+subscriptions:
+  - h_lo: null
+    h_hi: null
+    z_min: null
+    z_max: null
+storage:
+  data_path: /data
+logging:
+  level: info
+branding:
+  display_name: punkto.xyz

@@ -333,3 +333,10 @@ Start with [`CONTRIBUTING.md`](CONTRIBUTING.md). For security issues, see [`SECU
 ---
 
 > *Punkto begins. Anyone, anywhere, can sign atoms.*
+
+## Self-host a Punkti node
+
+Run the generic Punkti 0.6-draft Mesh Docker node with one YAML config and a
+persistent volume. See the [self-hosting guide](docs/self-hosting-node.md) for
+first start, peers, spatial subscriptions, backups and upgrades. This packages
+the draft Mesh reference without changing carrier, wire or validation semantics.
