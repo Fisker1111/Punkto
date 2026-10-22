@@ -8,6 +8,7 @@ from .mesh import peer_url
 from .spatial import Subscription
 
 DEFAULTS = {
+    'web': {'enabled': True, 'root': '/srv/pwa', 'spa_fallback': False},
     'node': {'name': 'punkti-node', 'public_url': '', 'description': '', 'operator_contact': ''},
     'network': {'listen_host': '0.0.0.0', 'listen_port': 8000, 'advertise_url': '',
                 'peers': [], 'sync_interval_seconds': 30},
@@ -15,6 +16,8 @@ DEFAULTS = {
     'logging': {'level': 'info'}, 'branding': {'display_name': 'Punkti Node'},
 }
 ENV = {
+    'PUNKTO_WEB_ENABLED': ('web', 'enabled', lambda s: s.lower() not in ('0', 'false', 'no', 'off')),
+    'PUNKTO_WEB_ROOT': ('web', 'root', str),
     'PUNKTO_HOST': ('network', 'listen_host', str),
     'PUNKTO_PORT': ('network', 'listen_port', int),
     'PUNKTO_NODE_NAME': ('node', 'name', str),
@@ -54,6 +57,14 @@ def load_config(path=None, environ=None):
             for key, default in keys.items():
                 if isinstance(default, str) and not isinstance(config[section][key], str):
                     raise ValueError(f'{section}.{key} must be a string')
+    web = config['web']
+    if type(web['enabled']) is not bool or type(web['spa_fallback']) is not bool:
+        raise ValueError('web.enabled and web.spa_fallback must be booleans')
+    if web['enabled']:
+        if not Path(web['root']).is_absolute():
+            raise ValueError('web.root must be an absolute path')
+        if not Path(web['root']).is_dir():
+            raise ValueError('web.root directory does not exist: ' + web['root'])
     net = config['network']
     if not net['listen_host'] or any(c.isspace() for c in net['listen_host']):
         raise ValueError('network.listen_host must be a host')

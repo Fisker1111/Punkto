@@ -12,6 +12,7 @@ RUN pip install --no-cache-dir -r /app/requirements.txt
 COPY punkti_node/ /app/punkti_node/
 COPY node/entrypoint.py /entrypoint.py
 # Build provenance is not an operator configuration override.
+ENV PUNKTO_WEB_ENABLED=false
 ENV PUNKTO_NODE_CONFIG=/config/punkto-node.yml
 RUN printf '%s\n' "$VERSION" > /app/build-version && printf '%s\n' "$REVISION" > /app/build-revision
 EXPOSE 8000

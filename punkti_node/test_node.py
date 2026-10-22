@@ -36,7 +36,7 @@ class NodeTests(unittest.TestCase):
             node.durable.close()
 
     def config(self, name='a', extra=None):
-        data = dict(node=dict(name=name), network=dict(listen_host='127.0.0.1', listen_port=0),
+        data = dict(web=dict(enabled=False), node=dict(name=name), network=dict(listen_host='127.0.0.1', listen_port=0),
                     storage=dict(data_path=str(self.root / name)))
         for key, value in (extra or {}).items():
             if isinstance(value, dict):

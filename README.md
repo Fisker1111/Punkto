@@ -340,3 +340,12 @@ Run the generic Punkti 0.6-draft Mesh Docker node with one YAML config and a
 persistent volume. See the [self-hosting guide](docs/self-hosting-node.md) for
 first start, peers, spatial subscriptions, backups and upgrades. This packages
 the draft Mesh reference without changing carrier, wire or validation semantics.
+
+## Docker = Punkto node
+
+The root Dockerfile packages the current PWA and Punkti 0.6-draft node into one
+container on one port. Configure `config.yml`, mount persistent `data/`, and use
+`docker-compose.punkto.yml` with a CI-published image reference.
+See [single-image operations](docs/single-image.md) for configuration, routes,
+TLS, mesh peers, backups and digest-pinned upgrades. The node-only image remains
+available through `node/Dockerfile`.

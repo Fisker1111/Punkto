@@ -23,3 +23,9 @@ logging:
   level: info                      # debug | info | warning | error; stdout.
 branding:
   display_name: Punkti Node         # Public status display only.
+
+# Local UI hosting; disabled for the node-only image.
+web:
+  enabled: false
+  root: /srv/pwa
+  spa_fallback: false

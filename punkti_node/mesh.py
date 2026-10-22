@@ -68,6 +68,8 @@ class Node:
         self.subscriptions = tuple([Subscription()] if subscriptions is None else subscriptions)
         self.peers = set(map(peer_url, peers))
         self.epoch = epoch or uuid.uuid4().hex  # Store incarnation, never atom ordering.
+        self.api_prefix = '/api'  # Deployment alias; not a mesh protocol change.
+        self.web = None
         self.store = {}
         self.candidates = {}  # Transport-digest keyed unverified variants, bounded.
         self.log = []
@@ -77,6 +79,10 @@ class Node:
         self.server = None
         self.url = None
         self.metrics = dict(push_requests=0, push_records=0, pull_requests=0, pull_records=0)
+
+    def api_path(self, path):
+        prefix = self.api_prefix
+        return path[len(prefix):] if prefix and path.startswith(prefix + '/') else path
 
     def wants(self, h):
         if h is None:  # Unknown carrier cannot authenticate any spatial address.
@@ -283,6 +289,8 @@ class Node:
 
             def dispatch(self):
                 parsed = urlparse(self.path)
+                # Deployment aliases preserve the native peer protocol surface.
+                parsed = parsed._replace(path=node.api_path(parsed.path))
                 special = node.special_route(self.command, parsed.path, parsed.query)
                 if special is not None:
                     return special
@@ -316,11 +324,16 @@ class Node:
                         else:
                             raise ValueError('sync phase')
                         return {'ok': True}
+                # Static fallback uses the original path so unknown API routes stay errors.
+                if node.web and node.web.serve(self, urlparse(self.path).path):
+                    return None
                 raise ValueError('unknown operation')
 
             def handle_request(self):
                 try:
-                    self.reply(200, self.dispatch())
+                    result = self.dispatch()
+                    if result is not None:
+                        self.reply(200, result)
                 except ResourceLimit as exc:
                     self.reply(413, {'error': str(exc), 'kind': 'resource'})
                 except (ValueError, KeyError, TypeError, IndexError) as exc:
@@ -328,7 +341,7 @@ class Node:
                 except OSError as exc:
                     self.reply(502, {'error': str(exc)})
 
-            do_GET = do_POST = handle_request
+            do_GET = do_POST = do_HEAD = handle_request
 
         self.server = ThreadingHTTPServer((host, port), Handler)
         url_host = '127.0.0.1' if host == '0.0.0.0' else host

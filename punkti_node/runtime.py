@@ -7,6 +7,7 @@ import threading
 import yaml
 from .config import load_config
 from .store import PersistentNode
+from .web import StaticWeb
 
 LOG = logging.getLogger(__name__)
 
@@ -14,6 +15,8 @@ LOG = logging.getLogger(__name__)
 def run(config):
     stopping = threading.Event()
     node = PersistentNode(config)
+    if config['web']['enabled']:
+        node.web = StaticWeb(config['web']['root'], config['web']['spa_fallback'])
     net = config['network']
 
     def stop_requested(signum, frame):

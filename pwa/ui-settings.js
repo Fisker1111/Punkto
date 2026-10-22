@@ -34,13 +34,11 @@ const refs = {
   nodeStatus: null,
   nodeName: null,
   nodePublicUrl: null,
-  nodeDomainHostnames: null,
   nodeFingerprint: null,
   nodeVersion: null,
   nodeConfigLoaded: null,
   nodeRoles: null,
   nodeServing: null,
-  nodeSeedNodes: null,
   nodeKnownNodes: null,
   nodeStats: null,
   nodeHealth: null,
@@ -99,13 +97,11 @@ export function initSettingsView({
   refs.nodeStatus = byId('settings-node-status');
   refs.nodeName = byId('settings-node-name');
   refs.nodePublicUrl = byId('settings-node-public-url');
-  refs.nodeDomainHostnames = byId('settings-node-domain-hostnames');
   refs.nodeFingerprint = byId('settings-node-fingerprint');
   refs.nodeVersion = byId('settings-node-version');
   refs.nodeConfigLoaded = byId('settings-node-config-loaded');
   refs.nodeRoles = byId('settings-node-roles');
   refs.nodeServing = byId('settings-node-serving');
-  refs.nodeSeedNodes = byId('settings-node-seed-nodes');
   refs.nodeKnownNodes = byId('settings-node-known-nodes');
   refs.nodeStats = byId('settings-node-stats');
   refs.nodeHealth = byId('settings-node-health');
@@ -160,20 +156,18 @@ export function renderSettingsView({ network = {}, identity = {}, version = null
   if (refs.networkSyncStatus) refs.networkSyncStatus.textContent = toText(networkView.syncStatus, 'checking…');
   if (refs.networkLastSync) refs.networkLastSync.textContent = toText(networkView.lastSync, 'not synced yet');
   if (refs.networkCachedCount) refs.networkCachedCount.textContent = toText(networkView.cachedCount, 'unknown');
-  if (refs.networkPeerCount) refs.networkPeerCount.textContent = toText(networkView.peerCount, 'no peers discovered yet');
-  if (refs.networkKnownNodes) refs.networkKnownNodes.innerHTML = toText(networkView.knownNodesHtml, 'no known nodes yet');
+  if (refs.networkPeerCount) refs.networkPeerCount.textContent = toText(networkView.peerCount, 'checking…');
+  if (refs.networkKnownNodes) refs.networkKnownNodes.innerHTML = toText(networkView.knownNodesHtml, 'checking…');
 
   if (nodeStatus) {
     if (refs.nodeStatus && nodeStatus.status !== undefined) refs.nodeStatus.textContent = toText(nodeStatus.status, 'checking…');
     if (refs.nodeName && nodeStatus.name !== undefined) refs.nodeName.textContent = toText(nodeStatus.name);
     if (refs.nodePublicUrl && nodeStatus.publicUrl !== undefined) refs.nodePublicUrl.textContent = toText(nodeStatus.publicUrl);
-    if (refs.nodeDomainHostnames && nodeStatus.domainHostnames !== undefined) refs.nodeDomainHostnames.textContent = toText(nodeStatus.domainHostnames);
     if (refs.nodeFingerprint && nodeStatus.fingerprint !== undefined) refs.nodeFingerprint.textContent = toText(nodeStatus.fingerprint);
     if (refs.nodeVersion && nodeStatus.version !== undefined) refs.nodeVersion.textContent = toText(nodeStatus.version);
     if (refs.nodeConfigLoaded && nodeStatus.configLoaded !== undefined) refs.nodeConfigLoaded.textContent = toText(nodeStatus.configLoaded);
     if (refs.nodeRoles && nodeStatus.roles !== undefined) refs.nodeRoles.textContent = toText(nodeStatus.roles);
     if (refs.nodeServing && nodeStatus.serving !== undefined) refs.nodeServing.textContent = toText(nodeStatus.serving);
-    if (refs.nodeSeedNodes && nodeStatus.seedNodes !== undefined) refs.nodeSeedNodes.textContent = toText(nodeStatus.seedNodes);
     if (refs.nodeKnownNodes && nodeStatus.knownNodes !== undefined) refs.nodeKnownNodes.textContent = toText(nodeStatus.knownNodes);
     if (refs.nodeStats && nodeStatus.stats !== undefined) refs.nodeStats.textContent = toText(nodeStatus.stats);
     if (refs.nodeHealth && nodeStatus.health !== undefined) refs.nodeHealth.textContent = toText(nodeStatus.health);
