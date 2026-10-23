@@ -71,7 +71,7 @@ Proposed transport is a UTF-8 JSON object with exactly `v`, `t`, `h`, `x`, `alg`
 | Field | Proposed representation |
 |---|---|
 | `v` | Literal string `punkti/0.6`. |
-| `t` | JSON integer, 0 through 9007199254740991, Unix milliseconds; fractional/exponent spellings rejected. |
+| `t` | JSON integer, Unix milliseconds; exact accepted spelling `0\|[1-9][0-9]*`, maximum 9007199254740991. Reject `-0`, negatives, leading zeros, plus signs, decimal points and exponents. |
 | `h` | Empty string for no spatial anchor, otherwise 12 lowercase characters from `0123456789bcdefghjkmnpqrstuvwxyz`. Exact spatial encoding remains subject to the geohash profile review. |
 | `x` | Application payload as a UTF-8 string; no required type prefix or schema. |
 | `alg` | Nonempty ASCII algorithm identifier, maximum 128 bytes; proposed known profile `ed25519`. Case-sensitive, no aliases. |
@@ -87,6 +87,8 @@ Proposed admission limits are a 1 MiB canonical body, a 2 MiB transport record, 
 ### Canonical bytes and immutable addressing
 
 Define `U32(n)` as four-byte unsigned big-endian length/count, and `LP(b) = U32(length(b)) || b`. Every length is in bytes. `UTF8(s)` encodes the unnormalized scalar string. Base64 fields are decoded before framing; reject malformed padding, nonzero unused bits and noncanonical encodings by decode/re-encode comparison.
+
+JSON timestamp import MUST accept exactly `0|[1-9][0-9]*`, with value <=9007199254740991, and explicitly reject `-0`. Canonical framing uses minimal unsigned decimal with the same bound; this import rule does not change carrier bytes.
 
 The canonical body `C` is the concatenation, in this exact order:
 
@@ -126,11 +128,11 @@ The three requested primary states cannot honestly represent a forged supported 
 
 ### Synchronization semantics
 
-Proposed operations are **PUSH** of immutable records and **Range PULL** over lexicographically sorted full addresses. Range bounds are inclusive start/exclusive end; pages return records, the next address cursor, and an end marker. No timestamps define reconciliation order. A page size bounds work, and a receiver verifies the supplied address against the record whenever it understands that version.
+Proposed operations are **PUSH** of immutable records and **Range PULL** over lexicographically sorted full addresses. Range bounds are inclusive start/exclusive end; when both endpoints are present, equal or reversed bounds MUST be rejected (HTTP 400 in Mesh), while either null endpoint is unbounded; pages return records, the next address cursor, and an end marker. No timestamps define reconciliation order. A page size bounds work, and a receiver verifies the supplied address against the record whenever it understands that version.
 
 Mesh will define network framing, discovery, capability negotiation, snapshots and range summaries. The core contract is already precise: nodes MUST preserve transferred record bytes, deduplicate logical content by full namespace-qualified MID, preserve unknown application/reference/algorithm data, and avoid semantic interpretation. Transport record hashes may identify byte variants; they do not replace native MIDs.
 
-Spatial range subscriptions and range-scoped reconciliation are first-class requirements for that subsequent Mesh. A spatial range selects atoms by `h`, independently of their opaque `x`; it is distinct from the lexicographic MID ranges used by Range PULL above. A node can subscribe to such a spatial range and carry unknown Layer-4 atoms within it. Mesh must define subscription and reconciliation mechanics separately; no new wire encoding or Mesh implementation is authorized here.
+Spatial range subscriptions and range-scoped reconciliation are first-class requirements for that subsequent Mesh. Spatial h and z ranges follow the same rule: reject `h_lo >= h_hi` (literal lexicographic order, not prefix expansion) and `z_min >= z_max` when both endpoints are present; null is unbounded. Subscription construction MUST fail fast for invalid bounds. A spatial range selects atoms by `h`, independently of their opaque `x`; it is distinct from the lexicographic MID ranges used by Range PULL above. A node can subscribe to such a spatial range and carry unknown Layer-4 atoms within it. Mesh must define subscription and reconciliation mechanics separately; no new wire encoding or Mesh implementation is authorized here.
 
 Because signatures are excluded from MID, a bad signature variant must not poison the address permanently. Check a newly received variant before treating it as an already verified duplicate. Store a bounded set of variants or quarantine candidates separately; retain a verified representative when available. Unknown-alg variants cannot safely be assumed equivalent in provenance.
 
