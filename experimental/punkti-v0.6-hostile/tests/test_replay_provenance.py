@@ -46,9 +46,9 @@ class Provenance(unittest.TestCase):
                 row('B-provenance','valid-after-forgery-100-replays',k,[1,99,1],[sum(flags),len(flags)-sum(flags),len(state['log'])],True,raw=dumps(good))
                 wrong=dict(good,address='punkti/0.6:'+'0'*64)
                 code,result=push(n,wrong)
-                expected=(400,{'error':'address mismatch'}) if k=='ref' else (200,{'results':[{'state':S,'admitted':False,'reason':'address-mismatch'}]})
+                expected=(400,{'error':'address mismatch'}) if k=='ref' else (400,{'kind':'request','reason':'address-mismatch'})
                 self.assertEqual((code,result),expected); self.assertEqual(r.state(n),state)
-                row('B-provenance','wrong-declared-address',k,'reject; HTTP versus record tier unspecified',list(expected),False,'DIVERGE',raw=dumps(wrong))
+                row('B-provenance','wrong-declared-address',k,'HTTP 400; no admission',list(expected),False,'AGREE',raw=dumps(wrong))
     def test_unknown_and_opaque(self):
         for k in ('ref','nb'):
             with Runner('candidates',k) as r:
@@ -66,9 +66,9 @@ class Provenance(unittest.TestCase):
                 code,page=http(n.url,'/pull?'+urlencode({'q':'{}'})); self.assertIn(opaque,page['records'])
                 row('B-provenance','opaque-version',k,'OPAQUE-version','OPAQUE-version',True,raw=dumps(opaque))
                 corrupt=dict(opaque,sha256='0'*64); code,result=push(n,corrupt)
-                expected=(400,dict(error='transport digest mismatch')) if k=='ref' else (200,dict(results=[dict(state=S,admitted=False,reason='transport-digest')]))
+                expected=(400,dict(error='transport digest mismatch')) if k=='ref' else (400,dict(kind='request',reason='transport-digest'))
                 self.assertEqual((code,result),expected)
-                row('B-provenance','opaque-corrupt-digest',k,'reject; HTTP versus record tier unspecified',list(expected),False,'DIVERGE',raw=dumps(corrupt))
+                row('B-provenance','opaque-corrupt-digest',k,'HTTP 400; no admission',list(expected),False,'AGREE',raw=dumps(corrupt))
                 good=wrapper(wire(atom())); self.assertTrue(push(n,good)[1]['results'][0]['admitted'])
                 before=r.state(n); collision=dict(opaque,address=good['address'])
                 code,result=push(n,collision); self.assertEqual(code,200); self.assertEqual(result['results'][0]['state'],S); self.assertFalse(result['results'][0]['admitted']); self.assertEqual(r.state(n),before)

@@ -42,9 +42,9 @@ class Coverage(unittest.TestCase):
                 p.idle(); sent=[w for e in p.exchanges if e['path']=='/push' for w in json.loads(e['request'].split(b'\r\n\r\n',1)[1])['records']]
                 self.assertEqual(sent,list(map(item,inside)))
                 row('E-coverage','narrow-advertisement',k,2,len(sent),True,raw=dumps(dict(subscriptions=hello['subscriptions'],records=list(map(item,inside+[outside])))))
-                expected_limits=({'body':1048576,'record':2097152,'page':32,'http':8388608,'candidates':128} if k=='ref' else {'canonical_body':1048576,'record':2097152,'references':256,'relation_bytes':1024,'http_body':8388608,'page':32,'batch':32,'candidates':128,'query_bytes':16384})
+                expected_limits={'body':1048576,'record':2097152,'page':32,'http':8388608,'candidates':128}
                 self.assertEqual(hello['limits'],expected_limits)
-                row('E-coverage','hello-limit-schema',k,'limit member names unspecified',hello['limits'],classification='DIVERGE',raw=b'GET /hello')
+                row('E-coverage','hello-limit-schema',k,expected_limits,hello['limits'],classification='AGREE',raw=b'GET /hello',note='The spec now defines the five required core limit names and units.')
     def test_stale_coverage_and_drop_after(self):
         for k in ('ref','nb'):
             with Runner('stale',k) as r:
@@ -132,9 +132,8 @@ class Coverage(unittest.TestCase):
                                 self.assertEqual(result['hints'],sorted(hints)); self.assertEqual(result['state'],'returned')
                                 row('E-coverage','500-hints-no-crawl',k,[500,0,0,True],[len(result['hints']),len(select.select(sockets,[],[],0)[0]),result['valid'],result['peers_unchanged']],raw=dumps(dict(peers=['http://127.0.0.1:<tripwire-'+str(i)+'>' for i in range(500)])),note='500 unique live accept tripwires; no socket accepted, no peer-set mutation; only explicitly configured peer contacted.')
                             else:
-                                expected='KeyError' if k=='ref' else 'PeerError'; self.assertEqual(result['state'],expected)
-                                self.assertEqual(result['message'],"'peers'" if k=='ref' else 'hello-shape')
-                                row('E-coverage','poisoned-nonimplementation-hint',k,'recoverable failure; node alive',dict(exception=result['state'],message=result['message'],alive=True),False,'DIVERGE',raw=b'{"message":"ordinary HTTP server"}',note='Discovery throws to caller; subprocess adapter catches it and subsequent /hello succeeds. Reference lacks peer-shape validation.')
+                                self.assertEqual(result['state'],'returned'); self.assertEqual(result['hints'],[])
+                                row('E-coverage','poisoned-nonimplementation-hint',k,dict(state='returned',hints=[],alive=True),dict(state=result['state'],hints=result['hints'],alive=True),False,'AGREE',raw=b'{"message":"ordinary HTTP server"}',note='The spec now defines malformed discovery hellos as skipped; node alive and store unchanged.')
                         self.assertEqual(calls,['/hello','/hello'])
                     finally:
                         if proc.poll() is None:

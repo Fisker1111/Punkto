@@ -8,13 +8,10 @@
   },
   "counts": {
     "nb": {
-      "AGREE": 141,
-      "DEFECT": 2,
-      "DIVERGE": 11
+      "AGREE": 154
     },
     "ref": {
-      "AGREE": 141,
-      "DIVERGE": 13
+      "AGREE": 154
     }
   },
   "rows": [
@@ -1853,8 +1850,8 @@
     {
       "admitted": null,
       "case": "t-negative-zero",
-      "classification": "DIVERGE",
-      "expected_state": "unsigned-zero spelling unspecified",
+      "classification": "AGREE",
+      "expected_state": "INVALID-structural",
       "group": "A-envelope",
       "implementation": "nb",
       "input": {
@@ -1867,8 +1864,8 @@
     {
       "admitted": null,
       "case": "t-negative-zero",
-      "classification": "DIVERGE",
-      "expected_state": "unsigned-zero spelling unspecified",
+      "classification": "AGREE",
+      "expected_state": "INVALID-structural",
       "group": "A-envelope",
       "implementation": "ref",
       "input": {
@@ -1876,7 +1873,7 @@
         "length": 242
       },
       "note": "Direct import_json/validate; successfully imported R also checked via original --stdin decode.",
-      "observed_state": "VALID"
+      "observed_state": "INVALID-structural"
     },
     {
       "admitted": null,
@@ -2553,8 +2550,8 @@
     {
       "admitted": false,
       "case": "opaque-corrupt-digest",
-      "classification": "DIVERGE",
-      "expected_state": "reject; HTTP versus record tier unspecified",
+      "classification": "AGREE",
+      "expected_state": "HTTP 400; no admission",
       "group": "B-provenance",
       "implementation": "nb",
       "input": {
@@ -2563,23 +2560,18 @@
       },
       "note": "",
       "observed_state": [
-        200,
+        400,
         {
-          "results": [
-            {
-              "admitted": false,
-              "reason": "transport-digest",
-              "state": "INVALID-structural"
-            }
-          ]
+          "kind": "request",
+          "reason": "transport-digest"
         }
       ]
     },
     {
       "admitted": false,
       "case": "opaque-corrupt-digest",
-      "classification": "DIVERGE",
-      "expected_state": "reject; HTTP versus record tier unspecified",
+      "classification": "AGREE",
+      "expected_state": "HTTP 400; no admission",
       "group": "B-provenance",
       "implementation": "ref",
       "input": {
@@ -2725,8 +2717,8 @@
     {
       "admitted": false,
       "case": "wrong-declared-address",
-      "classification": "DIVERGE",
-      "expected_state": "reject; HTTP versus record tier unspecified",
+      "classification": "AGREE",
+      "expected_state": "HTTP 400; no admission",
       "group": "B-provenance",
       "implementation": "nb",
       "input": {
@@ -2735,23 +2727,18 @@
       },
       "note": "",
       "observed_state": [
-        200,
+        400,
         {
-          "results": [
-            {
-              "admitted": false,
-              "reason": "address-mismatch",
-              "state": "INVALID-structural"
-            }
-          ]
+          "kind": "request",
+          "reason": "address-mismatch"
         }
       ]
     },
     {
       "admitted": false,
       "case": "wrong-declared-address",
-      "classification": "DIVERGE",
-      "expected_state": "reject; HTTP versus record tier unspecified",
+      "classification": "AGREE",
+      "expected_state": "HTTP 400; no admission",
       "group": "B-provenance",
       "implementation": "ref",
       "input": {
@@ -3652,7 +3639,7 @@
     {
       "admitted": false,
       "case": "limit-33",
-      "classification": "DIVERGE",
+      "classification": "AGREE",
       "expected_state": "accept 1..32; refuse others",
       "group": "C-cursors",
       "implementation": "nb",
@@ -3672,7 +3659,7 @@
     {
       "admitted": false,
       "case": "limit-33",
-      "classification": "DIVERGE",
+      "classification": "AGREE",
       "expected_state": "accept 1..32; refuse others",
       "group": "C-cursors",
       "implementation": "ref",
@@ -3683,16 +3670,17 @@
       "note": "",
       "observed_state": {
         "response": {
-          "error": "page size"
+          "error": "page size",
+          "kind": "resource"
         },
-        "status": 400
+        "status": 413
       }
     },
     {
       "admitted": null,
       "case": "mid-empty-sentinel",
-      "classification": "DIVERGE",
-      "expected_state": "empty cursor preserved; initial sentinel unspecified",
+      "classification": "AGREE",
+      "expected_state": null,
       "group": "C-cursors",
       "implementation": "nb",
       "input": {
@@ -3705,8 +3693,8 @@
     {
       "admitted": null,
       "case": "mid-empty-sentinel",
-      "classification": "DIVERGE",
-      "expected_state": "empty cursor preserved; initial sentinel unspecified",
+      "classification": "AGREE",
+      "expected_state": null,
       "group": "C-cursors",
       "implementation": "ref",
       "input": {
@@ -3714,15 +3702,12 @@
         "length": 14
       },
       "note": "",
-      "observed_state": [
-        "",
-        ""
-      ]
+      "observed_state": null
     },
     {
       "admitted": false,
       "case": "mid-equal",
-      "classification": "DEFECT",
+      "classification": "AGREE",
       "expected_state": "reject lo >= hi",
       "group": "C-cursors",
       "implementation": "nb",
@@ -3730,18 +3715,19 @@
         "hex": "7b226d6f6465223a226d6964222c226c6f223a2270756e6b74692f302e363a61353331653965366565313466343531353162393630653339346464336136633463656262303037343130323231663434383335633638333564653961613032222c226869223a2270756e6b74692f302e363a61353331653965366565313466343531353162393630653339346464336136633463656262303037343130323231663434383335633638333564653961613032227d",
         "length": 180
       },
-      "note": "Brief requires rejection; Mesh half-open bounds do not explicitly mandate rejecting empty intervals. Clarify policy.",
+      "note": "The spec now requires HTTP 400 for equal or reversed bounds.",
       "observed_state": {
-        "after": null,
-        "end": true,
-        "records": [],
-        "status": 200
+        "response": {
+          "kind": "request",
+          "reason": "equal or reversed bounds"
+        },
+        "status": 400
       }
     },
     {
       "admitted": false,
       "case": "mid-equal",
-      "classification": "DIVERGE",
+      "classification": "AGREE",
       "expected_state": "reject lo >= hi",
       "group": "C-cursors",
       "implementation": "ref",
@@ -3749,7 +3735,7 @@
         "hex": "7b226d6f6465223a226d6964222c226c6f223a2270756e6b74692f302e363a61353331653965366565313466343531353162393630653339346464336136633463656262303037343130323231663434383335633638333564653961613032222c226869223a2270756e6b74692f302e363a61353331653965366565313466343531353162393630653339346464336136633463656262303037343130323231663434383335633638333564653961613032227d",
         "length": 180
       },
-      "note": "Brief requires rejection; Mesh half-open bounds do not explicitly mandate rejecting empty intervals. Clarify policy.",
+      "note": "The spec now requires HTTP 400 for equal or reversed bounds.",
       "observed_state": {
         "response": {
           "error": "MID bounds"
@@ -3800,7 +3786,7 @@
     {
       "admitted": false,
       "case": "mid-reversed",
-      "classification": "DEFECT",
+      "classification": "AGREE",
       "expected_state": "reject lo >= hi",
       "group": "C-cursors",
       "implementation": "nb",
@@ -3808,18 +3794,19 @@
         "hex": "7b226d6f6465223a226d6964222c226c6f223a2270756e6b74692f302e363a61386237623531636130346165373539326134326437393931336433353036633239613263316136363031366636643536613965643261376338353932306231222c226869223a2270756e6b74692f302e363a61353331653965366565313466343531353162393630653339346464336136633463656262303037343130323231663434383335633638333564653961613032227d",
         "length": 180
       },
-      "note": "Brief requires rejection; Mesh half-open bounds do not explicitly mandate rejecting empty intervals. Clarify policy.",
+      "note": "The spec now requires HTTP 400 for equal or reversed bounds.",
       "observed_state": {
-        "after": null,
-        "end": true,
-        "records": [],
-        "status": 200
+        "response": {
+          "kind": "request",
+          "reason": "equal or reversed bounds"
+        },
+        "status": 400
       }
     },
     {
       "admitted": false,
       "case": "mid-reversed",
-      "classification": "DIVERGE",
+      "classification": "AGREE",
       "expected_state": "reject lo >= hi",
       "group": "C-cursors",
       "implementation": "ref",
@@ -3827,7 +3814,7 @@
         "hex": "7b226d6f6465223a226d6964222c226c6f223a2270756e6b74692f302e363a61386237623531636130346165373539326134326437393931336433353036633239613263316136363031366636643536613965643261376338353932306231222c226869223a2270756e6b74692f302e363a61353331653965366565313466343531353162393630653339346464336136633463656262303037343130323231663434383335633638333564653961613032227d",
         "length": 180
       },
-      "note": "Brief requires rejection; Mesh half-open bounds do not explicitly mandate rejecting empty intervals. Clarify policy.",
+      "note": "The spec now requires HTTP 400 for equal or reversed bounds.",
       "observed_state": {
         "response": {
           "error": "MID bounds"
@@ -4134,8 +4121,8 @@
     {
       "admitted": null,
       "case": "h-equal",
-      "classification": "DIVERGE",
-      "expected_state": "empty interval policy unspecified",
+      "classification": "AGREE",
+      "expected_state": "REJECT",
       "group": "D-spatial",
       "implementation": "nb",
       "input": {
@@ -4143,13 +4130,13 @@
         "length": 74
       },
       "note": "",
-      "observed_state": false
+      "observed_state": "REJECT"
     },
     {
       "admitted": null,
       "case": "h-equal",
-      "classification": "DIVERGE",
-      "expected_state": "empty interval policy unspecified",
+      "classification": "AGREE",
+      "expected_state": "REJECT",
       "group": "D-spatial",
       "implementation": "ref",
       "input": {
@@ -4162,8 +4149,8 @@
     {
       "admitted": null,
       "case": "h-reversed",
-      "classification": "DIVERGE",
-      "expected_state": "empty interval policy unspecified",
+      "classification": "AGREE",
+      "expected_state": "REJECT",
       "group": "D-spatial",
       "implementation": "nb",
       "input": {
@@ -4171,13 +4158,13 @@
         "length": 52
       },
       "note": "",
-      "observed_state": false
+      "observed_state": "REJECT"
     },
     {
       "admitted": null,
       "case": "h-reversed",
-      "classification": "DIVERGE",
-      "expected_state": "empty interval policy unspecified",
+      "classification": "AGREE",
+      "expected_state": "REJECT",
       "group": "D-spatial",
       "implementation": "ref",
       "input": {
@@ -4438,8 +4425,8 @@
     {
       "admitted": null,
       "case": "z-equal",
-      "classification": "DIVERGE",
-      "expected_state": "empty interval policy unspecified",
+      "classification": "AGREE",
+      "expected_state": "REJECT",
       "group": "D-spatial",
       "implementation": "nb",
       "input": {
@@ -4447,13 +4434,13 @@
         "length": 84
       },
       "note": "",
-      "observed_state": false
+      "observed_state": "REJECT"
     },
     {
       "admitted": null,
       "case": "z-equal",
-      "classification": "DIVERGE",
-      "expected_state": "empty interval policy unspecified",
+      "classification": "AGREE",
+      "expected_state": "REJECT",
       "group": "D-spatial",
       "implementation": "ref",
       "input": {
@@ -4522,8 +4509,8 @@
     {
       "admitted": null,
       "case": "z-reversed",
-      "classification": "DIVERGE",
-      "expected_state": "empty interval policy unspecified",
+      "classification": "AGREE",
+      "expected_state": "REJECT",
       "group": "D-spatial",
       "implementation": "nb",
       "input": {
@@ -4531,13 +4518,13 @@
         "length": 51
       },
       "note": "",
-      "observed_state": false
+      "observed_state": "REJECT"
     },
     {
       "admitted": null,
       "case": "z-reversed",
-      "classification": "DIVERGE",
-      "expected_state": "empty interval policy unspecified",
+      "classification": "AGREE",
+      "expected_state": "REJECT",
       "group": "D-spatial",
       "implementation": "ref",
       "input": {
@@ -4674,39 +4661,47 @@
     {
       "admitted": null,
       "case": "hello-limit-schema",
-      "classification": "DIVERGE",
-      "expected_state": "limit member names unspecified",
-      "group": "E-coverage",
-      "implementation": "nb",
-      "input": {
-        "hex": "474554202f68656c6c6f",
-        "length": 10
-      },
-      "note": "",
-      "observed_state": {
-        "batch": 32,
+      "classification": "AGREE",
+      "expected_state": {
+        "body": 1048576,
         "candidates": 128,
-        "canonical_body": 1048576,
-        "http_body": 8388608,
+        "http": 8388608,
         "page": 32,
-        "query_bytes": 16384,
-        "record": 2097152,
-        "references": 256,
-        "relation_bytes": 1024
+        "record": 2097152
+      },
+      "group": "E-coverage",
+      "implementation": "nb",
+      "input": {
+        "hex": "474554202f68656c6c6f",
+        "length": 10
+      },
+      "note": "The spec now defines the five required core limit names and units.",
+      "observed_state": {
+        "body": 1048576,
+        "candidates": 128,
+        "http": 8388608,
+        "page": 32,
+        "record": 2097152
       }
     },
     {
       "admitted": null,
       "case": "hello-limit-schema",
-      "classification": "DIVERGE",
-      "expected_state": "limit member names unspecified",
+      "classification": "AGREE",
+      "expected_state": {
+        "body": 1048576,
+        "candidates": 128,
+        "http": 8388608,
+        "page": 32,
+        "record": 2097152
+      },
       "group": "E-coverage",
       "implementation": "ref",
       "input": {
         "hex": "474554202f68656c6c6f",
         "length": 10
       },
-      "note": "",
+      "note": "The spec now defines the five required core limit names and units.",
       "observed_state": {
         "body": 1048576,
         "candidates": 128,
@@ -4746,37 +4741,45 @@
     {
       "admitted": false,
       "case": "poisoned-nonimplementation-hint",
-      "classification": "DIVERGE",
-      "expected_state": "recoverable failure; node alive",
+      "classification": "AGREE",
+      "expected_state": {
+        "alive": true,
+        "hints": [],
+        "state": "returned"
+      },
       "group": "E-coverage",
       "implementation": "nb",
       "input": {
         "hex": "7b226d657373616765223a226f7264696e617279204854545020736572766572227d",
         "length": 34
       },
-      "note": "Discovery throws to caller; subprocess adapter catches it and subsequent /hello succeeds. Reference lacks peer-shape validation.",
+      "note": "The spec now defines malformed discovery hellos as skipped; node alive and store unchanged.",
       "observed_state": {
         "alive": true,
-        "exception": "PeerError",
-        "message": "hello-shape"
+        "hints": [],
+        "state": "returned"
       }
     },
     {
       "admitted": false,
       "case": "poisoned-nonimplementation-hint",
-      "classification": "DIVERGE",
-      "expected_state": "recoverable failure; node alive",
+      "classification": "AGREE",
+      "expected_state": {
+        "alive": true,
+        "hints": [],
+        "state": "returned"
+      },
       "group": "E-coverage",
       "implementation": "ref",
       "input": {
         "hex": "7b226d657373616765223a226f7264696e617279204854545020736572766572227d",
         "length": 34
       },
-      "note": "Discovery throws to caller; subprocess adapter catches it and subsequent /hello succeeds. Reference lacks peer-shape validation.",
+      "note": "The spec now defines malformed discovery hellos as skipped; node alive and store unchanged.",
       "observed_state": {
         "alive": true,
-        "exception": "KeyError",
-        "message": "'peers'"
+        "hints": [],
+        "state": "returned"
       }
     },
     {

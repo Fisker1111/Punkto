@@ -80,7 +80,7 @@ def envelope_cases():
     for n,v in [('case','PUNKTI/0.6'),('space','punkti/0.6 '),('number',6)]: mutate('v-'+n,'v',v)
     for n,v in [('negative',-1),('string','1'),('bool',True),('overflow',2**53)]: mutate('t-'+n,'t',v)
     for n,v in [('negative-zero',b'-0'),('float',b'1.0'),('exponent',b'1e3'),('fraction',b'0.5'),('leading-zero',b'01')]:
-        add('t-'+n,raw.replace(b'"t":0',b'"t":'+v), S if n!='negative-zero' else 'unsigned-zero spelling unspecified',dict(ref=V,nb=S) if n=='negative-zero' else None)
+        add('t-'+n,raw.replace(b'"t":0',b'"t":'+v), S)
     signed('t-max',t=2**53-1); signed('t-zero'); add('json-whitespace',b' \n'+raw+b'\t ',V)
     for n,h in [('11','g'*11),('13','g'*13),('uppercase','G'*12)]+[(c,c*12) for c in 'ailo']: mutate('h-'+n,'h',h)
     signed('h-empty',h=''); signed('h-valid',h='g'*12)
