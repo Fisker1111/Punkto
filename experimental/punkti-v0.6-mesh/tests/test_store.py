@@ -68,6 +68,9 @@ class StoreTests(unittest.TestCase):
         node = Node([Subscription('g', 'h')])
         item = wire(b'future raw', 'punkti/9:aa')
         item['h'] = 'g'*12
+        with self.assertRaises(ValueError):
+            node.admit(item)
+        del item['h']
         self.assertFalse(node.admit(item)['admitted'])
         self.assertFalse(node.candidates)
         self.assertFalse(node.add(fixture(h='z'*12))['admitted'])

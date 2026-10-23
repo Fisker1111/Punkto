@@ -73,8 +73,11 @@ class AcceptanceTests(NetworkCase):
         forged = good[:-1] + bytes([good[-1] ^ 1])
         for node in self.nodes:
             for raw, state in [(b'corrupt', State.STRUCTURAL), (forged, State.PROVENANCE)]:
-                item = wire(raw)
-                item['state'] = 'VALID'  # Malicious peer claim must have no effect.
+                item = wire(raw, validate(good).address)
+                with self.assertRaises(HTTPError) as error:
+                    request(node.url, '/push', dict(records=[dict(item, state='VALID')]))
+                self.assertEqual(error.exception.code, 400)
+                error.exception.close()
                 result = request(node.url, '/push', dict(records=[item]))
                 self.assertEqual(result['results'][0]['state'], state.value)
             self.assertFalse(node.store)
@@ -234,7 +237,8 @@ class WireTests(NetworkCase):
                       dict(limit=0), dict(limit=33), dict(cursor=dict(cursor, after=-1))]:
             with self.assertRaises(HTTPError) as error:
                 request(a.url, '/pull?' + urlencode({'q': packed(query).decode()}))
-            self.assertEqual(error.exception.code, 400)
+            self.assertEqual(error.exception.code, 413 if query.get('limit') == 33 else 400)
+            error.exception.close()
         # Store replacement invalidates saved cursor; pull automatically starts afresh.
         a.epoch = 'new-store'
         a.add(fixture(2))

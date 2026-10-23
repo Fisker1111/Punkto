@@ -41,7 +41,7 @@ class CarrierTests(unittest.TestCase):
     def test_json_strictness(self):
         good = json.dumps(atom()).encode()
         self.assertEqual(import_json(good), fixture())
-        for raw in [good.replace(b'"t": 0', b'"t": 0.0'), good.replace(b'"t": 0', b'"t": 0e0'),
+        for raw in [good.replace(b'"t": 0', b'"t": -0'), good.replace(b'"t": 0', b'"t": 0.0'), good.replace(b'"t": 0', b'"t": 0e0'),
                     good.replace(b'"t": 0', b'"t": true'), good.replace(b'"t": 0', b'"t": -1'),
                     good.replace(b'"t": 0', b'"t": 9007199254740992'),
                     good.replace(b'"t": 0', b'"t": 0, "t": 0'),

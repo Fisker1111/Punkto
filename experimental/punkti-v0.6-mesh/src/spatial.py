@@ -25,12 +25,12 @@ class Subscription:
                                       or any(c not in ALPHABET for c in bound)):
                 raise ValueError('geohash bound')
         if self.h_lo is not None and self.h_hi is not None and self.h_lo >= self.h_hi:
-            raise ValueError('empty/reversed h interval')
+            raise ValueError('equal or reversed bounds: h')
         for bound in (self.z_min, self.z_max):
             if bound is not None and (type(bound) not in (int, float) or not math.isfinite(bound)):
                 raise ValueError('finite elevation required')
         if self.z_min is not None and self.z_max is not None and self.z_min >= self.z_max:
-            raise ValueError('empty/reversed z interval')
+            raise ValueError('equal or reversed bounds: z')
 
     def matches(self, h):
         scoped = any(v is not None for v in asdict(self).values())
