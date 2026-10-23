@@ -31,10 +31,12 @@ class SpatialTests(unittest.TestCase):
         self.assertFalse(matches(h, {'z_max': z}))
         self.assertFalse(subscribed(h, []))
         self.assertTrue(subscribed(h, [{'h_hi': '0'}, {'h_lo': 'g'}]))
-        self.assertFalse(matches(h, {'h_lo': 'z', 'h_hi': '0'}))
+        with self.assertRaises(StructuralError):
+            matches(h, {'h_lo': 'z', 'h_hi': '0'})
 
     def test_bad_scopes(self):
-        for s in ({'h_lo': ''}, {'h_hi': 'i'}, {'z_min': True}, {'z_max': float('inf')},
+        for s in ({'h_lo': 'g', 'h_hi': 'g'}, {'h_lo': 'z', 'h_hi': '0'},
+                  {'z_min': 1, 'z_max': 1}, {'z_min': 1, 'z_max': -1}, {'h_lo': ''}, {'h_hi': 'i'}, {'z_min': True}, {'z_max': float('inf')},
                   {'z_min': float('nan')}, {'z_min': 10**1000}, {'x': ''}, []):
             with self.subTest(scope=s), self.assertRaises(StructuralError):
                 normalize(s)

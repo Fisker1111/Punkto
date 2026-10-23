@@ -25,6 +25,9 @@ def normalize(scope: dict) -> dict:
                     raise StructuralError('scope-z')
             except OverflowError as exc:
                 raise StructuralError('scope-z') from exc
+    for lo, hi in (('h_lo', 'h_hi'), ('z_min', 'z_max')):
+        if result[lo] is not None and result[hi] is not None and result[lo] >= result[hi]:
+            raise StructuralError('equal or reversed bounds')
     return result
 
 

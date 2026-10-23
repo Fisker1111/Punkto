@@ -405,7 +405,7 @@ class Interop(unittest.TestCase):
         self.eq('stored addresses differ', ref['addresses'] != nb['addresses'], True)
 
     def test_request_validation_divergences(self):
-        """Pin six request-validation differences without requiring parity."""
+        """Pin four revised agreements and two out-of-scope request differences."""
         reference, clean_room = self.adapter('ref'), self.adapter('nb')
         m = self.call(reference, 'mint', spec=spec(110))
         for node in (reference, clean_room):
@@ -414,27 +414,27 @@ class Interop(unittest.TestCase):
         wrong_address = 'punkti/0.6:' + ('0' if m['MID'][0] != '0' else '1') + m['MID'][1:]
         cases = [
             ('equal h bounds', dict(mode='spatial', scope=dict(h_lo='g', h_hi='g')), None,
-             400, {'error': 'empty/reversed h interval'}, 200, {'records': [], 'end': True},
-             "GET /pull scope {h_lo:'g',h_hi:'g'}: reference HTTP 400, error 'empty/reversed h interval'; clean-room HTTP 200, records=[], end=true."),
+             400, {'error': 'equal or reversed bounds: h'}, 400, {'kind': 'request', 'reason': 'equal or reversed bounds'},
+             "GET /pull scope {h_lo:'g',h_hi:'g'}: reference HTTP 400, error 'equal or reversed bounds: h'; clean-room HTTP 400, reason 'equal or reversed bounds'. Revised contract agrees."),
             ('reversed elevation', dict(mode='spatial', scope=dict(z_min=100, z_max=-100)), None,
-             400, {'error': 'empty/reversed z interval'}, 200, {'records': [], 'end': True},
-             "GET /pull scope {z_min:100,z_max:-100}: reference HTTP 400, error 'empty/reversed z interval'; clean-room HTTP 200, records=[], end=true."),
+             400, {'error': 'equal or reversed bounds: z'}, 400, {'kind': 'request', 'reason': 'equal or reversed bounds'},
+             "GET /pull scope {z_min:100,z_max:-100}: reference HTTP 400, error 'equal or reversed bounds: z'; clean-room HTTP 400, reason 'equal or reversed bounds'. Revised contract agrees."),
             ('equal elevation', dict(mode='spatial', scope=dict(z_min=1, z_max=1)), None,
-             400, {'error': 'empty/reversed z interval'}, 200, {'records': [], 'end': True},
-             "GET /pull scope {z_min:1,z_max:1}: reference HTTP 400, error 'empty/reversed z interval'; clean-room HTTP 200, records=[], end=true."),
+             400, {'error': 'equal or reversed bounds: z'}, 400, {'kind': 'request', 'reason': 'equal or reversed bounds'},
+             "GET /pull scope {z_min:1,z_max:1}: reference HTTP 400, error 'equal or reversed bounds: z'; clean-room HTTP 400, reason 'equal or reversed bounds'. Revised contract agrees."),
             ('unknown query member', dict(mode='spatial', extra=1), None,
              200, {'records': [], 'end': True}, 400, {'kind': 'request', 'reason': 'query-fields'},
              "GET /pull query {mode:'spatial',extra:1}: reference HTTP 200, member ignored; clean-room HTTP 400, kind='request', reason='query-fields'."),
             ('wrong address for VALID record', None, {'records': [item(m, address=wrong_address)]},
-             400, {'error': 'address mismatch'}, 200,
-             {'results': [{'state': 'INVALID-structural', 'reason': 'address-mismatch', 'admitted': False}]},
-             "POST /push wrong address for a VALID record: reference HTTP 400 for the whole request, error 'address mismatch'; clean-room HTTP 200, per-record state='INVALID-structural', reason='address-mismatch', admitted=false."),
+             400, {'error': 'address mismatch'}, 400,
+             {'kind': 'request', 'reason': 'address-mismatch'},
+             "POST /push wrong address for a VALID record: reference HTTP 400 for the whole request, error 'address mismatch'; clean-room HTTP 400, reason='address-mismatch'. Revised descriptor tier agrees."),
             ('empty push batch', None, {'records': []},
              400, {'error': 'push batch size'}, 200, {'results': []},
              "POST /push {records:[]}: reference HTTP 400, error 'push batch size'; clean-room HTTP 200, {results:[]}."),
         ]
-        self.row['divergence'] = 'Six pinned request-validation divergences: interval bounds, unknown query member, wrong address, and empty push batch.'
-        self.row['divergence_lines'] = [case[-1] for case in cases]
+        self.row['divergence'] = 'Two remaining out-of-scope request-validation divergences: unknown query member and empty push batch. Revised interval bounds and wrong-address tiers agree.'
+        self.row['divergence_lines'] = [case[-1] for case in cases if case[0] in ('unknown query member', 'empty push batch')]
         self.row['reference_behaviour'] = {}
         self.row['clean_room_behaviour'] = {}
         for label, query, payload, ref_status, ref_body, nb_status, nb_body, _ in cases:

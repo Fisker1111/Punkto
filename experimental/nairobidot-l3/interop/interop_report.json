@@ -5,21 +5,21 @@
   },
   "implementations": {
     "ref": {
-      "experimental/punkti-v0.6-mesh/src/carrier.py": "f0b1784e334ef1fbf31fa0b2d7994075eb1183dfb4eb555e84ab6d5a8b96245c",
-      "experimental/punkti-v0.6-mesh/src/mesh.py": "e4c8f1a7db0810ad5a218b0edf0f624cb040a5a847a179590a0b74eab62780ab",
-      "experimental/punkti-v0.6-mesh/src/spatial.py": "3abad81efb48c3e583279a813feb375618d378cd0f67883ef85d43cd079fe344"
+      "experimental/punkti-v0.6-mesh/src/carrier.py": "718b77e5985f7d6a9abdba116b71148d6ddd7db281e4ddb22183fc54ad653238",
+      "experimental/punkti-v0.6-mesh/src/mesh.py": "92e1383bcbdb49923e3b5abda32d27fb1aa5e8b43eb65dc745dd62ccd82cb871",
+      "experimental/punkti-v0.6-mesh/src/spatial.py": "ff5e6ce99af880a41df206ff4902371452caec2d8f74be597035c576472c6522"
     },
     "nb": {
       "experimental/nairobidot-l3/src/nairobidot/__init__.py": "9201d2d42577b7529187e979f8d66a249a7fa82e3760507cb146925f5d74a40e",
-      "experimental/nairobidot-l3/src/nairobidot/carrier.py": "135bb403a7b7ded44e27bf6f6e2ca96a68a7ea0cf9b03adf1fb9713885594359",
-      "experimental/nairobidot-l3/src/nairobidot/node.py": "e1b417cb1d055f128fce5594d296251f50b2cbbc0dd111c88609515db669ae13",
+      "experimental/nairobidot-l3/src/nairobidot/carrier.py": "5ba9dfaa85d3d3af3fd0f1d71d97cd5c7482de35359904640e8833d8cc2f1afb",
+      "experimental/nairobidot-l3/src/nairobidot/node.py": "e05f7cfeacc9b8a887c88dd04176a5294bf804409d95e28d7a6b1899b2575401",
       "experimental/nairobidot-l3/src/nairobidot/serve.py": "3a16ce3cb979551633c679cba626824bdf6c112e2b0611e83793bc425d399f8f",
-      "experimental/nairobidot-l3/src/nairobidot/spatial.py": "1a38003bbe205523f5a950cb756215175e325d5eb4f26dad97eea43626d58c8e"
+      "experimental/nairobidot-l3/src/nairobidot/spatial.py": "ac5de0f25ac8ed89727478937dcc89d3799739ff9407f59880c2a26978f5aeb0"
     }
   },
   "source_manifest_sha256": {
-    "ref": "3967410ebc8ead848cd832f29d47bd1069b6b3a0143f4a63ca5f9f60a852a1dd",
-    "nb": "caf9d0c4b08b1904a100a1596fe6311895f2d7b20d0a1d6e39241b84676371b6"
+    "ref": "b6d013a314bde8eea30f586f18f2af4d01ddd03fbb9362aa027580b80a541668",
+    "nb": "c986761817da5ad174c39f824fee3f2ab5f1782ab813bb89b4e40b236acdfbf0"
   },
   "arrangement": "two clean-room nodes and one reference",
   "totals": {
@@ -1908,8 +1908,8 @@
         },
         {
           "label": "isolated package path",
-          "actual": "/home/hermes/.hermes/kanban/workspaces/t_0307c488/repo/experimental/nairobidot-l3/src/nairobidot/__init__.py",
-          "expected": "/home/hermes/.hermes/kanban/workspaces/t_0307c488/repo/experimental/nairobidot-l3/src/nairobidot/__init__.py"
+          "actual": "/home/hermes/.hermes/kanban/workspaces/t_c35eff1c/repo/experimental/nairobidot-l3/src/nairobidot/__init__.py",
+          "expected": "/home/hermes/.hermes/kanban/workspaces/t_c35eff1c/repo/experimental/nairobidot-l3/src/nairobidot/__init__.py"
         },
         {
           "label": "nb isolated sys.path",
@@ -2889,7 +2889,7 @@
     },
     "request_validation_divergences": {
       "status": "PASS",
-      "summary": "Pin six request-validation differences without requiring parity.",
+      "summary": "Pin four revised agreements and two out-of-scope request differences.",
       "comparisons": [
         {
           "label": "ref isolated sys.path",
@@ -2958,23 +2958,23 @@
         },
         {
           "label": "equal h bounds error ref",
-          "actual": "empty/reversed h interval",
-          "expected": "empty/reversed h interval"
+          "actual": "equal or reversed bounds: h",
+          "expected": "equal or reversed bounds: h"
         },
         {
           "label": "equal h bounds HTTP status nb",
-          "actual": 200,
-          "expected": 200
+          "actual": 400,
+          "expected": 400
         },
         {
-          "label": "equal h bounds records nb",
-          "actual": [],
-          "expected": []
+          "label": "equal h bounds kind nb",
+          "actual": "request",
+          "expected": "request"
         },
         {
-          "label": "equal h bounds end nb",
-          "actual": true,
-          "expected": true
+          "label": "equal h bounds reason nb",
+          "actual": "equal or reversed bounds",
+          "expected": "equal or reversed bounds"
         },
         {
           "label": "reversed elevation HTTP status ref",
@@ -2983,23 +2983,23 @@
         },
         {
           "label": "reversed elevation error ref",
-          "actual": "empty/reversed z interval",
-          "expected": "empty/reversed z interval"
+          "actual": "equal or reversed bounds: z",
+          "expected": "equal or reversed bounds: z"
         },
         {
           "label": "reversed elevation HTTP status nb",
-          "actual": 200,
-          "expected": 200
+          "actual": 400,
+          "expected": 400
         },
         {
-          "label": "reversed elevation records nb",
-          "actual": [],
-          "expected": []
+          "label": "reversed elevation kind nb",
+          "actual": "request",
+          "expected": "request"
         },
         {
-          "label": "reversed elevation end nb",
-          "actual": true,
-          "expected": true
+          "label": "reversed elevation reason nb",
+          "actual": "equal or reversed bounds",
+          "expected": "equal or reversed bounds"
         },
         {
           "label": "equal elevation HTTP status ref",
@@ -3008,23 +3008,23 @@
         },
         {
           "label": "equal elevation error ref",
-          "actual": "empty/reversed z interval",
-          "expected": "empty/reversed z interval"
+          "actual": "equal or reversed bounds: z",
+          "expected": "equal or reversed bounds: z"
         },
         {
           "label": "equal elevation HTTP status nb",
-          "actual": 200,
-          "expected": 200
+          "actual": 400,
+          "expected": 400
         },
         {
-          "label": "equal elevation records nb",
-          "actual": [],
-          "expected": []
+          "label": "equal elevation kind nb",
+          "actual": "request",
+          "expected": "request"
         },
         {
-          "label": "equal elevation end nb",
-          "actual": true,
-          "expected": true
+          "label": "equal elevation reason nb",
+          "actual": "equal or reversed bounds",
+          "expected": "equal or reversed bounds"
         },
         {
           "label": "unknown query member HTTP status ref",
@@ -3096,25 +3096,18 @@
         },
         {
           "label": "wrong address for VALID record HTTP status nb",
-          "actual": 200,
-          "expected": 200
+          "actual": 400,
+          "expected": 400
         },
         {
-          "label": "wrong address for VALID record results nb",
-          "actual": [
-            {
-              "admitted": false,
-              "reason": "address-mismatch",
-              "state": "INVALID-structural"
-            }
-          ],
-          "expected": [
-            {
-              "state": "INVALID-structural",
-              "reason": "address-mismatch",
-              "admitted": false
-            }
-          ]
+          "label": "wrong address for VALID record kind nb",
+          "actual": "request",
+          "expected": "request"
+        },
+        {
+          "label": "wrong address for VALID record reason nb",
+          "actual": "address-mismatch",
+          "expected": "address-mismatch"
         },
         {
           "label": "empty push batch HTTP status ref",
@@ -3147,32 +3140,28 @@
         }
       ],
       "failures": [],
-      "divergence": "Six pinned request-validation divergences: interval bounds, unknown query member, wrong address, and empty push batch.",
+      "divergence": "Two remaining out-of-scope request-validation divergences: unknown query member and empty push batch. Revised interval bounds and wrong-address tiers agree.",
       "divergence_lines": [
-        "GET /pull scope {h_lo:'g',h_hi:'g'}: reference HTTP 400, error 'empty/reversed h interval'; clean-room HTTP 200, records=[], end=true.",
-        "GET /pull scope {z_min:100,z_max:-100}: reference HTTP 400, error 'empty/reversed z interval'; clean-room HTTP 200, records=[], end=true.",
-        "GET /pull scope {z_min:1,z_max:1}: reference HTTP 400, error 'empty/reversed z interval'; clean-room HTTP 200, records=[], end=true.",
         "GET /pull query {mode:'spatial',extra:1}: reference HTTP 200, member ignored; clean-room HTTP 400, kind='request', reason='query-fields'.",
-        "POST /push wrong address for a VALID record: reference HTTP 400 for the whole request, error 'address mismatch'; clean-room HTTP 200, per-record state='INVALID-structural', reason='address-mismatch', admitted=false.",
         "POST /push {records:[]}: reference HTTP 400, error 'push batch size'; clean-room HTTP 200, {results:[]}."
       ],
       "reference_behaviour": {
         "equal h bounds": {
           "http_status": 400,
           "response": {
-            "error": "empty/reversed h interval"
+            "error": "equal or reversed bounds: h"
           }
         },
         "reversed elevation": {
           "http_status": 400,
           "response": {
-            "error": "empty/reversed z interval"
+            "error": "equal or reversed bounds: z"
           }
         },
         "equal elevation": {
           "http_status": 400,
           "response": {
-            "error": "empty/reversed z interval"
+            "error": "equal or reversed bounds: z"
           }
         },
         "unknown query member": {
@@ -3203,42 +3192,24 @@
       },
       "clean_room_behaviour": {
         "equal h bounds": {
-          "http_status": 200,
+          "http_status": 400,
           "response": {
-            "cursor": {
-              "after": 0,
-              "ceiling": 0,
-              "epoch": "<epoch>",
-              "scope": "eeb3ceba4bc053f593dbe5c039f52cd0a54bcb5b4d85d8f0a2bc84ff39295bb7"
-            },
-            "end": true,
-            "records": []
+            "kind": "request",
+            "reason": "equal or reversed bounds"
           }
         },
         "reversed elevation": {
-          "http_status": 200,
+          "http_status": 400,
           "response": {
-            "cursor": {
-              "after": 0,
-              "ceiling": 0,
-              "epoch": "<epoch>",
-              "scope": "f7848f2c8f3f74503894880796c4aa86ece79a3219796d157cbd4e85c3d5bf12"
-            },
-            "end": true,
-            "records": []
+            "kind": "request",
+            "reason": "equal or reversed bounds"
           }
         },
         "equal elevation": {
-          "http_status": 200,
+          "http_status": 400,
           "response": {
-            "cursor": {
-              "after": 0,
-              "ceiling": 0,
-              "epoch": "<epoch>",
-              "scope": "9f9da9835f2129592facf29cdde29d28ce3afd9c38ce76719515e5af4c1e939f"
-            },
-            "end": true,
-            "records": []
+            "kind": "request",
+            "reason": "equal or reversed bounds"
           }
         },
         "unknown query member": {
@@ -3249,15 +3220,10 @@
           }
         },
         "wrong address for VALID record": {
-          "http_status": 200,
+          "http_status": 400,
           "response": {
-            "results": [
-              {
-                "admitted": false,
-                "reason": "address-mismatch",
-                "state": "INVALID-structural"
-              }
-            ]
+            "kind": "request",
+            "reason": "address-mismatch"
           }
         },
         "empty push batch": {
@@ -5088,24 +5054,24 @@
     },
     {
       "test": "request_validation_divergences",
-      "explanation": "Six pinned request-validation divergences: interval bounds, unknown query member, wrong address, and empty push batch.",
+      "explanation": "Two remaining out-of-scope request-validation divergences: unknown query member and empty push batch. Revised interval bounds and wrong-address tiers agree.",
       "reference_behaviour": {
         "equal h bounds": {
           "http_status": 400,
           "response": {
-            "error": "empty/reversed h interval"
+            "error": "equal or reversed bounds: h"
           }
         },
         "reversed elevation": {
           "http_status": 400,
           "response": {
-            "error": "empty/reversed z interval"
+            "error": "equal or reversed bounds: z"
           }
         },
         "equal elevation": {
           "http_status": 400,
           "response": {
-            "error": "empty/reversed z interval"
+            "error": "equal or reversed bounds: z"
           }
         },
         "unknown query member": {
@@ -5136,42 +5102,24 @@
       },
       "clean_room_behaviour": {
         "equal h bounds": {
-          "http_status": 200,
+          "http_status": 400,
           "response": {
-            "cursor": {
-              "after": 0,
-              "ceiling": 0,
-              "epoch": "<epoch>",
-              "scope": "eeb3ceba4bc053f593dbe5c039f52cd0a54bcb5b4d85d8f0a2bc84ff39295bb7"
-            },
-            "end": true,
-            "records": []
+            "kind": "request",
+            "reason": "equal or reversed bounds"
           }
         },
         "reversed elevation": {
-          "http_status": 200,
+          "http_status": 400,
           "response": {
-            "cursor": {
-              "after": 0,
-              "ceiling": 0,
-              "epoch": "<epoch>",
-              "scope": "f7848f2c8f3f74503894880796c4aa86ece79a3219796d157cbd4e85c3d5bf12"
-            },
-            "end": true,
-            "records": []
+            "kind": "request",
+            "reason": "equal or reversed bounds"
           }
         },
         "equal elevation": {
-          "http_status": 200,
+          "http_status": 400,
           "response": {
-            "cursor": {
-              "after": 0,
-              "ceiling": 0,
-              "epoch": "<epoch>",
-              "scope": "9f9da9835f2129592facf29cdde29d28ce3afd9c38ce76719515e5af4c1e939f"
-            },
-            "end": true,
-            "records": []
+            "kind": "request",
+            "reason": "equal or reversed bounds"
           }
         },
         "unknown query member": {
@@ -5182,15 +5130,10 @@
           }
         },
         "wrong address for VALID record": {
-          "http_status": 200,
+          "http_status": 400,
           "response": {
-            "results": [
-              {
-                "admitted": false,
-                "reason": "address-mismatch",
-                "state": "INVALID-structural"
-              }
-            ]
+            "kind": "request",
+            "reason": "address-mismatch"
           }
         },
         "empty push batch": {

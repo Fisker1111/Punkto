@@ -53,11 +53,15 @@ def loads(raw: bytes | str, *, carrier: bool = False) -> Any:
         return out
     def constant(value: str) -> None:
         raise StructuralError('non-json-number')
+    def integer(spelling: str) -> int:
+        if carrier and not re.fullmatch(r'0|[1-9][0-9]*', spelling):
+            raise StructuralError('timestamp spelling: expected 0|[1-9][0-9]*')
+        return int(spelling)
     try:
         if isinstance(raw, bytes):
             raw = raw.decode('utf-8')
         return json.loads(raw, object_pairs_hook=pairs, parse_constant=constant,
-                          parse_int=lambda s: '-0' if carrier and s == '-0' else int(s))
+                          parse_int=integer)
     except (ValueError, UnicodeError, RecursionError) as exc:
         raise StructuralError('json') from exc
 

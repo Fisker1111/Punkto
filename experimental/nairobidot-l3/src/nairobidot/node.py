@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 import hashlib
+from http.client import HTTPException
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 import threading
 from typing import Any
@@ -19,9 +20,8 @@ MAX_HTTP = 8 * 1024 * 1024
 MAX_PAGE = 32
 MAX_CANDIDATES = 128
 MAX_QUERY = 16384
-LIMITS = {'canonical_body': MAX_C, 'record': MAX_R, 'references': 256,
-          'relation_bytes': 1024, 'http_body': MAX_HTTP, 'page': MAX_PAGE,
-          'batch': MAX_PAGE, 'candidates': MAX_CANDIDATES, 'query_bytes': MAX_QUERY}
+LIMITS = {'body': MAX_C, 'record': MAX_R, 'page': MAX_PAGE,
+          'http': MAX_HTTP, 'candidates': MAX_CANDIDATES}
 
 
 class PeerError(RuntimeError):
@@ -44,27 +44,32 @@ def origin(value: str) -> str:
         raise StructuralError('peer-origin') from exc
 
 
-def request(peer: str, path: str, body: dict | None = None) -> dict:
+def request(peer: str, path: str, body: dict | None = None, *, timeout: int = 5) -> dict:
     """Bounded standard-library HTTP client; resource errors retain their kind."""
     data = None if body is None else dumps(body)
     if data is not None and len(data) > MAX_HTTP:
         raise ResourceError('http-body-limit')
     req = Request(origin(peer) + path, data=data, headers={'Content-Type': 'application/json'})
     try:
-        with urlopen(req, timeout=5) as response:
+        with urlopen(req, timeout=timeout) as response:
             raw = response.read(MAX_HTTP + 1)
+            length = response.headers.get('Content-Length')
+            if length is not None and len(raw) < int(length) and len(raw) <= MAX_HTTP:
+                raise PeerError('truncated HTTP response')
             if len(raw) > MAX_HTTP:
                 raise ResourceError('http-response-limit')
             result = loads(raw)
             if not isinstance(result, dict):
                 raise PeerError('peer-response-shape')
             return result
+    except ResourceError:
+        raise
     except HTTPError as exc:
         exc.close()
         if exc.code == 413:
             raise ResourceError('peer-resource-refusal') from exc
         raise PeerError(f'peer-http-{exc.code}') from exc
-    except (URLError, TimeoutError, OSError, StructuralError) as exc:
+    except (URLError, TimeoutError, OSError, ValueError, HTTPException) as exc:
         raise PeerError('peer-unreachable-or-malformed') from exc
 
 
@@ -111,11 +116,11 @@ class Node:
                 'capabilities': ['push', 'range-mid', 'range-spatial', 'opaque-wrapper'],
                 'limits': dict(LIMITS)}
 
-    def add(self, raw: bytes | str | dict | Record) -> dict:
+    def add(self, raw: bytes | str | dict | Record, *, _validate_only: bool = False) -> dict:
         """Locally verify imports or wire items before deduplication (Mesh admission)."""
         if isinstance(raw, dict) and 'record' in raw:
             item = raw
-            if not {'address', 'sha256', 'record'} <= set(item):
+            if set(item) != {'address', 'sha256', 'record'}:
                 raise StructuralError('item-fields')
             address = item['address']
             if not address_ok(address):
@@ -125,8 +130,7 @@ class Node:
                 raise ResourceError('record-limit')
             digest = hashlib.sha256(record_raw).hexdigest()
             if item['sha256'] != digest:
-                return {'state': State.STRUCTURAL.value, 'admitted': False,
-                        'reason': 'transport-digest'}
+                raise StructuralError('transport-digest')
             namespace = address.split(':', 1)[0]
             if namespace != 'punkti/0.6':
                 if namespace == 'punkti/0.5.1':
@@ -140,8 +144,7 @@ class Node:
                 except StructuralError as exc:
                     return {'state': State.STRUCTURAL.value, 'admitted': False, 'reason': str(exc)}
                 if result.record is not None and result.record.address != address:
-                    return {'state': State.STRUCTURAL.value, 'admitted': False,
-                            'reason': 'address-mismatch'}
+                    raise StructuralError('address-mismatch')
                 if result.state not in (State.VALID, State.ALGORITHM):
                     return {'state': result.state.value, 'admitted': False, 'reason': result.reason}
                 state, h = result.state, result.record.atom['h']
@@ -152,6 +155,8 @@ class Node:
             rec = result.record
             address, digest, record_raw = rec.address, rec.digest, rec.R
             state, h = result.state, rec.atom['h']
+        if _validate_only:
+            return {'state': state.value, 'admitted': False}
         with self._lock:
             if not subscribed(h, self.subscriptions):
                 return {'state': state.value, 'admitted': False, 'reason': 'out-of-scope'}
@@ -172,8 +177,10 @@ class Node:
             raise ResourceError('batch-limit')
         results = []
         for item in body['records']:
-            if not isinstance(item, dict) or not {'address', 'sha256', 'record'} <= set(item):
+            if not isinstance(item, dict) or set(item) != {'address', 'sha256', 'record'}:
                 raise StructuralError('item-fields')
+            self.add(item, _validate_only=True)
+        for item in body['records']:
             results.append(self.add(item))
         return {'results': results}
 
@@ -188,6 +195,8 @@ class Node:
         lo, hi = query.get('lo'), query.get('hi')
         if any(v is not None and not address_ok(v) for v in (lo, hi)):
             raise StructuralError('mid-bound')
+        if mode == 'mid' and lo is not None and hi is not None and lo >= hi:
+            raise StructuralError('equal or reversed bounds')
         limit = query.get('limit', MAX_PAGE)
         if type(limit) is not int or limit < 1:
             raise StructuralError('page-limit')
@@ -254,11 +263,16 @@ class Node:
                 or type(page.get('end')) is not bool or not isinstance(page.get('cursor'), dict)):
             raise PeerError('pull-response-shape')
         for item in page['records']:
-            if not isinstance(item, dict) or not {'address', 'sha256', 'record'} <= set(item):
+            if not isinstance(item, dict) or set(item) != {'address', 'sha256', 'record'}:
                 raise PeerError('pull-item-shape')
-            result = self.add(item)
+            try:
+                result = self.add(item, _validate_only=True)
+            except StructuralError as exc:
+                raise PeerError('pull-invalid-descriptor') from exc
             if result['state'] not in (State.VALID.value, State.ALGORITHM.value, State.VERSION.value):
                 raise PeerError('pull-invalid-record')
+        for item in page['records']:
+            self.add(item)
         return page
 
     def _hello(self, peer: str) -> dict:
@@ -321,17 +335,26 @@ class Node:
             raise StructuralError('unconfigured-peer')
         with self._sync_lock:
             self._push_to(peer)
-            request(peer, '/sync', {'peer': self.url, 'phase': 'push'})
+            request(peer, '/sync', {'peer': self.url, 'phase': 'push'}, timeout=300)
             self._pull_from(peer)
-            request(peer, '/sync', {'peer': self.url, 'phase': 'pull'})
+            request(peer, '/sync', {'peer': self.url, 'phase': 'pull'}, timeout=300)
 
     def discover(self, peer: str) -> list[str]:
         """Return hints for explicit selection, without configuring or crawling them."""
-        info = self._hello(peer)
-        hints = info.get('peers', [])
-        if not isinstance(hints, list):
-            raise PeerError('peer-hints')
-        return [origin(p) for p in hints]
+        try:
+            info = request(peer, '/hello')
+            if (info.get('protocol') != 'punkti-mesh/0.6-draft'
+                    or not isinstance(info.get('peers'), list)):
+                return []
+        except (PeerError, ResourceError, StructuralError, OSError):
+            return []
+        hints = set()
+        for hint in info['peers']:
+            try:
+                hints.add(origin(hint))
+            except StructuralError:
+                continue
+        return sorted(hints - {self.url})
 
     def sync_known(self) -> dict[str, str]:
         results = {}

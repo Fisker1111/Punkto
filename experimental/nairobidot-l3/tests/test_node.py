@@ -68,7 +68,7 @@ class NodeTests(unittest.TestCase):
         bad = atom()
         bad['sig'] = b64(bytes(64))
         forged = from_atom(bad).item()
-        forged['state'] = 'VALID'
+        self.http_error(n, '/push', {'records': [dict(forged, state='VALID')]}, 400)
         results = request(n.url, '/push', {'records': [forged, good, good, forged]})['results']
         self.assertEqual([r['state'] for r in results],
                          ['INVALID-provenance', 'VALID', 'VALID', 'INVALID-provenance'])
@@ -77,10 +77,12 @@ class NodeTests(unittest.TestCase):
         self.assertEqual(n.store[good['address']].item(), good)
         damaged = copy.deepcopy(good)
         damaged['sha256'] = '0' * 64
-        self.assertEqual(n.add(damaged)['reason'], 'transport-digest')
+        with self.assertRaises(StructuralError):
+            n.add(damaged)
         damaged = copy.deepcopy(good)
         damaged['address'] = 'punkti/0.6:' + '0' * 64
-        self.assertEqual(n.add(damaged)['reason'], 'address-mismatch')
+        with self.assertRaises(StructuralError):
+            n.add(damaged)
         raw = b'not a canonical R'
         malformed = {'address': good['address'], 'record': b64(raw),
                      'sha256': hashlib.sha256(raw).hexdigest()}
@@ -182,7 +184,8 @@ class NodeTests(unittest.TestCase):
         self.assertEqual(n.page({'mode': 'mid', 'cursor': page['cursor']})['records'], [])
         self.assertEqual(len(n.page({'mode': 'mid'})['records']), 4)
         bound = records[0]['address']
-        self.assertEqual(len(n.page({'mode': 'mid', 'lo': bound, 'hi': bound})['records']), 0)
+        with self.assertRaises(StructuralError):
+            n.page({'mode': 'mid', 'lo': bound, 'hi': bound})
         self.assertEqual(len(n.page({'mode': 'mid', 'lo': bound})['records']),
                          sum(e.address >= bound for e in n.log))
         with self.assertRaises(StructuralError):
@@ -281,7 +284,7 @@ class NodeTests(unittest.TestCase):
             with self.assertRaises(StructuralError):
                 n.page(query)
         self.assertEqual(self.http_error(n, '/push', {'records': [item(), {}]}, 400)['kind'], 'request')
-        self.assertEqual(len(n.store), 1)  # documented partial admission
+        self.assertEqual(len(n.store), 0)  # descriptor validation precedes all admissions
         # Oversized declaration is rejected before a body is read.
         with socket.create_connection(('127.0.0.1', n._port), timeout=5) as s:
             s.sendall(f'POST /push HTTP/1.0\r\nContent-Length: {MAX_HTTP + 1}\r\n\r\n'.encode())
