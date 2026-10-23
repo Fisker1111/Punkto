@@ -26,26 +26,27 @@ proposal receives only the requested wrapping and stray-space cleanup.
 
 ## 2. Exact specification changes
 
-The N1–N11 crosswalk below groups the revised contract by topic. Section names
-refer to the Phase 1 committed proposals, not the unrevised historical report.
+The crosswalk below follows the Issue's required-resolution numbering exactly
+(1–11). Section names refer to the Phase 1 committed proposals, not the unrevised
+historical report.
 
-| Item | File and section | Revised rule |
+| Issue item | File and section | Revised rule |
 |---|---|---|
-| N1: ranges | `docs/proposals/PUNKTI_0_6_LAYER3_RESET.md`, Synchronization semantics; `docs/proposals/PUNKTI_0_6_MESH.md`, Subscriptions and cursors | Reject equal/reversed MID, h and Z endpoints when both are present; null is unbounded; h comparison is literal; invalid subscriptions fail at construction. |
-| N2: error tiers | Mesh, HTTP operations / Normative error tiers | Exactly address/sha256/record in each wrapper; descriptor errors are request-level 400 with no admission; content failures are per-record 200 rejection; unknown algorithms/versions remain candidates; legacy namespace is rejected per-record. |
-| N3: resource limits | Mesh, Normative error tiers | Size/limit excess is 413, including page 33; malformed limit types or values below 1 are 400; an oversized decoded R is 413 with no admission from the request. |
-| N4: HELLO | Mesh, Required hello.limits members | Required integer body/record/page/http/candidates names and units; additional members permitted, lower policy maxima permitted; both experiments advertise exactly the five specified maxima. |
-| N5: cursors | Mesh, Subscriptions and cursors | Initial/empty MID after is null, nonempty MID continuation is an address/digest pair; spatial after is an integer initially 0; clients echo server tokens. |
-| N6: timestamp import | Reset, Atom envelope / Canonical bytes and immutable addressing; Mesh, opening carrier rules | Exact unsigned spelling `0\|[1-9][0-9]*`, bounded by 9007199254740991; explicitly reject -0 and other noncanonical spellings without changing canonical bytes. |
-| N7: discovery | Mesh, Discovery and convergence | Skip malformed/unreachable HELLOs and invalid individual origins, keep valid siblings, deduplicate and exclude self; never crawl, configure peers or admit records from hints. |
-| N8: peer failures | Mesh, Peer failures and interrupted pages | Distinguish unreachable/timeout/protocol/resource semantically; wording is implementation-defined; use documented local deadlines, not a fixed protocol deadline. |
-| N9: page atomicity | Mesh, Peer failures and interrupted pages | Truncated/unreadable/invalid JSON admits nothing; fully decoded pages prevalidate every descriptor and carrier; invalid content aborts the page without admission or checkpoint advancement. Earlier completed pages remain committed. |
-| N10: reciprocal sync | Mesh, Peer failures and interrupted pages | connect is orchestration; each /sync runs one nonrecursive phase; bounded callbacks may exceed ordinary deadlines; failed operations do not advance their checkpoints. |
-| N11: completeness | Mesh, final reconciliation paragraphs | Coverage, sync success, finite peer sets, cursors and end:true cannot establish global completeness or freshness. |
+| 1: timestamp grammar | `docs/proposals/PUNKTI_0_6_LAYER3_RESET.md`, Atom envelope / Canonical bytes and immutable addressing; `docs/proposals/PUNKTI_0_6_MESH.md`, opening carrier rules | Exact unsigned spelling `0\|[1-9][0-9]*`, bounded by 9007199254740991; explicitly reject -0 and other noncanonical spellings without changing canonical bytes. |
+| 2: wrapper-level errors | Mesh, HTTP operations / Normative error tiers | Exactly address/sha256/record in each wrapper; descriptor errors are request-level 400 with no admission; content failures are per-record 200 rejection; unknown algorithms/versions remain candidates; legacy namespace is rejected per-record. |
+| 3: over-limit responses | Mesh, Normative error tiers | Size/limit excess is 413, including page 33; malformed limit types or values below 1 are 400; an oversized decoded R is 413 with no admission from the request. |
+| 4: initial MID cursor | Mesh, Subscriptions and cursors | Initial/empty MID after is null, nonempty MID continuation is an address/digest pair; spatial after is an integer initially 0; clients echo server tokens. |
+| 5: equal/reversed bounds | `docs/proposals/PUNKTI_0_6_LAYER3_RESET.md`, Synchronization semantics; `docs/proposals/PUNKTI_0_6_MESH.md`, Subscriptions and cursors | Reject equal/reversed MID, h and Z endpoints when both are present; null is unbounded; h comparison is literal; invalid subscriptions fail at construction. |
+| 6: hello.limits members | Mesh, Required hello.limits members | Required integer body/record/page/http/candidates names and units; additional members permitted, lower policy maxima permitted; both experiments advertise exactly the five specified maxima. |
+| 7: poisoned discovery hints | Mesh, Discovery and convergence | Skip malformed/unreachable HELLOs and invalid individual origins, keep valid siblings, deduplicate and exclude self; never crawl, configure peers or admit records from hints. |
+| 8: peer errors and deadlines | Mesh, Peer failures and interrupted pages | Distinguish unreachable/timeout/protocol/resource semantically; wording is implementation-defined; use documented local deadlines, not a fixed protocol deadline. |
+| 9: interrupted-page atomicity | Mesh, Peer failures and interrupted pages | Truncated/unreadable/invalid JSON admits nothing; fully decoded pages prevalidate every descriptor and carrier; invalid content aborts the page without admission or checkpoint advancement. Earlier completed pages remain committed. |
+| 10: coverage completeness/freshness | Mesh, final reconciliation paragraphs | Coverage, sync success, finite peer sets, cursors and end:true cannot establish global completeness or freshness. |
+| 11: connect() reciprocal callback | Mesh, Peer failures and interrupted pages | connect is orchestration; each /sync runs one nonrecursive phase; bounded callbacks may exceed ordinary deadlines; failed operations do not advance their checkpoints. |
 
 Canonical C/S/MID/address/R/signature framing is unchanged by Phase 1. The
-specific N3 oversized-record rule takes precedence over generic N2 descriptor
-400 wording. Ordinary requests use local 5-second deadlines; reciprocal /sync
+specific Item 3 oversized-record rule takes precedence over generic Item 2
+descriptor 400 wording. Ordinary requests use local 5-second deadlines; reciprocal /sync
 requests use 300 seconds. Neither number is a universal protocol deadline.
 
 ## 3. Exact implementation changes
@@ -139,23 +140,23 @@ it cannot directly inspect the return bytes of import_json through that command.
 Before evidence is the committed Issue #13
 [findings](../../punkti-v0.6-hostile/docs/FINDINGS.md#2b-adversarial-protocol-findings-308-cases-282-agree)
 and [network report](../../punkti-v0.6-hostile/docs/HOSTILE_NETWORK_REPORT.md).
-The latter lists discovery safety and eclipse/no-crawl separately; N7 covers both.
+The latter lists discovery safety and eclipse/no-crawl separately; Issue item 7 covers both.
 Existing revision/hostile tests supplement the ten published vectors where noted;
-the new vectors alone are not claimed to cover every clause of N1–N11.
+the new vectors alone are not claimed to cover every clause of the eleven items.
 
-| Item | Before (#13 evidence) | Resolution | Implementation change | Vector | Status |
+| Issue item | Before (#13 evidence) | Resolution | Implementation change | Vector | Status |
 |---|---|---|---|---|---|
-| N1 ranges | Ref rejects; nb returns empty MID page or nonmatching spatial scope for equal/reversed bounds. | 400; null unbounded; fail-fast subscriptions. | nb node.py/spatial.py rejection; ref existing rejection retained. | V3, V4; spatial tests | Resolved; PASS |
-| N2 tiers | Digest/address mismatch: ref request 400, nb per-record structural rejection. Partial batch rules unclear. | All descriptors prevalidated; content remains per-record. | Both mesh.py/node.py validation-only passes, exact wrappers; nb errors promoted to request tier. | V1, V5, V6, V9 | Resolved; PASS |
-| N3 limits | Page 33: ref 400, nb 413. | Resource excess 413, malformed limits 400. | ref page/batch/query limits; both retain resource refusals. | V10 advertises maxima; revision and hostile limit cases enforce refusal | Resolved; PASS |
-| N4 HELLO | Different names/extras; no normative schema. | Five required integer members; experiments emit exact maxima. | nb LIMITS names aligned; ref already matched. | V10 | Resolved; PASS |
-| N5 cursor | Empty first MID after was ["",""] in ref, null in nb. | Null initial MID; returned pair for nonempty; echo complete token. | ref sentinel and token validation. | V2, V8 | Resolved; PASS |
-| N6 timestamp | JSON -0 accepted by ref, rejected by nb; wording implicit. | Reject all noncanonical timestamp spellings explicitly. | Both carrier parsers enforce unsigned grammar. | V7 | Resolved; PASS |
-| N7 discovery | Poisoned HELLO raised KeyError/PeerError; 500-hint probe already demonstrated no auto-crawl. | Skip malformed HELLO/hints, retain good siblings; never auto-connect. | Both discovery implementations filter independently. | No new dedicated vector; both revision suites and hostile E-coverage | Resolved; PASS |
-| N8 failures | Error strings/classes and timeout policy differed; no fixed taxonomy/deadline contract. | Semantic categories, implementation-defined messages, documented bounded local deadlines. | Both HTTP clients detect short bodies and propagate failure; nb preserves resource errors. | V8; hostile slow_peer/interrupted/corrupt cases | Contract clarified; tested subset PASS, no uniform exception API claimed |
-| N9 page atomicity | Undecodable-page safe subset tested; decoded mixed-page transaction rule unspecified. | Validate whole page before admission; retain checkpoint on invalid page. | Both PULL receivers prevalidate and only commit cursor after processing. | V8; both revision suites | Resolved; PASS |
-| N10 reciprocal sync | Reference 5000-record synchronous callback exceeded ordinary 5 s deadline; separately driven phases worked. | One nonrecursive /sync phase; longer bounded local callback deadline; no fixed-round promise. | Both connect helpers use 300 s callbacks. | Existing revision deadline assertions and hostile network suite; no new dedicated vector | Resolved contract; PASS; 5000-record scale matrix not rerun here |
-| N11 completeness | Withholding/stale coverage can hide records despite end:true or successful sync. | Explicitly disclaim global completeness/freshness. | Documentation only; no dishonest detection mechanism added. | Existing hostile withholding/eclipsing cases; no new dedicated vector | Limitation explicit; PASS |
+| 1 timestamp | JSON -0 accepted by ref, rejected by nb; wording implicit. | Reject all noncanonical timestamp spellings explicitly. | Both carrier parsers enforce unsigned grammar. | V7 | Resolved; PASS |
+| 2 wrapper errors | Digest/address mismatch: ref request 400, nb per-record structural rejection. Partial batch rules unclear. | All descriptors prevalidated; content remains per-record. | Both mesh.py/node.py validation-only passes, exact wrappers; nb errors promoted to request tier. | V1, V5, V6, V9 | Resolved; PASS |
+| 3 over-limit | Page 33: ref 400, nb 413. | Resource excess 413, malformed limits 400. | ref page/batch/query limits; both retain resource refusals. | V10 advertises maxima; revision and hostile limit cases enforce refusal | Resolved; PASS |
+| 4 initial MID cursor | Empty first MID after was ["",""] in ref, null in nb. | Null initial MID; returned pair for nonempty; echo complete token. | ref sentinel and token validation. | V2, V8 | Resolved; PASS |
+| 5 equal/reversed bounds | Ref rejects; nb returns empty MID page or nonmatching spatial scope for equal/reversed bounds. | 400; null unbounded; fail-fast subscriptions. | nb node.py/spatial.py rejection; ref existing rejection retained. | V3, V4; spatial tests | Resolved; PASS |
+| 6 hello.limits | Different names/extras; no normative schema. | Five required integer members; experiments emit exact maxima. | nb LIMITS names aligned; ref already matched. | V10 | Resolved; PASS |
+| 7 discovery hints | Poisoned HELLO raised KeyError/PeerError; 500-hint probe already demonstrated no auto-crawl. | Skip malformed HELLO/hints, retain good siblings; never auto-connect. | Both discovery implementations filter independently. | No new dedicated vector; both revision suites and hostile E-coverage | Resolved; PASS |
+| 8 peer errors/deadlines | Error strings/classes and timeout policy differed; no fixed taxonomy/deadline contract. | Semantic categories, implementation-defined messages, documented bounded local deadlines. | Both HTTP clients detect short bodies and propagate failure; nb preserves resource errors. | V8; hostile slow_peer/interrupted/corrupt cases | Contract clarified; tested subset PASS, no uniform exception API claimed |
+| 9 page atomicity | Undecodable-page safe subset tested; decoded mixed-page transaction rule unspecified. | Validate whole page before admission; retain checkpoint on invalid page. | Both PULL receivers prevalidate and only commit cursor after processing. | V8; both revision suites | Resolved; PASS |
+| 10 completeness | Withholding/stale coverage can hide records despite end:true or successful sync. | Explicitly disclaim global completeness/freshness. | Documentation only; no dishonest detection mechanism added. | Existing hostile withholding/eclipsing cases; no new dedicated vector | Limitation explicit; PASS |
+| 11 connect()/callback | Reference 5000-record synchronous callback exceeded ordinary 5 s deadline; separately driven phases worked. | One nonrecursive /sync phase; longer bounded local callback deadline; no fixed-round promise. | Both connect helpers use 300 s callbacks. | Existing revision deadline assertions and hostile network suite; no new dedicated vector | Resolved contract; PASS; 5000-record scale matrix not rerun here |
 
 ## 6. Test counts and retained hostile corpus
 
@@ -198,9 +199,9 @@ The 308 corpus rows are observations, distinct from the 125 unittest methods.
 
 The interop suite still explicitly tests and records these differences:
 
-| Input | Reference | Clean-room | Why outside N1–N11 |
+| Input | Reference | Clean-room | Why outside the eleven items |
 |---|---|---|---|
-| Duplicate JSON keys in HTTP PUSH envelope | Last records key wins; HTTP 200 and record admitted. | HTTP 400; nothing admitted. | N2 fixes item descriptors and error tiers, not duplicate-key parsing of the outer HTTP envelope. Carrier JSON duplicate-key rejection is separate. |
+| Duplicate JSON keys in HTTP PUSH envelope | Last records key wins; HTTP 200 and record admitted. | HTTP 400; nothing admitted. | Item 2 fixes item descriptors and error tiers, not duplicate-key parsing of the outer HTTP envelope. Carrier JSON duplicate-key rejection is separate. |
 | Unknown PULL query member | HTTP 200; member ignored, normal empty page on empty store. | HTTP 400 with kind=request, reason=query-fields. | The revision fixes ranges/limits/tokens; it does not standardize rejection of unknown query members. |
 | Empty PUSH records array | HTTP 400, {"error":"push batch size"}. | HTTP 200, {"results":[]}. | Revision specifies maximum batch size and error tiers, not minimum batch cardinality. V5 records this without a normative assertion. |
 | Request error envelope and exception text | E.g. wrong address: {"error":"address mismatch"}. | Same 400, {"kind":"request","reason":"address-mismatch"}. | Status/admission tier is normative; message text and exception class are implementation-defined. |
@@ -229,7 +230,7 @@ accounts for it. No additional normative divergence was observed in this run.
 
 Recommendation: **freeze candidate**. No new protocol defect was exposed by the
 required vectors or suites. Founder approval must explicitly choose the exact
-specification/implementation/vector commits, accept the N1–N11 resolutions and
+specification/implementation/vector commits, accept the eleven Issue resolutions and
 provisional spatial profile, and decide whether the documented non-normative
 HTTP parsing/batch differences can remain unspecified for the freeze. If they
 must be standardized, authorize a separate focused contract revision with tests.
