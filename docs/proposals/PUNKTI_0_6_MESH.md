@@ -96,8 +96,9 @@ prefix endpoints participate in literal lexicographic `[lo,hi)` comparison, not
 prefix expansion. The geohash alphabet order equals ASCII order. For example use
 `gggh..gggj`; `i` is not a geohash character. Multiple scopes form a union.
 An empty scope selects all, including unanchored h="". Any spatial constraint
-excludes unanchored records. Empty subscription lists select nothing. Every half-open range MUST reject equal
-or reversed bounds: when both endpoints are present, `h_lo >= h_hi`,
+excludes unanchored records. Empty subscription lists select nothing.
+Every half-open range MUST reject equal or reversed bounds: when both endpoints
+are present, `h_lo >= h_hi`,
 `z_min >= z_max`, or MID `lo >= hi` is HTTP 400, never an empty page. h uses literal
 lexicographic order, not prefix expansion. Either null endpoint is unbounded and
 valid. Invalid subscription bounds MUST fail at node construction as a structural
@@ -186,7 +187,7 @@ exceed an ordinary request deadline. It MUST be bounded locally (300 seconds in
 these experiments). Callback failure is a non-fatal peer failure and advances no
 checkpoint for that failed operation. Callers MUST NOT assume both directions
 complete within one fixed deadline or any fixed round count.
- Store replacement changes epoch, forcing catch-up.
+Store replacement changes epoch, forcing catch-up.
 
 The reference retains state during a server disconnect; it does not persist stores
 across process exits. Multi-hop convergence requires repeated fair peer exchanges,

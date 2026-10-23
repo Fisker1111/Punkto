@@ -74,6 +74,9 @@ def run(carrier, Node, Subscription=None):
                 cmd = req['cmd']
                 if cmd == 'mint':
                     result = mint(req['spec'])
+                elif cmd == 'import_json':
+                    carrier.import_json(base64.b64decode(req['json'], validate=True))
+                    result = {'ok': True}
                 elif cmd == 'decode':
                     result = describe(carrier.unb64(req['record']))
                 elif cmd == 'shutdown':
@@ -107,6 +110,13 @@ def run(carrier, Node, Subscription=None):
                     result = {'ok': True}
                 elif cmd == 'push_to':
                     (node.push_to if ref else node._push_to)(req['peer'])
+                    result = {'ok': True}
+                elif cmd == 'pull_from':
+                    if ref:
+                        node.pull(req['peer'], scope=Subscription(**req.get('scope', {})),
+                                  mode=req.get('mode', 'spatial'))
+                    else:
+                        node._pull_from(req['peer'])
                     result = {'ok': True}
                 elif cmd == 'pull':
                     opts = {k: req[k] for k in ('mode', 'scope', 'lo', 'hi') if k in req}
