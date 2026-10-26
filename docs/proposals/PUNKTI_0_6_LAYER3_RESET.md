@@ -25,7 +25,7 @@ The successor tasks are **Punkti 0.6 — Mesh** (application-agnostic discovery,
 | Atom envelope/canonical bytes | Parse bounded structure; preserve canonical content | Interpret payload and extensions | Unknown application types remain admissible. |
 | Immutable content addressing (MID) | Compute immutable content digest | Assign domain meaning to addressed objects | An address is not a person. |
 | Timestamp | Carry a signed integer timestamp | Interpret event time, freshness and chronology | No trusted clock or global ordering is implied. |
-| Spatial address (`h`, geohash) | Carry, structurally check and operate on native spatial addresses/ranges | Interpret application meaning and physical claims | XY is horizontal position; Z is physical altitude, not application meaning. No proof of presence; legacy anchors stay unchanged. |
+| Spatial address (`h`, XY_Z) | Carry, structurally check and operate on native spatial addresses/ranges | Interpret application meaning and physical claims | XY is horizontal position; Z is physical altitude, not application meaning. No proof of presence; legacy anchors stay unchanged. |
 | Signature/provenance envelope | Verify supported signature schemes over defined bytes | Decide trust and authority | Verification proves control of a key only. |
 | Self-certifying public key | Embed key; bind it into signed content and MID | Associate keys with identities | No external registry prerequisite for v0.6. |
 | Algorithm/version identifiers | Dispatch explicitly; preserve unsupported values | Choose application assurance policy | Never guess or downgrade an algorithm. |
@@ -72,7 +72,7 @@ Proposed transport is a UTF-8 JSON object with exactly `v`, `t`, `h`, `x`, `alg`
 |---|---|
 | `v` | Literal string `punkti/0.6`. |
 | `t` | JSON integer, Unix milliseconds; exact accepted spelling `0\|[1-9][0-9]*`, maximum 9007199254740991. Reject `-0`, negatives, leading zeros, plus signs, decimal points and exponents. |
-| `h` | Empty string for no spatial anchor, otherwise 12 lowercase characters from `0123456789bcdefghjkmnpqrstuvwxyz`. Exact spatial encoding remains subject to the geohash profile review. |
+| `h` | Empty string for no spatial anchor, otherwise `<xy>_<z>` under [the normative spatial profile candidate](PUNKTI_0_6_SPATIAL_XY_Z.md): 4–12 lowercase 2D geohash characters, canonical decimal WGS84 ellipsoidal metres, at most 32 characters total. |
 | `x` | Application payload as a UTF-8 string; no required type prefix or schema. |
 | `alg` | Nonempty ASCII algorithm identifier, maximum 128 bytes; proposed known profile `ed25519`. Case-sensitive, no aliases. |
 | `pk` | Canonical padded RFC 4648 base64 public-key bytes; nonempty. |
@@ -132,7 +132,7 @@ Proposed operations are **PUSH** of immutable records and **Range PULL** over le
 
 Mesh will define network framing, discovery, capability negotiation, snapshots and range summaries. The core contract is already precise: nodes MUST preserve transferred record bytes, deduplicate logical content by full namespace-qualified MID, preserve unknown application/reference/algorithm data, and avoid semantic interpretation. Transport record hashes may identify byte variants; they do not replace native MIDs.
 
-Spatial range subscriptions and range-scoped reconciliation are first-class requirements for that subsequent Mesh. Spatial h and z ranges follow the same rule: reject `h_lo >= h_hi` (literal lexicographic order, not prefix expansion) and `z_min >= z_max` when both endpoints are present; null is unbounded. Subscription construction MUST fail fast for invalid bounds. A spatial range selects atoms by `h`, independently of their opaque `x`; it is distinct from the lexicographic MID ranges used by Range PULL above. A node can subscribe to such a spatial range and carry unknown Layer-4 atoms within it. Mesh must define subscription and reconciliation mechanics separately; no new wire encoding or Mesh implementation is authorized here.
+Spatial range subscriptions and range-scoped reconciliation are first-class requirements for that subsequent Mesh. Spatial XY and Z ranges follow the restored profile: reject `K(xy_lo) >= K(xy_hi)` with K padded right to 12 characters using `0`, and `z_min >= z_max` by exact decimal comparison of canonical strings when both endpoints are present; null is unbounded. Selection uses lower-edge key containment, not region overlap. Subscription construction MUST fail fast for invalid bounds. A spatial range selects atoms by `h`, independently of their opaque `x`; it is distinct from the lexicographic MID ranges used by Range PULL above. A node can subscribe to such a spatial range and carry unknown Layer-4 atoms within it. Mesh must define subscription and reconciliation mechanics separately; no new wire encoding or Mesh implementation is authorized here.
 
 Because signatures are excluded from MID, a bad signature variant must not poison the address permanently. Check a newly received variant before treating it as an already verified duplicate. Store a bounded set of variants or quarantine candidates separately; retain a verified representative when available. Unknown-alg variants cannot safely be assumed equivalent in provenance.
 

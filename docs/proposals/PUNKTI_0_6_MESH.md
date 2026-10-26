@@ -90,28 +90,27 @@ future work. Resource refusals prevent a successful sync checkpoint.
 
 ## Subscriptions and cursors
 
-A scope is `{"h_lo":null,"h_hi":null,"z_min":null,"z_max":null}`. Null is an
-unbounded endpoint. h endpoints are 1–12 characters from the geohash alphabet;
-prefix endpoints participate in literal lexicographic `[lo,hi)` comparison, not
-prefix expansion. The geohash alphabet order equals ASCII order. For example use
-`gggh..gggj`; `i` is not a geohash character. Multiple scopes form a union.
-An empty scope selects all, including unanchored h="". Any spatial constraint
-excludes unanchored records. Empty subscription lists select nothing.
-Every half-open range MUST reject equal or reversed bounds: when both endpoints
-are present, `h_lo >= h_hi`,
-`z_min >= z_max`, or MID `lo >= hi` is HTTP 400, never an empty page. h uses literal
-lexicographic order, not prefix expansion. Either null endpoint is unbounded and
-valid. Invalid subscription bounds MUST fail at node construction as a structural
-configuration error.
+A scope is `{"xy_lo":null,"xy_hi":null,"z_min":null,"z_max":null}`.
+The normative [XY_Z profile](PUNKTI_0_6_SPATIAL_XY_Z.md) defines
+`h = <xy>_<z>`: standard 2D geohash (4–12 characters, default 10) and
+canonical decimal WGS84 ellipsoidal metres, at most 32 characters total.
+The empty h is unanchored. Z has no artificial altitude clamp.
 
-Elevation uses a **provisional profile**, pending the reset's geohash review:
-12 base32 characters encode 60 bits, interleaved latitude/longitude/altitude,
-20 bits each, MSB first. Altitude cell center is
-`-500 + (z_integer + 0.5) * 9000 / 2^20` metres. This is the existing 3D profile,
-implemented independently in the experiment without production imports. z bounds
-are finite numbers with lower inclusive and upper exclusive semantics. Filtering
-reads only addressed h and its decoded altitude, never x. Spatial ordering is not
-claimed to be a rectangular geographic bounding box.
+XY bounds are null or 1–12 geohash characters. Compare the lower-edge keys
+`K(xy) = xy.ljust(12, '0')`, inclusive below and exclusive above. Selection
+consults only this key, never region size or overlap. Thus `[u3bu,u3bu000001)`
+selects `u3bu`, while `[u3butz7k9q,u3butz7k9r)` does not.
+Z bounds are null or canonical ASCII decimal strings (1–27 characters),
+compared as exact decimals, never binary floats; lower inclusive, upper exclusive.
+Reject equal/reversed XY keys, equal/reversed numeric Z bounds, and MID
+`lo >= hi` with HTTP 400. In particular `[u3b,u3b0)` is rejected.
+Invalid subscription bounds fail at construction as structural configuration errors.
+
+Multiple scopes form a union. An empty scope selects all including unanchored
+records; any spatial constraint excludes unanchored records. Empty subscription
+lists select nothing. Filtering reads only the signed address, never payload x.
+Spatial ordering is not a rectangular geographic bounding box. Renaming scope
+members changes the scope binding hash and therefore cursor tokens.
 
 Query: `{"mode":"spatial"|"mid","scope":scope,"lo":null,"hi":null,
 "cursor":null,"limit":32}`. MID bounds are optional full namespace-qualified
