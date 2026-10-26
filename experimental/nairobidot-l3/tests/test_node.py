@@ -99,18 +99,20 @@ class NodeTests(unittest.TestCase):
         self.assertEqual(set(a.candidates), set(b.candidates))
         self.assertEqual(b.candidates[c['sha256']].item(), c)
         self.assertEqual(b.candidates[future['sha256']].item(), future)
-        limited = self.node([{'z_min': -1000}])
+        limited = self.node([{'z_min': '-1000'}])
         self.assertEqual(limited.add(future)['reason'], 'out-of-scope')
         self.assertEqual(limited.add(item())['reason'], 'out-of-scope')
-        self.assertTrue(limited.add(item(h='000000000000'))['admitted'])
+        self.assertTrue(limited.add(item(h='000000000000_-18'))['admitted'])
         self.assertFalse(self.node([]).add(item())['admitted'])
 
     def test_wire_queries_and_strict_json_requests(self):
         n = self.node()
-        n.add(item(h='s00000000000'))
+        n.add(item(h='s00000000000_23'))
         def query(raw):
             return '/pull?' + urlencode({'q': raw})
-        self.assertTrue(request(n.url, query('{"scope":{"z_min":-0}}'))['end'])
+        with self.assertRaises(HTTPError) as caught:
+            urlopen(n.url + query('{"scope":{"z_min":-0}}'), timeout=5)
+        self.assertEqual(caught.exception.code, 400)
         for raw, status in [('{"limit":33}', 413), ('{"limit":0}', 400),
                             ('{"limit":1,"limit":2}', 400), ('{"cursor":{}}', 400)]:
             with self.assertRaises(HTTPError) as caught:
@@ -137,13 +139,13 @@ class NodeTests(unittest.TestCase):
 
     def test_spatial_cursor_gaps_resume_and_binding(self):
         n = self.node()
-        for i, h in enumerate(('000000000000', '', 's00000000000', '', 's00000000001')):
+        for i, h in enumerate(('000000000000_-18', '', 's00000000000_23', '', 's00000000001_23.025')):
             n.add(item(i, h))
-        scope = {'h_lo': 's'}
+        scope = {'xy_lo': 's'}
         first = n.page({'scope': scope, 'limit': 1})
         self.assertFalse(first['end'])
         self.assertEqual(first['cursor']['after'], 3)
-        n.add(item(5, 's00000000000'))
+        n.add(item(5, 's00000000000_23'))
         second = n.page({'scope': scope, 'limit': 2, 'cursor': first['cursor']})
         self.assertTrue(second['end'])
         self.assertEqual(second['cursor']['after'], 5)
@@ -249,7 +251,7 @@ class NodeTests(unittest.TestCase):
         a.peers.add(b.url)
         b.peers.update([a.url, c.url])
         c.peers.add(b.url)
-        records = [item(i, h='000000000000' if i % 2 else '') for i in range(12)]
+        records = [item(i, h='000000000000_-18' if i % 2 else '') for i in range(12)]
         for n, indices in ((a, range(6)), (b, range(8, 2, -1)), (c, range(11, 6, -1))):
             for i in indices:
                 n.add(records[i])
@@ -280,7 +282,7 @@ class NodeTests(unittest.TestCase):
             self.http_error(n, '/sync', {'peer': peer, 'phase': 'push'}, 502)
         with self.assertRaises(ResourceError):
             n.page({'limit': 33})
-        for query in ({'limit': True}, {'limit': 0}, {'mode': 'application'}, {'scope': {'h_lo': 'i'}}):
+        for query in ({'limit': True}, {'limit': 0}, {'mode': 'application'}, {'scope': {'xy_lo': 'i'}}):
             with self.assertRaises(StructuralError):
                 n.page(query)
         self.assertEqual(self.http_error(n, '/push', {'records': [item(), {}]}, 400)['kind'], 'request')

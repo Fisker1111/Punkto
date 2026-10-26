@@ -21,7 +21,7 @@ def atom(index: int = 0, h: str = '', **changes) -> dict:
 
 def vectors() -> list[dict]:
     result = []
-    for index, h in enumerate(('', 's00000000000', 's00000000001')):
+    for index, h in enumerate(('', 's00000000000_23', 's00000000001_23.025')):
         a = atom(index, h, refs=[{'target': 'future:00', 'rel': ''}], ext=b64(b'\x00\xff'))
         r = from_atom(a)
         result.append({'name': ('unanchored', 'xy-scope', 'xyz-scope')[index],

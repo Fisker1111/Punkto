@@ -35,7 +35,7 @@ class RevisionTests(unittest.TestCase):
                 n.page({'mode': 'mid', 'cursor': dict(page['cursor'], after=after)})
         with self.assertRaises(StructuralError):
             n.page({'cursor': dict(n.page({})['cursor'], after=None)})
-        for scope in ({'h_lo': 'g', 'h_hi': 'g'}, {'h_lo': 'z', 'h_hi': 'g'},
+        for scope in ({'xy_lo': 'g', 'xy_hi': 'g'}, {'xy_lo': 'z', 'xy_hi': 'g'},
                       {'z_min': 1, 'z_max': 1}, {'z_min': 1, 'z_max': -1}):
             with self.assertRaises(StructuralError):
                 Node([scope])

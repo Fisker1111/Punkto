@@ -14,6 +14,8 @@ from typing import Any
 from cryptography.exceptions import InvalidSignature
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PublicKey
 
+from .spatial import parse_h
+
 MAX_C = 1024 * 1024
 MAX_R = 2 * MAX_C
 ALPHABET = '0123456789bcdefghjkmnpqrstuvwxyz'
@@ -114,8 +116,7 @@ def canonical_body(atom: dict) -> bytes:
     if type(atom['t']) is not int or not 0 <= atom['t'] <= 9007199254740991:
         raise StructuralError('timestamp')
     h = atom['h']
-    if h and (len(h) != 12 or any(c not in ALPHABET for c in h)):
-        raise StructuralError('spatial-address')
+    parse_h(h)
     alg = atom['alg']
     if not alg or not alg.isascii() or len(alg) > 128:
         raise StructuralError('algorithm')

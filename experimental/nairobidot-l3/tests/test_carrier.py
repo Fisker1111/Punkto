@@ -102,7 +102,7 @@ class CarrierTests(unittest.TestCase):
     def test_mutation_key_substitution_and_algorithm_dispatch(self):
         original = atom(refs=[{'target': 'future:00', 'rel': 'opaque'},
                              {'target': 'future:01', 'rel': ''}], ext=b64(b'abc'))
-        for field, value in [('t', 1), ('h', '000000000000'), ('x', 'changed'),
+        for field, value in [('t', 1), ('h', '000000000000_-18'), ('x', 'changed'),
                              ('pk', b64(bytes(range(32)))), ('ext', b64(b'abd')),
                              ('refs', list(reversed(original['refs'])))]:
             a = copy.deepcopy(original)

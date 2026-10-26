@@ -58,3 +58,13 @@ independent implementation, written without sight of the reference code, reprodu
 canonical byte and every qualifying validation state exactly, and diverged only on HTTP
 request-validation rules the specification does not state (see `PROOF_REPORT.md` §5).
 A copy-based reimplementation would not be expected to diverge at all.
+
+## XY_Z correction provenance
+
+The XY_Z module was written anew from the approved profile in this shared working
+tree by the same implementing agent that edited the reference implementation.
+This is not the original sight-unseen isolated procedure: the agent had read
+both old modules and written the reference replacement. No reference source was
+copied, imported, or read at runtime by nairobidot. The new codec uses a separate
+algorithm structure and scope normalization path. Static import isolation and
+black-box byte agreement are tested; cognitive independence is not claimed.

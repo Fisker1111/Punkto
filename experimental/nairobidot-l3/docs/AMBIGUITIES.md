@@ -208,3 +208,16 @@ while equal `h` bounds and equal/reversed elevation bounds are accepted here and
 by the reference. Items 1, 5, 6 and 7 correspond to interpretations 8 and 12. No carrier
 byte, MID, address, signature, validation state of a well-formed record, or spatial
 selection of valid records differs as a result.
+
+## XY_Z profile readings
+
+The approved XY_Z profile resolves selection as lower-edge containment, never
+region overlap; equal padded keys reject even if raw prefixes differ. Z precision
+is limited by 27 characters rather than a fixed decimal scale. Wire Z bounds are
+canonical strings, and xy_lo/xy_hi replace the old h bounds. Published XY permits
+4–12 characters with 10 recommended; restricting publication to 10 is deferred.
+The whole h is limited to 32 characters. The standalone client codec does not
+rewire the frozen creation flow. These are the seven recorded profile choices.
+For client float rounding the implementation uses nearest millimetre with ties
+to even after exact binary-to-decimal conversion; exact string inputs are never
+normalized silently.
