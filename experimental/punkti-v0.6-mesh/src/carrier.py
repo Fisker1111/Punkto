@@ -10,6 +10,8 @@ from enum import Enum
 from cryptography.exceptions import InvalidSignature
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PublicKey
 
+from spatial import parse_h
+
 VERSION = 'punkti/0.6'
 ALPHABET = '0123456789bcdefghjkmnpqrstuvwxyz'
 BODY_LIMIT = 1024 * 1024
@@ -69,8 +71,7 @@ def canonical(atom):
     if type(atom['t']) is not int or not 0 <= atom['t'] <= 9007199254740991:
         raise ValueError('timestamp')
     h = atom['h']
-    if not isinstance(h, str) or (h and (len(h) != 12 or any(c not in ALPHABET for c in h))):
-        raise ValueError('spatial address')
+    parse_h(h)
     alg = utf8(atom['alg'])
     if not 1 <= len(alg) <= 128 or not alg.isascii():
         raise ValueError('algorithm')
