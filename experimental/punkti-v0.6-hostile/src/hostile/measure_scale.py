@@ -26,8 +26,8 @@ import carrier  # noqa: E402  (reference implementation, imported read-only)
 import mesh  # noqa: E402
 from spatial import Subscription  # noqa: E402
 
-CELLS = ('gggb00000000', 'gggc00000000', 'gggd00000000', 'ggge00000000',
-         'gggf00000000', 'gggg00000000', 'gggh00000000', 'gggj00000000')
+CELLS = ('gggb00000000_0', 'gggc00000000_0', 'gggd00000000_0', 'ggge00000000_0',
+         'gggf00000000_0', 'gggg00000000_0', 'gggh00000000_0', 'gggj00000000_0')
 PAYLOAD = ('opaque-scale-payload-' * 10)[:200]
 OUT = HOME / 'evidence/scale.json'
 DOC = HOME / 'docs/SCALE_MEASUREMENT.md'

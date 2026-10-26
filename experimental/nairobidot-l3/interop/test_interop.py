@@ -21,7 +21,7 @@ def b64(raw):
 
 
 def spec(i=0, **kw):
-    result = dict(seed=f'interop-{i}', t=1700000000000 + i, h='gggh00000000',
+    result = dict(seed=f'interop-{i}', t=1700000000000 + i, h='gggh00000000_0',
                   x=f'opaque-{i}', refs=[], ext='')
     result.update(kw)
     return result
@@ -30,7 +30,7 @@ def spec(i=0, **kw):
 def vectors():
     refs = [dict(target='unknown/a:00ff', rel='unrecognized/关系'),
             dict(target='future:abcd', rel=''), dict(target='unknown/a:00ff', rel='unrecognized/关系')]
-    return [spec(0, h=''), spec(1, h='s00000000000'), spec(2, h='s00000000001'),
+    return [spec(0, h=''), spec(1, h='s00000000000_23'), spec(2, h='s00000000001_23.025'),
             spec(3, refs=refs), spec(4, x='Nairobi 🌍\u0000 e\u0301 漢字', ext=b64(bytes(range(256)))),
             spec(5, alg='future-signature')]
 
@@ -213,13 +213,13 @@ class Interop(unittest.TestCase):
             self.eq(kind + ' receiver store', self.addresses(b), sorted(expected))
 
     def test_spatial_range_selection(self):
-        """Literal half-open h bounds filter push admission and peer PULL."""
-        scope = dict(h_lo='gggh', h_hi='gggj')
+        """Padded lower-edge XY bounds filter push admission and peer PULL."""
+        scope = dict(xy_lo='gggh', xy_hi='gggj')
         for kind in ('ref', 'nb'):
             source = self.adapter('nb' if kind == 'ref' else 'ref')
             target = self.adapter(kind, [scope])
             expected = []
-            for i, h in enumerate(('', 'ggggzzzzzzzz', 'gggh00000000', 'ggghzzzzzzzz', 'gggj00000000')):
+            for i, h in enumerate(('', 'ggggzzzzzzzz_0', 'gggh00000000_0', 'ggghzzzzzzzz_0', 'gggj00000000_0')):
                 m = self.seed(source, spec(20 + i, h=h))
                 admitted = i in (2, 3)
                 status, body = http(target.url, '/push', {'records': [item(m)]})
@@ -234,15 +234,21 @@ class Interop(unittest.TestCase):
             self.eq('source scoped PULL', sorted(r['address'] for r in self.pullpage(source, scope)['records']), sorted(expected))
             self.eq('target PULL', sorted(r['address'] for r in self.pullpage(target)['records']), sorted(expected))
 
+    def test_xy_z_profile_vectors(self):
+        """Every deterministic XY_Z vector runs on both process-isolated codecs."""
+        sys.path.insert(0, str(ROOT / 'experimental/punkti-v0.6-freeze/src'))
+        from vector_suite import HOME, Runner
+        document = json.loads((HOME / 'vectors.json').read_text())
+        for vector in document['vectors']:
+            if vector['id'] in ('V11', 'V12', 'V13'):
+                self.eq(vector['id'] + ' parity', Runner('ref',document).run(vector),
+                        Runner('nb',document).run(vector))
+
     def test_xy_z_selection(self):
-        """Fixed XY bits with varying Z agree at exact altitude boundaries."""
-        alphabet = '0123456789bcdefghjkmnpqrstuvwxyz'
+        """Same XY with separate decimal Z agrees at exact height boundaries."""
         zs = [0, 1, 2, 3, 100]
-        hs = []
-        for z in zs:
-            bits = ''.join('00' + bit for bit in f'{z:020b}')
-            hs.append(''.join(alphabet[int(bits[i:i+5], 2)] for i in range(0, 60, 5)))
-        altitude = lambda z: -500 + (z + .5) * 9000 / 2**20
+        hs = ['u3butz7k9q_' + str(z) for z in zs]
+        altitude = str
         scope = dict(z_min=altitude(1), z_max=altitude(3))
         all_nodes = [self.adapter(k) for k in ('ref', 'nb')]
         expected = []
@@ -302,11 +308,11 @@ class Interop(unittest.TestCase):
 
     def test_convergence_orders_and_subsets(self):
         """Two clean-room plus one reference converge after two fair sync rounds."""
-        nodes = [self.adapter('nb', [{'h_lo': 'g', 'h_hi': 'u'}]),
-                 self.adapter('nb', [{'h_lo': 'f', 'h_hi': 't'}]),
-                 self.adapter('ref', [{'h_lo': 'g', 'h_hi': 't'}])]
+        nodes = [self.adapter('nb', [{'xy_lo': 'g', 'xy_hi': 'u'}]),
+                 self.adapter('nb', [{'xy_lo': 'f', 'xy_hi': 't'}]),
+                 self.adapter('ref', [{'xy_lo': 'g', 'xy_hi': 't'}])]
         self.configure(*nodes)
-        specs = [spec(80+i, h=('gggh00000000' if i % 2 else 's00000000000')) for i in range(6)]
+        specs = [spec(80+i, h=('gggh00000000_0' if i % 2 else 's00000000000_23')) for i in range(6)]
         expected = set()
         for node, indices in zip(nodes, ((0, 2, 4), (5, 3, 1), (2, 1, 4))):
             for i in indices:
@@ -413,15 +419,15 @@ class Interop(unittest.TestCase):
                     self.call(node, 'decode', record=m['R'])['state'], 'VALID')
         wrong_address = 'punkti/0.6:' + ('0' if m['MID'][0] != '0' else '1') + m['MID'][1:]
         cases = [
-            ('equal h bounds', dict(mode='spatial', scope=dict(h_lo='g', h_hi='g')), None,
-             400, {'error': 'equal or reversed bounds: h'}, 400, {'kind': 'request', 'reason': 'equal or reversed bounds'},
-             "GET /pull scope {h_lo:'g',h_hi:'g'}: reference HTTP 400, error 'equal or reversed bounds: h'; clean-room HTTP 400, reason 'equal or reversed bounds'. Revised contract agrees."),
-            ('reversed elevation', dict(mode='spatial', scope=dict(z_min=100, z_max=-100)), None,
+            ('equal XY bounds', dict(mode='spatial', scope=dict(xy_lo='g', xy_hi='g')), None,
+             400, {'error': 'equal or reversed bounds: xy'}, 400, {'kind': 'request', 'reason': 'equal or reversed bounds'},
+             "GET /pull scope {xy_lo:'g',xy_hi:'g'}: reference HTTP 400, error 'equal or reversed bounds: xy'; clean-room HTTP 400, reason 'equal or reversed bounds'. Revised contract agrees."),
+            ('reversed elevation', dict(mode='spatial', scope=dict(z_min='100', z_max='-100')), None,
              400, {'error': 'equal or reversed bounds: z'}, 400, {'kind': 'request', 'reason': 'equal or reversed bounds'},
-             "GET /pull scope {z_min:100,z_max:-100}: reference HTTP 400, error 'equal or reversed bounds: z'; clean-room HTTP 400, reason 'equal or reversed bounds'. Revised contract agrees."),
-            ('equal elevation', dict(mode='spatial', scope=dict(z_min=1, z_max=1)), None,
+             "GET /pull scope {z_min:'100',z_max:'-100'}: reference HTTP 400, error 'equal or reversed bounds: z'; clean-room HTTP 400, reason 'equal or reversed bounds'. Revised contract agrees."),
+            ('equal elevation', dict(mode='spatial', scope=dict(z_min='1', z_max='1')), None,
              400, {'error': 'equal or reversed bounds: z'}, 400, {'kind': 'request', 'reason': 'equal or reversed bounds'},
-             "GET /pull scope {z_min:1,z_max:1}: reference HTTP 400, error 'equal or reversed bounds: z'; clean-room HTTP 400, reason 'equal or reversed bounds'. Revised contract agrees."),
+             "GET /pull scope {z_min:'1',z_max:'1'}: reference HTTP 400, error 'equal or reversed bounds: z'; clean-room HTTP 400, reason 'equal or reversed bounds'. Revised contract agrees."),
             ('unknown query member', dict(mode='spatial', extra=1), None,
              200, {'records': [], 'end': True}, 400, {'kind': 'request', 'reason': 'query-fields'},
              "GET /pull query {mode:'spatial',extra:1}: reference HTTP 200, member ignored; clean-room HTTP 400, kind='request', reason='query-fields'."),

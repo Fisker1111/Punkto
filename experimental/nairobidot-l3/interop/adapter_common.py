@@ -12,7 +12,7 @@ def b64(raw):
     return base64.b64encode(raw).decode('ascii')
 
 
-def run(carrier, Node, Subscription=None):
+def run(carrier, Node, Subscription=None, spatial_codec=None):
     ref = Subscription is not None
     parser = argparse.ArgumentParser()
     group = parser.add_mutually_exclusive_group(required=True)
@@ -72,7 +72,12 @@ def run(carrier, Node, Subscription=None):
             try:
                 req = json.loads(line)
                 cmd = req['cmd']
-                if cmd == 'mint':
+                if cmd == 'spatial':
+                    operation = req['operation']
+                    if operation not in ('encode_xy', 'decode_xy', 'format_z', 'compare_z', 'parse_h'):
+                        raise ValueError('spatial operation')
+                    result = {'value': getattr(spatial_codec, operation)(*req['args'])}
+                elif cmd == 'mint':
                     result = mint(req['spec'])
                 elif cmd == 'import_json':
                     carrier.import_json(base64.b64decode(req['json'], validate=True))

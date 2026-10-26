@@ -29,7 +29,8 @@ class ScaleEnvelope(unittest.TestCase):
         row = self._cell(0.0)
         self.assertTrue(row['converged_sets'])
         self.assertEqual(row['records_needed'], 300)
-        self.assertEqual(row['useful_bytes'], 300 * 384)
+        # XY_Z appends '_0': the signed R fixture grows from 384 to 386 bytes.
+        self.assertEqual(row['useful_bytes'], 300 * 386)
         self.assertGreater(row['overhead_ratio'], 3)
         self.assertEqual(
             row['wire_bytes'],
@@ -41,7 +42,7 @@ class ScaleEnvelope(unittest.TestCase):
         row = self._cell(0.5)
         self.assertTrue(row['converged_sets'])
         self.assertEqual(row['records_needed'], 150)
-        self.assertEqual(row['useful_bytes'], 150 * 384)
+        self.assertEqual(row['useful_bytes'], 150 * 386)
         self.assertGreater(row['fresh_subscriber']['records'], 0)
         self.assertGreaterEqual(row['fresh_subscriber']['wire_bytes'], 300 * 200)
 

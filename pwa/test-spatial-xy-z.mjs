@@ -44,6 +44,21 @@ for (let i=0;i<zOrder.length;i++) for (let j=0;j<zOrder.length;j++) check(codec.
 check(['23','23.02','23.025','22.999'].map(z=>codec.matches('u3bu_'+z,{z_min:'23',z_max:'23.025'})),[true,true,false,false]);
 check(codec.matches('u3bu_0',{xy_lo:'u3bu',xy_hi:'u3bu000001'}),true);
 check(codec.matches('u3bu_0',{xy_lo:'u3butz7k9q',xy_hi:'u3butz7k9r'}),false);
+for (const [lo,hi,xy,selected] of [
+  ['u3b','u3c','u3bu',true], ['u3b','u3c','u3b',true],
+  ['u3b','u3c','u3butz7k9q',true], ['u3b','u3c','u3c',false],
+  ['u3butz7k9q','u3butz7k9r','u3bu',false],
+  ['u3butz7k9q','u3butz7k9r','u3butz7k9q',true],
+  ['u3butz7k9q','u3butz7k9r','u3butz7k9r',false],
+  ['u3bu','u3bu000001','u3bu',true]
+]) {
+  // Three-character examples in §9.4 are keys; append 0 for a valid address
+  // with exactly the same lower edge, without admitting short address XY.
+  check(codec.matches(xy.padEnd(4,'0')+'_0',{xy_lo:lo,xy_hi:hi}),selected);
+}
+check(codec.encodeH(0,0,'1'.repeat(27),4).length,32);
+assert.throws(()=>codec.encodeH(0,0,'1'.repeat(27),12)); count++;
+assert.throws(()=>codec.formatZ('23.50')); count++;
 for (const scope of [{xy_lo:'u3b',xy_hi:'u3b0'},{z_min:23},{z_min:'23.0'},{z_min:'1',z_max:'1'},{h_lo:'u'}]) {
   assert.throws(()=>codec.normalizeScope(scope)); count++;
 }

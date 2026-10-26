@@ -27,7 +27,7 @@ def b64(raw):
 
 
 def spec(**kw):
-    value = dict(seed=SEED, t=1700000000000, h='s00000000000',
+    value = dict(seed=SEED, t=1700000000000, h='s00000000000_23',
                  x='opaque freeze payload \0 世界 🌍',
                  refs=[dict(target='unknown/a:00ff', rel='unrecognized/关系'),
                        dict(target='future/v9:abcd', rel='')], ext=b64(b'\0\xff\0'), alg='ed25519')
@@ -41,10 +41,7 @@ def item(m, raw=None):
 
 
 def altitude(h):
-    alphabet = '0123456789bcdefghjkmnpqrstuvwxyz'
-    bits = ''.join(f'{alphabet.index(c):05b}' for c in h)
-    z = int(bits[2::3], 2)
-    return -500 + (z + .5) * 9000 / 2**20
+    return h.split('_')[1]
 
 
 def equal(actual, expected, label=''):
@@ -64,8 +61,13 @@ def adapter(kind, serve=True):
 def fixtures():
     specs = {'canonical': spec(), 'zero': spec(t=0),
              'opaque': spec(alg='future-signature', x='opaque\0 🌍 e\u0301', ext=b64(b'\xff\0opaque'))}
-    for i, h in enumerate(('000000000000', 's00000000000', 's00000000001', 'zzzzzzzzzzzz')):
+    for i, h in enumerate(('000000000000_-18', 's00000000000_23', 's00000000001_23.025', 'zzzzzzzzzzzz_9000')):
         specs['spatial' + str(i)] = spec(h=h, x='boundary-' + str(i))
+    for name, h in [('height23','u3butz7k9q_23'),('negative','u3butz7k9q_-18'),('decimal','u3butz7k9q_23.025')]:
+        specs[name] = spec(h=h)
+    for i, h in enumerate(('u3bu_23','u3butz7k9q_23','u3c0_23','u3bu_23.02',
+                           'u3bu_23.025','u3bu_22.999','u3bu_-18','')):
+        specs['selection'+str(i)] = spec(h=h)
     result = {}
     with adapter('ref', False) as a, adapter('nb', False) as b:
         for name, s in specs.items():
@@ -90,13 +92,14 @@ def definitions(f):
     A, B = sorted(f[k]['address'] for k in ('spatial0', 'spatial1'))
     alts = {f['spatial'+str(i)]['atom']['h']: altitude(f['spatial'+str(i)]['atom']['h']) for i in range(4)}
     h0, h1 = 's00000000000', 's00000000001'
-    assert alts[h0] < alts[h1], 'profile altitude order changed: revise/document bounds before publishing'
-    scope = dict(h_lo=h0, h_hi='s00000000002')
+    z0, z1 = '23', '23.025'
+    assert z0 < z1, 'profile altitude order changed: revise/document bounds before publishing'
+    scope = dict(xy_lo=h0, xy_hi='s00000000002')
     vectors = []
 
     def add(id, title, description, data, expectation, expected, transition):
         final_valid = dict(V1=1, V2=3, V3=1, V4=4, V5=0, V6=1,
-                           V7=0, V8=1, V9=1, V10=0)[id]
+                           V7=0, V8=1, V9=1, V10=0, V11=0, V12=0, V13=8)[id]
         final_candidates = int(id == 'V9')
         vectors.append(dict(id=id, title=title, input=dict(description=description, **data),
                             expected=dict(description=expectation, **expected),
@@ -118,21 +121,21 @@ def definitions(f):
              page_addresses=sorted(f['spatial'+str(i)]['address'] for i in range(3))[:2], scope_pattern='[0-9a-f]{64}'),
         'PULL does not change store/candidates/log/epoch.')
     queries = [({'mode':'mid','lo':A,'hi':A},400), ({'mode':'mid','lo':B,'hi':A},400),
-               ({'mode':'spatial','scope':{'h_lo':'g','h_hi':'g'}},400), ({'scope':{'h_lo':'t','h_hi':'g'}},400),
-               ({'mode':'spatial','scope':{'z_min':1,'z_max':1}},400), ({'scope':{'z_min':1,'z_max':-1}},400),
-               ({'mode':'mid','lo':A},200), ({'mode':'spatial','scope':{'h_lo':'g'}},200), ({'scope':{'z_max':1}},200)]
+               ({'mode':'spatial','scope':{'xy_lo':'g','xy_hi':'g'}},400), ({'scope':{'xy_lo':'t','xy_hi':'g'}},400),
+               ({'mode':'spatial','scope':{'z_min':'1','z_max':'1'}},400), ({'scope':{'z_min':'1','z_max':'-1'}},400),
+               ({'mode':'mid','lo':A},200), ({'mode':'spatial','scope':{'xy_lo':'g'}},200), ({'scope':{'z_max':'1'}},200)]
     add('V3', 'range-rejection', 'Seed canonical record; issue each exact range request.',
         dict(fixtures=['canonical'], requests=[request(q) for q,_ in queries], A=A, B=B),
         'Equal/reversed bounds reject; single unbounded endpoints accept.', dict(statuses=[s for _,s in queries]),
         'Each request leaves store, candidates, log and epoch unchanged.')
-    scopes = [dict(h_lo=h0,h_hi=h1), dict(scope,z_min=alts[h0],z_max=alts[h1]),
-              dict(scope,z_max=alts[h0]),dict(scope,z_min=alts[h1])]
-    add('V4', 'spatial-boundary', 'Four-record store; literal h and independently derived Z half-open boundaries.',
+    scopes = [dict(xy_lo=h0,xy_hi=h1), dict(scope,z_min=z0,z_max=z1),
+              dict(scope,z_max=z0),dict(scope,z_min=z1)]
+    add('V4', 'spatial-boundary', 'Four-record store; lower-edge XY and exact decimal Z half-open boundaries.',
         dict(fixtures=['spatial'+str(i) for i in range(4)], altitudes=alts,
              requests=[request(dict(mode='spatial',scope=s)) for s in scopes]),
         'Exactly lower boundary for XY and bounded Z; none below lower altitude; exactly upper record at z_min=alt1.',
         dict(http_status=200, addresses=[[f['spatial1']['address']],[f['spatial1']['address']],[],[f['spatial2']['address']]]),
-        'PULL only: no store/candidate/log/epoch mutation. The h scope excludes both extreme h fixtures.')
+        'PULL only: no store/candidate/log/epoch mutation. The XY scope excludes both extreme h fixtures.')
     bad_digest = dict(good, sha256='f'*64)
     bad_address = dict(good, address='punkti/0.6:' + '0'*64)
     cases = [[good,bad_digest],[bad_address],[dict(good,extra=1)],[dict(good,record=good['record']+'=')]]
@@ -155,7 +158,7 @@ def definitions(f):
         'Only unsigned integer spelling 0 accepts; accepted object has the pinned zero fixture canonical bytes.',
         dict(ok=[True]+[False]*6), 'JSON import only; no store mutation.')
     stubhello = dict(protocol='punkti-mesh/0.6-draft',epoch='stub-epoch',subscriptions=[{}],peers=[])
-    binding = hashlib.sha256(packed(dict(mode='spatial',scope=dict(h_lo=None,h_hi=None,z_min=None,z_max=None),lo=None,hi=None)).encode()).hexdigest()
+    binding = hashlib.sha256(packed(dict(mode='spatial',scope=dict(xy_lo=None,xy_hi=None,z_min=None,z_max=None),lo=None,hi=None)).encode()).hexdigest()
     token = dict(epoch='stub-epoch',scope=binding,after=1,ceiling=1)
     clean = dict(records=[good],end=True,cursor=token)
     badpage = dict(records=[good,tampered],end=True,cursor=dict(token,after=2,ceiling=2))
@@ -177,6 +180,52 @@ def definitions(f):
         dict(http_status=200,limits=dict(body=1048576,record=2097152,page=32,http=8388608,candidates=128),
              capabilities=['push','range-mid','range-spatial','opaque-wrapper'],protocol='punkti-mesh/0.6-draft'),
         'No state mutation.')
+    invalid_z = ['+23','2.3e1','023','23.','23.0','23.50','-0','0.0','0.00','٢٣','.5','23 ','23\n']
+    invalid_h = ['u3bu_'+z for z in invalid_z] + [
+        'u3b_23','u'*13+'_0','u3bu23','u3bu__23','u3bu_','u3bu_'+'1'*28,
+        'u3butz7k9q_'+'1'*22, 's00000000000']
+    order = ['-99999999999999999999999999','-18','-0.5','0','0.05','0.5','23',
+             '23.02','23.025','999999999999999999999999998','999999999999999999999999999']
+    add('V11','canonical-XY_Z-and-order','Historical signed addresses, rejected spellings and all pairs of exact Z order.',
+        dict(fixtures=['height23','negative','decimal'],invalid_h=invalid_h,order=order),
+        'Distinct h/C/MID/address for same XY with different Z; structural rejection of every malformed h; exact total Z order.',
+        dict(state='VALID',invalid_state='INVALID-structural'), 'Mint and validate only; no store mutation.')
+    rows = [(55.675398,12.561895,'u3butz7k9q7v'),(51.5074,-.1278,'gcpvj0duq533'),
+            (35.6762,139.6503,'xn76cydhzven'),(40.7128,-74.006,'dr5regw3ppyz'),
+            (59.9139,10.7522,'u4xsudvxb2mq'),(0.,0.,'s000000000000'),
+            (-90.,-180.,'000000000000'),(90.,180.,'zzzzzzzzzzzz')]
+    cells = []
+    alphabet = '0123456789bcdefghjkmnpqrstuvwxyz'
+    for lat,lon,full in rows:
+        for precision in (4,10,12):
+            xy = full[:precision]
+            bits = ''.join(format(alphabet.index(c),'05b') for c in xy)
+            xbits,ybits = bits[::2],bits[1::2]
+            x,y = int(xbits,2),int(ybits,2)
+            dx,dy = 360/2**len(xbits),180/2**len(ybits)
+            cells.append(dict(lat=lat,lon=lon,precision=precision,xy=xy,
+                decoded=dict(lon_min=-180+x*dx,lon_max=-180+(x+1)*dx,
+                             lat_min=-90+y*dy,lat_max=-90+(y+1)*dy,
+                             lon=-180+(x+.5)*dx,lat=-90+(y+.5)*dy)))
+    add('V12','geohash-ground-truth','All eight profile rows at precisions 4, 10 and 12, including endpoints and midpoint.',
+        dict(cells=cells), 'Encode equals pinned XY; decode equals independent integer-grid oracle; centre re-encodes.',
+        dict(count=24), 'Pure codec operations; no store mutation.')
+    selections = [({},list(range(8))),({'xy_lo':'u3b','xy_hi':'u3c'},[0,1,3,4,5,6]),
+        ({'xy_lo':'u3bu','xy_hi':'u3bu000001'},[0,3,4,5,6]),
+        ({'xy_lo':'u3butz7k9q','xy_hi':'u3butz7k9r'},[1]),
+        ({'z_min':'23','z_max':'23.025'},[0,1,2,3]),
+        ({'xy_lo':'u3b','xy_hi':'u3c','z_min':'23','z_max':'23.025'},[0,1,3])]
+    invalid_scopes = [{'xy_lo':'u3b','xy_hi':'u3b0'}, {'xy_lo':'u3b0','xy_hi':'u3b'},
+        {'xy_lo':'u3c','xy_hi':'u3b'}, {'z_min':'23','z_max':'23'},
+        {'z_min':'23.025','z_max':'23'}, {'z_min':23}, {'z_min':'٢٣'}, {'z_min':'23.0'},
+        {'xy_lo':''}, {'xy_hi':'u'*13}, {'xy_lo':'U'}, {'h_lo':'u3b'}]
+    add('V13','exact-XY_Z-wire-scopes','Seed coarse/fine XY, Z endpoints and unanchored fixtures; issue exact PULL queries.',
+        dict(fixtures=['selection'+str(i) for i in range(8)],
+             requests=[request(dict(mode='spatial',scope=scope)) for scope,_ in selections],
+             invalid_requests=[request(dict(mode='spatial',scope=scope)) for scope in invalid_scopes]),
+        'Lower-edge containment regardless of region size; exact half-open Z; equal padded keys and malformed bounds HTTP 400.',
+        dict(addresses=[sorted(f['selection'+str(i)]['address'] for i in indexes) for _,indexes in selections],
+             invalid_statuses=[400]*len(invalid_scopes)), 'Eight seeded records; PULL and rejected queries never mutate state.')
     return dict(format='punkti-freeze-vectors/1', seed_literal=SEED,
                 seed_hex=hashlib.sha256(SEED.encode()).hexdigest(), fixtures=f, vectors=vectors)
 
@@ -366,6 +415,54 @@ class Runner:
         equal(all(type(v) is int for v in body['limits'].values()),True)
         equal(self.snapshot(n),before)
         return {k:body[k] for k in ('limits','capabilities','protocol')}
+
+    def V11(self,i,e):
+        n=self.node();out=[]
+        for name in i['fixtures']:
+            fixture=self.f[name];actual=n.rpc('mint',spec=fixture['spec'])
+            self.canonical(actual,fixture);equal(actual['state'],e['state'])
+            out.append({key:actual[key] for key in KEYS})
+        for key in ('C','MID','address'):
+            equal(len({a[key] for a in out}),len(out),'different Z changes '+key)
+        for h in i['invalid_h']:
+            # Send malformed signed content through each carrier's structural decoder.
+            fixture=self.f[i['fixtures'][0]]
+            atom=dict(fixture['atom'],h=h)
+            equal(n.rpc('import_json',json=b64(packed(atom).encode()))['ok'],False,h)
+            body=bytes.fromhex(fixture['C'])
+            old=fixture['atom']['h'].encode();new=h.encode()
+            body=body.replace(len(old).to_bytes(4,'big')+old,len(new).to_bytes(4,'big')+new,1)
+            signature=base64.b64decode(fixture['sig'])
+            raw=len(body).to_bytes(4,'big')+body+len(signature).to_bytes(4,'big')+signature
+            equal(n.rpc('decode',record=b64(raw))['state'],e['invalid_state'],h)
+        for a,left in enumerate(i['order']):
+            for b,right in enumerate(i['order']):
+                equal(n.rpc('spatial',operation='compare_z',args=[left,right]),{'value':(a>b)-(a<b)})
+        return out
+
+    def V12(self,i,e):
+        n=self.node();out=[]
+        equal(len(i['cells']),e['count'])
+        for cell in i['cells']:
+            equal(n.rpc('spatial',operation='encode_xy',args=[cell['lat'],cell['lon'],cell['precision']]),{'value':cell['xy']})
+            result=n.rpc('spatial',operation='decode_xy',args=[cell['xy']])
+            equal(result,{'value':cell['decoded']})
+            equal(n.rpc('spatial',operation='encode_xy',args=[cell['decoded']['lat'],cell['decoded']['lon'],cell['precision']]),{'value':cell['xy']})
+            out.append(result)
+        return out
+
+    def V13(self,i,e):
+        n=self.node()
+        for name in i['fixtures']: self.seed(n,name)
+        before=self.snapshot(n);out=[]
+        for req,addresses in zip(i['requests'],e['addresses']):
+            status,page=self.call(n,req);equal(status,200)
+            actual=sorted(r['address'] for r in page['records']);equal(actual,addresses)
+            equal(self.snapshot(n),before);out.append(actual)
+        for req,expected in zip(i['invalid_requests'],e['invalid_statuses']):
+            status,_=self.call(n,req);equal(status,expected)
+            equal(self.snapshot(n),before);out.append(status)
+        return out
 
 
 @contextmanager

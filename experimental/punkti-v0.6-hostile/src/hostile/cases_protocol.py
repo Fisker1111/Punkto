@@ -30,7 +30,7 @@ def body(a):
     return b''.join(lp(str(a[k]).encode('utf-8')) for k in ('v','t','h','x','alg')) + lp(base64.b64decode(a['pk'])) + struct.pack('>I', len(a['refs'])) + b''.join(lp(r[k].encode()) for r in a['refs'] for k in ('target','rel')) + lp(base64.b64decode(a['ext']))
 
 def atom(**updates):
-    a = dict(v='punkti/0.6', t=0, h='gggh00000000', x='hostile', alg='ed25519',
+    a = dict(v='punkti/0.6', t=0, h='gggh00000000_0', x='hostile', alg='ed25519',
              pk=b64(KEY.public_key().public_bytes(Encoding.Raw, PublicFormat.Raw)), refs=[], ext='', sig='')
     a.update(updates)
     a['sig'] = b64(KEY.sign(b'PUNKTI-L3-SIGN\0' + body(a)))
@@ -83,7 +83,13 @@ def envelope_cases():
         add('t-'+n,raw.replace(b'"t":0',b'"t":'+v), S)
     signed('t-max',t=2**53-1); signed('t-zero'); add('json-whitespace',b' \n'+raw+b'\t ',V)
     for n,h in [('11','g'*11),('13','g'*13),('uppercase','G'*12)]+[(c,c*12) for c in 'ailo']: mutate('h-'+n,'h',h)
-    signed('h-empty',h=''); signed('h-valid',h='g'*12)
+    signed('h-empty',h=''); signed('h-valid',h='g'*12+'_0')
+    for index,z in enumerate(['+23','2.3e1','023','23.','23.0','23.50','-0','0.0','٢٣','.5','23\n']):
+        mutate('xy-z-spelling-'+str(index),'h','u3bu_'+z)
+    for index,h in enumerate(['u3b_0','u'*13+'_0','u3bu__0','u3bu_','u3bu_'+'1'*28]):
+        mutate('xy-z-address-'+str(index),'h',h)
+    signed('xy-z-negative',h='u3butz7k9q_-18')
+    signed('xy-z-decimal',h='u3butz7k9q_23.025')
     for n,a in [('empty',''),('129','q'*129),('unicode','é')]: mutate('alg-'+n,'alg',a)
     for n,a in [('128','q'*128),('NUL','future\0x'),('uppercase','ED25519'),('space','ed25519 ')]: signed('alg-'+n,U,alg=a)
     for f in ('pk','sig','ext'):

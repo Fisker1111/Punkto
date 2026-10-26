@@ -32,11 +32,11 @@ class Coverage(unittest.TestCase):
     def test_hello_and_narrow_push(self):
         for k in ('ref','nb'):
             with Runner('hello',k) as r:
-                a=r.node(); b=Adapter(k,dict(subscriptions=[dict(h_lo='g',h_hi='h')],peers=[])); r.nodes.append(b)
+                a=r.node(); b=Adapter(k,dict(subscriptions=[dict(xy_lo='g',xy_hi='h')],peers=[])); r.nodes.append(b)
                 inside=r.seed(a,10000,2)
-                outside=r.call(a,'add',spec=dict(seed='outside',t=0,h='s00000000000',x='outside',refs=[],ext=''))
+                outside=r.call(a,'add',spec=dict(seed='outside',t=0,h='s00000000000_23',x='outside',refs=[],ext=''))
                 code,hello=http(b.url,'/hello'); self.assertEqual(code,200)
-                self.assertEqual(hello['subscriptions'],[dict(h_lo='g',h_hi='h',z_min=None,z_max=None)])
+                self.assertEqual(hello['subscriptions'],[dict(xy_lo='g',xy_hi='h',z_min=None,z_max=None)])
                 self.assertEqual(hello['capabilities'],['push','range-mid','range-spatial','opaque-wrapper'])
                 p=r.proxy(b); r.call(a,'push_to',peer=p.url); r.equal([b],inside)
                 p.idle(); sent=[w for e in p.exchanges if e['path']=='/push' for w in json.loads(e['request'].split(b'\r\n\r\n',1)[1])['records']]
@@ -79,7 +79,7 @@ class Coverage(unittest.TestCase):
                     self.assertEqual(lost,10); self.assertEqual(proxy.stats()['drop_after'],10)
                     r.equal([target],[m for i,m in enumerate(records) if i%4!=3])
                     before=len(r.state(target)['valid']); self.assertEqual(before,30)
-                    code,hello=http(proxy.url,'/hello'); self.assertEqual(hello['subscriptions'],[dict(h_lo=None,h_hi=None,z_min=None,z_max=None)])
+                    code,hello=http(proxy.url,'/hello'); self.assertEqual(hello['subscriptions'],[dict(xy_lo=None,xy_hi=None,z_min=None,z_max=None)])
                     _,bounded=http(target.url,'/pull?'+urlencode({'q':'{}'})); self.assertTrue(bounded['end']); self.assertNotIn('complete',bounded)
                     self.assertTrue(r.pull(target,source.url)['ok']); r.equal([target],records)
                     row('E-coverage','stale-advertisement-withholding-quarter',k,[40,30,10,40],[counter[0],before,lost,len(r.state(target)['valid'])],True,raw=dumps(list(map(item,records))),note='Malicious endpoint acknowledges without retaining indices 3,7,...,39; FaultProxy drops those responses. Explicit pull recovers ten; end is bounded-view only.')

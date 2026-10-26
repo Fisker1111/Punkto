@@ -9,7 +9,7 @@ from vector_suite import HOME, Runner
 
 DOCUMENT = json.loads((HOME / 'vectors.json').read_text())
 # Explicit inventory prevents silently generating tests for unintended/missing IDs.
-IDS = tuple('V' + str(i) for i in range(1, 11))
+IDS = tuple('V' + str(i) for i in range(1, 14))
 EXERCISED = set()
 
 

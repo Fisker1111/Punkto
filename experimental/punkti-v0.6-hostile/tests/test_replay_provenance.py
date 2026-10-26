@@ -17,7 +17,7 @@ class Provenance(unittest.TestCase):
         for k in ('ref','nb'):
             with Runner('mutations',k) as r:
                 n=r.node(); original=atom()
-                for field,value in dict(t=1,h='gggj00000000',x='changed',pk=b64(bytes(32)),refs=[dict(target='future:ab',rel='r')],ext='YQ==',alg='ED25519').items():
+                for field,value in dict(t=1,h='gggj00000000_0',x='changed',pk=b64(bytes(32)),refs=[dict(target='future:ab',rel='r')],ext='YQ==',alg='ED25519').items():
                     a=deepcopy(original); a[field]=value; w=wrapper(wire(a))
                     code,result=push(n,w); self.assertEqual(code,200)
                     expected=U if field=='alg' else P

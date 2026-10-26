@@ -82,35 +82,54 @@ class Cursors(unittest.TestCase):
 
 class Spatial(unittest.TestCase):
     def test_decoders_and_scopes(self):
-        samples=['000000000000','zzzzzzzzzzzz','gggh00000000','s00000000000','s00000000001','bcd123456789']
-        # Neither public implementation exports lat/lon decoding. Pin the complete
-        # bit-cell oracle and compare their actual exported Z and h boundary APIs.
-        alphabet='0123456789bcdefghjkmnpqrstuvwxyz'
+        samples=['000000000000_-18','zzzzzzzzzzzz_9000','gggh00000000_0',
+                 'u3butz7k9q_23','u3butz7k9q_23.025']
         for h in samples:
-            bits=''.join(f'{alphabet.index(c):05b}' for c in h)
-            xyz=[int(bits[i::3],2) for i in range(3)]
-            centers=[-90+(xyz[0]+.5)*180/2**20,-180+(xyz[1]+.5)*360/2**20,-500+(xyz[2]+.5)*9000/2**20]
             for k,m in [('ref',direct_ref),('nb',direct_nb)]:
-                self.assertEqual(m.altitude(h),centers[2])
-                row('D-spatial','decode-'+h,k,centers[2],m.altitude(h),raw=h.encode(),note='Public API exposes altitude only. Independent bit-cell center (lat,lon,z)='+repr(centers)+'; no implementation lat/lon decoder exists to compare.')
-        h='s00000000000'; z=direct_ref.altitude(h)
-        cases=[('exact-cell',dict(h_lo=h,h_hi='s00000000001'),True),('lower-inclusive',dict(h_lo=h),True),('upper-exclusive',dict(h_hi=h),False),('span',dict(h_lo='g',h_hi='t'),True),('full',{},True),('h-reversed',dict(h_lo='t',h_hi='g'),'REJECT'),('h-equal',dict(h_lo=h,h_hi=h),'REJECT'),('z-equal',dict(z_min=z,z_max=z),'REJECT'),('z-reversed',dict(z_min=1,z_max=-1),'REJECT'),('z-negative',dict(z_min=-500,z_max=-499),True),('z-fractional',dict(z_min=z,z_max=z+.001),True),('z-upper-exclusive',dict(z_max=z),False),('null',dict(h_lo=None,h_hi=None,z_min=None,z_max=None),True)]
-        for name,s,expected in cases:
+                self.assertEqual(str(m.altitude(h)),h.split('_')[1])
+                row('D-spatial','decode-'+h,k,h.split('_')[1],str(m.altitude(h)),raw=h.encode(),note='Z is an exact decimal claim, independent of XY.')
+        h='u3bu_23'
+        cases=[('exact-cell',dict(xy_lo='u3bu',xy_hi='u3bv'),True),
+               ('lower-inclusive',dict(xy_lo='u3bu'),True),('upper-exclusive',dict(xy_hi='u3bu'),False),
+               ('span',dict(xy_lo='g',xy_hi='z'),True),('full',{},True),
+               ('xy-reversed',dict(xy_lo='t',xy_hi='g'),'REJECT'),
+               ('xy-equal-key',dict(xy_lo='u3b',xy_hi='u3b0'),'REJECT'),
+               ('coarse-in-fine',dict(xy_lo='u3bu',xy_hi='u3bu000001'),True),
+               ('coarse-overlap-only',dict(xy_lo='u3butz7k9q',xy_hi='u3butz7k9r'),False),
+               ('z-equal',dict(z_min='23',z_max='23'),'REJECT'),
+               ('z-reversed',dict(z_min='1',z_max='-1'),'REJECT'),
+               ('z-number',dict(z_min=23),'REJECT'),
+               ('z-negative',dict(z_min='-18',z_max='0'),False),
+               ('z-fractional',dict(z_min='23',z_max='23.025'),True),
+               ('z-upper-exclusive',dict(z_max='23'),False),
+               ('null',dict(xy_lo=None,xy_hi=None,z_min=None,z_max=None),True)]
+        for name,scope,expected in cases:
             for k,m in [('ref',direct_ref),('nb',direct_nb)]:
-                observed=m.scope(h,s); pin=expected
-                self.assertEqual(observed,pin)
-                row('D-spatial',name,k,expected,observed,classification='AGREE',raw=dumps(dict(h=h,scope=s)))
+                observed=m.scope(h,scope)
+                self.assertEqual(observed,expected)
+                row('D-spatial',name,k,expected,observed,classification='AGREE',raw=dumps(dict(h=h,scope=scope)))
         for k,m in [('ref',direct_ref),('nb',direct_nb)]:
-            scope=dict(z_min=z,z_max=direct_ref.altitude('s00000000001'))
-            selected=[m.scope(h,scope) for h in ('s00000000000','s00000000001')]
-            self.assertEqual(selected,[True,False])
-            row('D-spatial','same-XY-Z-boundary',k,[True,False],selected,raw=dumps(dict(h=['s00000000000','s00000000001'],scope=scope)),note='Z=0 is an actual altitude cell, not an absent-Z sentinel.')
+            scope=dict(z_min='23',z_max='23.025')
+            addresses=['u3bu_'+z for z in ('23','23.02','23.025','22.999')]
+            selected=[m.scope(address,scope) for address in addresses]
+            self.assertEqual(selected,[True,True,False,False])
+            row('D-spatial','same-XY-Z-boundary',k,[True,True,False,False],selected,raw=dumps(dict(h=addresses,scope=scope)),note='Exact decimal half-open boundary, no float comparison.')
+
+    def test_equal_padded_bounds_http(self):
+        for k in ('ref','nb'):
+            with Runner('xy-z-invalid-scope',k) as r:
+                node=r.node()
+                for scope in [dict(xy_lo='u3b',xy_hi='u3b0'),dict(z_min=23),dict(z_min='23.0')]:
+                    status,result=page(node,dict(scope=scope))
+                    self.assertEqual(status,400)
+                    row('D-spatial','wire-'+str(scope),k,400,status,raw=dumps(scope))
+
     def test_overlapping_nodes(self):
         for k in ('ref','nb'):
             with Runner('overlap',k) as r:
                 source=r.node()
-                records=[r.call(source,'mint',spec=dict(spec(9400+i),h=h)) for i,h in enumerate(['000000000000','gggh00000000','s00000000000','zzzzzzzzzzzz'])]
-                scopes=[[dict(h_lo='0',h_hi='t'),dict(h_lo='g',h_hi='z')],[dict(h_lo='g',h_hi='z')]]
+                records=[r.call(source,'mint',spec=dict(spec(9400+i),h=h)) for i,h in enumerate(['000000000000_-18','gggh00000000_0','s00000000000_23','zzzzzzzzzzzz_9000'])]
+                scopes=[[dict(xy_lo='0',xy_hi='t'),dict(xy_lo='g',xy_hi='z')],[dict(xy_lo='g',xy_hi='z')]]
                 nodes=[]
                 for i,subs in enumerate(scopes):
                     n=Adapter(k,dict(subscriptions=subs,peers=[])); r.nodes.append(n); nodes.append(n)

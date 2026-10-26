@@ -37,7 +37,7 @@ class Adapter(BaseAdapter):
 
 
 def spec(i):
-    return dict(seed=f'hostile-{i}', t=1700000000000 + i, h='gggh00000000',
+    return dict(seed=f'hostile-{i}', t=1700000000000 + i, h='gggh00000000_0',
                 x=f'hostile opaque {i}', refs=[], ext='')
 
 

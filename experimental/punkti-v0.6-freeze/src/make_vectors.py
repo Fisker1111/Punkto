@@ -31,7 +31,7 @@ def main():
              'and echo complete returned tokens. Canonical atom JSON member order is not normative.',
              'Error message text and implementation-specific error envelopes are not normative;',
              'HTTP statuses, classifications, admissions and state transitions asserted here are.',
-             'V5 empty PUSH is labelled non_normative and excluded from the 10-vector normative total.',
+             'V5 empty PUSH is labelled non_normative and excluded from the 13-vector normative total.',
              'A seeded fixture means adapter add(spec), with admitted=true and exact canonical fields checked.',
              'V7 import_json returns only ok/error by contract: accepted JSON is checked against the',
              'pinned atom and independently minted zero-timestamp C/R; the import return bytes are not exposed.', '',
@@ -50,7 +50,7 @@ def main():
               '```json', json.dumps(observations, indent=2, sort_keys=True), '```', '']
     (HOME / 'vectors.json').write_text(json.dumps(doc, indent=2, ensure_ascii=True, sort_keys=True)+'\n')
     (HOME / 'docs/NORMATIVE_VECTORS.md').write_text('\n'.join(lines))
-    print('10 normative vectors × 2 implementations PASS; 10 equality comparisons PASS; 1 non-normative subcase excluded.')
+    print(f"{len(doc['vectors'])} normative vectors × 2 implementations PASS; {len(doc['vectors'])} equality comparisons PASS; 1 non-normative subcase excluded.")
 
 
 if __name__ == '__main__':
