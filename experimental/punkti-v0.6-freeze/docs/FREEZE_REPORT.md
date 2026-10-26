@@ -1,5 +1,45 @@
 # Punkti 0.6 Founder-review freeze report
 
+## 0. Status: on hold, superseded by CEO-OS #19
+
+**2026-10-26T20:12Z — Founder HOLD on CEO-OS issue #17.** The freeze recommendation is NOT
+accepted at this time. No merge, tag, deployment or freeze of Punkti 0.6 is authorized.
+Two architecture questions were left open: the intended XY + Z spatial/addressing model,
+and static-first publication/replication.
+
+**2026-10-26T20:18Z — Founder correction tracked in CEO-OS issue #19**
+("Punkti 0.6 — restore human-readable XY_Z spatial addressing"). Issue #19 removes the
+provisional 12-character interleaved 3D geohash from the 0.6 candidate and restores
+`h = <xy>_<z>`. Issue #19 is the live successor task. CEO-OS issue #18 was closed by the
+Founder as duplicate cleanup, with #17 preserved as the review source.
+
+**Consequently the recommendation in section 9 of this report is superseded.** This branch
+is preserved as **non-spatial hardening evidence**, not as a freeze proposal. The value it
+carries is executable evidence and one harness fix, not a freeze authorization.
+
+**PR #115 base retargeted.** The pull request base was changed from
+`hardening/punkti-0.6-hostile` (`aea705e`) to `freeze/punkti-0.6-spec-revision` (`c835eb4`)
+so the pull request shows only this issue's additive delta and issue #17 remains the
+review source. The branch content is unchanged by the retarget.
+
+1. **Handoff requirement 1 — baseline bytes must be re-captured under the XY_Z model.**
+   `golden_base.json` pins bytes captured from `aea705e` whose spatial `h` is the interim
+   12-character profile `s00000000000`. Because `h` participates in the canonical body `C`,
+   the MID and the signature, those pinned `C`/`R`/MID/signature bytes **legitimately change**
+   under issue #19's restored `h = <xy>_<z>` model. `tests/test_baseline_bytes.py` must be
+   re-captured from the XY_Z baseline and must not be treated as a regression when it changes.
+2. **Handoff requirement 2 — two commits are absent from `c835eb4` and must be carried
+   forward.** `687dd99` ("forward callback deadlines in scale harness") and `460b1be`
+   ("verify reciprocal sync deadline and failure semantics") are not present in
+   `freeze/punkti-0.6-spec-revision`. Without `687dd99` the scale harness raises
+   `TypeError: counting_request() got an unexpected keyword argument 'timeout'` as soon as
+   `connect()` is reached, because `connect()` passes an explicit 300-second reciprocal
+   deadline that the harness's patched request signature cannot accept.
+3. **Handoff requirement 3 — no new protocol defect was found.** The suites and the six
+   required coverages are satisfied by the published V1-V10 vectors; no vector was added,
+   removed or renumbered. The single real defect fixed by this branch is the harness defect
+   in `687dd99`, which had left the committed scale evidence asserting a false failure.
+
 ## 1. Scope, base and commits
 
 CEO-OS Issue #18; branch `freeze/punkti-0.6-freeze-candidate`, based on
@@ -9,6 +49,7 @@ Issue #17 at `c835eb4` (`freeze/punkti-0.6-spec-revision`). Historical Phase 2 s
 Nothing is merged, pushed, deployed, released or frozen by this work. A freeze
 requires separate Founder approval. This is an experimental conformance package,
 not a production release or authorization to deploy.
+The pull request base was retargeted to `freeze/punkti-0.6-spec-revision` so issue #17 stays the review source.
 
 Phase 1 committed objects inspected for this report:
 
@@ -257,7 +298,12 @@ accounts for it. No additional normative divergence was observed in this run.
 
 ## 9. Recommendation and Founder decision
 
-Recommendation: **freeze candidate**. No new protocol defect was exposed by the
+The freeze recommendation is superseded by the Founder HOLD of
+2026-10-26T20:12Z and by CEO-OS issue #19. This branch's role is preserved
+non-spatial hardening evidence plus the `687dd99` harness fix, to be carried into
+the issue #19 lineage.
+
+No new protocol defect was exposed by the
 required vectors or suites. The previously outstanding scale-matrix rerun is
 complete: the 5000-atom `connect()` probe succeeds with equal admitted sets and
 stores 5000/5000, wall 31339.7 ms. Local PUSH took 10633.2 ms, reciprocal PUSH
@@ -272,13 +318,14 @@ required coverages mapped to executable vectors with exact oracles. The evidence
 inventory above identifies the tests, pinned bytes, mapping and measured scale
 artifacts; no normative vector or decision was changed by this report refresh.
 
-Founder approval must explicitly choose the exact
-specification/implementation/vector commits, accept the eleven Issue resolutions and
-provisional spatial profile, and decide whether the documented non-normative
-HTTP parsing/batch differences can remain unspecified for the freeze. If they
-must be standardized, authorize a separate focused contract revision with tests.
-Approval must also acknowledge the limitations above. This recommendation grants
-no merge, release, deployment or freeze authorization by itself.
+The eleven Issue resolutions and provisional spatial profile describe the
+historical candidate assessed here; issue #19 replaces that spatial profile.
+The documented non-normative HTTP parsing/batch differences remain unspecified.
+Any decision to standardize them requires a separate focused contract revision
+with tests in the successor lineage. Any future Founder approval must also
+acknowledge the limitations above. This report grants no merge, release,
+deployment or freeze authorization, and requests no freeze decision or selection
+of exact freeze commits.
 
 ## 10. Reproduction
 
