@@ -20,7 +20,7 @@ import the package. The interop suite does not use `PYTHONPATH`.
 The interop command regenerates [the matrix](interop/interop_matrix.md) and
 [the full JSON evidence](interop/interop_report.json), including on test failure.
 It can also run as `python3 experimental/nairobidot-l3/interop/test_interop.py -v`.
-Run the entire suite to regenerate the complete eleven-row report.
+Run the entire suite to regenerate the complete 14-row report.
 
 ## Process isolation and transport
 
@@ -56,19 +56,17 @@ as initiator: the resumed PULL reuses `after=3` and transfers exactly two new at
 
 ## Result and retained divergences
 
-Clean-room tests: **23 passed**. Interop matrix: **13 rows, 0 failures**, of which two
-rows are pinned documented divergences covering seven request-validation behaviours.
-Both implementations agree on every carrier byte (`C`, `S`, `MID`, address, `R`,
-signature) for all six vectors, on validation classifications for invalid data, on
-spatial and Z selection, on unknown-payload preservation, on cursor catch-up after a
-real TCP partition, and on convergence from different orders and subsets. Divergences
-are limited to HTTP request validation that `PUNKTI_0_6_MESH.md` does not specify:
-duplicate envelope keys, equal `h` bounds, equal or reversed elevation bounds, unknown
-query members, declared-address mismatch, and empty PUSH batches. They are pinned by
-`test_http_duplicate_key_divergence` and `test_request_validation_divergences` and listed
-with exact values in [the matrix](interop/interop_matrix.md) and
-[the proof report](docs/PROOF_REPORT.md). Neither implementation's `src/` was changed by
-the harness. See [docs/PROOF_REPORT.md](docs/PROOF_REPORT.md) for the architecture-test
-answer, the proposed minimal spec corrections and the unfrozen list.
+Clean-room tests: **34 passed**. Interop matrix: **14 rows, 0 failures**.
+Both implementations agree on canonical bytes and signatures, validation states,
+XY_Z lower-edge scopes, exact decimal boundaries, and the full 13-vector freeze
+corpus. The new spatial codec is independently structured but was implemented in
+a shared session; the provenance record states the limits of that independence.
+Scope shape: `{"xy_lo":null,"xy_hi":null,"z_min":null,"z_max":null}`.
+Z bounds are canonical decimal strings; equal padded XY keys reject with HTTP 400.
+
+The retained non-normative divergences are duplicate HTTP-envelope keys, unknown
+PULL query members, and empty PUSH batches. Error wording is implementation-defined.
+Equal/reversed bounds and declared-address mismatch now agree as required by #17.
+See the regenerated matrix and the current correction in the proof report.
 
 How the implementation was kept clean-room, and what is verifiable versus procedural about that claim, is recorded in [docs/CLEANROOM_PROVENANCE.md](docs/CLEANROOM_PROVENANCE.md).

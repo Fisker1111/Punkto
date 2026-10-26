@@ -1,5 +1,31 @@
 # Findings
 
+## Current XY_Z correction (2026-10-26)
+
+The current local suites pass 37 reference, 34 clean-room, 14 interop, 144 hostile
+and 14 freeze tests. The hostile suite regenerates protocol and network evidence
+using valid XY_Z signed addresses. Added adversarial cases reject noncanonical Z,
+non-ASCII digits, malformed separators and length violations. Scope probes pin
+exact string Z boundaries, lower-edge containment of coarse addresses and HTTP 400
+for equal padded keys (`u3b` / `u3b0`). The implementations agree on these cases.
+
+The provisional interleaved altitude mapping is no longer the candidate profile.
+Canonical bytes/MIDs/signatures change for spatial fixtures; non-spatial #17
+semantics remain intact. Scope hashes change with xy_lo/xy_hi. See the current
+[freeze report](../../punkti-v0.6-freeze/docs/FREEZE_REPORT.md) and the normative
+[XY_Z profile](../../../docs/proposals/PUNKTI_0_6_SPATIAL_XY_Z.md).
+
+This correction reruns local loopback suites only. The scale and constrained
+container measurements below are historical and were not repeated. No deployment,
+WAN, production-state or manual browser result is implied. Network captures have
+runtime ports/epochs/timings; only the freeze vector artifacts are byte-deterministic.
+
+## Historical evidence
+
+All counts, provisional-profile observations and deployment/container statements
+below describe the original experiment. They are retained as history, not current
+XY_Z validation. The current results above supersede their old contract findings.
+
 ## 1. Demonstrated implementation defects
 
 None demonstrated in the exercised scenarios. The two failing assertions were test-design

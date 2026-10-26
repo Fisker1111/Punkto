@@ -1,263 +1,199 @@
-# Punkti 0.6 Founder-review freeze report
+# Punkti 0.6 XY_Z correction — Founder review
 
-## 1. Scope, base and commits
+Status: **implemented candidate; no freeze, merge, tag, PR or deployment authorization.**
+Base: `c835eb417190cf22d1e55a22eb9fd8d7c2efa340`.
+Branch: `fix/punkti-0.6-xy-z-spatial`. The final exact SHA is in the handoff.
+The prior #17 report remains available in the base commit's version of this file.
 
-CEO-OS Issue #17; branch `freeze/punkti-0.6-spec-revision`. Phase 2 starts at
-`cee82627f7a2eed056aedcf692e9f520012b495e`. The Phase 1 comparison base is
-`aea705e` (the Issue #13 hostile-network report).
-Nothing is merged, pushed, deployed, released or frozen by this work. A freeze
-requires separate Founder approval. This is an experimental conformance package,
-not a production release or authorization to deploy.
+## Changes
 
-Phase 1 committed objects inspected for this report:
+The normative [XY_Z profile](../../../docs/proposals/PUNKTI_0_6_SPATIAL_XY_Z.md)
+replaces the provisional interleaved 3D profile only for Punkti 0.6. Both Python
+implementations validate `<xy>_<z>` in signed carriers. XY is standard 2D geohash,
+4–12 characters, default 10; Z is canonical ASCII decimal WGS84 ellipsoidal metres,
+compared exactly. The entire h is at most 32 characters. Empty h stays unanchored.
 
-- `9718d3c176172e3d97c51cd1bad99de34476436e`: focused specification revisions.
-- `a8a3a977864d339eaee9d52882de46215ce57190`: reference implementation and tests.
-- `535034b8a8a63b5e007a8deb283f201d20a3acd3`: independent clean-room alignment and tests.
-- `cee82627f7a2eed056aedcf692e9f520012b495e`: revised hostile expectations and regenerated evidence.
+Both node implementations already delegate scope construction, serialization,
+filtering and binding hashes to their spatial modules. Those modules now use
+xy_lo/xy_hi and canonical string z_min/z_max; no node transport refactor was needed.
+Selection and bound rejection use the same padded K keys. The resolved coarse/fine
+rule is implemented as written, including HTTP 400 for [u3b,u3b0).
 
-Phase 2 vectors commit: `050012be0a6948a96bdab8d037c4bcb38644fa88`. The following report-only commit contains
-this document; its exact SHA is recorded in the uncommitted root `PHASE2_REPORT.md`
-and the final handoff (a commit cannot contain its own SHA).
-`PHASE1_REPORT.md` and `PHASE2_REPORT.md` are deliberately not committed.
-No protocol implementation source changed in Phase 2. The only shared tooling
-changes are additive `import_json` and `pull_from` adapter commands. The Mesh
-proposal receives only the requested wrapping and stray-space cleanup.
+The PWA receives a pure standalone ES module and Node test. It is not wired into
+the frozen create flow. Python uses Decimal; JS compares scaled BigInts. Float
+client formatting first rounds the exact binary value to millimetres, ties to even,
+then strips trailing zeros. String input must already be canonical.
 
-## 2. Exact specification changes
+Clean-room source remains free of reference imports and runtime reads. The same
+agent wrote both replacements in one shared session, using separate implementations;
+this is not a fresh sight-unseen implementation. See the honest
+[CLEANROOM_PROVENANCE.md](../../nairobidot-l3/docs/CLEANROOM_PROVENANCE.md) update.
 
-The crosswalk below follows the Issue's required-resolution numbering exactly
-(1–11). Section names refer to the Phase 1 committed proposals, not the unrevised
-historical report.
+## Actual acceptance results
 
-| Issue item | File and section | Revised rule |
-|---|---|---|
-| 1: timestamp grammar | `docs/proposals/PUNKTI_0_6_LAYER3_RESET.md`, Atom envelope / Canonical bytes and immutable addressing; `docs/proposals/PUNKTI_0_6_MESH.md`, opening carrier rules | Exact unsigned spelling `0\|[1-9][0-9]*`, bounded by 9007199254740991; explicitly reject -0 and other noncanonical spellings without changing canonical bytes. |
-| 2: wrapper-level errors | Mesh, HTTP operations / Normative error tiers | Exactly address/sha256/record in each wrapper; descriptor errors are request-level 400 with no admission; content failures are per-record 200 rejection; unknown algorithms/versions remain candidates; legacy namespace is rejected per-record. |
-| 3: over-limit responses | Mesh, Normative error tiers | Size/limit excess is 413, including page 33; malformed limit types or values below 1 are 400; an oversized decoded R is 413 with no admission from the request. |
-| 4: initial MID cursor | Mesh, Subscriptions and cursors | Initial/empty MID after is null, nonempty MID continuation is an address/digest pair; spatial after is an integer initially 0; clients echo server tokens. |
-| 5: equal/reversed bounds | `docs/proposals/PUNKTI_0_6_LAYER3_RESET.md`, Synchronization semantics; `docs/proposals/PUNKTI_0_6_MESH.md`, Subscriptions and cursors | Reject equal/reversed MID, h and Z endpoints when both are present; null is unbounded; h comparison is literal; invalid subscriptions fail at construction. |
-| 6: hello.limits members | Mesh, Required hello.limits members | Required integer body/record/page/http/candidates names and units; additional members permitted, lower policy maxima permitted; both experiments advertise exactly the five specified maxima. |
-| 7: poisoned discovery hints | Mesh, Discovery and convergence | Skip malformed/unreachable HELLOs and invalid individual origins, keep valid siblings, deduplicate and exclude self; never crawl, configure peers or admit records from hints. |
-| 8: peer errors and deadlines | Mesh, Peer failures and interrupted pages | Distinguish unreachable/timeout/protocol/resource semantically; wording is implementation-defined; use documented local deadlines, not a fixed protocol deadline. |
-| 9: interrupted-page atomicity | Mesh, Peer failures and interrupted pages | Truncated/unreadable/invalid JSON admits nothing; fully decoded pages prevalidate every descriptor and carrier; invalid content aborts the page without admission or checkpoint advancement. Earlier completed pages remain committed. |
-| 10: coverage completeness/freshness | Mesh, final reconciliation paragraphs | Coverage, sync success, finite peer sets, cursors and end:true cannot establish global completeness or freshness. |
-| 11: connect() reciprocal callback | Mesh, Peer failures and interrupted pages | connect is orchestration; each /sync runs one nonrecursive phase; bounded callbacks may exceed ordinary deadlines; failed operations do not advance their checkpoints. |
-
-Canonical C/S/MID/address/R/signature framing is unchanged by Phase 1. The
-specific Item 3 oversized-record rule takes precedence over generic Item 2
-descriptor 400 wording. Ordinary requests use local 5-second deadlines; reciprocal /sync
-requests use 300 seconds. Neither number is a universal protocol deadline.
-
-## 3. Exact implementation changes
-
-Reference (`experimental/punkti-v0.6-mesh/src/`), Phase 1:
-
-- `carrier.py`: `unsigned_integer` parser enforces unsigned timestamp spelling
-  during JSON import, including rejecting -0.
-- `spatial.py`: existing equal/reversed rejection retained; error wording aligned.
-- `mesh.py`: exact wrapper members/address/digest validation; validation-only
-  admission pass for whole PUSH descriptors and decoded PULL pages; legacy
-  per-record rejection; 413 for page/batch excess; bounded query size; null MID
-  sentinel with pair validation; explicit short Content-Length detection and
-  nonfinite-JSON rejection; discovery skips malformed peers/hints independently;
-  sync failure handling expanded; reciprocal callback deadline set to 300 s.
-
-Clean-room (`experimental/nairobidot-l3/src/nairobidot/`), Phase 1:
-
-- `carrier.py`: carrier JSON integer parsing explicitly enforces unsigned spelling.
-- `spatial.py`: normalized h/Z scopes reject equal or reversed bounds, also at
-  construction through normalization.
-- `node.py`: five HELLO limit names; exact descriptor members and request-level
-  digest/address errors; validation-only admission pass before PUSH/PULL mutation;
-  MID range rejection; short-response detection and resource-error preservation;
-  independent filtering of discovery hints; 300 s reciprocal callback deadline.
-  Its existing null MID sentinel remains unchanged.
-
-Phase 1 tests changed in reference `tests/test_carrier.py`, `test_mesh.py`,
-`test_store.py`, and new `test_revision.py`; clean-room `tests/test_node.py`,
-`test_spatial.py`, and new `test_revision.py`; interop `test_interop.py`; hostile
-`src/hostile/cases_protocol.py`, `tests/test_coverage_eclipse.py`,
-`test_cursor_spatial.py`, and `test_replay_provenance.py`. The interop matrix/report
-and hostile protocol/network evidence were regenerated in Phase 1.
-
-Phase 2 adds `experimental/punkti-v0.6-freeze/README.md`, `src/vector_suite.py`,
-`src/make_vectors.py`, `tests/test_vectors.py`, `vectors.json`,
-`docs/NORMATIVE_VECTORS.md`, and this report. In the existing shared
-`experimental/nairobidot-l3/interop/adapter_common.py`, `import_json` delegates
-exact decoded bytes to the implementation; `pull_from` delegates to reference
-`Node.pull` with Subscription and mode, or clean-room `Node._pull_from`, which owns
-its checkpoint. Both commands expose ok/error through existing RPC plumbing.
-The clean-room one-page `pull` RPC is deliberately not used to test V8 checkpoints.
-
-## 4. Normative vectors and results
-
-Ten normative vectors, twenty independent implementation executions, ten
-ref/nb normative-output comparisons: all pass. Eleven freeze unittest methods
-cover the ten vectors and an explicit exercised-ID inventory. One V5 empty-PUSH
-subcase is labelled `non_normative: true`, recorded, and excluded from normative
-pass/fail and equality totals.
-
-| ID | Title | Reference | Clean-room | Normative equality |
-|---|---|---|---|---|
-| V1 | canonical-record | PASS | PASS | PASS |
-| V2 | initial-mid-cursor | PASS | PASS | PASS |
-| V3 | range-rejection | PASS | PASS | PASS |
-| V4 | spatial-boundary | PASS | PASS | PASS |
-| V5 | descriptor-errors | PASS | PASS | PASS |
-| V6 | content-errors | PASS | PASS | PASS |
-| V7 | timestamp-grammar | PASS | PASS | PASS |
-| V8 | interrupted-page-atomicity | PASS | PASS | PASS |
-| V9 | opaque-preservation | PASS | PASS | PASS |
-| V10 | hello-limits | PASS | PASS | PASS |
-
-[NORMATIVE_VECTORS.md](NORMATIVE_VECTORS.md) and [vectors.json](../vectors.json)
-pin the exact JSON input bytes/request targets, expected statuses/results, state
-transitions and seven canonical fixtures: atom, C, S, MID, address, R, sig and
-sha256_R. Minting uses each implementation's own signing path with
-SHA256(b"punkti-0.6-freeze-vectors"). Every fixture agrees byte-for-byte. Generation
-runs all vectors before publishing either artifact, and a second generation
-produced identical artifact SHA-256 hashes. Tests load the artifact without
-regenerating expectations. Epochs and ports are runtime-bound, not fixed values.
-
-V2 separately proves empty MID after:null and nonempty address/digest continuation.
-V4 independently decodes Z bits and asserts the two adjacent s-cell altitude
-ordering; its h scope excludes the extreme fixtures. V8 exercises both truncated
-HTTP and a fully decoded mixed valid/forged page: no admission on failure, null
-cursor on retry, one admission on success, then reuse of the successful token
-without another log entry. V9 preserves the exact unsupported-algorithm R and
-opaque Unicode/refs/extensions on both nodes while retaining a distinct VALID MID.
-
-The harness imports neither implementation. It reuses the existing driver
-Adapter/http/HERE, runs isolated subprocesses and uses actual loopback HTTP. V8's
-controlled peer uses only stdlib http.server. No dependencies were added.
-`import_json` intentionally exposes only ok/error: V7 verifies accepted exact
-JSON equals the pinned atom and independently mints/checks its zero-timestamp C/R;
-it cannot directly inspect the return bytes of import_json through that command.
-
-## 5. Before/after ambiguity table
-
-Before evidence is the committed Issue #13
-[findings](../../punkti-v0.6-hostile/docs/FINDINGS.md#2b-adversarial-protocol-findings-308-cases-282-agree)
-and [network report](../../punkti-v0.6-hostile/docs/HOSTILE_NETWORK_REPORT.md).
-The latter lists discovery safety and eclipse/no-crawl separately; Issue item 7 covers both.
-Existing revision/hostile tests supplement the ten published vectors where noted;
-the new vectors alone are not claimed to cover every clause of the eleven items.
-
-| Issue item | Before (#13 evidence) | Resolution | Implementation change | Vector | Status |
-|---|---|---|---|---|---|
-| 1 timestamp | JSON -0 accepted by ref, rejected by nb; wording implicit. | Reject all noncanonical timestamp spellings explicitly. | Both carrier parsers enforce unsigned grammar. | V7 | Resolved; PASS |
-| 2 wrapper errors | Digest/address mismatch: ref request 400, nb per-record structural rejection. Partial batch rules unclear. | All descriptors prevalidated; content remains per-record. | Both mesh.py/node.py validation-only passes, exact wrappers; nb errors promoted to request tier. | V1, V5, V6, V9 | Resolved; PASS |
-| 3 over-limit | Page 33: ref 400, nb 413. | Resource excess 413, malformed limits 400. | ref page/batch/query limits; both retain resource refusals. | V10 advertises maxima; revision and hostile limit cases enforce refusal | Resolved; PASS |
-| 4 initial MID cursor | Empty first MID after was ["",""] in ref, null in nb. | Null initial MID; returned pair for nonempty; echo complete token. | ref sentinel and token validation. | V2, V8 | Resolved; PASS |
-| 5 equal/reversed bounds | Ref rejects; nb returns empty MID page or nonmatching spatial scope for equal/reversed bounds. | 400; null unbounded; fail-fast subscriptions. | nb node.py/spatial.py rejection; ref existing rejection retained. | V3, V4; spatial tests | Resolved; PASS |
-| 6 hello.limits | Different names/extras; no normative schema. | Five required integer members; experiments emit exact maxima. | nb LIMITS names aligned; ref already matched. | V10 | Resolved; PASS |
-| 7 discovery hints | Poisoned HELLO raised KeyError/PeerError; 500-hint probe already demonstrated no auto-crawl. | Skip malformed HELLO/hints, retain good siblings; never auto-connect. | Both discovery implementations filter independently. | No new dedicated vector; both revision suites and hostile E-coverage | Resolved; PASS |
-| 8 peer errors/deadlines | Error strings/classes and timeout policy differed; no fixed taxonomy/deadline contract. | Semantic categories, implementation-defined messages, documented bounded local deadlines. | Both HTTP clients detect short bodies and propagate failure; nb preserves resource errors. | V8; hostile slow_peer/interrupted/corrupt cases | Contract clarified; tested subset PASS, no uniform exception API claimed |
-| 9 page atomicity | Undecodable-page safe subset tested; decoded mixed-page transaction rule unspecified. | Validate whole page before admission; retain checkpoint on invalid page. | Both PULL receivers prevalidate and only commit cursor after processing. | V8; both revision suites | Resolved; PASS |
-| 10 completeness | Withholding/stale coverage can hide records despite end:true or successful sync. | Explicitly disclaim global completeness/freshness. | Documentation only; no dishonest detection mechanism added. | Existing hostile withholding/eclipsing cases; no new dedicated vector | Limitation explicit; PASS |
-| 11 connect()/callback | Reference 5000-record synchronous callback exceeded ordinary 5 s deadline; separately driven phases worked. | One nonrecursive /sync phase; longer bounded local callback deadline; no fixed-round promise. | Both connect helpers use 300 s callbacks. | Existing revision deadline assertions and hostile network suite; no new dedicated vector | Resolved contract; PASS; 5000-record scale matrix not rerun here |
-
-## 6. Test counts and retained hostile corpus
-
-After counts below are from actual complete local Phase 2 runs on 2026-10-23,
-with no failed assertions. Reported runtimes were reference 2.703 s, clean-room
-2.340 s, interop 10.295 s, hostile 133.400 s, and freeze 7.017 s. Before counts are the actual historical runs recorded
-in Issue #13's committed network report, not newly rerun baseline measurements.
-
-| Suite | Before (#13) | After (this run) | Result |
+| Suite | Base count | XY_Z count | Result |
 |---|---:|---:|---|
-| Reference | 27 | 32 | PASS |
-| Clean-room | 23 | 28 | PASS |
-| Interop | 13 | 13 | PASS |
-| Hostile | 125 | 125 | PASS |
-| Freeze | 0 (suite absent) | 11 | PASS |
+| Reference unittest | 32 | 37 | PASS |
+| Clean-room unittest | 28 | 34 | PASS |
+| Black-box interop | 13 | 14 | PASS |
+| Hostile network | 125 | 144 | PASS |
+| Freeze vectors | 11 | 14 | PASS |
 
-The generator additionally passed all ten vectors on both implementations and all
-ten equality checks; deterministic regeneration passed. Reference tests emitted
-a non-failing ResourceWarning about HTTPError cleanup. No manual browser testing
-was performed: this is protocol/tooling work with no UI change. Real loopback
-HTTP and controlled failure/retry behavior were exercised automatically.
+The PWA XY_Z test passes 219 assertions, including byte-equivalent XY encoding,
+identical decoded bounds/centres and float formatting in JS and both Python trees.
+Ten JS files pass individual node --check (the new codec plus all nine existing
+files listed in the task). Four module-mode syntax checks pass (codec, app, map,
+board). The unchanged slice5 helper suite passes. git diff --check passes.
 
-The freshly generated `experimental/punkti-v0.6-hostile/evidence/protocol.json`
-contains 308 rows: **154 AGREE, 0 DIVERGE, 0 DEFECT per implementation**.
-An exact set comparison of `(group, case, implementation)` against the committed
-`aea705e` evidence confirms **308/308 pre-existing row keys retained**, no missing
-or added keys. Its content is unchanged from Phase 1 HEAD after this rerun.
-The original classifications were ref 141 AGREE / 13 DIVERGE / 0 DEFECT and nb
-141 AGREE / 11 DIVERGE / 2 DEFECT; those were actual #13 observations under the
-previous contract, not hidden failures removed from the corpus.
+All 13 deterministic vectors pass on both isolated implementations (26 executions,
+13 output comparisons), plus the explicit inventory test. Two consecutive
+regenerations of vectors.json and NORMATIVE_VECTORS.md are byte-identical.
+Clean-room pinned vectors regenerate identically as well.
 
-Hostile expectations were updated to the revised normative contract in Phase 1,
-not silently dropped. In particular -0, descriptor errors, page limits, cursor
-sentinel, equal/reversed bounds, HELLO limits and poisoned discovery now assert
-the revised policy. Historical findings remain historical evidence, not the
-current expected results. This Phase 2 adds no weakening of those assertions.
-The 308 corpus rows are observations, distinct from the 125 unittest methods.
+No manual browser verification was performed: the codec has no DOM or shipped-flow
+integration. Real HTTP, fault injection, admission, pagination and interop are
+covered by the automated loopback suites. The full scale matrix, container, WAN and relay suites
+were not rerun; relay is outside the authorized change scope.
 
-## 7. Remaining non-normative differences
+## Vector coverage and retained #17 semantics
 
-The interop suite still explicitly tests and records these differences:
+V1–V10 retain their original non-spatial assertions: canonical framing, initial
+MID cursor, rejection tiers, descriptor atomicity, signature failures, timestamp
+grammar, interrupted-page checkpoint safety, opaque preservation and HELLO limits.
+V4 now pins separate XY and Z boundaries; spatial fixture bytes and scope bindings
+are deliberately regenerated. V5's empty-PUSH observation stays non-normative.
 
-| Input | Reference | Clean-room | Why outside the eleven items |
+V11 covers same-XY/different-Z C/MID/address, negative and fractional heights,
+all required invalid spellings/lengths/separators, and pairwise exact Z ordering,
+including adjacent 27-digit integers that binary doubles cannot distinguish.
+V12 covers all 24 encode/decode ground-truth cases. Its bounds use an independent
+integer-grid oracle. V13 covers prefix ranges, unanchored records, exact half-open
+Z bounds, both coarse/fine counterexamples, equal padded-key HTTP rejection and
+malformed string/numeric bounds. Existing node tests retain union/empty-list rules.
+The interop suite also executes V11–V13 against both processes.
+
+## Before/after signed-content scope
+
+All seven pre-existing freeze fixtures contained nonempty spatial h. All seven
+therefore change C, S, MID, address and R. The six Ed25519 signatures change;
+the unsupported-algorithm fixture retains its opaque signature bytes. Every
+other atom field is unchanged. This is a signed-content correction, not a framing/domain change.
+
+| Fixture | Before h → after h | Before MID | After MID |
 |---|---|---|---|
-| Duplicate JSON keys in HTTP PUSH envelope | Last records key wins; HTTP 200 and record admitted. | HTTP 400; nothing admitted. | Item 2 fixes item descriptors and error tiers, not duplicate-key parsing of the outer HTTP envelope. Carrier JSON duplicate-key rejection is separate. |
-| Unknown PULL query member | HTTP 200; member ignored, normal empty page on empty store. | HTTP 400 with kind=request, reason=query-fields. | The revision fixes ranges/limits/tokens; it does not standardize rejection of unknown query members. |
-| Empty PUSH records array | HTTP 400, {"error":"push batch size"}. | HTTP 200, {"results":[]}. | Revision specifies maximum batch size and error tiers, not minimum batch cardinality. V5 records this without a normative assertion. |
-| Request error envelope and exception text | E.g. wrong address: {"error":"address mismatch"}. | Same 400, {"kind":"request","reason":"address-mismatch"}. | Status/admission tier is normative; message text and exception class are implementation-defined. |
+| canonical | `s00000000000` → `s00000000000_23` | `0224ff9b877ba0e74c7f103a7f32108e0393ea67a97abce136238c4d313dd895` | `82444945204576099501248b1a615c1c841b44981ae8e8bd1f89eb4e093f73ba` |
+| opaque | `s00000000000` → `s00000000000_23` | `ad5bef0800968201b6044d27f28b275698b83cc2feab453e147d940e100f350f` | `8b6dca8bc139ff96f5b7e6c8841e88f6f5b5e50c45fc9e31e53be68e74c00969` |
+| spatial0 | `000000000000` → `000000000000_-18` | `b8da0a3c616083fada8f7b5cc5c90faba1e2d1ba6719e96a05979a5d8ebee00e` | `b794c104861488e804b57a559bf62987731e79580267c007afe01568ff3233d6` |
+| spatial1 | `s00000000000` → `s00000000000_23` | `efa769042ad022b66eaca4aa5cceae58d420f8baf546e7cadd2806fd2e749eaa` | `64787c65702b2091e07fca6d588dcccda806654248d9f62978af640994ad5342` |
+| spatial2 | `s00000000001` → `s00000000001_23.025` | `f001cfc4becb89f3228bb414b3fb540e14ce41bcc1aa7653e8aa41268745e8d7` | `40d073c1656d7025c2342d2904800fa0ac2699254016277a61fd5432c8af5479` |
+| spatial3 | `zzzzzzzzzzzz` → `zzzzzzzzzzzz_9000` | `f851c2c52242a4272f8ad0e21d71961bc9f34e82d198457dd75ea4c6fc75bfac` | `d71670ee11209e93d50c73b645714a57cea67a511c232ffb7d88f9ce80f96025` |
+| zero | `s00000000000` → `s00000000000_23` | `42adf91cf60d1b538b2d060075ca993f8077afb57067cfea5d0494fde652c28e` | `16c16c69428c89562f5eef5f5d1c1986585356292889cc5350ae5ebecc682608` |
 
-Reference and clean-room also have different local APIs: reference pull owns its
-checkpoint; clean-room pull is one-page and _pull_from owns catch-up checkpoints.
-This is a tooling distinction, not a wire divergence. The V8 adapter explicitly
-accounts for it. No additional normative divergence was observed in this run.
+The clean-room pinned set retains the unanchored fixture byte-for-byte, including
+C/S/MID/address/R/signature, and regenerates only its two spatial fixtures. The
+interop unanchored fixture likewise retains its MID. New historical and selection
+fixtures supplement the old freeze fixtures. Scope bindings and cursor tokens
+change because the serialized keys change from h_lo/h_hi to xy_lo/xy_hi.
 
-## 8. Limitations
+The protected-path comparison against the exact base is empty for `core/`,
+`relay/`, `pwa/geohash3d.js`, `pwa/app.js`, and `pwa/core/location.js`. All existing
+PWA files are untouched; only the new codec and its test are added. The frozen
+v0.5.1 paragraph in the reset specification is byte-identical to the base.
 
-- Loopback only; no WAN or two-host run. The historical single-host constrained
-  container run was not repeated in Phase 2, nor was the separate scale matrix.
-- Finite generated corpus; agreement of two implementations is not a proof that
-  either is universally correct. Shared RPC plumbing is reused, not reimplemented.
-- Stores are in memory; no durability/crash-recovery guarantee or production budget.
-- No global completeness or freshness; withholding and partitions remain possible.
-- No peer authentication, TLS or rate limits in these experiments.
-- No deletion/compaction/retention agreement.
-- No proof of real-world location, time or identity; signatures establish key control.
-- The spatial altitude mapping remains the proposal's provisional profile. Passing
-  V4 pins this profile's behavior, not a claim that its real-world interpretation
-  has received final product approval.
+## Remaining choices recorded in profile §10
 
-## 9. Recommendation and Founder decision
+1. Lower-edge containment is the resolved selection rule; region overlap is rejected.
+2. Z precision is bounded by length (27), with no fixed decimal-place cap.
+3. Z wire bounds are canonical strings to preserve exact boundaries.
+4. Scope keys are xy_lo/xy_hi, deliberately changing scope hashes.
+5. Published XY allows 4–12, recommends 10; a future precision-10-only restriction is undecided.
+6. The whole address is limited to 32 characters, constraining XY and Z together.
+7. Shipped PWA integration remains a separate authorized task; this delivery is standalone.
 
-Recommendation: **freeze candidate**. No new protocol defect was exposed by the
-required vectors or suites. Founder approval must explicitly choose the exact
-specification/implementation/vector commits, accept the eleven Issue resolutions and
-provisional spatial profile, and decide whether the documented non-normative
-HTTP parsing/batch differences can remain unspecified for the freeze. If they
-must be standardized, authorize a separate focused contract revision with tests.
-Approval must also acknowledge the limitations above. This recommendation grants
-no merge, release, deployment or freeze authorization by itself.
+The prior non-normative HTTP differences remain: duplicate envelope keys, unknown
+query members, empty PUSH arrays, and implementation-defined error wording. No
+new normative divergence is claimed. Location remains a signed claim, not proof
+of presence; x stays opaque. No static-tree transport is implemented.
 
-## 10. Reproduction
+## Reproduction
 
-Run from the repository root with the existing Python environment (stdlib plus
-already-installed cryptography; no new dependency):
+Use the commands in the task and each experimental README. Run the vector generator
+before the freeze/interop suites, which consume the committed artifacts. Full
+interop and hostile runs regenerate their reports. Protocol and network evidence
+in this correction comes from the XY_Z suites; old scale/container measurements
+remain historical and are not represented as newly verified.
 
-```sh
-PYTHONPATH="$PWD/experimental/punkti-v0.6-mesh/src" python3 -m unittest discover -s experimental/punkti-v0.6-mesh/tests
-PYTHONPATH="$PWD/experimental/nairobidot-l3/src" python3 -m unittest discover -s experimental/nairobidot-l3/tests
-(cd experimental/nairobidot-l3/interop && python3 -m unittest discover -s .)
-PYTHONPATH="$PWD/experimental/punkti-v0.6-hostile/src" python3 -m unittest discover -s experimental/punkti-v0.6-hostile/tests
-PYTHONPATH="$PWD/experimental/punkti-v0.6-freeze/src" python3 -m unittest discover -s experimental/punkti-v0.6-freeze/tests
-python3 experimental/punkti-v0.6-freeze/src/make_vectors.py
-git diff --check
+## Regenerated evidence and changed files
+
+Actual machine-readable acceptance counts, durations, artifact hashes and exclusions
+are recorded in [xy_z_verification.json](../../punkti-v0.6-hostile/evidence/xy_z_verification.json).
+The hostile protocol corpus contains 354 observations. Counts by implementation:
+
+```json
+{
+  "nb": {
+    "AGREE": 177
+  },
+  "ref": {
+    "AGREE": 177
+  }
+}
 ```
 
-The interop/hostile suites rewrite their evidence artifacts. Timing/request-count
-noise can change network evidence without changing conformance outcomes; review
-those separately from the deterministic freeze artifacts. All new normative
-inputs, results and transitions are published in the two generated artifacts.
+Files changed relative to the exact base (the two supplied root task/profile files
+remain untracked inputs):
 
-Phase 2 run network captures were preserved in a local scratch directory before
-restoring their tracked Phase 1 versions; their volatile ports, epochs, timings
-and partition scheduling were not added to the two focused Phase 2 commits.
-The deterministic protocol evidence was identical to the committed Phase 1 file.
+```text
+docs/proposals/PUNKTI_0_6_LAYER3_RESET.md
+docs/proposals/PUNKTI_0_6_MESH.md
+docs/proposals/PUNKTI_0_6_SPATIAL_XY_Z.md
+experimental/nairobidot-l3/README.md
+experimental/nairobidot-l3/docs/AMBIGUITIES.md
+experimental/nairobidot-l3/docs/CLEANROOM_PROVENANCE.md
+experimental/nairobidot-l3/docs/PROOF_REPORT.md
+experimental/nairobidot-l3/interop/adapter_common.py
+experimental/nairobidot-l3/interop/interop_matrix.md
+experimental/nairobidot-l3/interop/interop_report.json
+experimental/nairobidot-l3/interop/nb_adapter.py
+experimental/nairobidot-l3/interop/ref_adapter.py
+experimental/nairobidot-l3/interop/test_interop.py
+experimental/nairobidot-l3/src/nairobidot/carrier.py
+experimental/nairobidot-l3/src/nairobidot/spatial.py
+experimental/nairobidot-l3/tests/test_carrier.py
+experimental/nairobidot-l3/tests/test_node.py
+experimental/nairobidot-l3/tests/test_revision.py
+experimental/nairobidot-l3/tests/test_spatial.py
+experimental/nairobidot-l3/tests/vectors.json
+experimental/nairobidot-l3/tests/vectors.py
+experimental/punkti-v0.6-freeze/README.md
+experimental/punkti-v0.6-freeze/docs/FREEZE_REPORT.md
+experimental/punkti-v0.6-freeze/docs/NORMATIVE_VECTORS.md
+experimental/punkti-v0.6-freeze/src/make_vectors.py
+experimental/punkti-v0.6-freeze/src/vector_suite.py
+experimental/punkti-v0.6-freeze/tests/test_vectors.py
+experimental/punkti-v0.6-freeze/vectors.json
+experimental/punkti-v0.6-hostile/README.md
+experimental/punkti-v0.6-hostile/docs/FINDINGS.md
+experimental/punkti-v0.6-hostile/docs/HOSTILE_NETWORK_REPORT.md
+experimental/punkti-v0.6-hostile/evidence/cross_impl_network.json
+experimental/punkti-v0.6-hostile/evidence/network.json
+experimental/punkti-v0.6-hostile/evidence/protocol.json
+experimental/punkti-v0.6-hostile/evidence/xy_z_verification.json
+experimental/punkti-v0.6-hostile/src/hostile/cases_protocol.py
+experimental/punkti-v0.6-hostile/src/hostile/harness.py
+experimental/punkti-v0.6-hostile/src/hostile/measure_scale.py
+experimental/punkti-v0.6-hostile/tests/test_coverage_eclipse.py
+experimental/punkti-v0.6-hostile/tests/test_cursor_spatial.py
+experimental/punkti-v0.6-hostile/tests/test_replay_provenance.py
+experimental/punkti-v0.6-hostile/tests/test_scale_envelope.py
+experimental/punkti-v0.6-mesh/README.md
+experimental/punkti-v0.6-mesh/src/carrier.py
+experimental/punkti-v0.6-mesh/src/spatial.py
+experimental/punkti-v0.6-mesh/tests/support.py
+experimental/punkti-v0.6-mesh/tests/test_carrier.py
+experimental/punkti-v0.6-mesh/tests/test_mesh.py
+experimental/punkti-v0.6-mesh/tests/test_store.py
+experimental/punkti-v0.6-mesh/tests/test_xy_z.py
+pwa/spatial-xy-z.js
+pwa/test-spatial-xy-z.mjs
+```

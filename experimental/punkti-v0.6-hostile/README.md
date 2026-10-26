@@ -24,11 +24,11 @@ PYTHONPATH="$PWD/experimental/nairobidot-l3/src" python3 -m unittest discover -s
 python3 -m unittest discover -s experimental/nairobidot-l3/interop -v
 ```
 
-The hostile suite has 125 test methods in six modules:
+The hostile suite has 144 test methods in six modules:
 
 - `test_network_hostile.py` / `test_cross_impl_network.py`: ten real-HTTP fault
   scenarios, each also run with both implementations as initiator.
-- `test_envelope_adversarial.py`: 79 envelope/framing cases per implementation.
+- `test_envelope_adversarial.py`: 98 envelope/framing cases per implementation.
 - `test_replay_provenance.py`: provenance, replay, unknown algorithm and opaque
   version cases.
 - `test_cursor_spatial.py`: cursor, ordering, XY+Z and overlapping-scope cases.
@@ -39,9 +39,8 @@ The partition test executes its body three times with fresh runners and requires
 identical status, admitted addresses and store sizes. Each adversarial case is
 recorded in `evidence/protocol.json` and classified AGREE / DIVERGE / DEFECT for
 both implementations; divergences are pinned by tests and explained in FINDINGS.
-Baselines contain 27 reference, 23 clean-room and 13 interop tests.
-Interop regenerates its own report; restore incidental report changes before
-committing this experiment.
+The XY_Z acceptance runs contain 37 reference, 34 clean-room and 14 interop tests.
+Interop regenerates its own report; commit evidence that reflects the spatial correction; avoid unrelated timing churn.
 
 Scale measurement (real loopback HTTP, no reconciliation protocol):
 

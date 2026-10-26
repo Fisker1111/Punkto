@@ -1,5 +1,38 @@
 # Punkti 0.6 Layer 3 — clean-room interoperability proof
 
+## Current XY_Z correction (2026-10-26)
+
+The current candidate uses `<xy>_<z>`: 2D geohash and exact decimal WGS84
+ellipsoidal height. Scope bounds are xy_lo/xy_hi prefixes and canonical Z strings.
+Both selection and equal/reversed validation use 12-character lower-edge keys;
+coarse-address size and overlap are irrelevant. The standalone PWA codec agrees
+with both Python trees on all profile ground-truth vectors.
+
+Actual current results: 34 clean-room tests, 37 reference tests, 14 interop tests,
+144 hostile tests and 14 freeze tests pass. The full 13-vector deterministic corpus
+runs against both isolated implementations. The static/runtime no-reference-imports
+check passes. The source manifests and current MID values are in the regenerated
+interop_report.json and interop_matrix.md. The unanchored pinned vector is unchanged;
+spatial h, canonical bytes, MID, address and signatures necessarily change.
+
+The XY_Z replacement was separately written in a shared session by an agent that
+had seen both trees. It contains no reference imports, runtime reads or copied
+implementation code. It does not claim the original sight-unseen isolation;
+see CLEANROOM_PROVENANCE.md. Remaining profile choices are recorded in
+AMBIGUITIES.md and the normative profile §10. The original #17 non-spatial
+contracts are retained. Remaining non-normative wire differences are duplicate
+HTTP-envelope keys, unknown PULL query members, empty PUSH arrays and error text.
+
+For the complete current audit, see
+[FREEZE_REPORT.md](../../punkti-v0.6-freeze/docs/FREEZE_REPORT.md).
+No manual browser, scale, container or production validation is claimed.
+
+## Historical Issue #11 report
+
+The following is the original historical evidence, including its old test counts,
+MIDs, provisional profile and sight-unseen procedure. It does not describe the
+current XY_Z correction. Current manifests and the section above supersede it.
+
 Status: **evidence for founder review. Nothing is frozen. No deployment.**
 Branch: `proof/punkti-0.6-cleanroom` (isolated, not merged, not deployed).
 Task: CEO-OS Issue #11 — "Punkti 0.6 — clean-room Layer-3 interoperability proof".

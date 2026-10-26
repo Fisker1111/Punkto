@@ -1,6 +1,6 @@
 # Punkti 0.6 freeze-candidate vectors
 
-Ten deterministic, publishable vectors for Founder review. This experiment does
+Thirteen deterministic, publishable vectors for Founder review. This experiment does
 not freeze or release the protocol. `docs/NORMATIVE_VECTORS.md` contains exact
 inputs, canonical fixture bytes, expected results and state transitions;
 `vectors.json` is the machine-readable artifact.
@@ -13,10 +13,10 @@ PYTHONPATH="$PWD/experimental/punkti-v0.6-freeze/src" python3 -m unittest discov
 ```
 
 Generation first independently mints every fixture with ref and nb, checks all
-canonical fields, then verifies all ten vectors on both implementations before
+canonical fields, then verifies all thirteen vectors on both implementations before
 writing either artifact. Repeated generation is byte-for-byte deterministic.
-Tests read the committed artifact without regenerating expectations. The eleven
-unittest methods cover ten vectors × two implementations plus inventory coverage;
+Tests read the committed artifact without regenerating expectations. The fourteen
+unittest methods cover thirteen vectors × two implementations plus inventory coverage;
 each vector also compares normative outputs across implementations. Empty PUSH
 in V5 is recorded separately and excluded from normative pass/fail totals.
 
@@ -27,8 +27,14 @@ loopback HTTP. V8 uses a controlled standard-library HTTP peer, including an
 incomplete response with an oversized Content-Length. No new dependencies.
 The additive adapter commands are `import_json` (exact JSON bytes) and
 `pull_from` (one catch-up pass using each implementation's own checkpoint).
-Both expose only ok/error; neither changes protocol behavior.
+These expose only ok/error. The new `spatial` RPC delegates pure codec operations
+to each implementation and returns their values; it does not implement the codec.
 
 Runtime epochs are checked against HELLO, never pinned or compared between nodes.
 No WAN, deployment, production storage or manual browser testing is implied.
 See `docs/FREEZE_REPORT.md` for review scope, limitations and complete suite counts.
+
+V11 pins historical XY_Z addresses, canonical grammar and exact total Z order.
+V12 pins all eight geohash rows at three precisions, including decoded bounds and
+centres. V13 pins lower-edge containment, the coarse/fine counterexample, exact
+Z boundaries, unanchored selection, and HTTP 400 for equal padded XY keys.
