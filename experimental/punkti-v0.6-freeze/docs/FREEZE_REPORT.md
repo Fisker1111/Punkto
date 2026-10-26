@@ -1,13 +1,55 @@
 # Punkti 0.6 Founder-review freeze report
 
+## 0. Status: on hold, superseded by CEO-OS #19
+
+**2026-10-26T20:12Z — Founder HOLD on CEO-OS issue #17.** The freeze recommendation is NOT
+accepted at this time. No merge, tag, deployment or freeze of Punkti 0.6 is authorized.
+Two architecture questions were left open: the intended XY + Z spatial/addressing model,
+and static-first publication/replication.
+
+**2026-10-26T20:18Z — Founder correction tracked in CEO-OS issue #19**
+("Punkti 0.6 — restore human-readable XY_Z spatial addressing"). Issue #19 removes the
+provisional 12-character interleaved 3D geohash from the 0.6 candidate and restores
+`h = <xy>_<z>`. Issue #19 is the live successor task. CEO-OS issue #18 was closed by the
+Founder as duplicate cleanup, with #17 preserved as the review source.
+
+**Consequently the recommendation in section 9 of this report is superseded.** This branch
+is preserved as **non-spatial hardening evidence**, not as a freeze proposal. The value it
+carries is executable evidence and one harness fix, not a freeze authorization.
+
+**PR #115 base retargeted.** The pull request base was changed from
+`hardening/punkti-0.6-hostile` (`aea705e`) to `freeze/punkti-0.6-spec-revision` (`c835eb4`)
+so the pull request shows only this issue's additive delta and issue #17 remains the
+review source. The branch content is unchanged by the retarget.
+
+1. **Handoff requirement 1 — baseline bytes must be re-captured under the XY_Z model.**
+   `golden_base.json` pins bytes captured from `aea705e` whose spatial `h` is the interim
+   12-character profile `s00000000000`. Because `h` participates in the canonical body `C`,
+   the MID and the signature, those pinned `C`/`R`/MID/signature bytes **legitimately change**
+   under issue #19's restored `h = <xy>_<z>` model. `tests/test_baseline_bytes.py` must be
+   re-captured from the XY_Z baseline and must not be treated as a regression when it changes.
+2. **Handoff requirement 2 — two commits are absent from `c835eb4` and must be carried
+   forward.** `687dd99` ("forward callback deadlines in scale harness") and `460b1be`
+   ("verify reciprocal sync deadline and failure semantics") are not present in
+   `freeze/punkti-0.6-spec-revision`. Without `687dd99` the scale harness raises
+   `TypeError: counting_request() got an unexpected keyword argument 'timeout'` as soon as
+   `connect()` is reached, because `connect()` passes an explicit 300-second reciprocal
+   deadline that the harness's patched request signature cannot accept.
+3. **Handoff requirement 3 — no new protocol defect was found.** The suites and the six
+   required coverages are satisfied by the published V1-V10 vectors; no vector was added,
+   removed or renumbered. The single real defect fixed by this branch is the harness defect
+   in `687dd99`, which had left the committed scale evidence asserting a false failure.
+
 ## 1. Scope, base and commits
 
-CEO-OS Issue #17; branch `freeze/punkti-0.6-spec-revision`. Phase 2 starts at
+CEO-OS Issue #18; branch `freeze/punkti-0.6-freeze-candidate`, based on
+Issue #17 at `c835eb4` (`freeze/punkti-0.6-spec-revision`). Historical Phase 2 starts at
 `cee82627f7a2eed056aedcf692e9f520012b495e`. The Phase 1 comparison base is
 `aea705e` (the Issue #13 hostile-network report).
 Nothing is merged, pushed, deployed, released or frozen by this work. A freeze
 requires separate Founder approval. This is an experimental conformance package,
 not a production release or authorization to deploy.
+The pull request base was retargeted to `freeze/punkti-0.6-spec-revision` so issue #17 stays the review source.
 
 Phase 1 committed objects inspected for this report:
 
@@ -16,13 +58,32 @@ Phase 1 committed objects inspected for this report:
 - `535034b8a8a63b5e007a8deb283f201d20a3acd3`: independent clean-room alignment and tests.
 - `cee82627f7a2eed056aedcf692e9f520012b495e`: revised hostile expectations and regenerated evidence.
 
-Phase 2 vectors commit: `050012be0a6948a96bdab8d037c4bcb38644fa88`. The following report-only commit contains
-this document; its exact SHA is recorded in the uncommitted root `PHASE2_REPORT.md`
-and the final handoff (a commit cannot contain its own SHA).
+Phase 2 vectors commit: `050012be0a6948a96bdab8d037c4bcb38644fa88`. The original
+report commit is `bcbaea9`, with Issue numbering aligned in `c835eb4`.
 `PHASE1_REPORT.md` and `PHASE2_REPORT.md` are deliberately not committed.
 No protocol implementation source changed in Phase 2. The only shared tooling
 changes are additive `import_json` and `pull_from` adapter commands. The Mesh
 proposal receives only the requested wrapping and stray-space cleanup.
+
+Issue #18 evidence inventory on this branch:
+
+- `687dd99`: `experimental/punkti-v0.6-hostile/src/hostile/measure_scale.py`
+  forwards request keyword arguments, including the reciprocal deadline.
+- `460b1be`: `experimental/punkti-v0.6-mesh/tests/test_callback.py` and
+  `experimental/nairobidot-l3/tests/test_callback.py` prove single-phase dispatch
+  without re-entering `connect()`, reciprocal versus ordinary deadlines, and
+  non-fatal deadline failure without checkpoint advancement.
+- `95a3a2f`: `experimental/punkti-v0.6-freeze/tests/test_baseline_bytes.py` pins
+  `experimental/punkti-v0.6-freeze/golden_base.json` from `aea705e`: canonical C,
+  full R framing, SHA-256(R), MID/address, signature, validation state, UTF-8
+  payload bytes and decoded extension bytes. The Hermes worker's negative control
+  mutated golden C and failed as intended, confirming the assertion is load-bearing.
+- `c0a094b`: `experimental/punkti-v0.6-freeze/docs/ISSUE_18_COVERAGE.md` maps the
+  six required coverages to V1–V10 and their exact acceptance/rejection oracles.
+  No gap was found; no vector was added, removed or renumbered.
+- `04f5e2f`: regenerated `experimental/punkti-v0.6-hostile/evidence/scale.json`,
+  `experimental/punkti-v0.6-hostile/docs/SCALE_MEASUREMENT.md` and hostile evidence,
+  including `experimental/punkti-v0.6-hostile/evidence/protocol.json`.
 
 ## 2. Exact specification changes
 
@@ -156,34 +217,40 @@ the new vectors alone are not claimed to cover every clause of the eleven items.
 | 8 peer errors/deadlines | Error strings/classes and timeout policy differed; no fixed taxonomy/deadline contract. | Semantic categories, implementation-defined messages, documented bounded local deadlines. | Both HTTP clients detect short bodies and propagate failure; nb preserves resource errors. | V8; hostile slow_peer/interrupted/corrupt cases | Contract clarified; tested subset PASS, no uniform exception API claimed |
 | 9 page atomicity | Undecodable-page safe subset tested; decoded mixed-page transaction rule unspecified. | Validate whole page before admission; retain checkpoint on invalid page. | Both PULL receivers prevalidate and only commit cursor after processing. | V8; both revision suites | Resolved; PASS |
 | 10 completeness | Withholding/stale coverage can hide records despite end:true or successful sync. | Explicitly disclaim global completeness/freshness. | Documentation only; no dishonest detection mechanism added. | Existing hostile withholding/eclipsing cases; no new dedicated vector | Limitation explicit; PASS |
-| 11 connect()/callback | Reference 5000-record synchronous callback exceeded ordinary 5 s deadline; separately driven phases worked. | One nonrecursive /sync phase; longer bounded local callback deadline; no fixed-round promise. | Both connect helpers use 300 s callbacks. | Existing revision deadline assertions and hostile network suite; no new dedicated vector | Resolved contract; PASS; 5000-record scale matrix not rerun here |
+| 11 connect()/callback | Historical callback exceeded the ordinary 5 s deadline; current 5000-atom reciprocal PUSH takes 11005.1 ms and succeeds under the 300 s locally bounded reciprocal deadline. | One nonrecursive /sync phase; longer bounded local callback deadline; no fixed-round promise. | Both connect helpers use 300 s callbacks; ordinary requests retain 5 s. | Both implementations’ tests/test_callback.py and regenerated scale probe; no new dedicated vector | Resolved; PASS; scale matrix rerun on this branch; connect outcome {'ok': True}, wall 31339.7 ms, stores 5000/5000, admitted sets equal |
 
 ## 6. Test counts and retained hostile corpus
 
-After counts below are from actual complete local Phase 2 runs on 2026-10-23,
-with no failed assertions. Reported runtimes were reference 2.703 s, clean-room
-2.340 s, interop 10.295 s, hostile 133.400 s, and freeze 7.017 s. Before counts are the actual historical runs recorded
+After counts below are from the Hermes worker's complete runs on this branch on
+2026-10-26, all OK with no failed assertions. Reported runtimes were hostile
+172.997 s and freeze 13.440 s. Before counts are the actual historical runs recorded
 in Issue #13's committed network report, not newly rerun baseline measurements.
 
 | Suite | Before (#13) | After (this run) | Result |
 |---|---:|---:|---|
-| Reference | 27 | 32 | PASS |
-| Clean-room | 23 | 28 | PASS |
+| Reference | 27 | 35 | PASS |
+| Clean-room | 23 | 31 | PASS |
 | Interop | 13 | 13 | PASS |
 | Hostile | 125 | 125 | PASS |
-| Freeze | 0 (suite absent) | 11 | PASS |
+| Freeze | 0 (suite absent) | 14 | PASS |
 
-The generator additionally passed all ten vectors on both implementations and all
+Since the Issue #17 report, each implementation gained three callback conformance
+methods in `tests/test_callback.py`, and the freeze suite gained three methods in
+`tests/test_baseline_bytes.py`. The eleven vector methods remain unchanged; the
+increased counts reflect added conformance coverage, not weakened assertions.
+
+In Phase 2, the generator additionally passed all ten vectors on both implementations and all
 ten equality checks; deterministic regeneration passed. Reference tests emitted
 a non-failing ResourceWarning about HTTPError cleanup. No manual browser testing
 was performed: this is protocol/tooling work with no UI change. Real loopback
 HTTP and controlled failure/retry behavior were exercised automatically.
 
-The freshly generated `experimental/punkti-v0.6-hostile/evidence/protocol.json`
+This branch’s regenerated `experimental/punkti-v0.6-hostile/evidence/protocol.json`
 contains 308 rows: **154 AGREE, 0 DIVERGE, 0 DEFECT per implementation**.
 An exact set comparison of `(group, case, implementation)` against the committed
 `aea705e` evidence confirms **308/308 pre-existing row keys retained**, no missing
-or added keys. Its content is unchanged from Phase 1 HEAD after this rerun.
+or added keys. The 154 `(group, case)` keys are retained exactly. Cases per class
+are A-envelope 80, B-provenance 16, C-cursors 29, D-spatial 22 and E-coverage 7.
 The original classifications were ref 141 AGREE / 13 DIVERGE / 0 DEFECT and nb
 141 AGREE / 11 DIVERGE / 2 DEFECT; those were actual #13 observations under the
 previous contract, not hidden failures removed from the corpus.
@@ -192,7 +259,7 @@ Hostile expectations were updated to the revised normative contract in Phase 1,
 not silently dropped. In particular -0, descriptor errors, page limits, cursor
 sentinel, equal/reversed bounds, HELLO limits and poisoned discovery now assert
 the revised policy. Historical findings remain historical evidence, not the
-current expected results. This Phase 2 adds no weakening of those assertions.
+current expected results. This branch adds no weakening of those assertions.
 The 308 corpus rows are observations, distinct from the 125 unittest methods.
 
 ## 7. Remaining non-normative differences
@@ -214,7 +281,10 @@ accounts for it. No additional normative divergence was observed in this run.
 ## 8. Limitations
 
 - Loopback only; no WAN or two-host run. The historical single-host constrained
-  container run was not repeated in Phase 2, nor was the separate scale matrix.
+  container run was not repeated in Phase 2. The separate scale matrix was rerun
+  on this branch; `SCALE_MEASUREMENT.md` and `evidence/scale.json` in the hostile
+  experiment are regenerated. It remains loopback/single-host; wall times are not
+  a WAN performance guarantee, as recorded in `scale.json` interpretation_limits.
 - Finite generated corpus; agreement of two implementations is not a proof that
   either is universally correct. Shared RPC plumbing is reused, not reimplemented.
 - Stores are in memory; no durability/crash-recovery guarantee or production budget.
@@ -228,14 +298,34 @@ accounts for it. No additional normative divergence was observed in this run.
 
 ## 9. Recommendation and Founder decision
 
-Recommendation: **freeze candidate**. No new protocol defect was exposed by the
-required vectors or suites. Founder approval must explicitly choose the exact
-specification/implementation/vector commits, accept the eleven Issue resolutions and
-provisional spatial profile, and decide whether the documented non-normative
-HTTP parsing/batch differences can remain unspecified for the freeze. If they
-must be standardized, authorize a separate focused contract revision with tests.
-Approval must also acknowledge the limitations above. This recommendation grants
-no merge, release, deployment or freeze authorization by itself.
+The freeze recommendation is superseded by the Founder HOLD of
+2026-10-26T20:12Z and by CEO-OS issue #19. This branch's role is preserved
+non-spatial hardening evidence plus the `687dd99` harness fix, to be carried into
+the issue #19 lineage.
+
+No new protocol defect was exposed by the
+required vectors or suites. The previously outstanding scale-matrix rerun is
+complete: the 5000-atom `connect()` probe succeeds with equal admitted sets and
+stores 5000/5000, wall 31339.7 ms. Local PUSH took 10633.2 ms, reciprocal PUSH
+11005.1 ms, local PULL 4825.1 ms and reciprocal PULL 4871.8 ms. Reciprocal PUSH
+exceeds the ordinary 5000 ms request deadline but succeeds under the locally
+bounded 300000 ms reciprocal deadline.
+
+The five previously unproven properties now have evidence on this branch:
+baseline byte preservation, the item-11 nonrecursive mechanism, reciprocal
+deadline semantics, callback conformance in each implementation, and the six
+required coverages mapped to executable vectors with exact oracles. The evidence
+inventory above identifies the tests, pinned bytes, mapping and measured scale
+artifacts; no normative vector or decision was changed by this report refresh.
+
+The eleven Issue resolutions and provisional spatial profile describe the
+historical candidate assessed here; issue #19 replaces that spatial profile.
+The documented non-normative HTTP parsing/batch differences remain unspecified.
+Any decision to standardize them requires a separate focused contract revision
+with tests in the successor lineage. Any future Founder approval must also
+acknowledge the limitations above. This report grants no merge, release,
+deployment or freeze authorization, and requests no freeze decision or selection
+of exact freeze commits.
 
 ## 10. Reproduction
 
@@ -245,7 +335,7 @@ already-installed cryptography; no new dependency):
 ```sh
 PYTHONPATH="$PWD/experimental/punkti-v0.6-mesh/src" python3 -m unittest discover -s experimental/punkti-v0.6-mesh/tests
 PYTHONPATH="$PWD/experimental/nairobidot-l3/src" python3 -m unittest discover -s experimental/nairobidot-l3/tests
-(cd experimental/nairobidot-l3/interop && python3 -m unittest discover -s .)
+PYTHONPATH="$PWD/experimental/nairobidot-l3/src" python3 -m unittest discover -s experimental/nairobidot-l3/interop
 PYTHONPATH="$PWD/experimental/punkti-v0.6-hostile/src" python3 -m unittest discover -s experimental/punkti-v0.6-hostile/tests
 PYTHONPATH="$PWD/experimental/punkti-v0.6-freeze/src" python3 -m unittest discover -s experimental/punkti-v0.6-freeze/tests
 python3 experimental/punkti-v0.6-freeze/src/make_vectors.py
