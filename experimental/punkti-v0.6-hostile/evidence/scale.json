@@ -20,17 +20,17 @@
       "wire_bytes": 295184,
       "request_bytes": 140600,
       "response_bytes": 154584,
-      "wall_ms": 405.3,
+      "wall_ms": 588.4,
       "steady_state": {
         "requests": 6,
         "wire_bytes": 1712,
-        "wall_ms": 8.9,
+        "wall_ms": 11.9,
         "note": "retained resume cursors; no new records"
       },
       "fresh_subscriber": {
         "requests": 5,
         "wire_bytes": 70054,
-        "wall_ms": 40.6,
+        "wall_ms": 97.0,
         "records": 100
       },
       "candidate_sizes": [
@@ -58,7 +58,7 @@
       "wire_bytes": 294964,
       "request_bytes": 140600,
       "response_bytes": 154364,
-      "wall_ms": 396.2,
+      "wall_ms": 541.6,
       "steady_state": {
         "requests": 6,
         "wire_bytes": 1712,
@@ -68,7 +68,7 @@
       "fresh_subscriber": {
         "requests": 5,
         "wire_bytes": 70054,
-        "wall_ms": 37.1,
+        "wall_ms": 69.2,
         "records": 100
       },
       "candidate_sizes": [
@@ -96,17 +96,17 @@
       "wire_bytes": 294084,
       "request_bytes": 140600,
       "response_bytes": 153484,
-      "wall_ms": 438.4,
+      "wall_ms": 609.5,
       "steady_state": {
         "requests": 6,
         "wire_bytes": 1712,
-        "wall_ms": 9.2,
+        "wall_ms": 8.7,
         "note": "retained resume cursors; no new records"
       },
       "fresh_subscriber": {
         "requests": 5,
         "wire_bytes": 70054,
-        "wall_ms": 52.1,
+        "wall_ms": 83.3,
         "records": 100
       },
       "candidate_sizes": [
@@ -134,17 +134,17 @@
       "wire_bytes": 293204,
       "request_bytes": 140600,
       "response_bytes": 152604,
-      "wall_ms": 711.5,
+      "wall_ms": 582.9,
       "steady_state": {
         "requests": 6,
         "wire_bytes": 1712,
-        "wall_ms": 17.1,
+        "wall_ms": 9.6,
         "note": "retained resume cursors; no new records"
       },
       "fresh_subscriber": {
         "requests": 5,
         "wire_bytes": 70054,
-        "wall_ms": 109.2,
+        "wall_ms": 89.2,
         "records": 100
       },
       "candidate_sizes": [
@@ -172,17 +172,17 @@
       "wire_bytes": 292984,
       "request_bytes": 140600,
       "response_bytes": 152384,
-      "wall_ms": 610.3,
+      "wall_ms": 583.4,
       "steady_state": {
         "requests": 6,
         "wire_bytes": 1712,
-        "wall_ms": 9.7,
+        "wall_ms": 7.5,
         "note": "retained resume cursors; no new records"
       },
       "fresh_subscriber": {
         "requests": 5,
         "wire_bytes": 70054,
-        "wall_ms": 45.0,
+        "wall_ms": 78.5,
         "records": 100
       },
       "candidate_sizes": [
@@ -210,17 +210,17 @@
       "wire_bytes": 2936930,
       "request_bytes": 1406000,
       "response_bytes": 1530930,
-      "wall_ms": 4210.2,
+      "wall_ms": 7130.1,
       "steady_state": {
         "requests": 6,
         "wire_bytes": 1716,
-        "wall_ms": 8.5,
+        "wall_ms": 8.3,
         "note": "retained resume cursors; no new records"
       },
       "fresh_subscriber": {
         "requests": 33,
         "wire_bytes": 696127,
-        "wall_ms": 461.1,
+        "wall_ms": 769.5,
         "records": 1000
       },
       "candidate_sizes": [
@@ -248,17 +248,17 @@
       "wire_bytes": 2934730,
       "request_bytes": 1406000,
       "response_bytes": 1528730,
-      "wall_ms": 4976.9,
+      "wall_ms": 13006.1,
       "steady_state": {
         "requests": 6,
         "wire_bytes": 1716,
-        "wall_ms": 7.5,
+        "wall_ms": 19.8,
         "note": "retained resume cursors; no new records"
       },
       "fresh_subscriber": {
         "requests": 33,
         "wire_bytes": 696127,
-        "wall_ms": 427.6,
+        "wall_ms": 1455.2,
         "records": 1000
       },
       "candidate_sizes": [
@@ -286,17 +286,17 @@
       "wire_bytes": 2925930,
       "request_bytes": 1406000,
       "response_bytes": 1519930,
-      "wall_ms": 4247.6,
+      "wall_ms": 7258.8,
       "steady_state": {
         "requests": 6,
         "wire_bytes": 1716,
-        "wall_ms": 8.5,
+        "wall_ms": 8.0,
         "note": "retained resume cursors; no new records"
       },
       "fresh_subscriber": {
         "requests": 33,
         "wire_bytes": 696127,
-        "wall_ms": 489.9,
+        "wall_ms": 781.3,
         "records": 1000
       },
       "candidate_sizes": [
@@ -324,17 +324,17 @@
       "wire_bytes": 2917130,
       "request_bytes": 1406000,
       "response_bytes": 1511130,
-      "wall_ms": 4248.6,
+      "wall_ms": 7716.1,
       "steady_state": {
         "requests": 6,
         "wire_bytes": 1716,
-        "wall_ms": 9.6,
+        "wall_ms": 16.8,
         "note": "retained resume cursors; no new records"
       },
       "fresh_subscriber": {
         "requests": 33,
         "wire_bytes": 696127,
-        "wall_ms": 447.7,
+        "wall_ms": 1570.5,
         "records": 1000
       },
       "candidate_sizes": [
@@ -362,17 +362,17 @@
       "wire_bytes": 2914930,
       "request_bytes": 1406000,
       "response_bytes": 1508930,
-      "wall_ms": 4107.3,
+      "wall_ms": 9221.5,
       "steady_state": {
         "requests": 6,
         "wire_bytes": 1716,
-        "wall_ms": 8.6,
+        "wall_ms": 7.4,
         "note": "retained resume cursors; no new records"
       },
       "fresh_subscriber": {
         "requests": 33,
         "wire_bytes": 696127,
-        "wall_ms": 479.2,
+        "wall_ms": 952.7,
         "records": 1000
       },
       "candidate_sizes": [
@@ -400,17 +400,17 @@
       "wire_bytes": 5872214,
       "request_bytes": 2812000,
       "response_bytes": 3060214,
-      "wall_ms": 10937.8,
+      "wall_ms": 14109.0,
       "steady_state": {
         "requests": 6,
         "wire_bytes": 1716,
-        "wall_ms": 7.3,
+        "wall_ms": 45.8,
         "note": "retained resume cursors; no new records"
       },
       "fresh_subscriber": {
         "requests": 64,
         "wire_bytes": 1391769,
-        "wall_ms": 1009.8,
+        "wall_ms": 6373.8,
         "records": 2000
       },
       "candidate_sizes": [
@@ -438,17 +438,17 @@
       "wire_bytes": 5828214,
       "request_bytes": 2812000,
       "response_bytes": 3016214,
-      "wall_ms": 8579.1,
+      "wall_ms": 35932.4,
       "steady_state": {
         "requests": 6,
         "wire_bytes": 1716,
-        "wall_ms": 9.5,
+        "wall_ms": 19.0,
         "note": "retained resume cursors; no new records"
       },
       "fresh_subscriber": {
         "requests": 64,
         "wire_bytes": 1391769,
-        "wall_ms": 1093.4,
+        "wall_ms": 5375.4,
         "records": 2000
       },
       "candidate_sizes": [
@@ -476,17 +476,17 @@
       "wire_bytes": 14678430,
       "request_bytes": 7030000,
       "response_bytes": 7648430,
-      "wall_ms": 23990.4,
+      "wall_ms": 67540.4,
       "steady_state": {
         "requests": 6,
         "wire_bytes": 1716,
-        "wall_ms": 8.0,
+        "wall_ms": 17.9,
         "note": "retained resume cursors; no new records"
       },
       "fresh_subscriber": {
         "requests": 158,
         "wire_bytes": 3478877,
-        "wall_ms": 3190.1,
+        "wall_ms": 7919.2,
         "records": 5000
       },
       "candidate_sizes": [
@@ -514,17 +514,17 @@
       "wire_bytes": 14568430,
       "request_bytes": 7030000,
       "response_bytes": 7538430,
-      "wall_ms": 27819.9,
+      "wall_ms": 75965.1,
       "steady_state": {
         "requests": 6,
         "wire_bytes": 1716,
-        "wall_ms": 23.5,
+        "wall_ms": 10.7,
         "note": "retained resume cursors; no new records"
       },
       "fresh_subscriber": {
         "requests": 158,
         "wire_bytes": 3478877,
-        "wall_ms": 3781.5,
+        "wall_ms": 6114.2,
         "records": 5000
       },
       "candidate_sizes": [
@@ -545,7 +545,7 @@
       "a_final": 1000,
       "http_requests": 1001,
       "wire_bytes": 750360,
-      "wall_ms": 1597.8
+      "wall_ms": 2397.0
     },
     {
       "size": 1000,
@@ -554,7 +554,7 @@
       "a_final": 1000,
       "http_requests": 33,
       "wire_bytes": 696127,
-      "wall_ms": 545.9
+      "wall_ms": 871.5
     }
   ],
   "sparse_three_node": {
@@ -568,12 +568,12 @@
     "rounds": 1,
     "http_requests": 22762,
     "wire_bytes": 33508496,
-    "wall_ms": 56641.5
+    "wall_ms": 103352.6
   },
   "large_record": {
     "record_bytes": 1044658,
-    "push_ms": 57.4,
-    "pull_ms": 84.3,
+    "push_ms": 83.6,
+    "pull_ms": 98.9,
     "push_wire": 1393456,
     "pull_wire": 1393547,
     "admitted": [
@@ -583,18 +583,38 @@
   "connect_callback": {
     "n": 5000,
     "outcome": {
-      "ok": false,
-      "error": "TimeoutError: timed out"
+      "ok": true
     },
-    "wall_ms": 14372.0,
+    "wall_ms": 31339.7,
     "a_final": 5000,
     "b_final": 5000,
-    "requests": 7563,
-    "wire_bytes": 5727768,
-    "client_deadline_ms": 5000
+    "requests": 10320,
+    "wire_bytes": 14568548,
+    "client_deadline_ms": 300000,
+    "ordinary_deadline_ms": 5000,
+    "phases": [
+      {
+        "phase": "local_push",
+        "wall_ms": 10633.2
+      },
+      {
+        "phase": "reciprocal_push",
+        "wall_ms": 11005.1
+      },
+      {
+        "phase": "local_pull",
+        "wall_ms": 4825.1
+      },
+      {
+        "phase": "reciprocal_pull",
+        "wall_ms": 4871.8
+      }
+    ],
+    "converged_sets": true
   },
   "interpretation_limits": [
     "loopback HTTP, single host, one process",
+    "wall times depend on host load; early matrix cells overlapped regression suites; not a WAN performance guarantee",
     "PUSH sends one record per request; PULL page size is 32",
     "no negentropy or digest reconciliation is implemented"
   ]

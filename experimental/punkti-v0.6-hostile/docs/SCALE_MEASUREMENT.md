@@ -6,36 +6,41 @@ Nothing is frozen; no reconciliation protocol is implemented.
 
 | n | overlap | converged | rounds | requests | wire bytes | useful bytes | overhead | wall ms | steady resync B/req | fresh subscriber B/req |
 |---|---|---|---|---|---|---|---|---|---|---|
-| 100 | 1.0 | True | 1 | 212 | 295184 | 0 | n/a | 405.3 | 1712/6 | 70054/5 |
-| 100 | 0.9 | True | 1 | 212 | 294964 | 3840 | 76.81 | 396.2 | 1712/6 | 70054/5 |
-| 100 | 0.5 | True | 1 | 212 | 294084 | 19200 | 15.32 | 438.4 | 1712/6 | 70054/5 |
-| 100 | 0.1 | True | 1 | 212 | 293204 | 34560 | 8.48 | 711.5 | 1712/6 | 70054/5 |
-| 100 | 0.0 | True | 1 | 212 | 292984 | 38400 | 7.63 | 610.3 | 1712/6 | 70054/5 |
-| 1000 | 1.0 | True | 1 | 2068 | 2936930 | 0 | n/a | 4210.2 | 1716/6 | 696127/33 |
-| 1000 | 0.9 | True | 1 | 2068 | 2934730 | 38400 | 76.43 | 4976.9 | 1716/6 | 696127/33 |
-| 1000 | 0.5 | True | 1 | 2068 | 2925930 | 192000 | 15.24 | 4247.6 | 1716/6 | 696127/33 |
-| 1000 | 0.1 | True | 1 | 2068 | 2917130 | 345600 | 8.44 | 4248.6 | 1716/6 | 696127/33 |
-| 1000 | 0.0 | True | 1 | 2068 | 2914930 | 384000 | 7.59 | 4107.3 | 1716/6 | 696127/33 |
-| 2000 | 1.0 | True | 1 | 4130 | 5872214 | 0 | n/a | 10937.8 | 1716/6 | 1391769/64 |
-| 2000 | 0.0 | True | 1 | 4130 | 5828214 | 768000 | 7.59 | 8579.1 | 1716/6 | 1391769/64 |
-| 5000 | 1.0 | True | 1 | 10318 | 14678430 | 0 | n/a | 23990.4 | 1716/6 | 3478877/158 |
-| 5000 | 0.0 | True | 1 | 10318 | 14568430 | 1920000 | 7.59 | 27819.9 | 1716/6 | 3478877/158 |
+| 100 | 1.0 | True | 1 | 212 | 295184 | 0 | n/a | 588.4 | 1712/6 | 70054/5 |
+| 100 | 0.9 | True | 1 | 212 | 294964 | 3840 | 76.81 | 541.6 | 1712/6 | 70054/5 |
+| 100 | 0.5 | True | 1 | 212 | 294084 | 19200 | 15.32 | 609.5 | 1712/6 | 70054/5 |
+| 100 | 0.1 | True | 1 | 212 | 293204 | 34560 | 8.48 | 582.9 | 1712/6 | 70054/5 |
+| 100 | 0.0 | True | 1 | 212 | 292984 | 38400 | 7.63 | 583.4 | 1712/6 | 70054/5 |
+| 1000 | 1.0 | True | 1 | 2068 | 2936930 | 0 | n/a | 7130.1 | 1716/6 | 696127/33 |
+| 1000 | 0.9 | True | 1 | 2068 | 2934730 | 38400 | 76.43 | 13006.1 | 1716/6 | 696127/33 |
+| 1000 | 0.5 | True | 1 | 2068 | 2925930 | 192000 | 15.24 | 7258.8 | 1716/6 | 696127/33 |
+| 1000 | 0.1 | True | 1 | 2068 | 2917130 | 345600 | 8.44 | 7716.1 | 1716/6 | 696127/33 |
+| 1000 | 0.0 | True | 1 | 2068 | 2914930 | 384000 | 7.59 | 9221.5 | 1716/6 | 696127/33 |
+| 2000 | 1.0 | True | 1 | 4130 | 5872214 | 0 | n/a | 14109.0 | 1716/6 | 1391769/64 |
+| 2000 | 0.0 | True | 1 | 4130 | 5828214 | 768000 | 7.59 | 35932.4 | 1716/6 | 1391769/64 |
+| 5000 | 1.0 | True | 1 | 10318 | 14678430 | 0 | n/a | 67540.4 | 1716/6 | 3478877/158 |
+| 5000 | 0.0 | True | 1 | 10318 | 14568430 | 1920000 | 7.59 | 75965.1 | 1716/6 | 3478877/158 |
 
 ## Direction attribution (n=1000, disjoint)
 
 | mode | requests | wire bytes | wall ms |
 |---|---|---|---|
-| push | 1001 | 750360 | 1597.8 |
-| pull | 33 | 696127 | 545.9 |
+| push | 1001 | 750360 | 2397.0 |
+| pull | 33 | 696127 | 871.5 |
 
 ## Sparse three-node and large-record checks
 
-- 3 nodes, 2000 atoms each in disjoint cells: converged=True, stores=[4000, 4000, 4000], rounds=1, requests=22762, wire=33508496 B, 56641.5 ms.
-- One 1044658-byte record: PUSH 1393456 B/57.4 ms, PULL 1393547 B/84.3 ms, admitted=[1].
+- 3 nodes, 2000 atoms each in disjoint cells: converged=True, stores=[4000, 4000, 4000], rounds=1, requests=22762, wire=33508496 B, 103352.6 ms.
+- One 1044658-byte record: PUSH 1393456 B/83.6 ms, PULL 1393547 B/98.9 ms, admitted=[1].
 
 ## connect() callback deadline probe
 
-- n=5000: outcome={'ok': False, 'error': 'TimeoutError: timed out'}, wall 14372.0 ms, stores 5000/5000, client deadline 5000 ms. A failed outcome means the reference refused to complete the reciprocal callback within its per-request deadline; the preceding PUSH/PULL matrix shows the same records transfer correctly when the directions are driven separately.
+- n=5000: outcome={'ok': True}, wall 31339.7 ms, stores 5000/5000, reciprocal client deadline 300000 ms.
+- Result: completed successfully; admitted sets equal=True.
+- Phase timings (ms): [{'phase': 'local_push', 'wall_ms': 10633.2}, {'phase': 'reciprocal_push', 'wall_ms': 11005.1}, {'phase': 'local_pull', 'wall_ms': 4825.1}, {'phase': 'reciprocal_pull', 'wall_ms': 4871.8}].
+- Reciprocal PUSH took 11.005 s; reciprocal PULL took 4.872 s.
+- Reciprocal phases can exceed the ordinary 5 s deadline. The outcome above
+  uses the current 300 s locally bounded callback deadline.
 
 ## Interpretation
 
@@ -52,12 +57,8 @@ Nothing is frozen; no reconciliation protocol is implemented.
   request count (10,318 for a mutual sync) dominates WAN latency, not bytes.
 - One near-limit 1 MiB record costs ~1.33x its record size on the wire because base64 JSON
   transport inflates binary fields; that is a transport choice, not a reconciliation issue.
-- connect() wraps the reciprocal direction in one synchronous HTTP callback: at 5000 atoms it
-  exceeded the reference client's 5 s deadline while the separately driven PUSH/PULL succeeded.
-  That is an implementation framing choice, not a carrier defect; the spec does not require a
-  synchronous callback.
 - No measured cell demonstrates a *correctness* need for Negentropy or another reconciliation
   protocol. The measured cost is bandwidth/requests during bootstrap and full sweeps, which is
   a post-freeze efficiency question, so no protocol change is proposed here.
 
-Limitations: loopback HTTP, single host, one process; PUSH sends one record per request; PULL page size is 32; no negentropy or digest reconciliation is implemented.
+Limitations: loopback HTTP, single host, one process; wall times depend on host load; early matrix cells overlapped regression suites; not a WAN performance guarantee; PUSH sends one record per request; PULL page size is 32; no negentropy or digest reconciliation is implemented.
