@@ -150,8 +150,8 @@ Content address = SHA-256 of exact canonical-JSON bytes.
   * `sha256` is the content address of the record object (SHA-256 of `R`);
   * `h` is the canonical spatial address of that record.
 * Record entries MUST be sorted ascending by `sha256` (hex string order);
-  `packs` MUST be sorted ascending by content address; `children` member order is
-  fixed by canonical JSON.
+  `packs` MUST be sorted ascending by content address (hex string order — **not**
+  by the group index of §6); `children` member order is fixed by canonical JSON.
 * A reader MUST reject a shard whose bytes do not hash to the address that named
   it.
 
@@ -167,7 +167,13 @@ The XY index is a prefix tree over the **12-character key space**.
   `L = K(xy)[:10]` (leaf depth `D = 10`).
 * The publication tree is: root → manifest → depth-2 shard → … → depth-10 leaf.
   Interior shard prefixes are the successive prefixes of `L`.
-* The manifest index therefore lists at most 1024 depth-2 prefixes plus `"~"`.
+* The manifest index MUST list **exactly** the depth-2 prefixes that occur among
+  the publication's leaves (at most 1024) plus at most one `"~"` entry. A depth-2
+  prefix that occurs MUST be present; a depth-2 prefix that does not occur MUST
+  NOT be present.
+* Every interior shard MUST have at least one child; every child key MUST occur
+  as the prefix of at least one leaf below it. The tree therefore contains no
+  empty subtree and no dangling shard.
 * A shard at prefix `p` is only reachable through its parent prefix `p[:-1]`; a
   reader MUST verify the prefix chain while walking.
 * The `"~"` leaf is not part of the XY tree and has no parent.
@@ -180,7 +186,7 @@ indexing layout only.
 Prefix selection is defined over the 12-character key space, not over filesystem
 paths and not over decimal numbers.
 
-* The **key interval** of a XY prefix `p` of length `d` (2 ≤ d ≤ 12) is the
+* The **key interval** of a XY prefix `p` of length `d` (2 ≤ d ≤ 10) is the
   inclusive interval of 12-character keys
 
   ```text
@@ -248,9 +254,10 @@ pack := "PUNKTIPACK1"            (10 ASCII bytes, no terminator)
   compares it with the shard index entry.
 * **Membership is normative and deterministic**: take the leaf shard's record
   entries, sort ascending by `sha256` hex, and split them into consecutive
-  groups of at most 256 entries. Group *k* is pack *k* of that leaf. A leaf with
-  *n* records therefore has `ceil(n / 256)` packs, and the packs of a leaf are
-  ordered by their group index.
+  groups of at most 256 entries. Group *k* is one pack of that leaf. A leaf with
+  *n* records therefore has `ceil(n / 256)` packs. The set of packs of a leaf is
+  thus determined by the leaf's record set; the shard lists them sorted by
+  content address (§4), so the group index is recoverable in any case.
 * **Per-pack rule**: every record extracted from a pack MUST be one of the
   records listed by the leaf shard that the pack belongs to (matched by
   `sha256`). A pack MUST NOT contain a foreign record, and a pack MUST NOT
