@@ -1,10 +1,10 @@
 # Punkti v0.6 — Layer 3 Reset
 
-Status: Draft for peer review
-Scope: Design/review-only proposal for the minimal virtual Layer-3 carrier and provenance boundary.
-Compatibility: Frozen v0.5.1 atoms coexist unchanged with a proposed, explicitly branded v0.6 namespace.
+Status: **FROZEN — Punkti v0.6 Layer 3, Founder-approved 2026-10-27**
+Scope: Minimal virtual Layer-3 carrier and provenance boundary.
+Compatibility: Frozen v0.5.1 atoms coexist unchanged with the explicitly branded v0.6 namespace.
 
-Nothing is frozen by this document. It authorizes no implementation, production deployment, merge, or protocol freeze. Proposed requirements below describe a candidate contract; MUST protects the carrier boundary, while SHOULD indicates a recommended operational choice.
+This document is frozen together with the accepted XY_Z spatial profile and static publication contract. Layer-4 semantics, Punkto UI/product behavior, BRTH, messaging, trust/reputation and optional dynamic acceleration remain outside this freeze.
 
 **Founder decisions incorporated:** (1) Geo is native Layer 3: `h` is spatial addressing, not decorative/application metadata; XY denotes horizontal position, Z physical altitude, and ranges select spatial addresses. Spatial range subscriptions and range-scoped reconciliation are first-class requirements for the subsequent Mesh. (2) `x` remains opaque Layer-4/application payload. (3) BRTH is persistent actor identity at Layer 4, usable by AI instances as well as humans and other actors. Frozen v0.5.1 remains unchanged; PR #111 must not be modified during its frozen review state. This proposal does not start Mesh.
 
@@ -16,7 +16,7 @@ What is the smallest protocol a node must implement to carry, validate, address,
 
 Punkti is a virtual Layer 3: a carrier for immutable atoms with a native spatial address space. A node MUST be able to operate on spatial addresses and ranges and carry an atom without understanding its application, reference vocabulary, or Layer-4 identity. Unknown algorithms do not license interpreting or discarding the payload. Resource admission limits remain possible, but must be explicit and independent of application meaning.
 
-The successor tasks are **Punkti 0.6 — Mesh** (application-agnostic discovery, replication and reconciliation), **Punkti Identity — BRTH Layer 4 specification** (identity semantics), **NairobiDot — independent Punkti compatibility proof** (a non-Punkto implementation), and **Punkti Internet Red Team** (hostile network and scale review). Their contracts should follow this boundary rather than silently extending the core.
+Dynamic Mesh work is no longer normative for Punkti 0.6 and is retained only as optional acceleration evidence. The successor product tasks include **Punkti Identity — BRTH Layer 4 specification** (identity semantics), **NairobiDot — independent Punkti compatibility proof** (a non-Punkto implementation), and **Punkti Internet Red Team** (hostile network and scale review). Their contracts should follow this boundary rather than silently extending the core.
 
 ## Layer 3 vs Layer 4 boundary table
 
