@@ -1,0 +1,1 @@
+$ for f in .github/workflows/*.yml *.yml; do python3 -c "import yaml,sys;yaml.safe_load(open(sys.argv[1]))" "$f" || exit 1; done

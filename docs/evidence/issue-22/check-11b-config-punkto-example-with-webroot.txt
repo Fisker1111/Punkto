@@ -1,0 +1,2 @@
+$ PUNKTO_WEB_ROOT="$PWD/pwa" python3 -m punkti_node --check-config --config punkto-config.example.yml
+Configuration valid

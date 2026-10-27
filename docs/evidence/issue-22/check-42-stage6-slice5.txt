@@ -1,0 +1,2 @@
+$ node pwa/test-slice5.mjs
+slice5 helper tests passed

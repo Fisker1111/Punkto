@@ -1,0 +1,8 @@
+$ python3 -m unittest discover -s experimental/punkti-v0.6-publication/tests
+STATIC CONVERGENCE packs=False: publishers exited; separate readers; 4 exact records; GETs=104
+STATIC CONVERGENCE packs=True: publishers exited; separate readers; 4 exact records; GETs=104
+......................................................................
+----------------------------------------------------------------------
+Ran 70 tests in 24.300s
+
+OK

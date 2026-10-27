@@ -1,0 +1,1 @@
+$ for f in pwa/*.js pwa/*/*.js; do node --check "$f" || exit 1; done

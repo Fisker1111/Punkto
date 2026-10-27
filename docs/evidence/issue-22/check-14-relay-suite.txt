@@ -1,0 +1,234 @@
+$ python3 relay/test_relay.py
+[RELAY] [2026-10-27T20:28:23] node config loaded from /home/hermes/.hermes/profiles/punkto-worker/cache/scratch/punkto-relay-test-6a7fqvb2/punkto-node.yml
+[RELAY] [2026-10-27T20:28:23] Created new node identity node_fingerprint=node:7b4fc09a3fc9 path=/home/hermes/.hermes/profiles/punkto-worker/cache/scratch/punkto-relay-test-6a7fqvb2/node-key.json
+[RELAY] [2026-10-27T20:28:23] 127.0.0.1 "GET /health HTTP/1.1" 200 -
+[RELAY] [2026-10-27T20:28:23] 127.0.0.1 "GET /health HTTP/1.1" 200 -
+  PASS  test_health
+[RELAY] [2026-10-27T20:28:23] 127.0.0.1 "GET /info HTTP/1.1" 200 -
+  PASS  test_info
+[RELAY] [2026-10-27T20:28:23] 127.0.0.1 "GET /node/info HTTP/1.1" 200 -
+  PASS  test_node_info_public_status_shape
+[RELAY] [2026-10-27T20:28:23] 127.0.0.1 "GET /node/info HTTP/1.1" 200 -
+  PASS  test_node_info_stats_fields_exist
+[RELAY] [2026-10-27T20:28:23] 127.0.0.1 "GET /node/info HTTP/1.1" 200 -
+  PASS  test_node_info_storage_fields_safe
+[RELAY] [2026-10-27T20:28:23] 127.0.0.1 "GET /node/info HTTP/1.1" 200 -
+  PASS  test_node_info_does_not_expose_private_values
+[RELAY] [2026-10-27T20:28:23] 127.0.0.1 "GET /status HTTP/1.1" 200 -
+  PASS  test_status_page_public_html
+[RELAY] [2026-10-27T20:28:23] 127.0.0.1 "GET /status HTTP/1.1" 200 -
+  PASS  test_status_page_data_flow_links_and_stats
+[RELAY] [2026-10-27T20:28:23] 127.0.0.1 "GET /status HTTP/1.1" 200 -
+  PASS  test_status_page_data_flow_safety_boundary
+[RELAY] [2026-10-27T20:28:23] 127.0.0.1 "GET /status HTTP/1.1" 200 -
+  PASS  test_status_page_escapes_dynamic_values
+[RELAY] [2026-10-27T20:28:23] 127.0.0.1 "GET /status HTTP/1.1" 200 -
+  PASS  test_status_page_config_missing_fallback
+[RELAY] [2026-10-27T20:28:23] Created new node identity node_fingerprint=node:88c8edffdaf4 path=/home/hermes/.hermes/profiles/punkto-worker/cache/scratch/punkto-node-identity-h05qb8cv/node-key.json
+[RELAY] [2026-10-27T20:28:23] Loaded existing node identity node_fingerprint=node:88c8edffdaf4 path=/home/hermes/.hermes/profiles/punkto-worker/cache/scratch/punkto-node-identity-h05qb8cv/node-key.json
+  PASS  test_load_or_create_node_identity_roundtrip
+[RELAY] [2026-10-27T20:28:23] ERROR: invalid node identity file at /home/hermes/.hermes/profiles/punkto-worker/cache/scratch/punkto-node-identity-invalid-5jaabn0y/node-key.json: node identity file /home/hermes/.hermes/profiles/punkto-worker/cache/scratch/punkto-node-identity-invalid-5jaabn0y/node-key.json failed integrity validation
+  PASS  test_load_or_create_node_identity_invalid_fails
+[RELAY] [2026-10-27T20:28:23] node config missing at /home/hermes/.hermes/profiles/punkto-worker/cache/scratch/punkto-relay-test-6a7fqvb2/missing-node-config.yml; using safe defaults
+  PASS  test_missing_config_uses_live_forward_defaults
+[RELAY] [2026-10-27T20:28:23] atom appended: p:u07qsuustfsh id=e204e2f314a6 buffer_size=1
+[RELAY] [2026-10-27T20:28:23] 127.0.0.1 "POST /atom HTTP/1.1" 201 -
+  PASS  test_post_valid_atom
+[RELAY] [2026-10-27T20:28:23] atom appended: p:u05zrbsytp8d-dmi06126 id=802333605c8a buffer_size=2
+[RELAY] [2026-10-27T20:28:23] 127.0.0.1 "POST /atom HTTP/1.1" 201 -
+[RELAY] [2026-10-27T20:28:23] 127.0.0.1 "GET /feed?since=0 HTTP/1.1" 200 -
+[RELAY] [2026-10-27T20:28:23] 127.0.0.1 "GET /latest HTTP/1.1" 200 -
+  PASS  test_dmi_station_atom_survives_local_relay_feed_and_latest
+[RELAY] [2026-10-27T20:28:23] 127.0.0.1 "POST /atom HTTP/1.1" 422 -
+  PASS  test_post_old_atom_rejected_by_acceptance_policy
+[RELAY] [2026-10-27T20:28:23] 127.0.0.1 "GET /latest HTTP/1.1" 200 -
+[RELAY] [2026-10-27T20:28:23] 127.0.0.1 "GET /feed HTTP/1.1" 200 -
+  PASS  test_serving_excludes_old_non_pinned_atoms_from_feed_and_latest
+[RELAY] [2026-10-27T20:28:23] 127.0.0.1 "GET /latest HTTP/1.1" 200 -
+[RELAY] [2026-10-27T20:28:23] 127.0.0.1 "GET /feed HTTP/1.1" 200 -
+  PASS  test_pinned_old_atom_is_served_outside_recent_window
+[RELAY] [2026-10-27T20:28:23] atom appended (sync<-https://trusted.example): p:u07qbackfill id=5e49438d599c buffer_size=1
+  PASS  test_trusted_backfill_old_atom_accepted_and_untrusted_skipped
+[RELAY] [2026-10-27T20:28:23] atom appended: p:u07qsuustfsh id=320e49fdbd55 buffer_size=5
+[RELAY] [2026-10-27T20:28:23] 127.0.0.1 "POST /atom HTTP/1.1" 201 -
+[RELAY] [2026-10-27T20:28:23] 127.0.0.1 "POST /atom HTTP/1.1" 200 -
+  PASS  test_post_duplicate_atom
+[RELAY] [2026-10-27T20:28:23] 127.0.0.1 "POST /atom HTTP/1.1" 422 -
+  PASS  test_post_invalid_missing_punkto
+[RELAY] [2026-10-27T20:28:23] 127.0.0.1 "POST /atom HTTP/1.1" 422 -
+  PASS  test_post_invalid_punkto_format
+[RELAY] [2026-10-27T20:28:23] 127.0.0.1 "POST /atom HTTP/1.1" 400 -
+  PASS  test_post_invalid_timestamp
+[RELAY] [2026-10-27T20:28:23] runtime prune: 6 -> 5 atoms (max_atoms=5, max_hours=168)
+[RELAY] [2026-10-27T20:28:23] atom appended: p:u07qskyuhbus id=c25ed5ee73de buffer_size=5
+[RELAY] [2026-10-27T20:28:23] 127.0.0.1 "POST /atom HTTP/1.1" 201 -
+  PASS  test_post_no_f_no_x_accepted
+[RELAY] [2026-10-27T20:28:23] runtime prune: 6 -> 5 atoms (max_atoms=5, max_hours=168)
+[RELAY] [2026-10-27T20:28:23] atom appended: p:u07qjn4k2sus id=b8e32ab2a35e buffer_size=5
+[RELAY] [2026-10-27T20:28:23] 127.0.0.1 "POST /atom HTTP/1.1" 201 -
+  PASS  test_old_atom_without_relation_or_parent_is_root_accepted
+[RELAY] [2026-10-27T20:28:23] runtime prune: 6 -> 5 atoms (max_atoms=5, max_hours=168)
+[RELAY] [2026-10-27T20:28:23] atom appended: p:u07qjh7k02zy id=196177632961 buffer_size=5
+[RELAY] [2026-10-27T20:28:23] 127.0.0.1 "POST /atom HTTP/1.1" 201 -
+  PASS  test_root_atom_with_relation_root_no_parent_is_accepted
+[RELAY] [2026-10-27T20:28:23] runtime prune: 6 -> 5 atoms (max_atoms=5, max_hours=168)
+[RELAY] [2026-10-27T20:28:23] atom appended: p:u07qsvy8txhf id=7fc7e749505e buffer_size=5
+[RELAY] [2026-10-27T20:28:23] 127.0.0.1 "POST /atom HTTP/1.1" 201 -
+  PASS  test_reply_with_missing_parent_is_accepted_as_orphan
+[RELAY] [2026-10-27T20:28:23] 127.0.0.1 "POST /atom HTTP/1.1" 400 -
+  PASS  test_reply_without_parent_rejects_400
+[RELAY] [2026-10-27T20:28:23] 127.0.0.1 "POST /atom HTTP/1.1" 400 -
+  PASS  test_root_with_parent_rejects_400
+[RELAY] [2026-10-27T20:28:23] 127.0.0.1 "POST /atom HTTP/1.1" 400 -
+  PASS  test_unknown_relation_rejects_400
+[RELAY] [2026-10-27T20:28:23] runtime prune: 6 -> 5 atoms (max_atoms=5, max_hours=168)
+[RELAY] [2026-10-27T20:28:23] atom appended: p:u07quvubhgbd id=d9016f5c0661 buffer_size=5
+[RELAY] [2026-10-27T20:28:23] 127.0.0.1 "POST /atom HTTP/1.1" 201 -
+[RELAY] [2026-10-27T20:28:23] runtime prune: 6 -> 5 atoms (max_atoms=5, max_hours=168)
+[RELAY] [2026-10-27T20:28:23] atom appended: p:u07quvubhgbd id=979c4d91270b buffer_size=5
+[RELAY] [2026-10-27T20:28:23] 127.0.0.1 "POST /atom HTTP/1.1" 201 -
+  PASS  test_parent_known_reply_same_punkto_location_is_accepted
+[RELAY] [2026-10-27T20:28:23] runtime prune: 6 -> 5 atoms (max_atoms=5, max_hours=168)
+[RELAY] [2026-10-27T20:28:23] atom appended: p:u07qskyuhbmy id=9df7dd748b4c buffer_size=5
+[RELAY] [2026-10-27T20:28:23] 127.0.0.1 "POST /atom HTTP/1.1" 201 -
+[RELAY] [2026-10-27T20:28:23] 127.0.0.1 "POST /atom HTTP/1.1" 400 -
+  PASS  test_parent_known_reply_different_punkto_location_rejects_400
+[RELAY] [2026-10-27T20:28:23] runtime prune: 6 -> 5 atoms (max_atoms=5, max_hours=168)
+[RELAY] [2026-10-27T20:28:23] atom appended: p:u07qsuustfsh id=08b0065878a7 buffer_size=5
+[RELAY] [2026-10-27T20:28:23] 127.0.0.1 "POST /atom HTTP/1.1" 201 -
+[RELAY] [2026-10-27T20:28:23] runtime prune: 6 -> 5 atoms (max_atoms=5, max_hours=168)
+[RELAY] [2026-10-27T20:28:23] atom appended: p:u07qsuustfsh id=12d39be9c10b buffer_size=5
+[RELAY] [2026-10-27T20:28:23] 127.0.0.1 "POST /atom HTTP/1.1" 201 -
+[RELAY] [2026-10-27T20:28:23] 127.0.0.1 "GET /feed HTTP/1.1" 200 -
+  PASS  test_feed_returns_root_reply_metadata_fields
+  PASS  test_missing_atom_log_startup_works
+[RELAY] [2026-10-27T20:28:23] runtime prune: 6 -> 5 atoms (max_atoms=5, max_hours=168)
+[RELAY] [2026-10-27T20:28:23] atom appended: p:u07qsvy8txhf id=5f8a0a199b81 buffer_size=5
+[RELAY] [2026-10-27T20:28:23] 127.0.0.1 "POST /atom HTTP/1.1" 201 -
+  PASS  test_accepted_atom_appended_to_log
+[RELAY] [2026-10-27T20:28:23] buffer loaded: 1 atoms, file_size=160, corrupt_lines=0
+  PASS  test_relay_reload_from_log_returns_atom_in_feed
+[RELAY] [2026-10-27T20:28:23] runtime prune: 6 -> 5 atoms (max_atoms=5, max_hours=168)
+[RELAY] [2026-10-27T20:28:23] atom appended: p:u07qskyuhbuu id=49c807120f2f buffer_size=5
+[RELAY] [2026-10-27T20:28:23] 127.0.0.1 "POST /atom HTTP/1.1" 201 -
+[RELAY] [2026-10-27T20:28:23] 127.0.0.1 "POST /atom HTTP/1.1" 200 -
+  PASS  test_duplicate_atom_id_not_appended_twice
+[RELAY] [2026-10-27T20:28:23] runtime prune: 2 -> 1 atoms (max_atoms=1, max_hours=168)
+  PASS  test_duplicate_pruned_atom_id_not_appended_twice
+[RELAY] [2026-10-27T20:28:23] buffer loaded: 1 atoms, file_size=83, corrupt_lines=1
+  PASS  test_corrupt_jsonl_line_skipped_and_counted
+[RELAY] [2026-10-27T20:28:23] buffer loaded: 1 atoms, file_size=61, corrupt_lines=0
+  PASS  test_old_atom_without_relation_parent_loads_as_root
+[RELAY] [2026-10-27T20:28:23] buffer loaded: 2 atoms, file_size=429, corrupt_lines=0
+  PASS  test_root_reply_fields_survive_reload
+[RELAY] [2026-10-27T20:28:23] 127.0.0.1 "GET /latest HTTP/1.1" 200 -
+  PASS  test_latest
+[RELAY] [2026-10-27T20:28:23] 127.0.0.1 "GET /feed HTTP/1.1" 200 -
+  PASS  test_feed_initial
+[RELAY] [2026-10-27T20:28:23] runtime prune: 6 -> 5 atoms (max_atoms=5, max_hours=168)
+[RELAY] [2026-10-27T20:28:23] atom appended: p:u07qsuustfsh id=a2e24075b638 buffer_size=5
+[RELAY] [2026-10-27T20:28:23] 127.0.0.1 "POST /atom HTTP/1.1" 201 -
+[RELAY] [2026-10-27T20:28:23] runtime prune: 6 -> 5 atoms (max_atoms=5, max_hours=168)
+[RELAY] [2026-10-27T20:28:23] atom appended: p:u07qskyuhbus id=d88f2b9b70da buffer_size=5
+[RELAY] [2026-10-27T20:28:23] 127.0.0.1 "POST /atom HTTP/1.1" 201 -
+[RELAY] [2026-10-27T20:28:23] runtime prune: 6 -> 5 atoms (max_atoms=5, max_hours=168)
+[RELAY] [2026-10-27T20:28:23] atom appended: p:u07qjn4k2sus id=1c144d1202fb buffer_size=5
+[RELAY] [2026-10-27T20:28:23] 127.0.0.1 "POST /atom HTTP/1.1" 201 -
+[RELAY] [2026-10-27T20:28:23] runtime prune: 6 -> 5 atoms (max_atoms=5, max_hours=168)
+[RELAY] [2026-10-27T20:28:23] atom appended: p:u07qjh7k02zy id=9e65e83ab43d buffer_size=5
+[RELAY] [2026-10-27T20:28:23] 127.0.0.1 "POST /atom HTTP/1.1" 201 -
+[RELAY] [2026-10-27T20:28:23] runtime prune: 6 -> 5 atoms (max_atoms=5, max_hours=168)
+[RELAY] [2026-10-27T20:28:23] atom appended: p:u07qsvy8txhf id=07d6b077bfa6 buffer_size=5
+[RELAY] [2026-10-27T20:28:23] 127.0.0.1 "POST /atom HTTP/1.1" 201 -
+[RELAY] [2026-10-27T20:28:23] runtime prune: 6 -> 5 atoms (max_atoms=5, max_hours=168)
+[RELAY] [2026-10-27T20:28:23] atom appended: p:u07qskyuhbmw id=3ef2711ea659 buffer_size=5
+[RELAY] [2026-10-27T20:28:23] 127.0.0.1 "POST /atom HTTP/1.1" 201 -
+[RELAY] [2026-10-27T20:28:23] runtime prune: 6 -> 5 atoms (max_atoms=5, max_hours=168)
+[RELAY] [2026-10-27T20:28:23] atom appended: p:u07qskyuhbuu id=bc557c9c53b6 buffer_size=5
+[RELAY] [2026-10-27T20:28:23] 127.0.0.1 "POST /atom HTTP/1.1" 201 -
+[RELAY] [2026-10-27T20:28:23] runtime prune: 6 -> 5 atoms (max_atoms=5, max_hours=168)
+[RELAY] [2026-10-27T20:28:23] atom appended: p:u07qskyuhsqu id=305f85a2c21f buffer_size=5
+[RELAY] [2026-10-27T20:28:23] 127.0.0.1 "POST /atom HTTP/1.1" 201 -
+[RELAY] [2026-10-27T20:28:23] runtime prune: 6 -> 5 atoms (max_atoms=5, max_hours=168)
+[RELAY] [2026-10-27T20:28:23] atom appended: p:u07quvubhgbd id=8815bd633919 buffer_size=5
+[RELAY] [2026-10-27T20:28:23] 127.0.0.1 "POST /atom HTTP/1.1" 201 -
+[RELAY] [2026-10-27T20:28:23] runtime prune: 6 -> 5 atoms (max_atoms=5, max_hours=168)
+[RELAY] [2026-10-27T20:28:23] atom appended: p:u07qskyuhbmy id=9b893c8d0af3 buffer_size=5
+[RELAY] [2026-10-27T20:28:23] 127.0.0.1 "POST /atom HTTP/1.1" 201 -
+[RELAY] [2026-10-27T20:28:23] 127.0.0.1 "GET /info HTTP/1.1" 200 -
+[RELAY] [2026-10-27T20:28:23] 127.0.0.1 "GET /latest HTTP/1.1" 200 -
+  PASS  test_buffer_rotation
+[RELAY] [2026-10-27T20:28:23] runtime prune: 6 -> 5 atoms (max_atoms=5, max_hours=168)
+[RELAY] [2026-10-27T20:28:23] atom appended: p:u07qsuustfsh id=604e03a93d00 buffer_size=5
+[RELAY] [2026-10-27T20:28:23] 127.0.0.1 "POST /atom HTTP/1.1" 201 -
+[RELAY] [2026-10-27T20:28:23] 127.0.0.1 "GET /p/604e03a93d00454b4c12e39e1eb1b00dee01813ae32eeff8cd86e43f7262ca21 HTTP/1.1" 200 -
+  PASS  test_p_atom_id_known
+[RELAY] [2026-10-27T20:28:23] 127.0.0.1 "GET /p/0000000000000000000000000000000000000000000000000000000000000000 HTTP/1.1" 200 -
+  PASS  test_p_atom_id_unknown
+[RELAY] [2026-10-27T20:28:23] runtime prune: 6 -> 5 atoms (max_atoms=5, max_hours=168)
+[RELAY] [2026-10-27T20:28:23] atom appended: p:u07qjn4k2sus id=6b00d849ea39 buffer_size=5
+[RELAY] [2026-10-27T20:28:23] 127.0.0.1 "POST /atom HTTP/1.1" 201 -
+[RELAY] [2026-10-27T20:28:23] runtime prune: 6 -> 5 atoms (max_atoms=5, max_hours=168)
+[RELAY] [2026-10-27T20:28:23] atom appended: p:u07qjn4k2sus id=576bb44b54b3 buffer_size=5
+[RELAY] [2026-10-27T20:28:23] 127.0.0.1 "POST /atom HTTP/1.1" 201 -
+[RELAY] [2026-10-27T20:28:23] 127.0.0.1 "GET /p/u07qjn4k2sus HTTP/1.1" 200 -
+  PASS  test_p_canonical_bare
+[RELAY] [2026-10-27T20:28:23] runtime prune: 6 -> 5 atoms (max_atoms=5, max_hours=168)
+[RELAY] [2026-10-27T20:28:23] atom appended: p:u07qjh7k02zy id=ebb6d46ac8f6 buffer_size=5
+[RELAY] [2026-10-27T20:28:23] 127.0.0.1 "POST /atom HTTP/1.1" 201 -
+[RELAY] [2026-10-27T20:28:23] 127.0.0.1 "GET /p/p:u07qjh7k02zy HTTP/1.1" 200 -
+  PASS  test_p_canonical_with_prefix
+[RELAY] [2026-10-27T20:28:23] 127.0.0.1 "GET /p/u07q000000zz HTTP/1.1" 200 -
+  PASS  test_p_canonical_unknown
+[RELAY] [2026-10-27T20:28:23] 127.0.0.1 "OPTIONS /atom HTTP/1.1" 204 -
+  PASS  test_options_cors
+  PASS  test_rate_limiter_class_sliding_window
+[RELAY] [2026-10-27T20:28:23] runtime prune: 6 -> 5 atoms (max_atoms=5, max_hours=168)
+[RELAY] [2026-10-27T20:28:23] atom appended: p:u07qsuustfsh id=f820cb257c35 buffer_size=5
+[RELAY] [2026-10-27T20:28:23] 127.0.0.1 "POST /atom HTTP/1.1" 201 -
+  PASS  test_post_under_limit_accepted
+[RELAY] [2026-10-27T20:28:23] runtime prune: 6 -> 5 atoms (max_atoms=5, max_hours=168)
+[RELAY] [2026-10-27T20:28:23] atom appended: p:u07qsuustfsh id=b984b10f26b0 buffer_size=5
+[RELAY] [2026-10-27T20:28:23] 127.0.0.1 "POST /atom HTTP/1.1" 201 -
+[RELAY] [2026-10-27T20:28:23] runtime prune: 6 -> 5 atoms (max_atoms=5, max_hours=168)
+[RELAY] [2026-10-27T20:28:23] atom appended: p:u07qsuustfsh id=74bdfe360fd6 buffer_size=5
+[RELAY] [2026-10-27T20:28:23] 127.0.0.1 "POST /atom HTTP/1.1" 201 -
+[RELAY] [2026-10-27T20:28:23] 127.0.0.1 "POST /atom HTTP/1.1" 429 -
+[RELAY] [2026-10-27T20:28:23] 127.0.0.1 "POST /atom HTTP/1.1" 429 -
+  PASS  test_post_burst_over_limit_returns_429
+[RELAY] [2026-10-27T20:28:23] runtime prune: 6 -> 5 atoms (max_atoms=5, max_hours=168)
+[RELAY] [2026-10-27T20:28:23] atom appended: p:u07qsuustfsh id=1cb77fa71461 buffer_size=5
+[RELAY] [2026-10-27T20:28:23] 127.0.0.1 "POST /atom HTTP/1.1" 201 -
+[RELAY] [2026-10-27T20:28:23] 127.0.0.1 "POST /atom HTTP/1.1" 429 -
+[RELAY] [2026-10-27T20:28:23] runtime prune: 6 -> 5 atoms (max_atoms=5, max_hours=168)
+[RELAY] [2026-10-27T20:28:23] atom appended: p:u07qsuustfsh id=434031035e46 buffer_size=5
+[RELAY] [2026-10-27T20:28:23] 127.0.0.1 "POST /atom HTTP/1.1" 201 -
+  PASS  test_rate_limit_is_per_ip
+[RELAY] [2026-10-27T20:28:23] runtime prune: 6 -> 5 atoms (max_atoms=5, max_hours=168)
+[RELAY] [2026-10-27T20:28:23] atom appended: p:u07qsuustfsh id=216709a5b224 buffer_size=5
+[RELAY] [2026-10-27T20:28:23] 127.0.0.1 "POST /atom HTTP/1.1" 201 -
+[RELAY] [2026-10-27T20:28:23] 127.0.0.1 "POST /atom HTTP/1.1" 200 -
+  PASS  test_duplicate_behavior_unchanged_under_limit
+[RELAY] [2026-10-27T20:28:23] 127.0.0.1 "GET /health HTTP/1.1" 200 -
+[RELAY] [2026-10-27T20:28:23] 127.0.0.1 "GET /status HTTP/1.1" 200 -
+[RELAY] [2026-10-27T20:28:23] 127.0.0.1 "GET /node/info HTTP/1.1" 200 -
+[RELAY] [2026-10-27T20:28:23] 127.0.0.1 "GET /feed HTTP/1.1" 200 -
+[RELAY] [2026-10-27T20:28:23] 127.0.0.1 "GET /health HTTP/1.1" 200 -
+[RELAY] [2026-10-27T20:28:23] 127.0.0.1 "GET /status HTTP/1.1" 200 -
+[RELAY] [2026-10-27T20:28:23] 127.0.0.1 "GET /node/info HTTP/1.1" 200 -
+[RELAY] [2026-10-27T20:28:23] 127.0.0.1 "GET /feed HTTP/1.1" 200 -
+[RELAY] [2026-10-27T20:28:23] 127.0.0.1 "GET /health HTTP/1.1" 200 -
+[RELAY] [2026-10-27T20:28:23] 127.0.0.1 "GET /status HTTP/1.1" 200 -
+[RELAY] [2026-10-27T20:28:23] 127.0.0.1 "GET /node/info HTTP/1.1" 200 -
+[RELAY] [2026-10-27T20:28:23] 127.0.0.1 "GET /feed HTTP/1.1" 200 -
+[RELAY] [2026-10-27T20:28:23] 127.0.0.1 "GET /health HTTP/1.1" 200 -
+[RELAY] [2026-10-27T20:28:23] 127.0.0.1 "GET /status HTTP/1.1" 200 -
+[RELAY] [2026-10-27T20:28:23] 127.0.0.1 "GET /node/info HTTP/1.1" 200 -
+[RELAY] [2026-10-27T20:28:23] 127.0.0.1 "GET /feed HTTP/1.1" 200 -
+[RELAY] [2026-10-27T20:28:23] 127.0.0.1 "GET /health HTTP/1.1" 200 -
+[RELAY] [2026-10-27T20:28:23] 127.0.0.1 "GET /status HTTP/1.1" 200 -
+[RELAY] [2026-10-27T20:28:23] 127.0.0.1 "GET /node/info HTTP/1.1" 200 -
+[RELAY] [2026-10-27T20:28:23] 127.0.0.1 "GET /feed HTTP/1.1" 200 -
+  PASS  test_get_endpoints_not_rate_limited
+
+  57/57 tests passed

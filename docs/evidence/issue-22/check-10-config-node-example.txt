@@ -1,0 +1,2 @@
+$ python3 -m punkti_node --check-config --config node-config.example.yml
+Configuration valid

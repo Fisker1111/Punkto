@@ -1,0 +1,8 @@
+$ python3 -m unittest discover -s experimental/punkti-v0.6-mesh/tests
+................../home/hermes/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/tempfile.py:484: ResourceWarning: Implicitly cleaning up <HTTPError 400: 'Bad Request'>
+  _warnings.warn(self.warn_message, ResourceWarning)
+...................
+----------------------------------------------------------------------
+Ran 37 tests in 2.497s
+
+OK

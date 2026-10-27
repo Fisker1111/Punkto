@@ -1,0 +1,4 @@
+$ node pwa/test-punkti-static-e2e.mjs
+Error: playwright unavailable: Cannot find package 'playwright' imported from /home/hermes/.hermes/kanban/workspaces/t_3d146aba/punkto/pwa/test-punkti-static-e2e.mjs
+    at importPlaywright (file:///home/hermes/.hermes/kanban/workspaces/t_3d146aba/punkto/pwa/test-punkti-static-e2e.mjs:16:11)
+    at async main (file:///home/hermes/.hermes/kanban/workspaces/t_3d146aba/punkto/pwa/test-punkti-static-e2e.mjs:247:22)

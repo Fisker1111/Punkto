@@ -1,0 +1,2 @@
+docs/CODEX_TASK_22_STAGE5.md:151:   function deriveLegacyPunkto(h) { … return parsed ? `p:${parsed.xy}` : ''; }
+docs/CODEX_TASK_22_STAGE5.md:153:   Note this produces `p:<xy>` — a **2D geohash** wearing the `p:` prefix of a form

@@ -1,0 +1,2 @@
+$ docker --version
+/bin/bash: line 26: docker: command not found
