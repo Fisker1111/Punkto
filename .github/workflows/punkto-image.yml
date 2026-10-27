@@ -7,7 +7,39 @@ permissions:
   contents: read
   packages: write
 jobs:
+  browser-e2e:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      # The browser E2E spawns the Punkti node for the write-to-static round
+      # trip, so the node's Python dependencies must be present here.
+      - name: Install Punkti node Python dependencies
+        run: pip install -r node/requirements.txt
+      - name: Install pinned Playwright package
+        run: npm install --no-save playwright@1.64.1
+      - name: Install Chromium for pinned Playwright
+        run: npx playwright install --with-deps chromium
+      - name: Run browser static-first E2E
+        env:
+          PLAYWRIGHT_MODULE: file://${{ github.workspace }}/node_modules/playwright/index.mjs
+        run: node pwa/test-punkti-static-e2e.mjs
+      - name: Browser E2E gate summary
+        if: always()
+        run: |
+          echo "## Browser E2E gate" >> "$GITHUB_STEP_SUMMARY"
+          echo "- mode: hard gate (publish depends on this job)" >> "$GITHUB_STEP_SUMMARY"
+          echo "- playwright: 1.64.1" >> "$GITHUB_STEP_SUMMARY"
+          echo "- chromium install: npx playwright install --with-deps chromium" >> "$GITHUB_STEP_SUMMARY"
+
   image:
+    needs:
+      - browser-e2e
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -16,12 +48,14 @@ jobs:
           python-version: '3.12'
       - run: pip install -r node/requirements.txt requests
       - run: python -m unittest discover -s experimental/punkti-v0.6-mesh/tests
-      - run: python -m unittest punkti_node.test_node punkti_node.test_web
+      - run: python -m unittest punkti_node.test_node punkti_node.test_web punkti_node.test_publication
       - run: python experimental/punkti-v0.6-mesh/tests/measure.py
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - run: node pwa/test-punkti-client.mjs
+      - run: node pwa/test-punkti-vectors.mjs
+      - run: node pwa/test-punkti-publication.mjs
+      - run: node pwa/test-spatial-xy-z.mjs
       - run: node pwa/test-slice5.mjs
       - run: |
           for test in relay/test_*.py tools/test_*.py; do
@@ -30,7 +64,7 @@ jobs:
             rm -rf "$test_data"
           done
       - run: |
-          for module in pwa/*.js pwa/sync/*.js pwa/storage/*.js; do node --check "$module"; done
+          for module in pwa/*.js pwa/*/*.js; do node --check "$module"; done
           node --input-type=module --check < pwa/app.js
       - run: |
           cmp experimental/punkti-v0.6-mesh/src/carrier.py punkti_node/carrier.py
@@ -56,6 +90,7 @@ jobs:
             type=raw,value=latest,enable=${{ startsWith(github.ref, 'refs/tags/v') && !contains(github.ref_name, '-') }}
             type=raw,value=preview,enable=${{ github.event_name == 'workflow_dispatch' }}
       - uses: docker/build-push-action@v6
+        id: build
         with:
           context: .
           file: Dockerfile
@@ -66,3 +101,10 @@ jobs:
           build-args: |
             VERSION=${{ steps.meta.outputs.version }}
             REVISION=${{ github.sha }}
+      - name: Published digest
+        run: |
+          echo "## Publish gate status" >> "$GITHUB_STEP_SUMMARY"
+          echo "- browser E2E gate: required and passed (hard gate)" >> "$GITHUB_STEP_SUMMARY"
+          echo "## Published image digest" >> "$GITHUB_STEP_SUMMARY"
+          echo "- image: \`ghcr.io/fisker1111/punkto\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "- digest: \`${{ steps.build.outputs.digest }}\`" >> "$GITHUB_STEP_SUMMARY"
