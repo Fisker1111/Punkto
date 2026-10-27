@@ -1,7 +1,6 @@
 # Punkti 0.6 — normative static publication contract
 
-**Status:** Founder freeze-review candidate. **Not frozen.** No deployment, release tag or
-protocol freeze is authorized by this document.
+**Status:** **FROZEN — Punkti v0.6 Layer 3, Founder-approved 2026-10-27.** This freezes the publication contract together with the accepted v0.6 carrier (C/S/MID/R) and XY_Z spatial contract. It does not deploy a product or freeze any Layer-4 application semantics.
 
 **Source:** CEO-OS Issue #21. Supersedes the *experiment* profile in
 `experimental/punkti-v0.6-static/docs/SPEC.md` as a normative source. The experiment
@@ -23,6 +22,7 @@ spec — optional acceleration only, see §11).
 | 1 | Initial contract. |
 | 2 | Fixed two internal inconsistencies found by the implementing agent before any code was written: (a) the XY prefix-interval endpoints were degenerate (§8 step 3) — replaced by the explicit prefix-interval definition in §4.2; (b) the pack-membership rule contradicted the pack grouping rule for leaves with more than 256 records (§6) — replaced by a collective-union rule. No normative rule was weakened; §4.2 and §6 are now implementable as written. |
 | 3 | Clarifications after the second review pass: pack magic length corrected from 10 to **11** ASCII bytes (`PUNKTIPACK1`); pack entry order fixed to ascending `sha256`; shard `packs` list order fixed to ascending content address; index tree shape constrained (no empty subtree, no dangling shard, manifest index lists exactly the depth-2 prefixes that occur). |
+| 4 | Founder freeze decision: packs confirmed as an **optional standardized accelerator**; `~` confirmed as the reserved unanchored index key; publication frozen together with the v0.6 carrier and XY_Z contracts. |
 
 ---
 
@@ -78,7 +78,7 @@ A *publication* is a set of immutable objects plus exactly one mutable pointer.
 | **manifest** | no | SHA-256 of its exact bytes |
 | **shard** | no | SHA-256 of its exact bytes |
 | **record** | no | SHA-256 of its exact bytes (`R`) |
-| **pack** | no | SHA-256 of its exact bytes |
+| **pack** | no | SHA-256 of its exact bytes; **optional standardized accelerator** |
 
 Content address = lowercase hex, 64 characters, SHA-256 over the object's **exact
 bytes** (`SHA256(R)`, `SHA256(pack bytes)`, `SHA256(canonical JSON bytes)`).
@@ -314,7 +314,7 @@ A publisher MUST make every object durable **before** the root pointer can name
 it:
 
 1. write + `fsync` new/changed **record objects**;
-2. write + `fsync` new/changed **packs**;
+2. if the publisher emits the optional pack profile, write + `fsync` new/changed **packs**;
 3. write + `fsync` new/changed **shards** (leaves and interiors);
 4. write + `fsync` the new **manifest**;
 5. atomically replace the **root pointer**.
