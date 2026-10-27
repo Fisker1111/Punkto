@@ -1,30 +1,46 @@
-# Punkto — Docker Deployment
+# Punkto — Docker deployment (single-image)
 
 This directory contains reusable templates for running a Punkto node with Docker.
-Each node runs two containers managed by Docker Compose.
-
+The current reference architecture runs one combined container per node.
 
 ## Deployment model
 
 Punkto separates common software from node-local operation:
 
-- `pwa/` and `relay/` are common public code.
-- `deploy/` contains reusable templates and reference helpers; these files are
-  not live production truth.
-- `/config/punkto-node.yml` on each server is the node's personality.
-- `/data` on each server is the node's persistent memory.
-- `.env` and `secrets.env` are local overrides/secrets and must never be
-  committed.
+- `pwa/` and `punkti_node/` are common public code bundled into one runtime image.
+- `deploy/` contains reusable templates and reference helpers; production truth lives on each node.
+- `/config/punkto-node.yml` on each server is the node personality.
+- `/data` on each server is persistent node memory.
+- `.env` and `secrets.env` are local overrides/secrets and must never be committed.
 
-`punkto.xyz` is the reference deployment, not the whole system. The production
-configuration for `punkto.xyz` is maintained on the nodes by the operator. Public
-examples in Git should use documentation-safe placeholders such as
-`example.org`. Prefer `node1` and `node2` for new reference node names; `node1`
-and `node2` may appear as legacy/reference aliases in existing deploy history.
+`punkto.xyz` is the reference deployment, not the whole system. Public examples in Git should use safe placeholders such as `example.org`.
 
 See [`docs/punkto-node.md`](../docs/punkto-node.md) and
 [`docs/examples/punkto-node.example.yml`](../docs/examples/punkto-node.example.yml)
-for the common-code/config/data model and generic example config.
+for the common-code/config/data model and generic config.
+
+## Current architecture (reference truth)
+
+Each node runs one container:
+
+| Service | Image | Purpose |
+|---|---|---|
+| `app` | `ghcr.io/fisker1111/punkto@sha256:<digest>` | Combined runtime: serves PWA, serves static publication, validates/submits Punkti |
+
+Key properties:
+
+- **Single origin**: PWA, `/submit`, and `/publication/*` are served by the same node origin.
+- **Static-first reads**: browser reads publication objects from `/publication` (no dynamic read API required).
+- **Persistent volume**: `/data` stores both node state and publication output and survives restarts.
+- **Digest-pinned deploys**: deployment must use image digests, never floating `:latest` for production.
+
+## Canonical CI workflow
+
+The only canonical image workflow is:
+
+- `.github/workflows/punkto-image.yml`
+
+It runs protocol/vector tests and browser static-E2E checks before publishing the combined image and records the published image digest in the workflow summary.
 
 ## Related deployment docs
 
@@ -43,37 +59,14 @@ Once a node is running, these documents describe how to ship updates safely:
 
 ```
 deploy/
-  docker-compose.yml     — service definitions (web + relay)
-  .env.example           — shared environment variable template
+  docker-compose.yml     — single-service compose (combined Punkto image)
+  .env.example           — legacy env template (historical; prefer digest pin via PUNKTO_IMAGE)
   node1/
-    Caddyfile            — Caddy config for node1 (punkto.xyz, node1, www)
+    Caddyfile            — node1 reverse-proxy/TLS reference (historical Caddy-side config)
   node2/
-    Caddyfile            — Caddy config for node2 (node2.punkto.xyz)
+    Caddyfile            — node2 reverse-proxy/TLS reference (historical Caddy-side config)
     .env.example         — node2-specific env template
 ```
-
-## How it works
-
-Each node runs two containers:
-
-| Container | Image | Purpose |
-|---|---|---|
-| `web` | `ghcr.io/fisker1111/punkto-web` | Caddy — serves static PWA files + proxies relay API |
-| `relay` | `ghcr.io/fisker1111/punkto-relay` | Python relay — atom store, peer sync |
-
-- **Caddy** handles TLS certificates automatically via Let's Encrypt — no certbot or cron needed.
-- **Relay data** persists in a named Docker volume (`punkto_relay_data`) across upgrades.
-- **Configuration** is supplied via a `.env` file and a `Caddyfile` on the server (not baked into the image).
-
-## Live nodes
-
-| Node | Domains | Location |
-|---|---|---|
-| node1 | `punkto.xyz`, `www.punkto.xyz` | Reference primary node |
-| node2 | operator-managed secondary hostname | Reference secondary node |
-
-`node1`, `node1`, and `node2` are legacy/reference aliases that may remain in
-existing files or DNS history. Prefer `node1`/`node2` in new docs and examples.
 
 ## First deploy on a new node
 
@@ -84,126 +77,87 @@ curl -fsSL https://get.docker.com | sh
 # 2. Create project folder and copy deploy files
 mkdir -p ~/punkto
 scp deploy/docker-compose.yml user@your-server:~/punkto/
-scp deploy/node1/Caddyfile user@your-server:~/punkto/Caddyfile  # or node2/Caddyfile
+scp deploy/.env.example user@your-server:~/punkto/.env.example
 
-# 3. SSH in and create .env
+# 3. SSH in and configure digest + node config
 ssh user@your-server
 cd ~/punkto
-cat > .env << EOF
-PUNKTO_VERSION=latest
-PUNKTO_NODE_NAME=your-node-name
-PUNKTO_PEERS=https://other-node.example.com
-EOF
+cp .env.example .env
+cat > .env << 'ENVEOF'
+PUNKTO_IMAGE=ghcr.io/fisker1111/punkto@sha256:<reviewed-digest>
+ENVEOF
 
-# 4. Start
-docker compose up -d
+# 4. Provide node config and data dir
+mkdir -p data
+cp /path/to/your/punkto-node.yml config.yml
 
-# 5. Verify (from any internet-connected machine)
-bash deploy/verify.sh your-domain.example.com "v0.46-hard-marker-YYYY-MM-DD-1"
-# See ../DEPLOYMENT_SMOKE_TESTS.md for full pass/fail criteria
+# 5. Start
+docker compose pull
+docker compose up -d --force-recreate
+
+# 6. Verify (from any internet-connected machine)
+bash deploy/verify.sh your-domain.example.com "hard-marker-YYYY-MM-DD-N"
 ```
 
 ## Upgrade to a new version
 
 ```bash
-# Pull latest images and restart
-docker compose pull && docker compose up -d
-
-# Or pin to a specific version — edit .env: PUNKTO_VERSION=v0.46
-docker compose up -d
+# 1) Edit .env and set PUNKTO_IMAGE to the new reviewed digest
+# 2) Pull + recreate
+docker compose pull && docker compose up -d --force-recreate
 ```
 
-## Rollback
+## Rollback (digest-pinned)
 
 ```bash
-# Edit .env: PUNKTO_VERSION=v0.44
-docker compose up -d
+# 1) Edit .env and set PUNKTO_IMAGE to the previous reviewed digest
+# 2) Pull + recreate
+docker compose pull && docker compose up -d --force-recreate
 ```
+
+Rollback is always an explicit digest change, not a floating tag.
 
 ## Check node health
 
 ```bash
 curl https://your-domain.example.com/health
-curl https://your-domain.example.com/info
+curl https://your-domain.example.com/node/info
+curl https://your-domain.example.com/publication/root.json
 ```
 
 ## Data persistence
 
-Atoms are stored in the `punkto_relay_data` Docker volume and survive container upgrades.
+Node state and publication data are persisted in `./data` mounted to `/data`.
+The same directory survives container restarts/upgrades.
 
 ```bash
-# List volumes
-docker volume ls | grep punkto
+# Inspect local persistent data directory
+ls -la ./data
 
-# Backup atoms before a major upgrade
-docker run --rm -v punkto_relay_data:/data -v $(pwd):/backup \
-  alpine tar czf /backup/atoms-backup.tar.gz /data
+# Backup persistent data before major upgrades
+tar czf punkto-data-backup.tar.gz data
 
 # Restore
-docker run --rm -v punkto_relay_data:/data -v $(pwd):/backup \
-  alpine tar xzf /backup/atoms-backup.tar.gz -C /
+mkdir -p data
+tar xzf punkto-data-backup.tar.gz
 ```
-
-## Configuration reference
-
-Runtime environment overrides live in `.env` on the server. The broader node
-configuration model is `/config/punkto-node.yml`; see the generic example in
-`docs/examples/punkto-node.example.yml`.
-
-| Variable | Default | Description |
-|---|---|---|
-| `PUNKTO_VERSION` | `latest` | Docker image tag to run |
-| `PUNKTO_NODE_NAME` | `punkto-node` | Human-readable node name |
-| `PUNKTO_PEERS` | _(empty)_ | Comma-separated peer relay URLs |
-| `PUNKTO_BUFFER_ATOMS` | `10000` | Max atoms in rolling buffer |
-| `PUNKTO_BUFFER_HOURS` | `168` | Max atom age in hours (7 days) |
-| `PUNKTO_SYNC_INTERVAL` | `30` | Peer sync interval in seconds |
-
-## Building images locally
-
-```bash
-# Build web image (Caddy + static PWA)
-docker build -t punkto-web ./pwa
-
-# Build relay image (Python)
-docker build -t punkto-relay ./relay
-
-# Test locally
-docker compose -f deploy/docker-compose.yml up
-```
-
-## GitHub Actions — automated builds
-
-Images are built and pushed automatically by `.github/workflows/docker.yml`:
-
-- **Push to `main`** → builds and pushes `:latest`
-- **Push tag `v0.46`** → builds and pushes `:v0.46` and `:latest`
-
-Images are published to:
-- `ghcr.io/fisker1111/punkto-web`
-- `ghcr.io/fisker1111/punkto-relay`
-
-No secrets need to be configured — the workflow uses `GITHUB_TOKEN` automatically.
 
 ## Useful commands
 
 ```bash
-# View running containers
+# View running services
 docker compose ps
 
 # Follow logs
-docker compose logs -f
+docker compose logs -f app
 
-# Relay logs only
-docker compose logs -f relay
+# Recreate from current pinned digest
+docker compose up -d --force-recreate
 
-# Restart relay without downtime
-docker compose restart relay
-
-# Open relay shell (debug)
-docker compose exec relay sh
+# Open shell in container
+docker compose exec app sh
 ```
 
-### Cache and CDN Policy
+### Cache and CDN policy
 
-See [docs/cache-cloudflare.md](../docs/cache-cloudflare.md) for the cache and Cloudflare/CDN policy.
+See [docs/cache-cloudflare.md](../docs/cache-cloudflare.md) for Cloudflare/CDN policy.

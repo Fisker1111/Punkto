@@ -60,17 +60,19 @@ Build version and revision come from image build arguments, not operator identit
 | --- | --- |
 | `/`, `/index.html`, JS, CSS, assets | Bundled static PWA, GET/HEAD |
 | `/p/<id>` | PWA exact link, with SPA fallback enabled |
-| `/api/hello`, `/api/pull`, `/api/push`, `/api/sync` | Same protocol operations under deployment alias |
+| `/api/hello`, `/api/pull`, `/api/push`, `/api/sync` | Native mesh compatibility aliases (node-to-node only) |
 | `/api/health`, `/api/ready`, `/api/node/info` | Operational aliases |
+| `/submit` | Browser publish endpoint (validate→dedupe→persist→republish) |
+| `/publication/root.json` + immutable objects | Static publication read path |
 | `/hello`, `/pull`, `/push`, `/sync` | Unchanged native peer routes |
 | `/health`, `/ready`, `/node/info` | Native operational routes and healthcheck |
 
 Unknown `/api` paths never serve HTML. Static paths stay confined to the web root.
 HTML, JavaScript and JSON use no-store; images/fonts cache for one hour.
-The PWA publishes signed L4 JSON inside signed L3 envelopes via `/api/push`, and
-reads all cursor pages from `/api/pull`. It verifies envelopes and L4 signatures,
-skipping invalid/foreign payloads with a client counter. There are no browser
-seed nodes or legacy relay endpoints. Publishing requires an existing identity.
+The PWA reads from `/publication` through static immutable objects and publishes
+through `/submit`. Browser reads do not require `/pull`, `/sync`, or `/push`.
+There are no browser seed nodes or legacy relay endpoints. Publishing requires
+an existing identity.
 The new `punkto-v06` IndexedDB cache isolates old relay atoms; localStorage
 identity/recovery keys remain intact. Existing relay data is not migrated.
 
