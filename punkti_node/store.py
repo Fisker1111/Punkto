@@ -8,7 +8,9 @@ import tempfile
 import threading
 import uuid
 from . import VERSION
-from .mesh import Node
+from .carrier import RECORD_LIMIT, State, unb64, validate
+from .mesh import Node, digest, wire
+from .publication import Publisher, Reader
 from .spatial import Subscription
 
 LOG = logging.getLogger(__name__)
@@ -131,6 +133,9 @@ class PersistentNode(Node):
         self.durable = DurableStore(config['storage']['data_path'])
         super().__init__([Subscription(**s) for s in config['subscriptions']],
                          config['network']['peers'], self.durable.meta['epoch'])
+        self.publication = None
+        self.publication_reader = None
+        self.publication_state = None
         self.replaying = True
         try:
             # Replay historical admissions independently of today's subscriptions.
@@ -140,6 +145,11 @@ class PersistentNode(Node):
             self.subscriptions = subscriptions
             self.replaying = False
             self.restore_cursors()
+            publication_config = self.config['publication']
+            if publication_config['enabled']:
+                self.publication = Publisher(publication_config['path'], packs=publication_config['packs'])
+                self.publication_reader = Reader(packs=publication_config['packs'])
+                self.publication_state = self.republish_publication()
         except Exception:
             self.durable.close()
             raise
@@ -193,7 +203,75 @@ class PersistentNode(Node):
                     log_lines=self.durable.log_lines, corrupt_lines=self.durable.corrupt_lines,
                     duplicate_lines=self.durable.duplicate_lines)
 
-    def special_route(self, method, path, query):
+    def publication_records(self):
+        """Records that are publishable under the ``punkti/pub/0.6`` profile.
+
+        The static publication indexes records by their ``punkti/0.6`` MID, so a
+        record from another namespace (an opaque future version) has no
+        namespace-qualified address to publish and is carried by the node only.
+        The publisher stays strict; the node filters here.
+        """
+        with self.lock:
+            raws = [entry.raw for entry in self.store.values()]
+            raws += [entry.raw for entry in self.candidates.values()]
+        publishable = []
+        for raw in raws:
+            observation = validate(raw)
+            if observation.state in (State.VALID, State.ALGORITHM, State.KEY):
+                publishable.append(raw)
+        return publishable
+
+    def republish_publication(self):
+        if not self.publication:
+            return None
+        self.publication_state = self.publication.publish(self.publication_records())
+        return self.publication_state
+
+    def replicate_publication(self, peer_base):
+        if not self.publication_reader:
+            raise ValueError('publication disabled')
+        with self.lock:
+            self.publication_reader.store.valid.clear()
+            self.publication_reader.store.candidates.clear()
+            self.publication_reader.read_publication(peer_base)
+            for raw in list(self.publication_reader.store.valid.values()) + list(self.publication_reader.store.candidates.values()):
+                self.admit(wire(raw))
+            return self.republish_publication()
+
+    def submit_records(self, records):
+        if not isinstance(records, list) or not records:
+            raise ValueError('records list required')
+        results = []
+        for item in records:
+            if not isinstance(item, dict):
+                raise ValueError('record wrapper required')
+            raw = unb64(item['record'])
+            if len(raw) > RECORD_LIMIT:
+                raise ValueError('record limit')
+            sha = digest(raw)
+            if item['sha256'] != sha:
+                raise ValueError('transport digest mismatch')
+            observation = validate(raw)
+            if observation.state in (State.STRUCTURAL, State.PROVENANCE):
+                raise ValueError(observation.state.value)
+            if item['address'] != observation.address:
+                raise ValueError('address mismatch')
+            admitted = self.admit(item)
+            results.append(dict(
+                address=observation.address,
+                sha256=sha,
+                state=admitted['state'],
+                admitted=admitted['admitted'],
+                duplicate=admitted.get('reason') == 'duplicate',
+            ))
+        publication = self.republish_publication()
+        return dict(results=results,
+                    head=publication['head'] if publication else None,
+                    seq=publication['seq'] if publication else None)
+
+    def special_route(self, method, path, query, body=None):
+        if method == 'POST' and path == '/submit' and body is not None:
+            return Response(**self.submit_records(body['records']))
         if method != 'GET':
             return None
         version = os.environ.get('PUNKTO_BUILD_VERSION') or VERSION

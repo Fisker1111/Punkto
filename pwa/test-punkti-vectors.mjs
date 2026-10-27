@@ -274,8 +274,10 @@ assert.equal(subscribed('u3bu_0', [{ xy_hi: 'g' }, { xy_lo: 'u' }]), true);
 spatialAssertions++;
 
 const publicationVectors = readJson('./punkti/test-vectors/publication-vectors.json');
-assert.equal(publicationVectors.status, 'stage-2');
-assert.deepEqual(publicationVectors.vectors, {});
+assert.equal(publicationVectors.profile, 'punkti/pub/0.6');
+assert.equal(typeof publicationVectors.fixtures, 'object');
+assert(Array.isArray(publicationVectors.vectors));
+assert.equal(publicationVectors.vectors.length, 9);
 
 console.log(`XY_Z: ${spatialAssertions} assertions passed; carrier: ${fixtureEntries.length} fixtures byte-identical; JS==Python: OK`);
 console.log(`carrier assertions: ${carrierAssertions}`);

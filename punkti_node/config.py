@@ -9,6 +9,7 @@ from .spatial import Subscription
 
 DEFAULTS = {
     'web': {'enabled': True, 'root': '/srv/pwa', 'spa_fallback': False},
+    'publication': {'enabled': True, 'path': None, 'packs': False, 'serve_prefix': '/publication'},
     'node': {'name': 'punkti-node', 'public_url': '', 'description': '', 'operator_contact': ''},
     'network': {'listen_host': '0.0.0.0', 'listen_port': 8000, 'advertise_url': '',
                 'peers': [], 'sync_interval_seconds': 30},
@@ -25,6 +26,10 @@ ENV = {
     'PUNKTO_DATA_DIR': ('storage', 'data_path', str),
     'PUNKTO_SYNC_INTERVAL': ('network', 'sync_interval_seconds', float),
     'PUNKTO_LOG_LEVEL': ('logging', 'level', str),
+    'PUNKTO_PUBLICATION_ENABLED': ('publication', 'enabled', lambda s: s.lower() not in ('0', 'false', 'no', 'off')),
+    'PUNKTO_PUBLICATION_PATH': ('publication', 'path', str),
+    'PUNKTO_PUBLICATION_PACKS': ('publication', 'packs', lambda s: s.lower() not in ('0', 'false', 'no', 'off')),
+    'PUNKTO_PUBLICATION_SERVE_PREFIX': ('publication', 'serve_prefix', str),
 }
 
 
@@ -65,6 +70,22 @@ def load_config(path=None, environ=None):
             raise ValueError('web.root must be an absolute path')
         if not Path(web['root']).is_dir():
             raise ValueError('web.root directory does not exist: ' + web['root'])
+
+    publication = config['publication']
+    if type(publication['enabled']) is not bool or type(publication['packs']) is not bool:
+        raise ValueError('publication.enabled and publication.packs must be booleans')
+    if publication['path'] in (None, ''):
+        publication['path'] = str(Path(config['storage']['data_path']) / 'publication')
+    if not isinstance(publication['path'], str):
+        raise ValueError('publication.path must be a string')
+    if not Path(publication['path']).is_absolute():
+        raise ValueError('publication.path must be an absolute path')
+    if not isinstance(publication['serve_prefix'], str) or not publication['serve_prefix'].startswith('/'):
+        raise ValueError('publication.serve_prefix must start with /')
+    if publication['serve_prefix'] != '/' and publication['serve_prefix'].endswith('/'):
+        raise ValueError('publication.serve_prefix must not end with /')
+    if any(part in ('', '.', '..') for part in publication['serve_prefix'].split('/')[1:]):
+        raise ValueError('publication.serve_prefix must be a clean path prefix')
     net = config['network']
     if not net['listen_host'] or any(c.isspace() for c in net['listen_host']):
         raise ValueError('network.listen_host must be a host')

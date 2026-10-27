@@ -28,3 +28,9 @@ web:
   enabled: false
   root: /srv/pwa
   spa_fallback: false
+
+publication:
+  enabled: true
+  path: /data/publication
+  packs: false
+  serve_prefix: /publication
