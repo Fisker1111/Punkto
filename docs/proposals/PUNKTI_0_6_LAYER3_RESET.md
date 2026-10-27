@@ -209,3 +209,20 @@ L3 cannot establish real-world identity, truthful location or time, trustworthin
 ## Guiding principle line
 
 A Punkti L3 node carries atoms it does not understand; provenance is self-certifying, identity is an application.
+
+
+## Founder-accepted replication architecture (2026-10-27)
+
+Punkti 0.6 adopts **static-first publication as the normative correctness and replication path**.
+
+> Nodes validate/write Punkti. Ordinary HTTP serves a static Punkti publication. Other nodes replicate by reading, independently verifying, deduplicating and republishing it.
+
+A serving peer MAY be only a publication base URL. Replication correctness MUST NOT require a live Punkti daemon, peer session, reciprocal callback, dynamic range-query API, PUSH endpoint or notification channel.
+
+Dynamic PUSH / Range PULL / notifications / sessions MAY remain available as optional performance accelerators, but are not required for conformance.
+
+The accepted publication model is a tiny mutable discovery root pointing to immutable content-addressed manifests/indexes/replication packs and canonical individual R objects. Exact record variants remain distinguishable by SHA256(R); logical atom identity remains MID. Static spatial discovery uses the accepted human-readable `h=<xy>_<z>` model, with XY prefix locality and independent exact-decimal Z filtering.
+
+The first experiment is preserved under `experimental/punkti-v0.6-static/` and demonstrated daemon-free replication through a plain static HTTP server, two-/three-node convergence, hostile/failure handling, and a strong request-count advantage for immutable replication packs.
+
+This section records the accepted architecture direction only. Punkti 0.6 is **not frozen** until the final normative publication specification and deterministic vectors are Founder-approved.
