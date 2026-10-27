@@ -12,8 +12,8 @@ network:
   peers: [] # Add mutually configured compatible draft Mesh origins when available.
   sync_interval_seconds: 30
 subscriptions:
-  - h_lo: null
-    h_hi: null
+  - xy_lo: null
+    xy_hi: null
     z_min: null
     z_max: null
 storage:

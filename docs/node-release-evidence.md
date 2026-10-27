@@ -40,7 +40,7 @@ Four containers from the identical image (`sha256:15209a2d…`), on node1:
 
 - `punkti-a` — `node-a`, peer `http://punkti-b:8000`
 - `punkti-b` — `node-b`, peer `http://punkti-a:8000`
-- `punkti-c` — narrow subscription `h_lo: "z"`, peer `punkti-a`
+- `punkti-c` — narrow subscription `xy_lo: "z"`, peer `punkti-a`
 - `punkti-xyz` — `punkto.xyz` sample config, host-local port 18088
 
 `punkti-a`, `punkti-b` and `punkti-c` ran on a Docker `--internal` network with no

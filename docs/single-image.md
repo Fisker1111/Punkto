@@ -40,8 +40,8 @@ subscriptions specify the protocol's spatial admission policy.
 | `network.peers` | `[]`; explicit mesh peer origins |
 | `network.sync_interval_seconds` | `30` |
 | `subscriptions` | `[{}]` accepts all; `[]` accepts nothing |
-| `subscriptions[].h_lo`, `h_hi` | null; inclusive/exclusive spatial bounds |
-| `subscriptions[].z_min`, `z_max` | null; inclusive/exclusive altitude metres |
+| `subscriptions[].xy_lo`, `xy_hi` | null; inclusive/exclusive XY prefix bounds |
+| `subscriptions[].z_min`, `z_max` | null; inclusive/exclusive canonical decimal Z bounds |
 | `storage.data_path` | `/data`, one writer per directory |
 | `logging.level` | `info`; debug, info, warning, error |
 | `branding.display_name` | `Punkti Node`; public UI/about label |

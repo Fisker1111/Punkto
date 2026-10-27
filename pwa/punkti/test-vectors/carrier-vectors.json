@@ -1,0 +1,870 @@
+{
+  "seed_hex": "623d095ee124c3c8270c69bdfaa98f0930527f7cc0b4140d05afd3cb5bd6ba7d",
+  "seed_literal": "punkti-0.6-freeze-vectors",
+  "fixtures": {
+    "canonical": {
+      "C": "0000000a70756e6b74692f302e360000000d313730303030303030303030300000000f7330303030303030303030305f3233000000236f706171756520667265657a65207061796c6f6164200020e4b896e7958c20f09f8c8d0000000765643235353139000000209fdc14a7085469ce9113511a2033acf5593d6e9cdab18cf2770b5888044f1a66000000020000000e756e6b6e6f776e2f613a3030666600000013756e7265636f676e697a65642fe585b3e7b3bb0000000e6675747572652f76393a61626364000000000000000300ff00",
+      "MID": "82444945204576099501248b1a615c1c841b44981ae8e8bd1f89eb4e093f73ba",
+      "R": "AAAA0gAAAApwdW5rdGkvMC42AAAADTE3MDAwMDAwMDAwMDAAAAAPczAwMDAwMDAwMDAwXzIzAAAAI29wYXF1ZSBmcmVlemUgcGF5bG9hZCAAIOS4lueVjCDwn4yNAAAAB2VkMjU1MTkAAAAgn9wUpwhUac6RE1EaIDOs9Vk9bpzasYzydwtYiARPGmYAAAACAAAADnVua25vd24vYTowMGZmAAAAE3VucmVjb2duaXplZC/lhbPns7sAAAAOZnV0dXJlL3Y5OmFiY2QAAAAAAAAAAwD/AAAAAECRFUq9ar2aYWpQNHl4ezXHk5ua/1bLrlkEocLtrQKEpq4Wq/FGlWi1jI92O/YegH2v+neF03YqD4kT/EpuIswF",
+      "S": "50554e4b54492d4c332d5349474e000000000a70756e6b74692f302e360000000d313730303030303030303030300000000f7330303030303030303030305f3233000000236f706171756520667265657a65207061796c6f6164200020e4b896e7958c20f09f8c8d0000000765643235353139000000209fdc14a7085469ce9113511a2033acf5593d6e9cdab18cf2770b5888044f1a66000000020000000e756e6b6e6f776e2f613a3030666600000013756e7265636f676e697a65642fe585b3e7b3bb0000000e6675747572652f76393a61626364000000000000000300ff00",
+      "address": "punkti/0.6:82444945204576099501248b1a615c1c841b44981ae8e8bd1f89eb4e093f73ba",
+      "atom": {
+        "alg": "ed25519",
+        "ext": "AP8A",
+        "h": "s00000000000_23",
+        "pk": "n9wUpwhUac6RE1EaIDOs9Vk9bpzasYzydwtYiARPGmY=",
+        "refs": [
+          {
+            "rel": "unrecognized/关系",
+            "target": "unknown/a:00ff"
+          },
+          {
+            "rel": "",
+            "target": "future/v9:abcd"
+          }
+        ],
+        "sig": "kRVKvWq9mmFqUDR5eHs1x5Obmv9Wy65ZBKHC7a0ChKauFqvxRpVotYyPdjv2HoB9r/p3hdN2Kg+JE/xKbiLMBQ==",
+        "t": 1700000000000,
+        "v": "punkti/0.6",
+        "x": "opaque freeze payload \u0000 世界 🌍"
+      },
+      "sha256_R": "53388006f408fd3c04aaab96e52357d41c4003a594ce68f1fc91a31b89ac0762",
+      "sig": "kRVKvWq9mmFqUDR5eHs1x5Obmv9Wy65ZBKHC7a0ChKauFqvxRpVotYyPdjv2HoB9r/p3hdN2Kg+JE/xKbiLMBQ==",
+      "spec": {
+        "alg": "ed25519",
+        "ext": "AP8A",
+        "h": "s00000000000_23",
+        "refs": [
+          {
+            "rel": "unrecognized/关系",
+            "target": "unknown/a:00ff"
+          },
+          {
+            "rel": "",
+            "target": "future/v9:abcd"
+          }
+        ],
+        "seed": "punkti-0.6-freeze-vectors",
+        "t": 1700000000000,
+        "x": "opaque freeze payload \u0000 世界 🌍"
+      },
+      "state": "VALID"
+    },
+    "decimal": {
+      "C": "0000000a70756e6b74692f302e360000000d313730303030303030303030300000001175336275747a376b39715f32332e303235000000236f706171756520667265657a65207061796c6f6164200020e4b896e7958c20f09f8c8d0000000765643235353139000000209fdc14a7085469ce9113511a2033acf5593d6e9cdab18cf2770b5888044f1a66000000020000000e756e6b6e6f776e2f613a3030666600000013756e7265636f676e697a65642fe585b3e7b3bb0000000e6675747572652f76393a61626364000000000000000300ff00",
+      "MID": "86cec2a65c1e4bec34d5e1cc2c8ba0ffd423b235d51a1def994db432be51fbd6",
+      "R": "AAAA1AAAAApwdW5rdGkvMC42AAAADTE3MDAwMDAwMDAwMDAAAAARdTNidXR6N2s5cV8yMy4wMjUAAAAjb3BhcXVlIGZyZWV6ZSBwYXlsb2FkIAAg5LiW55WMIPCfjI0AAAAHZWQyNTUxOQAAACCf3BSnCFRpzpETURogM6z1WT1unNqxjPJ3C1iIBE8aZgAAAAIAAAAOdW5rbm93bi9hOjAwZmYAAAATdW5yZWNvZ25pemVkL+WFs+ezuwAAAA5mdXR1cmUvdjk6YWJjZAAAAAAAAAADAP8AAAAAQJ8bz1e3o50+8IP22k+Mv5024FFL+T8GKybRVmfDY41QxiRx5d2C0H5AGRtp3OWRbNad3FHw4AW5Ht7DQdOOQgg=",
+      "S": "50554e4b54492d4c332d5349474e000000000a70756e6b74692f302e360000000d313730303030303030303030300000001175336275747a376b39715f32332e303235000000236f706171756520667265657a65207061796c6f6164200020e4b896e7958c20f09f8c8d0000000765643235353139000000209fdc14a7085469ce9113511a2033acf5593d6e9cdab18cf2770b5888044f1a66000000020000000e756e6b6e6f776e2f613a3030666600000013756e7265636f676e697a65642fe585b3e7b3bb0000000e6675747572652f76393a61626364000000000000000300ff00",
+      "address": "punkti/0.6:86cec2a65c1e4bec34d5e1cc2c8ba0ffd423b235d51a1def994db432be51fbd6",
+      "atom": {
+        "alg": "ed25519",
+        "ext": "AP8A",
+        "h": "u3butz7k9q_23.025",
+        "pk": "n9wUpwhUac6RE1EaIDOs9Vk9bpzasYzydwtYiARPGmY=",
+        "refs": [
+          {
+            "rel": "unrecognized/关系",
+            "target": "unknown/a:00ff"
+          },
+          {
+            "rel": "",
+            "target": "future/v9:abcd"
+          }
+        ],
+        "sig": "nxvPV7ejnT7wg/baT4y/nTbgUUv5PwYrJtFWZ8NjjVDGJHHl3YLQfkAZG2nc5ZFs1p3cUfDgBbke3sNB045CCA==",
+        "t": 1700000000000,
+        "v": "punkti/0.6",
+        "x": "opaque freeze payload \u0000 世界 🌍"
+      },
+      "sha256_R": "b0269c0aa91725d23f620814b4e9f7a00c22ef55fbd53fef923da6db15b36a04",
+      "sig": "nxvPV7ejnT7wg/baT4y/nTbgUUv5PwYrJtFWZ8NjjVDGJHHl3YLQfkAZG2nc5ZFs1p3cUfDgBbke3sNB045CCA==",
+      "spec": {
+        "alg": "ed25519",
+        "ext": "AP8A",
+        "h": "u3butz7k9q_23.025",
+        "refs": [
+          {
+            "rel": "unrecognized/关系",
+            "target": "unknown/a:00ff"
+          },
+          {
+            "rel": "",
+            "target": "future/v9:abcd"
+          }
+        ],
+        "seed": "punkti-0.6-freeze-vectors",
+        "t": 1700000000000,
+        "x": "opaque freeze payload \u0000 世界 🌍"
+      },
+      "state": "VALID"
+    },
+    "height23": {
+      "C": "0000000a70756e6b74692f302e360000000d313730303030303030303030300000000d75336275747a376b39715f3233000000236f706171756520667265657a65207061796c6f6164200020e4b896e7958c20f09f8c8d0000000765643235353139000000209fdc14a7085469ce9113511a2033acf5593d6e9cdab18cf2770b5888044f1a66000000020000000e756e6b6e6f776e2f613a3030666600000013756e7265636f676e697a65642fe585b3e7b3bb0000000e6675747572652f76393a61626364000000000000000300ff00",
+      "MID": "98f2628a42b6c0fe197c9a60025526185c6b74f668137cbd36d4526db5b839ea",
+      "R": "AAAA0AAAAApwdW5rdGkvMC42AAAADTE3MDAwMDAwMDAwMDAAAAANdTNidXR6N2s5cV8yMwAAACNvcGFxdWUgZnJlZXplIHBheWxvYWQgACDkuJbnlYwg8J+MjQAAAAdlZDI1NTE5AAAAIJ/cFKcIVGnOkRNRGiAzrPVZPW6c2rGM8ncLWIgETxpmAAAAAgAAAA51bmtub3duL2E6MDBmZgAAABN1bnJlY29nbml6ZWQv5YWz57O7AAAADmZ1dHVyZS92OTphYmNkAAAAAAAAAAMA/wAAAABAne9StIIn2rLI6XNofHkj48ElHQb0a5Fcb4HTbgv6cXng9eH+/THaRmgKQIYu3jnW4wej8opXW16Gg4HXlsjZCQ==",
+      "S": "50554e4b54492d4c332d5349474e000000000a70756e6b74692f302e360000000d313730303030303030303030300000000d75336275747a376b39715f3233000000236f706171756520667265657a65207061796c6f6164200020e4b896e7958c20f09f8c8d0000000765643235353139000000209fdc14a7085469ce9113511a2033acf5593d6e9cdab18cf2770b5888044f1a66000000020000000e756e6b6e6f776e2f613a3030666600000013756e7265636f676e697a65642fe585b3e7b3bb0000000e6675747572652f76393a61626364000000000000000300ff00",
+      "address": "punkti/0.6:98f2628a42b6c0fe197c9a60025526185c6b74f668137cbd36d4526db5b839ea",
+      "atom": {
+        "alg": "ed25519",
+        "ext": "AP8A",
+        "h": "u3butz7k9q_23",
+        "pk": "n9wUpwhUac6RE1EaIDOs9Vk9bpzasYzydwtYiARPGmY=",
+        "refs": [
+          {
+            "rel": "unrecognized/关系",
+            "target": "unknown/a:00ff"
+          },
+          {
+            "rel": "",
+            "target": "future/v9:abcd"
+          }
+        ],
+        "sig": "ne9StIIn2rLI6XNofHkj48ElHQb0a5Fcb4HTbgv6cXng9eH+/THaRmgKQIYu3jnW4wej8opXW16Gg4HXlsjZCQ==",
+        "t": 1700000000000,
+        "v": "punkti/0.6",
+        "x": "opaque freeze payload \u0000 世界 🌍"
+      },
+      "sha256_R": "7d3d69942586b8ed0d38ef9cd5df24a3053950f930a108cb4242f9c4363f7b30",
+      "sig": "ne9StIIn2rLI6XNofHkj48ElHQb0a5Fcb4HTbgv6cXng9eH+/THaRmgKQIYu3jnW4wej8opXW16Gg4HXlsjZCQ==",
+      "spec": {
+        "alg": "ed25519",
+        "ext": "AP8A",
+        "h": "u3butz7k9q_23",
+        "refs": [
+          {
+            "rel": "unrecognized/关系",
+            "target": "unknown/a:00ff"
+          },
+          {
+            "rel": "",
+            "target": "future/v9:abcd"
+          }
+        ],
+        "seed": "punkti-0.6-freeze-vectors",
+        "t": 1700000000000,
+        "x": "opaque freeze payload \u0000 世界 🌍"
+      },
+      "state": "VALID"
+    },
+    "negative": {
+      "C": "0000000a70756e6b74692f302e360000000d313730303030303030303030300000000e75336275747a376b39715f2d3138000000236f706171756520667265657a65207061796c6f6164200020e4b896e7958c20f09f8c8d0000000765643235353139000000209fdc14a7085469ce9113511a2033acf5593d6e9cdab18cf2770b5888044f1a66000000020000000e756e6b6e6f776e2f613a3030666600000013756e7265636f676e697a65642fe585b3e7b3bb0000000e6675747572652f76393a61626364000000000000000300ff00",
+      "MID": "c9185899abc56ac3acf3b6b0629c40c1e8f3f5e88d7d1dd65d6aa6d60cc219ab",
+      "R": "AAAA0QAAAApwdW5rdGkvMC42AAAADTE3MDAwMDAwMDAwMDAAAAAOdTNidXR6N2s5cV8tMTgAAAAjb3BhcXVlIGZyZWV6ZSBwYXlsb2FkIAAg5LiW55WMIPCfjI0AAAAHZWQyNTUxOQAAACCf3BSnCFRpzpETURogM6z1WT1unNqxjPJ3C1iIBE8aZgAAAAIAAAAOdW5rbm93bi9hOjAwZmYAAAATdW5yZWNvZ25pemVkL+WFs+ezuwAAAA5mdXR1cmUvdjk6YWJjZAAAAAAAAAADAP8AAAAAQH/XIfkqFCzEE9z73uQv0ogWpTNc9n5M1sYTROS46iE36TLkRhISc/2t2Se8JAe95cmadHnAjCFbYHVE5QNulwU=",
+      "S": "50554e4b54492d4c332d5349474e000000000a70756e6b74692f302e360000000d313730303030303030303030300000000e75336275747a376b39715f2d3138000000236f706171756520667265657a65207061796c6f6164200020e4b896e7958c20f09f8c8d0000000765643235353139000000209fdc14a7085469ce9113511a2033acf5593d6e9cdab18cf2770b5888044f1a66000000020000000e756e6b6e6f776e2f613a3030666600000013756e7265636f676e697a65642fe585b3e7b3bb0000000e6675747572652f76393a61626364000000000000000300ff00",
+      "address": "punkti/0.6:c9185899abc56ac3acf3b6b0629c40c1e8f3f5e88d7d1dd65d6aa6d60cc219ab",
+      "atom": {
+        "alg": "ed25519",
+        "ext": "AP8A",
+        "h": "u3butz7k9q_-18",
+        "pk": "n9wUpwhUac6RE1EaIDOs9Vk9bpzasYzydwtYiARPGmY=",
+        "refs": [
+          {
+            "rel": "unrecognized/关系",
+            "target": "unknown/a:00ff"
+          },
+          {
+            "rel": "",
+            "target": "future/v9:abcd"
+          }
+        ],
+        "sig": "f9ch+SoULMQT3Pve5C/SiBalM1z2fkzWxhNE5LjqITfpMuRGEhJz/a3ZJ7wkB73lyZp0ecCMIVtgdUTlA26XBQ==",
+        "t": 1700000000000,
+        "v": "punkti/0.6",
+        "x": "opaque freeze payload \u0000 世界 🌍"
+      },
+      "sha256_R": "a191dffd6142fcc3a8c2694aa3e20d44d8fd98d05da9d5b8181affba6143f851",
+      "sig": "f9ch+SoULMQT3Pve5C/SiBalM1z2fkzWxhNE5LjqITfpMuRGEhJz/a3ZJ7wkB73lyZp0ecCMIVtgdUTlA26XBQ==",
+      "spec": {
+        "alg": "ed25519",
+        "ext": "AP8A",
+        "h": "u3butz7k9q_-18",
+        "refs": [
+          {
+            "rel": "unrecognized/关系",
+            "target": "unknown/a:00ff"
+          },
+          {
+            "rel": "",
+            "target": "future/v9:abcd"
+          }
+        ],
+        "seed": "punkti-0.6-freeze-vectors",
+        "t": 1700000000000,
+        "x": "opaque freeze payload \u0000 世界 🌍"
+      },
+      "state": "VALID"
+    },
+    "opaque": {
+      "C": "0000000a70756e6b74692f302e360000000d313730303030303030303030300000000f7330303030303030303030305f3233000000106f70617175650020f09f8c8d2065cc81000000106675747572652d7369676e6174757265000000209fdc14a7085469ce9113511a2033acf5593d6e9cdab18cf2770b5888044f1a66000000020000000e756e6b6e6f776e2f613a3030666600000013756e7265636f676e697a65642fe585b3e7b3bb0000000e6675747572652f76393a616263640000000000000008ff006f7061717565",
+      "MID": "8b6dca8bc139ff96f5b7e6c8841e88f6f5b5e50c45fc9e31e53be68e74c00969",
+      "R": "AAAAzQAAAApwdW5rdGkvMC42AAAADTE3MDAwMDAwMDAwMDAAAAAPczAwMDAwMDAwMDAwXzIzAAAAEG9wYXF1ZQAg8J+MjSBlzIEAAAAQZnV0dXJlLXNpZ25hdHVyZQAAACCf3BSnCFRpzpETURogM6z1WT1unNqxjPJ3C1iIBE8aZgAAAAIAAAAOdW5rbm93bi9hOjAwZmYAAAATdW5yZWNvZ25pemVkL+WFs+ezuwAAAA5mdXR1cmUvdjk6YWJjZAAAAAAAAAAI/wBvcGFxdWUAAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+      "S": "50554e4b54492d4c332d5349474e000000000a70756e6b74692f302e360000000d313730303030303030303030300000000f7330303030303030303030305f3233000000106f70617175650020f09f8c8d2065cc81000000106675747572652d7369676e6174757265000000209fdc14a7085469ce9113511a2033acf5593d6e9cdab18cf2770b5888044f1a66000000020000000e756e6b6e6f776e2f613a3030666600000013756e7265636f676e697a65642fe585b3e7b3bb0000000e6675747572652f76393a616263640000000000000008ff006f7061717565",
+      "address": "punkti/0.6:8b6dca8bc139ff96f5b7e6c8841e88f6f5b5e50c45fc9e31e53be68e74c00969",
+      "atom": {
+        "alg": "future-signature",
+        "ext": "/wBvcGFxdWU=",
+        "h": "s00000000000_23",
+        "pk": "n9wUpwhUac6RE1EaIDOs9Vk9bpzasYzydwtYiARPGmY=",
+        "refs": [
+          {
+            "rel": "unrecognized/关系",
+            "target": "unknown/a:00ff"
+          },
+          {
+            "rel": "",
+            "target": "future/v9:abcd"
+          }
+        ],
+        "sig": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+        "t": 1700000000000,
+        "v": "punkti/0.6",
+        "x": "opaque\u0000 🌍 é"
+      },
+      "sha256_R": "e8ec8916f3b1ee2552f467cd2b7bc065569b5447eb2dcd8902edc8600ed1ecaa",
+      "sig": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+      "spec": {
+        "alg": "future-signature",
+        "ext": "/wBvcGFxdWU=",
+        "h": "s00000000000_23",
+        "refs": [
+          {
+            "rel": "unrecognized/关系",
+            "target": "unknown/a:00ff"
+          },
+          {
+            "rel": "",
+            "target": "future/v9:abcd"
+          }
+        ],
+        "seed": "punkti-0.6-freeze-vectors",
+        "t": 1700000000000,
+        "x": "opaque\u0000 🌍 é"
+      },
+      "state": "UNVERIFIABLE-alg"
+    },
+    "selection0": {
+      "C": "0000000a70756e6b74692f302e360000000d3137303030303030303030303000000007753362755f3233000000236f706171756520667265657a65207061796c6f6164200020e4b896e7958c20f09f8c8d0000000765643235353139000000209fdc14a7085469ce9113511a2033acf5593d6e9cdab18cf2770b5888044f1a66000000020000000e756e6b6e6f776e2f613a3030666600000013756e7265636f676e697a65642fe585b3e7b3bb0000000e6675747572652f76393a61626364000000000000000300ff00",
+      "MID": "5a840df386f557234dd0914a0c1287a7b81d9ffaf09515c1f7586dcba5286f91",
+      "R": "AAAAygAAAApwdW5rdGkvMC42AAAADTE3MDAwMDAwMDAwMDAAAAAHdTNidV8yMwAAACNvcGFxdWUgZnJlZXplIHBheWxvYWQgACDkuJbnlYwg8J+MjQAAAAdlZDI1NTE5AAAAIJ/cFKcIVGnOkRNRGiAzrPVZPW6c2rGM8ncLWIgETxpmAAAAAgAAAA51bmtub3duL2E6MDBmZgAAABN1bnJlY29nbml6ZWQv5YWz57O7AAAADmZ1dHVyZS92OTphYmNkAAAAAAAAAAMA/wAAAABAC4dHFFQlSbJahngUfjj7Q4Ob+/67Fy+GZXjI81gL9X30LGnVyvNBI7BJpQP0cByI0EdhLkih8suLlACG2JJ7Bw==",
+      "S": "50554e4b54492d4c332d5349474e000000000a70756e6b74692f302e360000000d3137303030303030303030303000000007753362755f3233000000236f706171756520667265657a65207061796c6f6164200020e4b896e7958c20f09f8c8d0000000765643235353139000000209fdc14a7085469ce9113511a2033acf5593d6e9cdab18cf2770b5888044f1a66000000020000000e756e6b6e6f776e2f613a3030666600000013756e7265636f676e697a65642fe585b3e7b3bb0000000e6675747572652f76393a61626364000000000000000300ff00",
+      "address": "punkti/0.6:5a840df386f557234dd0914a0c1287a7b81d9ffaf09515c1f7586dcba5286f91",
+      "atom": {
+        "alg": "ed25519",
+        "ext": "AP8A",
+        "h": "u3bu_23",
+        "pk": "n9wUpwhUac6RE1EaIDOs9Vk9bpzasYzydwtYiARPGmY=",
+        "refs": [
+          {
+            "rel": "unrecognized/关系",
+            "target": "unknown/a:00ff"
+          },
+          {
+            "rel": "",
+            "target": "future/v9:abcd"
+          }
+        ],
+        "sig": "C4dHFFQlSbJahngUfjj7Q4Ob+/67Fy+GZXjI81gL9X30LGnVyvNBI7BJpQP0cByI0EdhLkih8suLlACG2JJ7Bw==",
+        "t": 1700000000000,
+        "v": "punkti/0.6",
+        "x": "opaque freeze payload \u0000 世界 🌍"
+      },
+      "sha256_R": "a6dcb0b7d499440ac27ba3179dc076edfb4bf4731c10e5117193a1c61004bde9",
+      "sig": "C4dHFFQlSbJahngUfjj7Q4Ob+/67Fy+GZXjI81gL9X30LGnVyvNBI7BJpQP0cByI0EdhLkih8suLlACG2JJ7Bw==",
+      "spec": {
+        "alg": "ed25519",
+        "ext": "AP8A",
+        "h": "u3bu_23",
+        "refs": [
+          {
+            "rel": "unrecognized/关系",
+            "target": "unknown/a:00ff"
+          },
+          {
+            "rel": "",
+            "target": "future/v9:abcd"
+          }
+        ],
+        "seed": "punkti-0.6-freeze-vectors",
+        "t": 1700000000000,
+        "x": "opaque freeze payload \u0000 世界 🌍"
+      },
+      "state": "VALID"
+    },
+    "selection1": {
+      "C": "0000000a70756e6b74692f302e360000000d313730303030303030303030300000000d75336275747a376b39715f3233000000236f706171756520667265657a65207061796c6f6164200020e4b896e7958c20f09f8c8d0000000765643235353139000000209fdc14a7085469ce9113511a2033acf5593d6e9cdab18cf2770b5888044f1a66000000020000000e756e6b6e6f776e2f613a3030666600000013756e7265636f676e697a65642fe585b3e7b3bb0000000e6675747572652f76393a61626364000000000000000300ff00",
+      "MID": "98f2628a42b6c0fe197c9a60025526185c6b74f668137cbd36d4526db5b839ea",
+      "R": "AAAA0AAAAApwdW5rdGkvMC42AAAADTE3MDAwMDAwMDAwMDAAAAANdTNidXR6N2s5cV8yMwAAACNvcGFxdWUgZnJlZXplIHBheWxvYWQgACDkuJbnlYwg8J+MjQAAAAdlZDI1NTE5AAAAIJ/cFKcIVGnOkRNRGiAzrPVZPW6c2rGM8ncLWIgETxpmAAAAAgAAAA51bmtub3duL2E6MDBmZgAAABN1bnJlY29nbml6ZWQv5YWz57O7AAAADmZ1dHVyZS92OTphYmNkAAAAAAAAAAMA/wAAAABAne9StIIn2rLI6XNofHkj48ElHQb0a5Fcb4HTbgv6cXng9eH+/THaRmgKQIYu3jnW4wej8opXW16Gg4HXlsjZCQ==",
+      "S": "50554e4b54492d4c332d5349474e000000000a70756e6b74692f302e360000000d313730303030303030303030300000000d75336275747a376b39715f3233000000236f706171756520667265657a65207061796c6f6164200020e4b896e7958c20f09f8c8d0000000765643235353139000000209fdc14a7085469ce9113511a2033acf5593d6e9cdab18cf2770b5888044f1a66000000020000000e756e6b6e6f776e2f613a3030666600000013756e7265636f676e697a65642fe585b3e7b3bb0000000e6675747572652f76393a61626364000000000000000300ff00",
+      "address": "punkti/0.6:98f2628a42b6c0fe197c9a60025526185c6b74f668137cbd36d4526db5b839ea",
+      "atom": {
+        "alg": "ed25519",
+        "ext": "AP8A",
+        "h": "u3butz7k9q_23",
+        "pk": "n9wUpwhUac6RE1EaIDOs9Vk9bpzasYzydwtYiARPGmY=",
+        "refs": [
+          {
+            "rel": "unrecognized/关系",
+            "target": "unknown/a:00ff"
+          },
+          {
+            "rel": "",
+            "target": "future/v9:abcd"
+          }
+        ],
+        "sig": "ne9StIIn2rLI6XNofHkj48ElHQb0a5Fcb4HTbgv6cXng9eH+/THaRmgKQIYu3jnW4wej8opXW16Gg4HXlsjZCQ==",
+        "t": 1700000000000,
+        "v": "punkti/0.6",
+        "x": "opaque freeze payload \u0000 世界 🌍"
+      },
+      "sha256_R": "7d3d69942586b8ed0d38ef9cd5df24a3053950f930a108cb4242f9c4363f7b30",
+      "sig": "ne9StIIn2rLI6XNofHkj48ElHQb0a5Fcb4HTbgv6cXng9eH+/THaRmgKQIYu3jnW4wej8opXW16Gg4HXlsjZCQ==",
+      "spec": {
+        "alg": "ed25519",
+        "ext": "AP8A",
+        "h": "u3butz7k9q_23",
+        "refs": [
+          {
+            "rel": "unrecognized/关系",
+            "target": "unknown/a:00ff"
+          },
+          {
+            "rel": "",
+            "target": "future/v9:abcd"
+          }
+        ],
+        "seed": "punkti-0.6-freeze-vectors",
+        "t": 1700000000000,
+        "x": "opaque freeze payload \u0000 世界 🌍"
+      },
+      "state": "VALID"
+    },
+    "selection2": {
+      "C": "0000000a70756e6b74692f302e360000000d3137303030303030303030303000000007753363305f3233000000236f706171756520667265657a65207061796c6f6164200020e4b896e7958c20f09f8c8d0000000765643235353139000000209fdc14a7085469ce9113511a2033acf5593d6e9cdab18cf2770b5888044f1a66000000020000000e756e6b6e6f776e2f613a3030666600000013756e7265636f676e697a65642fe585b3e7b3bb0000000e6675747572652f76393a61626364000000000000000300ff00",
+      "MID": "808ad2a53eb49f538225800f36da445e828a00000a9a7513f5d3e816c627e949",
+      "R": "AAAAygAAAApwdW5rdGkvMC42AAAADTE3MDAwMDAwMDAwMDAAAAAHdTNjMF8yMwAAACNvcGFxdWUgZnJlZXplIHBheWxvYWQgACDkuJbnlYwg8J+MjQAAAAdlZDI1NTE5AAAAIJ/cFKcIVGnOkRNRGiAzrPVZPW6c2rGM8ncLWIgETxpmAAAAAgAAAA51bmtub3duL2E6MDBmZgAAABN1bnJlY29nbml6ZWQv5YWz57O7AAAADmZ1dHVyZS92OTphYmNkAAAAAAAAAAMA/wAAAABAceH7vewnN28+6qBN2m3kWepUyMWVvuS0WLj9x+DcjjE5BjcwArSP1ECWbkTXR/4zxe+OIBqhP9l4U3Erd6jvAg==",
+      "S": "50554e4b54492d4c332d5349474e000000000a70756e6b74692f302e360000000d3137303030303030303030303000000007753363305f3233000000236f706171756520667265657a65207061796c6f6164200020e4b896e7958c20f09f8c8d0000000765643235353139000000209fdc14a7085469ce9113511a2033acf5593d6e9cdab18cf2770b5888044f1a66000000020000000e756e6b6e6f776e2f613a3030666600000013756e7265636f676e697a65642fe585b3e7b3bb0000000e6675747572652f76393a61626364000000000000000300ff00",
+      "address": "punkti/0.6:808ad2a53eb49f538225800f36da445e828a00000a9a7513f5d3e816c627e949",
+      "atom": {
+        "alg": "ed25519",
+        "ext": "AP8A",
+        "h": "u3c0_23",
+        "pk": "n9wUpwhUac6RE1EaIDOs9Vk9bpzasYzydwtYiARPGmY=",
+        "refs": [
+          {
+            "rel": "unrecognized/关系",
+            "target": "unknown/a:00ff"
+          },
+          {
+            "rel": "",
+            "target": "future/v9:abcd"
+          }
+        ],
+        "sig": "ceH7vewnN28+6qBN2m3kWepUyMWVvuS0WLj9x+DcjjE5BjcwArSP1ECWbkTXR/4zxe+OIBqhP9l4U3Erd6jvAg==",
+        "t": 1700000000000,
+        "v": "punkti/0.6",
+        "x": "opaque freeze payload \u0000 世界 🌍"
+      },
+      "sha256_R": "a5fdd033f233a8d37bf247925304f66ad0811e84981eb8b42665236cafb816a8",
+      "sig": "ceH7vewnN28+6qBN2m3kWepUyMWVvuS0WLj9x+DcjjE5BjcwArSP1ECWbkTXR/4zxe+OIBqhP9l4U3Erd6jvAg==",
+      "spec": {
+        "alg": "ed25519",
+        "ext": "AP8A",
+        "h": "u3c0_23",
+        "refs": [
+          {
+            "rel": "unrecognized/关系",
+            "target": "unknown/a:00ff"
+          },
+          {
+            "rel": "",
+            "target": "future/v9:abcd"
+          }
+        ],
+        "seed": "punkti-0.6-freeze-vectors",
+        "t": 1700000000000,
+        "x": "opaque freeze payload \u0000 世界 🌍"
+      },
+      "state": "VALID"
+    },
+    "selection3": {
+      "C": "0000000a70756e6b74692f302e360000000d313730303030303030303030300000000a753362755f32332e3032000000236f706171756520667265657a65207061796c6f6164200020e4b896e7958c20f09f8c8d0000000765643235353139000000209fdc14a7085469ce9113511a2033acf5593d6e9cdab18cf2770b5888044f1a66000000020000000e756e6b6e6f776e2f613a3030666600000013756e7265636f676e697a65642fe585b3e7b3bb0000000e6675747572652f76393a61626364000000000000000300ff00",
+      "MID": "6cee0c46877405489f05523c12c857af7785aa1d43bbd92f59825b1bf338c46e",
+      "R": "AAAAzQAAAApwdW5rdGkvMC42AAAADTE3MDAwMDAwMDAwMDAAAAAKdTNidV8yMy4wMgAAACNvcGFxdWUgZnJlZXplIHBheWxvYWQgACDkuJbnlYwg8J+MjQAAAAdlZDI1NTE5AAAAIJ/cFKcIVGnOkRNRGiAzrPVZPW6c2rGM8ncLWIgETxpmAAAAAgAAAA51bmtub3duL2E6MDBmZgAAABN1bnJlY29nbml6ZWQv5YWz57O7AAAADmZ1dHVyZS92OTphYmNkAAAAAAAAAAMA/wAAAABA4irsAicaYeRNLnGNfbuWkE5WS9xnW2KMk81UUbBWLEX+fURYlqS5bs+DC9x74f8XiJsLrNzzK9B3S3TkPoheBg==",
+      "S": "50554e4b54492d4c332d5349474e000000000a70756e6b74692f302e360000000d313730303030303030303030300000000a753362755f32332e3032000000236f706171756520667265657a65207061796c6f6164200020e4b896e7958c20f09f8c8d0000000765643235353139000000209fdc14a7085469ce9113511a2033acf5593d6e9cdab18cf2770b5888044f1a66000000020000000e756e6b6e6f776e2f613a3030666600000013756e7265636f676e697a65642fe585b3e7b3bb0000000e6675747572652f76393a61626364000000000000000300ff00",
+      "address": "punkti/0.6:6cee0c46877405489f05523c12c857af7785aa1d43bbd92f59825b1bf338c46e",
+      "atom": {
+        "alg": "ed25519",
+        "ext": "AP8A",
+        "h": "u3bu_23.02",
+        "pk": "n9wUpwhUac6RE1EaIDOs9Vk9bpzasYzydwtYiARPGmY=",
+        "refs": [
+          {
+            "rel": "unrecognized/关系",
+            "target": "unknown/a:00ff"
+          },
+          {
+            "rel": "",
+            "target": "future/v9:abcd"
+          }
+        ],
+        "sig": "4irsAicaYeRNLnGNfbuWkE5WS9xnW2KMk81UUbBWLEX+fURYlqS5bs+DC9x74f8XiJsLrNzzK9B3S3TkPoheBg==",
+        "t": 1700000000000,
+        "v": "punkti/0.6",
+        "x": "opaque freeze payload \u0000 世界 🌍"
+      },
+      "sha256_R": "a238de38cd9bfce4b62da0fd22f64c6c9df2297259e4de535ae8f0f80ded889b",
+      "sig": "4irsAicaYeRNLnGNfbuWkE5WS9xnW2KMk81UUbBWLEX+fURYlqS5bs+DC9x74f8XiJsLrNzzK9B3S3TkPoheBg==",
+      "spec": {
+        "alg": "ed25519",
+        "ext": "AP8A",
+        "h": "u3bu_23.02",
+        "refs": [
+          {
+            "rel": "unrecognized/关系",
+            "target": "unknown/a:00ff"
+          },
+          {
+            "rel": "",
+            "target": "future/v9:abcd"
+          }
+        ],
+        "seed": "punkti-0.6-freeze-vectors",
+        "t": 1700000000000,
+        "x": "opaque freeze payload \u0000 世界 🌍"
+      },
+      "state": "VALID"
+    },
+    "selection4": {
+      "C": "0000000a70756e6b74692f302e360000000d313730303030303030303030300000000b753362755f32332e303235000000236f706171756520667265657a65207061796c6f6164200020e4b896e7958c20f09f8c8d0000000765643235353139000000209fdc14a7085469ce9113511a2033acf5593d6e9cdab18cf2770b5888044f1a66000000020000000e756e6b6e6f776e2f613a3030666600000013756e7265636f676e697a65642fe585b3e7b3bb0000000e6675747572652f76393a61626364000000000000000300ff00",
+      "MID": "8dfc43a121603aa47fe7c6ed47c011548252ca6fc7ca11e96a400c656eba2a61",
+      "R": "AAAAzgAAAApwdW5rdGkvMC42AAAADTE3MDAwMDAwMDAwMDAAAAALdTNidV8yMy4wMjUAAAAjb3BhcXVlIGZyZWV6ZSBwYXlsb2FkIAAg5LiW55WMIPCfjI0AAAAHZWQyNTUxOQAAACCf3BSnCFRpzpETURogM6z1WT1unNqxjPJ3C1iIBE8aZgAAAAIAAAAOdW5rbm93bi9hOjAwZmYAAAATdW5yZWNvZ25pemVkL+WFs+ezuwAAAA5mdXR1cmUvdjk6YWJjZAAAAAAAAAADAP8AAAAAQApcdF2HYyWnSzjub4ZwMC5ZFaSZqDpTCDswZAc9JrmmSXVbWwwLFKar01cjcGtfhiRHlXnDA61XULMVyDkiAwI=",
+      "S": "50554e4b54492d4c332d5349474e000000000a70756e6b74692f302e360000000d313730303030303030303030300000000b753362755f32332e303235000000236f706171756520667265657a65207061796c6f6164200020e4b896e7958c20f09f8c8d0000000765643235353139000000209fdc14a7085469ce9113511a2033acf5593d6e9cdab18cf2770b5888044f1a66000000020000000e756e6b6e6f776e2f613a3030666600000013756e7265636f676e697a65642fe585b3e7b3bb0000000e6675747572652f76393a61626364000000000000000300ff00",
+      "address": "punkti/0.6:8dfc43a121603aa47fe7c6ed47c011548252ca6fc7ca11e96a400c656eba2a61",
+      "atom": {
+        "alg": "ed25519",
+        "ext": "AP8A",
+        "h": "u3bu_23.025",
+        "pk": "n9wUpwhUac6RE1EaIDOs9Vk9bpzasYzydwtYiARPGmY=",
+        "refs": [
+          {
+            "rel": "unrecognized/关系",
+            "target": "unknown/a:00ff"
+          },
+          {
+            "rel": "",
+            "target": "future/v9:abcd"
+          }
+        ],
+        "sig": "Clx0XYdjJadLOO5vhnAwLlkVpJmoOlMIOzBkBz0muaZJdVtbDAsUpqvTVyNwa1+GJEeVecMDrVdQsxXIOSIDAg==",
+        "t": 1700000000000,
+        "v": "punkti/0.6",
+        "x": "opaque freeze payload \u0000 世界 🌍"
+      },
+      "sha256_R": "199d5009c9f0f781fc27467f28fbfe0191c75e517f924544969faf50a9e3e40a",
+      "sig": "Clx0XYdjJadLOO5vhnAwLlkVpJmoOlMIOzBkBz0muaZJdVtbDAsUpqvTVyNwa1+GJEeVecMDrVdQsxXIOSIDAg==",
+      "spec": {
+        "alg": "ed25519",
+        "ext": "AP8A",
+        "h": "u3bu_23.025",
+        "refs": [
+          {
+            "rel": "unrecognized/关系",
+            "target": "unknown/a:00ff"
+          },
+          {
+            "rel": "",
+            "target": "future/v9:abcd"
+          }
+        ],
+        "seed": "punkti-0.6-freeze-vectors",
+        "t": 1700000000000,
+        "x": "opaque freeze payload \u0000 世界 🌍"
+      },
+      "state": "VALID"
+    },
+    "selection5": {
+      "C": "0000000a70756e6b74692f302e360000000d313730303030303030303030300000000b753362755f32322e393939000000236f706171756520667265657a65207061796c6f6164200020e4b896e7958c20f09f8c8d0000000765643235353139000000209fdc14a7085469ce9113511a2033acf5593d6e9cdab18cf2770b5888044f1a66000000020000000e756e6b6e6f776e2f613a3030666600000013756e7265636f676e697a65642fe585b3e7b3bb0000000e6675747572652f76393a61626364000000000000000300ff00",
+      "MID": "6ac5260a26fddfe152d41f4b7206d8b51e72a56763db63988625a3526527500b",
+      "R": "AAAAzgAAAApwdW5rdGkvMC42AAAADTE3MDAwMDAwMDAwMDAAAAALdTNidV8yMi45OTkAAAAjb3BhcXVlIGZyZWV6ZSBwYXlsb2FkIAAg5LiW55WMIPCfjI0AAAAHZWQyNTUxOQAAACCf3BSnCFRpzpETURogM6z1WT1unNqxjPJ3C1iIBE8aZgAAAAIAAAAOdW5rbm93bi9hOjAwZmYAAAATdW5yZWNvZ25pemVkL+WFs+ezuwAAAA5mdXR1cmUvdjk6YWJjZAAAAAAAAAADAP8AAAAAQHrioKNmCZqHLN6MGJP4LUEZ/FzRrcrFdSUM0r58rGMV8R3JeH25Y2JHdYz2SD0v49SGndEShouA4fMKcucOOwc=",
+      "S": "50554e4b54492d4c332d5349474e000000000a70756e6b74692f302e360000000d313730303030303030303030300000000b753362755f32322e393939000000236f706171756520667265657a65207061796c6f6164200020e4b896e7958c20f09f8c8d0000000765643235353139000000209fdc14a7085469ce9113511a2033acf5593d6e9cdab18cf2770b5888044f1a66000000020000000e756e6b6e6f776e2f613a3030666600000013756e7265636f676e697a65642fe585b3e7b3bb0000000e6675747572652f76393a61626364000000000000000300ff00",
+      "address": "punkti/0.6:6ac5260a26fddfe152d41f4b7206d8b51e72a56763db63988625a3526527500b",
+      "atom": {
+        "alg": "ed25519",
+        "ext": "AP8A",
+        "h": "u3bu_22.999",
+        "pk": "n9wUpwhUac6RE1EaIDOs9Vk9bpzasYzydwtYiARPGmY=",
+        "refs": [
+          {
+            "rel": "unrecognized/关系",
+            "target": "unknown/a:00ff"
+          },
+          {
+            "rel": "",
+            "target": "future/v9:abcd"
+          }
+        ],
+        "sig": "euKgo2YJmocs3owYk/gtQRn8XNGtysV1JQzSvnysYxXxHcl4fbljYkd1jPZIPS/j1Iad0RKGi4Dh8wpy5w47Bw==",
+        "t": 1700000000000,
+        "v": "punkti/0.6",
+        "x": "opaque freeze payload \u0000 世界 🌍"
+      },
+      "sha256_R": "1191ab273b0eaaf937b188947d36807dafd815bb8ba5ba3d24e2180a36674212",
+      "sig": "euKgo2YJmocs3owYk/gtQRn8XNGtysV1JQzSvnysYxXxHcl4fbljYkd1jPZIPS/j1Iad0RKGi4Dh8wpy5w47Bw==",
+      "spec": {
+        "alg": "ed25519",
+        "ext": "AP8A",
+        "h": "u3bu_22.999",
+        "refs": [
+          {
+            "rel": "unrecognized/关系",
+            "target": "unknown/a:00ff"
+          },
+          {
+            "rel": "",
+            "target": "future/v9:abcd"
+          }
+        ],
+        "seed": "punkti-0.6-freeze-vectors",
+        "t": 1700000000000,
+        "x": "opaque freeze payload \u0000 世界 🌍"
+      },
+      "state": "VALID"
+    },
+    "selection6": {
+      "C": "0000000a70756e6b74692f302e360000000d3137303030303030303030303000000008753362755f2d3138000000236f706171756520667265657a65207061796c6f6164200020e4b896e7958c20f09f8c8d0000000765643235353139000000209fdc14a7085469ce9113511a2033acf5593d6e9cdab18cf2770b5888044f1a66000000020000000e756e6b6e6f776e2f613a3030666600000013756e7265636f676e697a65642fe585b3e7b3bb0000000e6675747572652f76393a61626364000000000000000300ff00",
+      "MID": "575e51cb059c11e8b595cf9ffb20deed2a970d2b8fae7d4242e7eeeb57db1202",
+      "R": "AAAAywAAAApwdW5rdGkvMC42AAAADTE3MDAwMDAwMDAwMDAAAAAIdTNidV8tMTgAAAAjb3BhcXVlIGZyZWV6ZSBwYXlsb2FkIAAg5LiW55WMIPCfjI0AAAAHZWQyNTUxOQAAACCf3BSnCFRpzpETURogM6z1WT1unNqxjPJ3C1iIBE8aZgAAAAIAAAAOdW5rbm93bi9hOjAwZmYAAAATdW5yZWNvZ25pemVkL+WFs+ezuwAAAA5mdXR1cmUvdjk6YWJjZAAAAAAAAAADAP8AAAAAQGLrgxrOSdrTmfXPRURmhqwXQdpmV9CtSCN/Y2WQklguveY4D1QFrNrfW+nu1/H+fBfsx4zAh00SHJNKXS3Gjwg=",
+      "S": "50554e4b54492d4c332d5349474e000000000a70756e6b74692f302e360000000d3137303030303030303030303000000008753362755f2d3138000000236f706171756520667265657a65207061796c6f6164200020e4b896e7958c20f09f8c8d0000000765643235353139000000209fdc14a7085469ce9113511a2033acf5593d6e9cdab18cf2770b5888044f1a66000000020000000e756e6b6e6f776e2f613a3030666600000013756e7265636f676e697a65642fe585b3e7b3bb0000000e6675747572652f76393a61626364000000000000000300ff00",
+      "address": "punkti/0.6:575e51cb059c11e8b595cf9ffb20deed2a970d2b8fae7d4242e7eeeb57db1202",
+      "atom": {
+        "alg": "ed25519",
+        "ext": "AP8A",
+        "h": "u3bu_-18",
+        "pk": "n9wUpwhUac6RE1EaIDOs9Vk9bpzasYzydwtYiARPGmY=",
+        "refs": [
+          {
+            "rel": "unrecognized/关系",
+            "target": "unknown/a:00ff"
+          },
+          {
+            "rel": "",
+            "target": "future/v9:abcd"
+          }
+        ],
+        "sig": "YuuDGs5J2tOZ9c9FRGaGrBdB2mZX0K1II39jZZCSWC695jgPVAWs2t9b6e7X8f58F+zHjMCHTRIck0pdLcaPCA==",
+        "t": 1700000000000,
+        "v": "punkti/0.6",
+        "x": "opaque freeze payload \u0000 世界 🌍"
+      },
+      "sha256_R": "696bfab07c08acc5564d03144c33bde8f6b01e75bdeaf37c4baee797f56ae558",
+      "sig": "YuuDGs5J2tOZ9c9FRGaGrBdB2mZX0K1II39jZZCSWC695jgPVAWs2t9b6e7X8f58F+zHjMCHTRIck0pdLcaPCA==",
+      "spec": {
+        "alg": "ed25519",
+        "ext": "AP8A",
+        "h": "u3bu_-18",
+        "refs": [
+          {
+            "rel": "unrecognized/关系",
+            "target": "unknown/a:00ff"
+          },
+          {
+            "rel": "",
+            "target": "future/v9:abcd"
+          }
+        ],
+        "seed": "punkti-0.6-freeze-vectors",
+        "t": 1700000000000,
+        "x": "opaque freeze payload \u0000 世界 🌍"
+      },
+      "state": "VALID"
+    },
+    "selection7": {
+      "C": "0000000a70756e6b74692f302e360000000d3137303030303030303030303000000000000000236f706171756520667265657a65207061796c6f6164200020e4b896e7958c20f09f8c8d0000000765643235353139000000209fdc14a7085469ce9113511a2033acf5593d6e9cdab18cf2770b5888044f1a66000000020000000e756e6b6e6f776e2f613a3030666600000013756e7265636f676e697a65642fe585b3e7b3bb0000000e6675747572652f76393a61626364000000000000000300ff00",
+      "MID": "8b43c5af563c190e9aa74ead22a5a5e32761aa5cc793deede4ad381f87cd17a6",
+      "R": "AAAAwwAAAApwdW5rdGkvMC42AAAADTE3MDAwMDAwMDAwMDAAAAAAAAAAI29wYXF1ZSBmcmVlemUgcGF5bG9hZCAAIOS4lueVjCDwn4yNAAAAB2VkMjU1MTkAAAAgn9wUpwhUac6RE1EaIDOs9Vk9bpzasYzydwtYiARPGmYAAAACAAAADnVua25vd24vYTowMGZmAAAAE3VucmVjb2duaXplZC/lhbPns7sAAAAOZnV0dXJlL3Y5OmFiY2QAAAAAAAAAAwD/AAAAAECwH4xJFUKOHqaZLVzxfrS/+hR+6XbWauY+2jrZXUuYmSvV3cPXdlBDyfHNHv1vT/zc1ffZ2IpFTG27M0Z4I8YA",
+      "S": "50554e4b54492d4c332d5349474e000000000a70756e6b74692f302e360000000d3137303030303030303030303000000000000000236f706171756520667265657a65207061796c6f6164200020e4b896e7958c20f09f8c8d0000000765643235353139000000209fdc14a7085469ce9113511a2033acf5593d6e9cdab18cf2770b5888044f1a66000000020000000e756e6b6e6f776e2f613a3030666600000013756e7265636f676e697a65642fe585b3e7b3bb0000000e6675747572652f76393a61626364000000000000000300ff00",
+      "address": "punkti/0.6:8b43c5af563c190e9aa74ead22a5a5e32761aa5cc793deede4ad381f87cd17a6",
+      "atom": {
+        "alg": "ed25519",
+        "ext": "AP8A",
+        "h": "",
+        "pk": "n9wUpwhUac6RE1EaIDOs9Vk9bpzasYzydwtYiARPGmY=",
+        "refs": [
+          {
+            "rel": "unrecognized/关系",
+            "target": "unknown/a:00ff"
+          },
+          {
+            "rel": "",
+            "target": "future/v9:abcd"
+          }
+        ],
+        "sig": "sB+MSRVCjh6mmS1c8X60v/oUful21mrmPto62V1LmJkr1d3D13ZQQ8nxzR79b0/83NX32diKRUxtuzNGeCPGAA==",
+        "t": 1700000000000,
+        "v": "punkti/0.6",
+        "x": "opaque freeze payload \u0000 世界 🌍"
+      },
+      "sha256_R": "fdacbde6020b844be314ab71f3635af3c6a6e66aed75a96b0da03598f4f33dfa",
+      "sig": "sB+MSRVCjh6mmS1c8X60v/oUful21mrmPto62V1LmJkr1d3D13ZQQ8nxzR79b0/83NX32diKRUxtuzNGeCPGAA==",
+      "spec": {
+        "alg": "ed25519",
+        "ext": "AP8A",
+        "h": "",
+        "refs": [
+          {
+            "rel": "unrecognized/关系",
+            "target": "unknown/a:00ff"
+          },
+          {
+            "rel": "",
+            "target": "future/v9:abcd"
+          }
+        ],
+        "seed": "punkti-0.6-freeze-vectors",
+        "t": 1700000000000,
+        "x": "opaque freeze payload \u0000 世界 🌍"
+      },
+      "state": "VALID"
+    },
+    "spatial0": {
+      "C": "0000000a70756e6b74692f302e360000000d31373030303030303030303030000000103030303030303030303030305f2d31380000000a626f756e646172792d300000000765643235353139000000209fdc14a7085469ce9113511a2033acf5593d6e9cdab18cf2770b5888044f1a66000000020000000e756e6b6e6f776e2f613a3030666600000013756e7265636f676e697a65642fe585b3e7b3bb0000000e6675747572652f76393a61626364000000000000000300ff00",
+      "MID": "b794c104861488e804b57a559bf62987731e79580267c007afe01568ff3233d6",
+      "R": "AAAAugAAAApwdW5rdGkvMC42AAAADTE3MDAwMDAwMDAwMDAAAAAQMDAwMDAwMDAwMDAwXy0xOAAAAApib3VuZGFyeS0wAAAAB2VkMjU1MTkAAAAgn9wUpwhUac6RE1EaIDOs9Vk9bpzasYzydwtYiARPGmYAAAACAAAADnVua25vd24vYTowMGZmAAAAE3VucmVjb2duaXplZC/lhbPns7sAAAAOZnV0dXJlL3Y5OmFiY2QAAAAAAAAAAwD/AAAAAECimV2bKy5WvWblc2Vdt9JojzWnQz1ZtDJ9YZomj/4I0Y4JAOq3DSbeis1uaTb8Vt39h9h/6WUmfmXUWJEL+PoF",
+      "S": "50554e4b54492d4c332d5349474e000000000a70756e6b74692f302e360000000d31373030303030303030303030000000103030303030303030303030305f2d31380000000a626f756e646172792d300000000765643235353139000000209fdc14a7085469ce9113511a2033acf5593d6e9cdab18cf2770b5888044f1a66000000020000000e756e6b6e6f776e2f613a3030666600000013756e7265636f676e697a65642fe585b3e7b3bb0000000e6675747572652f76393a61626364000000000000000300ff00",
+      "address": "punkti/0.6:b794c104861488e804b57a559bf62987731e79580267c007afe01568ff3233d6",
+      "atom": {
+        "alg": "ed25519",
+        "ext": "AP8A",
+        "h": "000000000000_-18",
+        "pk": "n9wUpwhUac6RE1EaIDOs9Vk9bpzasYzydwtYiARPGmY=",
+        "refs": [
+          {
+            "rel": "unrecognized/关系",
+            "target": "unknown/a:00ff"
+          },
+          {
+            "rel": "",
+            "target": "future/v9:abcd"
+          }
+        ],
+        "sig": "opldmysuVr1m5XNlXbfSaI81p0M9WbQyfWGaJo/+CNGOCQDqtw0m3orNbmk2/Fbd/YfYf+llJn5l1FiRC/j6BQ==",
+        "t": 1700000000000,
+        "v": "punkti/0.6",
+        "x": "boundary-0"
+      },
+      "sha256_R": "69a5d544ba686f45e9435cf31b29d26530ce93d04fe3c8c841d0d31964b110cf",
+      "sig": "opldmysuVr1m5XNlXbfSaI81p0M9WbQyfWGaJo/+CNGOCQDqtw0m3orNbmk2/Fbd/YfYf+llJn5l1FiRC/j6BQ==",
+      "spec": {
+        "alg": "ed25519",
+        "ext": "AP8A",
+        "h": "000000000000_-18",
+        "refs": [
+          {
+            "rel": "unrecognized/关系",
+            "target": "unknown/a:00ff"
+          },
+          {
+            "rel": "",
+            "target": "future/v9:abcd"
+          }
+        ],
+        "seed": "punkti-0.6-freeze-vectors",
+        "t": 1700000000000,
+        "x": "boundary-0"
+      },
+      "state": "VALID"
+    },
+    "spatial1": {
+      "C": "0000000a70756e6b74692f302e360000000d313730303030303030303030300000000f7330303030303030303030305f32330000000a626f756e646172792d310000000765643235353139000000209fdc14a7085469ce9113511a2033acf5593d6e9cdab18cf2770b5888044f1a66000000020000000e756e6b6e6f776e2f613a3030666600000013756e7265636f676e697a65642fe585b3e7b3bb0000000e6675747572652f76393a61626364000000000000000300ff00",
+      "MID": "64787c65702b2091e07fca6d588dcccda806654248d9f62978af640994ad5342",
+      "R": "AAAAuQAAAApwdW5rdGkvMC42AAAADTE3MDAwMDAwMDAwMDAAAAAPczAwMDAwMDAwMDAwXzIzAAAACmJvdW5kYXJ5LTEAAAAHZWQyNTUxOQAAACCf3BSnCFRpzpETURogM6z1WT1unNqxjPJ3C1iIBE8aZgAAAAIAAAAOdW5rbm93bi9hOjAwZmYAAAATdW5yZWNvZ25pemVkL+WFs+ezuwAAAA5mdXR1cmUvdjk6YWJjZAAAAAAAAAADAP8AAAAAQMfNAAkoSWubuHek911B+fJTGhuKJHUjPWRczvuMRHNB9TCLTVaApLsAe92Ce8NrOBxwa5XM6PLumRv7wHZK6ww=",
+      "S": "50554e4b54492d4c332d5349474e000000000a70756e6b74692f302e360000000d313730303030303030303030300000000f7330303030303030303030305f32330000000a626f756e646172792d310000000765643235353139000000209fdc14a7085469ce9113511a2033acf5593d6e9cdab18cf2770b5888044f1a66000000020000000e756e6b6e6f776e2f613a3030666600000013756e7265636f676e697a65642fe585b3e7b3bb0000000e6675747572652f76393a61626364000000000000000300ff00",
+      "address": "punkti/0.6:64787c65702b2091e07fca6d588dcccda806654248d9f62978af640994ad5342",
+      "atom": {
+        "alg": "ed25519",
+        "ext": "AP8A",
+        "h": "s00000000000_23",
+        "pk": "n9wUpwhUac6RE1EaIDOs9Vk9bpzasYzydwtYiARPGmY=",
+        "refs": [
+          {
+            "rel": "unrecognized/关系",
+            "target": "unknown/a:00ff"
+          },
+          {
+            "rel": "",
+            "target": "future/v9:abcd"
+          }
+        ],
+        "sig": "x80ACShJa5u4d6T3XUH58lMaG4okdSM9ZFzO+4xEc0H1MItNVoCkuwB73YJ7w2s4HHBrlczo8u6ZG/vAdkrrDA==",
+        "t": 1700000000000,
+        "v": "punkti/0.6",
+        "x": "boundary-1"
+      },
+      "sha256_R": "4a44a0eabf2fceefead5547c3bba2dd2ed738b6ff0225bcaab1bbd3d35a8619b",
+      "sig": "x80ACShJa5u4d6T3XUH58lMaG4okdSM9ZFzO+4xEc0H1MItNVoCkuwB73YJ7w2s4HHBrlczo8u6ZG/vAdkrrDA==",
+      "spec": {
+        "alg": "ed25519",
+        "ext": "AP8A",
+        "h": "s00000000000_23",
+        "refs": [
+          {
+            "rel": "unrecognized/关系",
+            "target": "unknown/a:00ff"
+          },
+          {
+            "rel": "",
+            "target": "future/v9:abcd"
+          }
+        ],
+        "seed": "punkti-0.6-freeze-vectors",
+        "t": 1700000000000,
+        "x": "boundary-1"
+      },
+      "state": "VALID"
+    },
+    "spatial2": {
+      "C": "0000000a70756e6b74692f302e360000000d31373030303030303030303030000000137330303030303030303030315f32332e3032350000000a626f756e646172792d320000000765643235353139000000209fdc14a7085469ce9113511a2033acf5593d6e9cdab18cf2770b5888044f1a66000000020000000e756e6b6e6f776e2f613a3030666600000013756e7265636f676e697a65642fe585b3e7b3bb0000000e6675747572652f76393a61626364000000000000000300ff00",
+      "MID": "40d073c1656d7025c2342d2904800fa0ac2699254016277a61fd5432c8af5479",
+      "R": "AAAAvQAAAApwdW5rdGkvMC42AAAADTE3MDAwMDAwMDAwMDAAAAATczAwMDAwMDAwMDAxXzIzLjAyNQAAAApib3VuZGFyeS0yAAAAB2VkMjU1MTkAAAAgn9wUpwhUac6RE1EaIDOs9Vk9bpzasYzydwtYiARPGmYAAAACAAAADnVua25vd24vYTowMGZmAAAAE3VucmVjb2duaXplZC/lhbPns7sAAAAOZnV0dXJlL3Y5OmFiY2QAAAAAAAAAAwD/AAAAAEA7MOOGFiD4LAWZSK2N5l7Wff89Qx0O+MdLxp3boTNl11OoGty15ZxvzaajuhllveEsBSyBdRfbDkcw8zqE954L",
+      "S": "50554e4b54492d4c332d5349474e000000000a70756e6b74692f302e360000000d31373030303030303030303030000000137330303030303030303030315f32332e3032350000000a626f756e646172792d320000000765643235353139000000209fdc14a7085469ce9113511a2033acf5593d6e9cdab18cf2770b5888044f1a66000000020000000e756e6b6e6f776e2f613a3030666600000013756e7265636f676e697a65642fe585b3e7b3bb0000000e6675747572652f76393a61626364000000000000000300ff00",
+      "address": "punkti/0.6:40d073c1656d7025c2342d2904800fa0ac2699254016277a61fd5432c8af5479",
+      "atom": {
+        "alg": "ed25519",
+        "ext": "AP8A",
+        "h": "s00000000001_23.025",
+        "pk": "n9wUpwhUac6RE1EaIDOs9Vk9bpzasYzydwtYiARPGmY=",
+        "refs": [
+          {
+            "rel": "unrecognized/关系",
+            "target": "unknown/a:00ff"
+          },
+          {
+            "rel": "",
+            "target": "future/v9:abcd"
+          }
+        ],
+        "sig": "OzDjhhYg+CwFmUitjeZe1n3/PUMdDvjHS8ad26EzZddTqBrcteWcb82mo7oZZb3hLAUsgXUX2w5HMPM6hPeeCw==",
+        "t": 1700000000000,
+        "v": "punkti/0.6",
+        "x": "boundary-2"
+      },
+      "sha256_R": "036cb81b5cd1fe29bfd4892bf3008ca93025427943231bede3cbc865de533fa0",
+      "sig": "OzDjhhYg+CwFmUitjeZe1n3/PUMdDvjHS8ad26EzZddTqBrcteWcb82mo7oZZb3hLAUsgXUX2w5HMPM6hPeeCw==",
+      "spec": {
+        "alg": "ed25519",
+        "ext": "AP8A",
+        "h": "s00000000001_23.025",
+        "refs": [
+          {
+            "rel": "unrecognized/关系",
+            "target": "unknown/a:00ff"
+          },
+          {
+            "rel": "",
+            "target": "future/v9:abcd"
+          }
+        ],
+        "seed": "punkti-0.6-freeze-vectors",
+        "t": 1700000000000,
+        "x": "boundary-2"
+      },
+      "state": "VALID"
+    },
+    "spatial3": {
+      "C": "0000000a70756e6b74692f302e360000000d31373030303030303030303030000000117a7a7a7a7a7a7a7a7a7a7a7a5f393030300000000a626f756e646172792d330000000765643235353139000000209fdc14a7085469ce9113511a2033acf5593d6e9cdab18cf2770b5888044f1a66000000020000000e756e6b6e6f776e2f613a3030666600000013756e7265636f676e697a65642fe585b3e7b3bb0000000e6675747572652f76393a61626364000000000000000300ff00",
+      "MID": "d71670ee11209e93d50c73b645714a57cea67a511c232ffb7d88f9ce80f96025",
+      "R": "AAAAuwAAAApwdW5rdGkvMC42AAAADTE3MDAwMDAwMDAwMDAAAAARenp6enp6enp6enp6XzkwMDAAAAAKYm91bmRhcnktMwAAAAdlZDI1NTE5AAAAIJ/cFKcIVGnOkRNRGiAzrPVZPW6c2rGM8ncLWIgETxpmAAAAAgAAAA51bmtub3duL2E6MDBmZgAAABN1bnJlY29nbml6ZWQv5YWz57O7AAAADmZ1dHVyZS92OTphYmNkAAAAAAAAAAMA/wAAAABAYCCiQmTDf+OWIwYuB5NTwzFy5MfsLP5hJW5BnR9hUEB8bzOLzwAXBkfZ3J+Bp/6x5Ib70gqdExeUnT7AwAPEBg==",
+      "S": "50554e4b54492d4c332d5349474e000000000a70756e6b74692f302e360000000d31373030303030303030303030000000117a7a7a7a7a7a7a7a7a7a7a7a5f393030300000000a626f756e646172792d330000000765643235353139000000209fdc14a7085469ce9113511a2033acf5593d6e9cdab18cf2770b5888044f1a66000000020000000e756e6b6e6f776e2f613a3030666600000013756e7265636f676e697a65642fe585b3e7b3bb0000000e6675747572652f76393a61626364000000000000000300ff00",
+      "address": "punkti/0.6:d71670ee11209e93d50c73b645714a57cea67a511c232ffb7d88f9ce80f96025",
+      "atom": {
+        "alg": "ed25519",
+        "ext": "AP8A",
+        "h": "zzzzzzzzzzzz_9000",
+        "pk": "n9wUpwhUac6RE1EaIDOs9Vk9bpzasYzydwtYiARPGmY=",
+        "refs": [
+          {
+            "rel": "unrecognized/关系",
+            "target": "unknown/a:00ff"
+          },
+          {
+            "rel": "",
+            "target": "future/v9:abcd"
+          }
+        ],
+        "sig": "YCCiQmTDf+OWIwYuB5NTwzFy5MfsLP5hJW5BnR9hUEB8bzOLzwAXBkfZ3J+Bp/6x5Ib70gqdExeUnT7AwAPEBg==",
+        "t": 1700000000000,
+        "v": "punkti/0.6",
+        "x": "boundary-3"
+      },
+      "sha256_R": "da48bd708955eb206d3e76f0d47ff8d81eb3513f9d57f1ba396f119f8796eec9",
+      "sig": "YCCiQmTDf+OWIwYuB5NTwzFy5MfsLP5hJW5BnR9hUEB8bzOLzwAXBkfZ3J+Bp/6x5Ib70gqdExeUnT7AwAPEBg==",
+      "spec": {
+        "alg": "ed25519",
+        "ext": "AP8A",
+        "h": "zzzzzzzzzzzz_9000",
+        "refs": [
+          {
+            "rel": "unrecognized/关系",
+            "target": "unknown/a:00ff"
+          },
+          {
+            "rel": "",
+            "target": "future/v9:abcd"
+          }
+        ],
+        "seed": "punkti-0.6-freeze-vectors",
+        "t": 1700000000000,
+        "x": "boundary-3"
+      },
+      "state": "VALID"
+    },
+    "zero": {
+      "C": "0000000a70756e6b74692f302e3600000001300000000f7330303030303030303030305f3233000000236f706171756520667265657a65207061796c6f6164200020e4b896e7958c20f09f8c8d0000000765643235353139000000209fdc14a7085469ce9113511a2033acf5593d6e9cdab18cf2770b5888044f1a66000000020000000e756e6b6e6f776e2f613a3030666600000013756e7265636f676e697a65642fe585b3e7b3bb0000000e6675747572652f76393a61626364000000000000000300ff00",
+      "MID": "16c16c69428c89562f5eef5f5d1c1986585356292889cc5350ae5ebecc682608",
+      "R": "AAAAxgAAAApwdW5rdGkvMC42AAAAATAAAAAPczAwMDAwMDAwMDAwXzIzAAAAI29wYXF1ZSBmcmVlemUgcGF5bG9hZCAAIOS4lueVjCDwn4yNAAAAB2VkMjU1MTkAAAAgn9wUpwhUac6RE1EaIDOs9Vk9bpzasYzydwtYiARPGmYAAAACAAAADnVua25vd24vYTowMGZmAAAAE3VucmVjb2duaXplZC/lhbPns7sAAAAOZnV0dXJlL3Y5OmFiY2QAAAAAAAAAAwD/AAAAAECJZ3pNmuQvxUTByQl131JUyBYWLlDWtIwQJ+GAn+N1vMQEycfaGZqafUK/mu/VL6INCNFf3Wl25kFi4FHHcuUM",
+      "S": "50554e4b54492d4c332d5349474e000000000a70756e6b74692f302e3600000001300000000f7330303030303030303030305f3233000000236f706171756520667265657a65207061796c6f6164200020e4b896e7958c20f09f8c8d0000000765643235353139000000209fdc14a7085469ce9113511a2033acf5593d6e9cdab18cf2770b5888044f1a66000000020000000e756e6b6e6f776e2f613a3030666600000013756e7265636f676e697a65642fe585b3e7b3bb0000000e6675747572652f76393a61626364000000000000000300ff00",
+      "address": "punkti/0.6:16c16c69428c89562f5eef5f5d1c1986585356292889cc5350ae5ebecc682608",
+      "atom": {
+        "alg": "ed25519",
+        "ext": "AP8A",
+        "h": "s00000000000_23",
+        "pk": "n9wUpwhUac6RE1EaIDOs9Vk9bpzasYzydwtYiARPGmY=",
+        "refs": [
+          {
+            "rel": "unrecognized/关系",
+            "target": "unknown/a:00ff"
+          },
+          {
+            "rel": "",
+            "target": "future/v9:abcd"
+          }
+        ],
+        "sig": "iWd6TZrkL8VEwckJdd9SVMgWFi5Q1rSMECfhgJ/jdbzEBMnH2hmamn1Cv5rv1S+iDQjRX91pduZBYuBRx3LlDA==",
+        "t": 0,
+        "v": "punkti/0.6",
+        "x": "opaque freeze payload \u0000 世界 🌍"
+      },
+      "sha256_R": "9e9f6b8b978e3b82529697199aaf7319868e0fe31fe2242b425b1cd854f30e94",
+      "sig": "iWd6TZrkL8VEwckJdd9SVMgWFi5Q1rSMECfhgJ/jdbzEBMnH2hmamn1Cv5rv1S+iDQjRX91pduZBYuBRx3LlDA==",
+      "spec": {
+        "alg": "ed25519",
+        "ext": "AP8A",
+        "h": "s00000000000_23",
+        "refs": [
+          {
+            "rel": "unrecognized/关系",
+            "target": "unknown/a:00ff"
+          },
+          {
+            "rel": "",
+            "target": "future/v9:abcd"
+          }
+        ],
+        "seed": "punkti-0.6-freeze-vectors",
+        "t": 0,
+        "x": "opaque freeze payload \u0000 世界 🌍"
+      },
+      "state": "VALID"
+    }
+  }
+}

@@ -1,0 +1,207 @@
+{
+  "geohash_rows": [
+    {
+      "lat": 55.675398,
+      "lon": 12.561895,
+      "xy": "u3butz7k9q7v"
+    },
+    {
+      "lat": 51.5074,
+      "lon": -0.1278,
+      "xy": "gcpvj0duq533"
+    },
+    {
+      "lat": 35.6762,
+      "lon": 139.6503,
+      "xy": "xn76cydhzven"
+    },
+    {
+      "lat": 40.7128,
+      "lon": -74.006,
+      "xy": "dr5regw3ppyz"
+    },
+    {
+      "lat": 59.9139,
+      "lon": 10.7522,
+      "xy": "u4xsudvxb2mq"
+    },
+    {
+      "lat": 0,
+      "lon": 0,
+      "xy": "s000000000000"
+    },
+    {
+      "lat": -90,
+      "lon": -180,
+      "xy": "000000000000"
+    },
+    {
+      "lat": 90,
+      "lon": 180,
+      "xy": "zzzzzzzzzzzz"
+    }
+  ],
+  "measured_heights": [
+    23.0254,
+    -0.0001,
+    0,
+    23,
+    -18,
+    23.025,
+    1.2345,
+    -1.2345,
+    0.0625,
+    0.1875,
+    -0.0625,
+    -0.1875,
+    1e+20
+  ],
+  "invalid_z": [
+    "+23",
+    "2.3e1",
+    "023",
+    "23.",
+    "23.0",
+    "23.50",
+    "-0",
+    "0.0",
+    "٢٣",
+    ".5",
+    "23\n"
+  ],
+  "invalid_h": [
+    "u3b_0",
+    "uuuuuuuuuuuuu_0",
+    "u3bu0",
+    "u3bu__0",
+    "u3bu_",
+    "u3bu_1111111111111111111111111111"
+  ],
+  "z_order": [
+    "-18",
+    "-0.5",
+    "0",
+    "0.05",
+    "0.5",
+    "23",
+    "23.02",
+    "23.025",
+    "999999999999999999999999998",
+    "999999999999999999999999999"
+  ],
+  "scope_cases": [
+    {
+      "scope": {
+        "z_min": "23",
+        "z_max": "23.025"
+      },
+      "values": [
+        "23",
+        "23.02",
+        "23.025",
+        "22.999"
+      ],
+      "expected": [
+        true,
+        true,
+        false,
+        false
+      ]
+    },
+    {
+      "h": "u3bu0000_0",
+      "scope": {
+        "xy_lo": "u3bu",
+        "xy_hi": "u3bu000001"
+      },
+      "expected": true
+    },
+    {
+      "h": "u3bu0000_0",
+      "scope": {
+        "xy_lo": "u3butz7k9q",
+        "xy_hi": "u3butz7k9r"
+      },
+      "expected": false
+    },
+    {
+      "interval_cases": [
+        {
+          "xy_lo": "u3b",
+          "xy_hi": "u3c",
+          "xy": "u3bu",
+          "selected": true
+        },
+        {
+          "xy_lo": "u3b",
+          "xy_hi": "u3c",
+          "xy": "u3b",
+          "selected": true
+        },
+        {
+          "xy_lo": "u3b",
+          "xy_hi": "u3c",
+          "xy": "u3butz7k9q",
+          "selected": true
+        },
+        {
+          "xy_lo": "u3b",
+          "xy_hi": "u3c",
+          "xy": "u3c",
+          "selected": false
+        },
+        {
+          "xy_lo": "u3butz7k9q",
+          "xy_hi": "u3butz7k9r",
+          "xy": "u3bu",
+          "selected": false
+        },
+        {
+          "xy_lo": "u3butz7k9q",
+          "xy_hi": "u3butz7k9r",
+          "xy": "u3butz7k9q",
+          "selected": true
+        },
+        {
+          "xy_lo": "u3butz7k9q",
+          "xy_hi": "u3butz7k9r",
+          "xy": "u3butz7k9r",
+          "selected": false
+        },
+        {
+          "xy_lo": "u3bu",
+          "xy_hi": "u3bu000001",
+          "xy": "u3bu",
+          "selected": true
+        }
+      ]
+    }
+  ],
+  "invalid_scopes": [
+    {
+      "xy_lo": "u3b",
+      "xy_hi": "u3b0"
+    },
+    {
+      "z_min": 23
+    },
+    {
+      "z_min": "23.0"
+    },
+    {
+      "z_min": "1",
+      "z_max": "1"
+    },
+    {
+      "h_lo": "u"
+    }
+  ],
+  "max_h": {
+    "lat": 0,
+    "lon": 0,
+    "z": "111111111111111111111111111",
+    "precision_ok": 4,
+    "precision_fail": 12,
+    "expected_len": 32
+  }
+}
