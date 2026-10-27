@@ -22,6 +22,36 @@ spec — optional acceleration only, see §11).
 |---|---|
 | 1 | Initial contract. |
 | 2 | Fixed two internal inconsistencies found by the implementing agent before any code was written: (a) the XY prefix-interval endpoints were degenerate (§8 step 3) — replaced by the explicit prefix-interval definition in §4.2; (b) the pack-membership rule contradicted the pack grouping rule for leaves with more than 256 records (§6) — replaced by a collective-union rule. No normative rule was weakened; §4.2 and §6 are now implementable as written. |
+| 3 | Clarifications after the second review pass: pack magic length corrected from 10 to **11** ASCII bytes (`PUNKTIPACK1`); pack entry order fixed to ascending `sha256`; shard `packs` list order fixed to ascending content address; index tree shape constrained (no empty subtree, no dangling shard, manifest index lists exactly the depth-2 prefixes that occur). |
+
+---
+
+## 0.1 Normative constants
+
+Every number used by this contract appears here exactly once. If a number
+appears elsewhere in this document, it is a restatement of a row below and MUST
+agree with it.
+
+| Name | Value | Meaning |
+|---|---|---|
+| `profile` | `punkti/pub/0.6` | the `v` member of root, manifest and shard |
+| `key_len` | 12 | length of the comparison key `K(xy)` |
+| `index_depth` | 2 | length of the manifest index keys (XY prefixes) |
+| `leaf_depth` (`D`) | 10 | length of a leaf prefix; depth of the interior tree |
+| `min_symbol` / `max_symbol` | `0` / `z` | smallest / largest geohash symbol used for interval padding |
+| `geohash_alphabet` | `0123456789bcdefghjkmnpqrstuvwxyz` | lowercase geohash alphabet, 32 symbols |
+| `max_index_entries` | 1024 | 32² distinct depth-2 XY prefixes |
+| `unanchored_key` | `~` | reserved manifest index key for `h = ""` |
+| `pack_magic` | `PUNKTIPACK1` | pack framing magic, **11 ASCII bytes**, no terminator |
+| `pack_max_entries` | 256 | maximum records in one pack |
+| `digest_len` | 64 | hex characters of a SHA-256 content address |
+| `content_address` | SHA-256 | digest used for every immutable object |
+| `manifest_members` | `index`, `pack_count`, `prev`, `record_count`, `seq`, `v` | manifest member names |
+| `root_members` | `head`, `seq`, `v` | root pointer member names |
+| `shard_members` | `children`, `packs`, `prefix`, `records`, `v` | shard member names |
+| `record_entry_members` | `h`, `mid`, `sha256` | index record entry member names |
+| `unanchored_address` | `""` | the `h` value of an unanchored atom |
+| `full_address_prefix` | `punkti/0.6:` | namespace of a full MID address |
 
 ---
 
@@ -243,15 +273,16 @@ A pack is an immutable byte string bundling record objects. Framing is
 deterministic:
 
 ```text
-pack := "PUNKTIPACK1"            (10 ASCII bytes, no terminator)
+pack := "PUNKTIPACK1"            (11 ASCII bytes, no terminator)
       || u32be(entry_count)
       || entry_count × ( u32be(len(R)) || R )
 ```
 
 * `entry_count` ≥ 1; `len(R)` ≥ 1.
-* Entries are the exact `R` bytes of the records; a pack carries **no other
-  metadata and no per-entry digest**. A reader hashes each extracted `R` and
-  compares it with the shard index entry.
+* Entries are the exact `R` bytes of the records, in the order defined by the
+  membership rule below (ascending `sha256` hex within the pack). A pack carries
+  **no other metadata and no per-entry digest**. A reader hashes each extracted
+  `R` and compares it with the shard index entry.
 * **Membership is normative and deterministic**: take the leaf shard's record
   entries, sort ascending by `sha256` hex, and split them into consecutive
   groups of at most 256 entries. Group *k* is one pack of that leaf. A leaf with
