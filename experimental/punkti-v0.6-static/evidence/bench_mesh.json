@@ -1,0 +1,993 @@
+{
+  "generated_at": "2026-10-27T03:43:43.455648+00:00",
+  "host": {
+    "cpu_count": 1,
+    "memory_total_kib": 2009888,
+    "platform": "Linux-7.0.0-38-generic-x86_64-with-glibc2.43",
+    "python_version": "3.14.7"
+  },
+  "plan": "bounded",
+  "repeats": 3,
+  "dataset_sizes": [
+    1000,
+    5000
+  ],
+  "scenarios_by_dataset": {
+    "1000": {
+      "fresh_subscriber_allspace": {
+        "runs": [
+          {
+            "scenario": "fresh_subscriber_allspace",
+            "source_count": 1000,
+            "target_seed_count": 0,
+            "admitted": 1000,
+            "pull_requests": 32,
+            "transferred_records": 1000,
+            "estimated_transferred_bytes": 183421,
+            "useful_bytes": 183429,
+            "wall_sec": 0.6205909990239888,
+            "cpu_sec": 0.6070538390000024,
+            "maxrss_kib": 73948
+          },
+          {
+            "scenario": "fresh_subscriber_allspace",
+            "source_count": 1000,
+            "target_seed_count": 0,
+            "admitted": 1000,
+            "pull_requests": 32,
+            "transferred_records": 1000,
+            "estimated_transferred_bytes": 183421,
+            "useful_bytes": 183429,
+            "wall_sec": 0.8467313220025972,
+            "cpu_sec": 0.796483760000001,
+            "maxrss_kib": 73948
+          },
+          {
+            "scenario": "fresh_subscriber_allspace",
+            "source_count": 1000,
+            "target_seed_count": 0,
+            "admitted": 1000,
+            "pull_requests": 32,
+            "transferred_records": 1000,
+            "estimated_transferred_bytes": 183421,
+            "useful_bytes": 183429,
+            "wall_sec": 0.835643159924075,
+            "cpu_sec": 0.7937184939999895,
+            "maxrss_kib": 73948
+          }
+        ],
+        "summary": {
+          "median": {
+            "source_count": 1000,
+            "target_seed_count": 0,
+            "admitted": 1000,
+            "pull_requests": 32,
+            "transferred_records": 1000,
+            "estimated_transferred_bytes": 183421,
+            "useful_bytes": 183429,
+            "wall_sec": 0.835643159924075,
+            "cpu_sec": 0.7937184939999895,
+            "maxrss_kib": 73948
+          },
+          "min": {
+            "source_count": 1000,
+            "target_seed_count": 0,
+            "admitted": 1000,
+            "pull_requests": 32,
+            "transferred_records": 1000,
+            "estimated_transferred_bytes": 183421,
+            "useful_bytes": 183429,
+            "wall_sec": 0.6205909990239888,
+            "cpu_sec": 0.6070538390000024,
+            "maxrss_kib": 73948
+          },
+          "max": {
+            "source_count": 1000,
+            "target_seed_count": 0,
+            "admitted": 1000,
+            "pull_requests": 32,
+            "transferred_records": 1000,
+            "estimated_transferred_bytes": 183421,
+            "useful_bytes": 183429,
+            "wall_sec": 0.8467313220025972,
+            "cpu_sec": 0.796483760000001,
+            "maxrss_kib": 73948
+          }
+        }
+      },
+      "overlap_100": {
+        "runs": [
+          {
+            "scenario": "overlap_100",
+            "source_count": 1000,
+            "target_seed_count": 1000,
+            "admitted": 0,
+            "pull_requests": 32,
+            "transferred_records": 1000,
+            "estimated_transferred_bytes": 183421,
+            "useful_bytes": 0,
+            "wall_sec": 0.7576023429865018,
+            "cpu_sec": 0.718448785999982,
+            "maxrss_kib": 73948
+          },
+          {
+            "scenario": "overlap_100",
+            "source_count": 1000,
+            "target_seed_count": 1000,
+            "admitted": 0,
+            "pull_requests": 32,
+            "transferred_records": 1000,
+            "estimated_transferred_bytes": 183421,
+            "useful_bytes": 0,
+            "wall_sec": 0.980709204915911,
+            "cpu_sec": 0.9430747270000097,
+            "maxrss_kib": 73948
+          },
+          {
+            "scenario": "overlap_100",
+            "source_count": 1000,
+            "target_seed_count": 1000,
+            "admitted": 0,
+            "pull_requests": 32,
+            "transferred_records": 1000,
+            "estimated_transferred_bytes": 183421,
+            "useful_bytes": 0,
+            "wall_sec": 0.6280182939954102,
+            "cpu_sec": 0.6067035420000195,
+            "maxrss_kib": 73948
+          }
+        ],
+        "summary": {
+          "median": {
+            "source_count": 1000,
+            "target_seed_count": 1000,
+            "admitted": 0,
+            "pull_requests": 32,
+            "transferred_records": 1000,
+            "estimated_transferred_bytes": 183421,
+            "useful_bytes": 0,
+            "wall_sec": 0.7576023429865018,
+            "cpu_sec": 0.718448785999982,
+            "maxrss_kib": 73948
+          },
+          "min": {
+            "source_count": 1000,
+            "target_seed_count": 1000,
+            "admitted": 0,
+            "pull_requests": 32,
+            "transferred_records": 1000,
+            "estimated_transferred_bytes": 183421,
+            "useful_bytes": 0,
+            "wall_sec": 0.6280182939954102,
+            "cpu_sec": 0.6067035420000195,
+            "maxrss_kib": 73948
+          },
+          "max": {
+            "source_count": 1000,
+            "target_seed_count": 1000,
+            "admitted": 0,
+            "pull_requests": 32,
+            "transferred_records": 1000,
+            "estimated_transferred_bytes": 183421,
+            "useful_bytes": 0,
+            "wall_sec": 0.980709204915911,
+            "cpu_sec": 0.9430747270000097,
+            "maxrss_kib": 73948
+          }
+        }
+      },
+      "overlap_0": {
+        "runs": [
+          {
+            "scenario": "overlap_0",
+            "source_count": 1000,
+            "target_seed_count": 1000,
+            "admitted": 1000,
+            "pull_requests": 32,
+            "transferred_records": 1000,
+            "estimated_transferred_bytes": 183421,
+            "useful_bytes": 183429,
+            "wall_sec": 0.7078347919741645,
+            "cpu_sec": 0.6575142449999873,
+            "maxrss_kib": 73948
+          },
+          {
+            "scenario": "overlap_0",
+            "source_count": 1000,
+            "target_seed_count": 1000,
+            "admitted": 1000,
+            "pull_requests": 32,
+            "transferred_records": 1000,
+            "estimated_transferred_bytes": 183421,
+            "useful_bytes": 183429,
+            "wall_sec": 0.6795798229286447,
+            "cpu_sec": 0.6495152749999988,
+            "maxrss_kib": 73948
+          },
+          {
+            "scenario": "overlap_0",
+            "source_count": 1000,
+            "target_seed_count": 1000,
+            "admitted": 1000,
+            "pull_requests": 32,
+            "transferred_records": 1000,
+            "estimated_transferred_bytes": 183421,
+            "useful_bytes": 183429,
+            "wall_sec": 0.7359372490318492,
+            "cpu_sec": 0.6446461479999925,
+            "maxrss_kib": 73948
+          }
+        ],
+        "summary": {
+          "median": {
+            "source_count": 1000,
+            "target_seed_count": 1000,
+            "admitted": 1000,
+            "pull_requests": 32,
+            "transferred_records": 1000,
+            "estimated_transferred_bytes": 183421,
+            "useful_bytes": 183429,
+            "wall_sec": 0.7078347919741645,
+            "cpu_sec": 0.6495152749999988,
+            "maxrss_kib": 73948
+          },
+          "min": {
+            "source_count": 1000,
+            "target_seed_count": 1000,
+            "admitted": 1000,
+            "pull_requests": 32,
+            "transferred_records": 1000,
+            "estimated_transferred_bytes": 183421,
+            "useful_bytes": 183429,
+            "wall_sec": 0.6795798229286447,
+            "cpu_sec": 0.6446461479999925,
+            "maxrss_kib": 73948
+          },
+          "max": {
+            "source_count": 1000,
+            "target_seed_count": 1000,
+            "admitted": 1000,
+            "pull_requests": 32,
+            "transferred_records": 1000,
+            "estimated_transferred_bytes": 183421,
+            "useful_bytes": 183429,
+            "wall_sec": 0.7359372490318492,
+            "cpu_sec": 0.6575142449999873,
+            "maxrss_kib": 73948
+          }
+        }
+      },
+      "xy_prefix_subscription": {
+        "runs": [
+          {
+            "scenario": "xy_prefix_subscription",
+            "source_count": 1000,
+            "target_seed_count": 0,
+            "admitted": 334,
+            "pull_requests": 11,
+            "transferred_records": 334,
+            "estimated_transferred_bytes": 61262,
+            "useful_bytes": 61265,
+            "wall_sec": 0.32341482397168875,
+            "cpu_sec": 0.27019267700001137,
+            "maxrss_kib": 73948
+          },
+          {
+            "scenario": "xy_prefix_subscription",
+            "source_count": 1000,
+            "target_seed_count": 0,
+            "admitted": 334,
+            "pull_requests": 11,
+            "transferred_records": 334,
+            "estimated_transferred_bytes": 61262,
+            "useful_bytes": 61265,
+            "wall_sec": 0.25103773607406765,
+            "cpu_sec": 0.23919327600000884,
+            "maxrss_kib": 73948
+          },
+          {
+            "scenario": "xy_prefix_subscription",
+            "source_count": 1000,
+            "target_seed_count": 0,
+            "admitted": 334,
+            "pull_requests": 11,
+            "transferred_records": 334,
+            "estimated_transferred_bytes": 61262,
+            "useful_bytes": 61265,
+            "wall_sec": 0.29861506808083504,
+            "cpu_sec": 0.28350512000000094,
+            "maxrss_kib": 73948
+          }
+        ],
+        "summary": {
+          "median": {
+            "source_count": 1000,
+            "target_seed_count": 0,
+            "admitted": 334,
+            "pull_requests": 11,
+            "transferred_records": 334,
+            "estimated_transferred_bytes": 61262,
+            "useful_bytes": 61265,
+            "wall_sec": 0.29861506808083504,
+            "cpu_sec": 0.27019267700001137,
+            "maxrss_kib": 73948
+          },
+          "min": {
+            "source_count": 1000,
+            "target_seed_count": 0,
+            "admitted": 334,
+            "pull_requests": 11,
+            "transferred_records": 334,
+            "estimated_transferred_bytes": 61262,
+            "useful_bytes": 61265,
+            "wall_sec": 0.25103773607406765,
+            "cpu_sec": 0.23919327600000884,
+            "maxrss_kib": 73948
+          },
+          "max": {
+            "source_count": 1000,
+            "target_seed_count": 0,
+            "admitted": 334,
+            "pull_requests": 11,
+            "transferred_records": 334,
+            "estimated_transferred_bytes": 61262,
+            "useful_bytes": 61265,
+            "wall_sec": 0.32341482397168875,
+            "cpu_sec": 0.28350512000000094,
+            "maxrss_kib": 73948
+          }
+        }
+      },
+      "broad_allspace_subscription": {
+        "runs": [
+          {
+            "scenario": "broad_allspace_subscription",
+            "source_count": 1000,
+            "target_seed_count": 0,
+            "admitted": 1000,
+            "pull_requests": 32,
+            "transferred_records": 1000,
+            "estimated_transferred_bytes": 183421,
+            "useful_bytes": 183429,
+            "wall_sec": 0.7364609009819105,
+            "cpu_sec": 0.7107401660000221,
+            "maxrss_kib": 73948
+          },
+          {
+            "scenario": "broad_allspace_subscription",
+            "source_count": 1000,
+            "target_seed_count": 0,
+            "admitted": 1000,
+            "pull_requests": 32,
+            "transferred_records": 1000,
+            "estimated_transferred_bytes": 183421,
+            "useful_bytes": 183429,
+            "wall_sec": 0.6896396899828687,
+            "cpu_sec": 0.6632398010000031,
+            "maxrss_kib": 73948
+          },
+          {
+            "scenario": "broad_allspace_subscription",
+            "source_count": 1000,
+            "target_seed_count": 0,
+            "admitted": 1000,
+            "pull_requests": 32,
+            "transferred_records": 1000,
+            "estimated_transferred_bytes": 183421,
+            "useful_bytes": 183429,
+            "wall_sec": 0.7560758109902963,
+            "cpu_sec": 0.7233700010000064,
+            "maxrss_kib": 73948
+          }
+        ],
+        "summary": {
+          "median": {
+            "source_count": 1000,
+            "target_seed_count": 0,
+            "admitted": 1000,
+            "pull_requests": 32,
+            "transferred_records": 1000,
+            "estimated_transferred_bytes": 183421,
+            "useful_bytes": 183429,
+            "wall_sec": 0.7364609009819105,
+            "cpu_sec": 0.7107401660000221,
+            "maxrss_kib": 73948
+          },
+          "min": {
+            "source_count": 1000,
+            "target_seed_count": 0,
+            "admitted": 1000,
+            "pull_requests": 32,
+            "transferred_records": 1000,
+            "estimated_transferred_bytes": 183421,
+            "useful_bytes": 183429,
+            "wall_sec": 0.6896396899828687,
+            "cpu_sec": 0.6632398010000031,
+            "maxrss_kib": 73948
+          },
+          "max": {
+            "source_count": 1000,
+            "target_seed_count": 0,
+            "admitted": 1000,
+            "pull_requests": 32,
+            "transferred_records": 1000,
+            "estimated_transferred_bytes": 183421,
+            "useful_bytes": 183429,
+            "wall_sec": 0.7560758109902963,
+            "cpu_sec": 0.7233700010000064,
+            "maxrss_kib": 73948
+          }
+        }
+      },
+      "incremental_one_new_atom": {
+        "runs": [
+          {
+            "scenario": "incremental_one_new_atom",
+            "source_count": 1001,
+            "target_seed_count": 1000,
+            "admitted": 1,
+            "pull_requests": 1,
+            "transferred_records": 1,
+            "estimated_transferred_bytes": 183,
+            "useful_bytes": 189,
+            "wall_sec": 0.0035151069751009345,
+            "cpu_sec": 0.0034910660000093685,
+            "maxrss_kib": 73948
+          },
+          {
+            "scenario": "incremental_one_new_atom",
+            "source_count": 1001,
+            "target_seed_count": 1000,
+            "admitted": 1,
+            "pull_requests": 1,
+            "transferred_records": 1,
+            "estimated_transferred_bytes": 183,
+            "useful_bytes": 189,
+            "wall_sec": 0.004681318998336792,
+            "cpu_sec": 0.004316430000017135,
+            "maxrss_kib": 73948
+          },
+          {
+            "scenario": "incremental_one_new_atom",
+            "source_count": 1001,
+            "target_seed_count": 1000,
+            "admitted": 1,
+            "pull_requests": 1,
+            "transferred_records": 1,
+            "estimated_transferred_bytes": 183,
+            "useful_bytes": 189,
+            "wall_sec": 0.008640876971185207,
+            "cpu_sec": 0.004224973999953363,
+            "maxrss_kib": 73948
+          }
+        ],
+        "summary": {
+          "median": {
+            "source_count": 1001,
+            "target_seed_count": 1000,
+            "admitted": 1,
+            "pull_requests": 1,
+            "transferred_records": 1,
+            "estimated_transferred_bytes": 183,
+            "useful_bytes": 189,
+            "wall_sec": 0.004681318998336792,
+            "cpu_sec": 0.004224973999953363,
+            "maxrss_kib": 73948
+          },
+          "min": {
+            "source_count": 1001,
+            "target_seed_count": 1000,
+            "admitted": 1,
+            "pull_requests": 1,
+            "transferred_records": 1,
+            "estimated_transferred_bytes": 183,
+            "useful_bytes": 189,
+            "wall_sec": 0.0035151069751009345,
+            "cpu_sec": 0.0034910660000093685,
+            "maxrss_kib": 73948
+          },
+          "max": {
+            "source_count": 1001,
+            "target_seed_count": 1000,
+            "admitted": 1,
+            "pull_requests": 1,
+            "transferred_records": 1,
+            "estimated_transferred_bytes": 183,
+            "useful_bytes": 189,
+            "wall_sec": 0.008640876971185207,
+            "cpu_sec": 0.004316430000017135,
+            "maxrss_kib": 73948
+          }
+        }
+      }
+    },
+    "5000": {
+      "fresh_subscriber_allspace": {
+        "runs": [
+          {
+            "scenario": "fresh_subscriber_allspace",
+            "source_count": 5000,
+            "target_seed_count": 0,
+            "admitted": 5000,
+            "pull_requests": 157,
+            "transferred_records": 5000,
+            "estimated_transferred_bytes": 917109,
+            "useful_bytes": 917142,
+            "wall_sec": 4.93501854094211,
+            "cpu_sec": 4.700029563000044,
+            "maxrss_kib": 88568
+          },
+          {
+            "scenario": "fresh_subscriber_allspace",
+            "source_count": 5000,
+            "target_seed_count": 0,
+            "admitted": 5000,
+            "pull_requests": 157,
+            "transferred_records": 5000,
+            "estimated_transferred_bytes": 917109,
+            "useful_bytes": 917142,
+            "wall_sec": 4.837640548008494,
+            "cpu_sec": 4.6609275120000575,
+            "maxrss_kib": 88568
+          },
+          {
+            "scenario": "fresh_subscriber_allspace",
+            "source_count": 5000,
+            "target_seed_count": 0,
+            "admitted": 5000,
+            "pull_requests": 157,
+            "transferred_records": 5000,
+            "estimated_transferred_bytes": 917109,
+            "useful_bytes": 917142,
+            "wall_sec": 5.02626147097908,
+            "cpu_sec": 4.802826838999977,
+            "maxrss_kib": 88568
+          }
+        ],
+        "summary": {
+          "median": {
+            "source_count": 5000,
+            "target_seed_count": 0,
+            "admitted": 5000,
+            "pull_requests": 157,
+            "transferred_records": 5000,
+            "estimated_transferred_bytes": 917109,
+            "useful_bytes": 917142,
+            "wall_sec": 4.93501854094211,
+            "cpu_sec": 4.700029563000044,
+            "maxrss_kib": 88568
+          },
+          "min": {
+            "source_count": 5000,
+            "target_seed_count": 0,
+            "admitted": 5000,
+            "pull_requests": 157,
+            "transferred_records": 5000,
+            "estimated_transferred_bytes": 917109,
+            "useful_bytes": 917142,
+            "wall_sec": 4.837640548008494,
+            "cpu_sec": 4.6609275120000575,
+            "maxrss_kib": 88568
+          },
+          "max": {
+            "source_count": 5000,
+            "target_seed_count": 0,
+            "admitted": 5000,
+            "pull_requests": 157,
+            "transferred_records": 5000,
+            "estimated_transferred_bytes": 917109,
+            "useful_bytes": 917142,
+            "wall_sec": 5.02626147097908,
+            "cpu_sec": 4.802826838999977,
+            "maxrss_kib": 88568
+          }
+        }
+      },
+      "overlap_100": {
+        "runs": [
+          {
+            "scenario": "overlap_100",
+            "source_count": 5000,
+            "target_seed_count": 5000,
+            "admitted": 0,
+            "pull_requests": 157,
+            "transferred_records": 5000,
+            "estimated_transferred_bytes": 917109,
+            "useful_bytes": 0,
+            "wall_sec": 5.542685937951319,
+            "cpu_sec": 4.930693450000035,
+            "maxrss_kib": 88568
+          },
+          {
+            "scenario": "overlap_100",
+            "source_count": 5000,
+            "target_seed_count": 5000,
+            "admitted": 0,
+            "pull_requests": 157,
+            "transferred_records": 5000,
+            "estimated_transferred_bytes": 917109,
+            "useful_bytes": 0,
+            "wall_sec": 5.372001308016479,
+            "cpu_sec": 4.749212203999946,
+            "maxrss_kib": 88568
+          },
+          {
+            "scenario": "overlap_100",
+            "source_count": 5000,
+            "target_seed_count": 5000,
+            "admitted": 0,
+            "pull_requests": 157,
+            "transferred_records": 5000,
+            "estimated_transferred_bytes": 917109,
+            "useful_bytes": 0,
+            "wall_sec": 4.676315160002559,
+            "cpu_sec": 4.51621770099996,
+            "maxrss_kib": 88568
+          }
+        ],
+        "summary": {
+          "median": {
+            "source_count": 5000,
+            "target_seed_count": 5000,
+            "admitted": 0,
+            "pull_requests": 157,
+            "transferred_records": 5000,
+            "estimated_transferred_bytes": 917109,
+            "useful_bytes": 0,
+            "wall_sec": 5.372001308016479,
+            "cpu_sec": 4.749212203999946,
+            "maxrss_kib": 88568
+          },
+          "min": {
+            "source_count": 5000,
+            "target_seed_count": 5000,
+            "admitted": 0,
+            "pull_requests": 157,
+            "transferred_records": 5000,
+            "estimated_transferred_bytes": 917109,
+            "useful_bytes": 0,
+            "wall_sec": 4.676315160002559,
+            "cpu_sec": 4.51621770099996,
+            "maxrss_kib": 88568
+          },
+          "max": {
+            "source_count": 5000,
+            "target_seed_count": 5000,
+            "admitted": 0,
+            "pull_requests": 157,
+            "transferred_records": 5000,
+            "estimated_transferred_bytes": 917109,
+            "useful_bytes": 0,
+            "wall_sec": 5.542685937951319,
+            "cpu_sec": 4.930693450000035,
+            "maxrss_kib": 88568
+          }
+        }
+      },
+      "overlap_0": {
+        "runs": [
+          {
+            "scenario": "overlap_0",
+            "source_count": 5000,
+            "target_seed_count": 5000,
+            "admitted": 5000,
+            "pull_requests": 157,
+            "transferred_records": 5000,
+            "estimated_transferred_bytes": 917109,
+            "useful_bytes": 917142,
+            "wall_sec": 4.942164579988457,
+            "cpu_sec": 4.754284858000005,
+            "maxrss_kib": 88568
+          },
+          {
+            "scenario": "overlap_0",
+            "source_count": 5000,
+            "target_seed_count": 5000,
+            "admitted": 5000,
+            "pull_requests": 157,
+            "transferred_records": 5000,
+            "estimated_transferred_bytes": 917109,
+            "useful_bytes": 917142,
+            "wall_sec": 4.731416212045588,
+            "cpu_sec": 4.561132138000062,
+            "maxrss_kib": 88568
+          },
+          {
+            "scenario": "overlap_0",
+            "source_count": 5000,
+            "target_seed_count": 5000,
+            "admitted": 5000,
+            "pull_requests": 157,
+            "transferred_records": 5000,
+            "estimated_transferred_bytes": 917109,
+            "useful_bytes": 917142,
+            "wall_sec": 7.1337808589451015,
+            "cpu_sec": 6.706153205999954,
+            "maxrss_kib": 88568
+          }
+        ],
+        "summary": {
+          "median": {
+            "source_count": 5000,
+            "target_seed_count": 5000,
+            "admitted": 5000,
+            "pull_requests": 157,
+            "transferred_records": 5000,
+            "estimated_transferred_bytes": 917109,
+            "useful_bytes": 917142,
+            "wall_sec": 4.942164579988457,
+            "cpu_sec": 4.754284858000005,
+            "maxrss_kib": 88568
+          },
+          "min": {
+            "source_count": 5000,
+            "target_seed_count": 5000,
+            "admitted": 5000,
+            "pull_requests": 157,
+            "transferred_records": 5000,
+            "estimated_transferred_bytes": 917109,
+            "useful_bytes": 917142,
+            "wall_sec": 4.731416212045588,
+            "cpu_sec": 4.561132138000062,
+            "maxrss_kib": 88568
+          },
+          "max": {
+            "source_count": 5000,
+            "target_seed_count": 5000,
+            "admitted": 5000,
+            "pull_requests": 157,
+            "transferred_records": 5000,
+            "estimated_transferred_bytes": 917109,
+            "useful_bytes": 917142,
+            "wall_sec": 7.1337808589451015,
+            "cpu_sec": 6.706153205999954,
+            "maxrss_kib": 88568
+          }
+        }
+      },
+      "xy_prefix_subscription": {
+        "runs": [
+          {
+            "scenario": "xy_prefix_subscription",
+            "source_count": 5000,
+            "target_seed_count": 0,
+            "admitted": 1667,
+            "pull_requests": 53,
+            "transferred_records": 1667,
+            "estimated_transferred_bytes": 305764,
+            "useful_bytes": 305775,
+            "wall_sec": 2.8417272119550034,
+            "cpu_sec": 2.519706334000034,
+            "maxrss_kib": 88568
+          },
+          {
+            "scenario": "xy_prefix_subscription",
+            "source_count": 5000,
+            "target_seed_count": 0,
+            "admitted": 1667,
+            "pull_requests": 53,
+            "transferred_records": 1667,
+            "estimated_transferred_bytes": 305764,
+            "useful_bytes": 305775,
+            "wall_sec": 2.3968745609745383,
+            "cpu_sec": 2.2866279849999955,
+            "maxrss_kib": 88568
+          },
+          {
+            "scenario": "xy_prefix_subscription",
+            "source_count": 5000,
+            "target_seed_count": 0,
+            "admitted": 1667,
+            "pull_requests": 53,
+            "transferred_records": 1667,
+            "estimated_transferred_bytes": 305764,
+            "useful_bytes": 305775,
+            "wall_sec": 2.426702080061659,
+            "cpu_sec": 2.297483317000001,
+            "maxrss_kib": 88568
+          }
+        ],
+        "summary": {
+          "median": {
+            "source_count": 5000,
+            "target_seed_count": 0,
+            "admitted": 1667,
+            "pull_requests": 53,
+            "transferred_records": 1667,
+            "estimated_transferred_bytes": 305764,
+            "useful_bytes": 305775,
+            "wall_sec": 2.426702080061659,
+            "cpu_sec": 2.297483317000001,
+            "maxrss_kib": 88568
+          },
+          "min": {
+            "source_count": 5000,
+            "target_seed_count": 0,
+            "admitted": 1667,
+            "pull_requests": 53,
+            "transferred_records": 1667,
+            "estimated_transferred_bytes": 305764,
+            "useful_bytes": 305775,
+            "wall_sec": 2.3968745609745383,
+            "cpu_sec": 2.2866279849999955,
+            "maxrss_kib": 88568
+          },
+          "max": {
+            "source_count": 5000,
+            "target_seed_count": 0,
+            "admitted": 1667,
+            "pull_requests": 53,
+            "transferred_records": 1667,
+            "estimated_transferred_bytes": 305764,
+            "useful_bytes": 305775,
+            "wall_sec": 2.8417272119550034,
+            "cpu_sec": 2.519706334000034,
+            "maxrss_kib": 88568
+          }
+        }
+      },
+      "broad_allspace_subscription": {
+        "runs": [
+          {
+            "scenario": "broad_allspace_subscription",
+            "source_count": 5000,
+            "target_seed_count": 0,
+            "admitted": 5000,
+            "pull_requests": 157,
+            "transferred_records": 5000,
+            "estimated_transferred_bytes": 917109,
+            "useful_bytes": 917142,
+            "wall_sec": 5.565510222921148,
+            "cpu_sec": 5.342872188999991,
+            "maxrss_kib": 91308
+          },
+          {
+            "scenario": "broad_allspace_subscription",
+            "source_count": 5000,
+            "target_seed_count": 0,
+            "admitted": 5000,
+            "pull_requests": 157,
+            "transferred_records": 5000,
+            "estimated_transferred_bytes": 917109,
+            "useful_bytes": 917142,
+            "wall_sec": 5.660858717979863,
+            "cpu_sec": 4.899218157000064,
+            "maxrss_kib": 94764
+          },
+          {
+            "scenario": "broad_allspace_subscription",
+            "source_count": 5000,
+            "target_seed_count": 0,
+            "admitted": 5000,
+            "pull_requests": 157,
+            "transferred_records": 5000,
+            "estimated_transferred_bytes": 917109,
+            "useful_bytes": 917142,
+            "wall_sec": 4.782302818959579,
+            "cpu_sec": 4.5837298200000305,
+            "maxrss_kib": 94764
+          }
+        ],
+        "summary": {
+          "median": {
+            "source_count": 5000,
+            "target_seed_count": 0,
+            "admitted": 5000,
+            "pull_requests": 157,
+            "transferred_records": 5000,
+            "estimated_transferred_bytes": 917109,
+            "useful_bytes": 917142,
+            "wall_sec": 5.565510222921148,
+            "cpu_sec": 4.899218157000064,
+            "maxrss_kib": 94764
+          },
+          "min": {
+            "source_count": 5000,
+            "target_seed_count": 0,
+            "admitted": 5000,
+            "pull_requests": 157,
+            "transferred_records": 5000,
+            "estimated_transferred_bytes": 917109,
+            "useful_bytes": 917142,
+            "wall_sec": 4.782302818959579,
+            "cpu_sec": 4.5837298200000305,
+            "maxrss_kib": 91308
+          },
+          "max": {
+            "source_count": 5000,
+            "target_seed_count": 0,
+            "admitted": 5000,
+            "pull_requests": 157,
+            "transferred_records": 5000,
+            "estimated_transferred_bytes": 917109,
+            "useful_bytes": 917142,
+            "wall_sec": 5.660858717979863,
+            "cpu_sec": 5.342872188999991,
+            "maxrss_kib": 94764
+          }
+        }
+      },
+      "incremental_one_new_atom": {
+        "runs": [
+          {
+            "scenario": "incremental_one_new_atom",
+            "source_count": 5001,
+            "target_seed_count": 5000,
+            "admitted": 1,
+            "pull_requests": 1,
+            "transferred_records": 1,
+            "estimated_transferred_bytes": 183,
+            "useful_bytes": 189,
+            "wall_sec": 0.00553434097673744,
+            "cpu_sec": 0.004771892000007938,
+            "maxrss_kib": 98220
+          },
+          {
+            "scenario": "incremental_one_new_atom",
+            "source_count": 5001,
+            "target_seed_count": 5000,
+            "admitted": 1,
+            "pull_requests": 1,
+            "transferred_records": 1,
+            "estimated_transferred_bytes": 183,
+            "useful_bytes": 189,
+            "wall_sec": 0.003500391962006688,
+            "cpu_sec": 0.0034822190000340925,
+            "maxrss_kib": 98860
+          },
+          {
+            "scenario": "incremental_one_new_atom",
+            "source_count": 5001,
+            "target_seed_count": 5000,
+            "admitted": 1,
+            "pull_requests": 1,
+            "transferred_records": 1,
+            "estimated_transferred_bytes": 183,
+            "useful_bytes": 189,
+            "wall_sec": 0.0050320279551669955,
+            "cpu_sec": 0.004803224000056616,
+            "maxrss_kib": 104236
+          }
+        ],
+        "summary": {
+          "median": {
+            "source_count": 5001,
+            "target_seed_count": 5000,
+            "admitted": 1,
+            "pull_requests": 1,
+            "transferred_records": 1,
+            "estimated_transferred_bytes": 183,
+            "useful_bytes": 189,
+            "wall_sec": 0.0050320279551669955,
+            "cpu_sec": 0.004771892000007938,
+            "maxrss_kib": 98860
+          },
+          "min": {
+            "source_count": 5001,
+            "target_seed_count": 5000,
+            "admitted": 1,
+            "pull_requests": 1,
+            "transferred_records": 1,
+            "estimated_transferred_bytes": 183,
+            "useful_bytes": 189,
+            "wall_sec": 0.003500391962006688,
+            "cpu_sec": 0.0034822190000340925,
+            "maxrss_kib": 98220
+          },
+          "max": {
+            "source_count": 5001,
+            "target_seed_count": 5000,
+            "admitted": 1,
+            "pull_requests": 1,
+            "transferred_records": 1,
+            "estimated_transferred_bytes": 183,
+            "useful_bytes": 189,
+            "wall_sec": 0.00553434097673744,
+            "cpu_sec": 0.004803224000056616,
+            "maxrss_kib": 104236
+          }
+        }
+      }
+    }
+  }
+}
