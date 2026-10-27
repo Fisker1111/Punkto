@@ -1,20 +1,23 @@
 """In-memory reference Mesh with real bounded HTTP PUSH and paginated Range PULL."""
 import hashlib
 import json
+import re
 import threading
 import uuid
 from dataclasses import dataclass
+from http.client import HTTPException
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import parse_qs, urlencode, urlparse
 from urllib.request import Request, urlopen
 
 from carrier import (BODY_LIMIT, RECORD_LIMIT, ResourceLimit, State, VERSION,
-                     address_ok, b64, unb64, validate)
+                     address_ok, b64, unb64, validate, reject_number)
 from spatial import Subscription
 
 MAX_PAGE = 32
 MAX_HTTP = 4 * RECORD_LIMIT
 MAX_CANDIDATES = 128
+MAX_QUERY = 16384
 
 
 def digest(raw):
@@ -30,20 +33,25 @@ def wire(raw, address=None):
     return dict(address=address or observation.address, sha256=digest(raw), record=b64(raw))
 
 
-def request(url, path, payload=None):
+def request(url, path, payload=None, *, timeout=5):
     data = None if payload is None else packed(payload)
     req = Request(url + path, data=data, headers={'Content-Type': 'application/json'})
-    with urlopen(req, timeout=5) as response:
+    with urlopen(req, timeout=timeout) as response:
         raw = response.read(MAX_HTTP + 1)
+        length = response.headers.get('Content-Length')
+        if length is not None and len(raw) < int(length) and len(raw) <= MAX_HTTP:
+            raise ValueError('truncated HTTP response')
     if len(raw) > MAX_HTTP:
         raise ResourceLimit('HTTP response limit')
-    return json.loads(raw)
+    return json.loads(raw, parse_constant=reject_number)
 
 
 def peer_url(url):
+    if not isinstance(url, str):
+        raise ValueError("loopback peer origin required")
     parsed = urlparse(url)
     # This executable reference intentionally exposes only loopback HTTP.
-    if parsed.scheme != 'http' or parsed.hostname != '127.0.0.1' or not parsed.port or parsed.path or parsed.query or parsed.fragment or parsed.username:
+    if parsed.scheme != 'http' or parsed.hostname != '127.0.0.1' or not parsed.port or parsed.path or parsed.query or parsed.fragment or parsed.username is not None or parsed.password is not None:
         raise ValueError('loopback peer origin required')
     return url
 
@@ -80,9 +88,13 @@ class Node:
             return Subscription() in self.subscriptions
         return any(s.matches(h) for s in self.subscriptions)
 
-    def admit(self, item):
-        if not isinstance(item, dict):
+    def admit(self, item, *, _validate_only=False):
+        if not isinstance(item, dict) or set(item) != {'address', 'sha256', 'record'}:
             raise ValueError('record wrapper required')
+        if not address_ok(item['address']):
+            raise ValueError('declared address')
+        if not isinstance(item['sha256'], str) or not re.fullmatch(r'[0-9a-f]{64}', item['sha256']):
+            raise ValueError('transport digest spelling')
         raw = unb64(item['record'])
         if len(raw) > RECORD_LIMIT:
             raise ResourceLimit('record limit')
@@ -98,11 +110,13 @@ class Node:
             if observation.address is not None and address != observation.address:
                 raise ValueError('address mismatch')
         elif namespace == 'punkti/0.5.1':
-            raise ValueError('legacy adapter not supported')
+            return dict(state=State.STRUCTURAL.value, admitted=False, reason='legacy-adapter-unavailable')
         else:
             state, h = State.VERSION, None
         # Never use a claimed state, or dedup before local verification.
         if state in (State.STRUCTURAL, State.PROVENANCE):
+            return dict(state=state.value, admitted=False)
+        if _validate_only:
             return dict(state=state.value, admitted=False)
         if not self.wants(h):
             return dict(state=state.value, admitted=False, reason='out-of-scope')
@@ -133,8 +147,10 @@ class Node:
             raise ValueError('query object required')
         mode = query.get('mode', 'spatial')
         size = query.get('limit', MAX_PAGE)
-        if type(size) is not int or not 1 <= size <= MAX_PAGE:
+        if type(size) is not int or size < 1:
             raise ValueError('page size')
+        if size > MAX_PAGE:
+            raise ResourceLimit('page size')
         scope = Subscription(**query.get('scope', {}))
         lo, hi = query.get('lo'), query.get('hi')
         if mode not in ('mid', 'spatial'):
@@ -157,16 +173,18 @@ class Node:
                         raise ValueError('sequence cursor')
                     if after == ceiling:
                         ceiling = top  # Resume a finished subscription at a new high-water.
-                elif not isinstance(after, list) or len(after) != 2 or not all(isinstance(v, str) for v in after):
+                elif after is not None and (not isinstance(after, list) or len(after) != 2
+                        or not address_ok(after[0]) or not isinstance(after[1], str)
+                        or not re.fullmatch(r'[0-9a-f]{64}', after[1])):
                     raise ValueError('address cursor')
             else:
-                after, ceiling = (0 if mode == 'spatial' else ['', '']), top
+                after, ceiling = (0 if mode == 'spatial' else None), top
             history = self.log[after:ceiling] if mode == 'spatial' else self.log[:ceiling]
             entries = [e for e in history if
                        (scope.matches(e.h) if e.h is not None else scope == Subscription()) and
                        (lo is None or e.address >= lo) and (hi is None or e.address < hi)]
             key = (lambda e: e.seq) if mode == 'spatial' else (lambda e: [e.address, digest(e.raw)])
-            entries = sorted((e for e in entries if key(e) > after), key=key)
+            entries = sorted((e for e in entries if after is None or key(e) > after), key=key)
             selected, byte_count = [], 0
             for entry in entries[:size]:
                 cost = len(packed(entry.wire()))
@@ -196,6 +214,14 @@ class Node:
         while True:
             query['cursor'] = cursor
             result = request(peer, '/pull?' + urlencode({'q': packed(query).decode()}))
+            if (not isinstance(result, dict) or not isinstance(result.get('records'), list)
+                    or len(result['records']) > MAX_PAGE or type(result.get('end')) is not bool
+                    or not isinstance(result.get('cursor'), dict)):
+                raise ValueError('peer page shape')
+            for item in result['records']:
+                outcome = self.admit(item, _validate_only=True)
+                if outcome['state'] in (State.STRUCTURAL.value, State.PROVENANCE.value):
+                    raise ValueError('peer invalid record')
             for item in result['records']:
                 self.admit(item)
             cursor = result['cursor']
@@ -228,18 +254,26 @@ class Node:
         self.peers.add(peer)
         # Both immediate PUSH directions precede both Range PULL directions.
         self.push_to(peer)
-        request(peer, '/sync', dict(peer=self.url, phase='push'))
+        request(peer, '/sync', dict(peer=self.url, phase='push'), timeout=300)
         self.catchup(peer)
-        request(peer, '/sync', dict(peer=self.url, phase='pull'))
+        request(peer, '/sync', dict(peer=self.url, phase='pull'), timeout=300)
 
     def discover(self):
         """Read peer hints; callers explicitly choose which origins to connect to."""
         hints = set()
         for peer in sorted(self.peers):
             try:
-                hints.update(peer_url(p) for p in request(peer, '/hello')['peers'])
-            except (OSError, ValueError):
+                info = request(peer, '/hello')
+                if (not isinstance(info, dict) or info.get('protocol') != 'punkti-mesh/0.6-draft'
+                        or not isinstance(info.get('peers'), list)):
+                    continue
+            except (OSError, ValueError, HTTPException):
                 continue
+            for hint in info['peers']:
+                try:
+                    hints.add(peer_url(hint))
+                except (ValueError, TypeError):
+                    continue
         return hints - {self.url}
 
     def sync_known(self):
@@ -247,7 +281,7 @@ class Node:
         for peer in sorted(self.peers):
             try:
                 self.connect(peer)
-            except OSError:
+            except (OSError, ValueError, HTTPException):
                 failures.append(peer)
         return failures
 
@@ -272,6 +306,8 @@ class Node:
                     if parsed.path == '/hello':
                         return node.hello()
                     if parsed.path == '/pull':
+                        if len(self.path.encode('utf-8')) > MAX_QUERY:
+                            raise ResourceLimit('query limit')
                         return node.page(json.loads(parse_qs(parsed.query)['q'][0]))
                 elif self.command == 'POST':
                     length = int(self.headers.get('Content-Length', '-1'))
@@ -282,8 +318,12 @@ class Node:
                         raise ValueError('request object required')
                     if parsed.path == '/push':
                         records = data['records']
-                        if not isinstance(records, list) or not 1 <= len(records) <= MAX_PAGE:
+                        if not isinstance(records, list) or not records:
                             raise ValueError('push batch size')
+                        if len(records) > MAX_PAGE:
+                            raise ResourceLimit('push batch size')
+                        for item in records:
+                            node.admit(item, _validate_only=True)
                         node.metrics['push_requests'] += 1
                         node.metrics['push_records'] += len(records)
                         return {'results': [node.admit(item) for item in records]}

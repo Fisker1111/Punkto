@@ -10,13 +10,13 @@ class StoreTests(unittest.TestCase):
     def test_subscription_history_resume_and_scope_binding(self):
         node = Node(epoch='test')
         for i in range(7):
-            node.add(fixture(i, h=('g' if i % 2 else 'z') * 12))
+            node.add(fixture(i, h=('g' if i % 2 else 'z') * 12 + '_0'))
         scope = Subscription('g', 'h').wire()
         query = dict(scope=scope, limit=2)
         page = node.page(query)
         self.assertFalse(page['end'])
         self.assertEqual(len(page['records']), 2)
-        node.add(fixture(8, h='g'*12))
+        node.add(fixture(8, h='g'*12 + '_0'))
         query['cursor'] = page['cursor']
         page = node.page(query)
         self.assertTrue(page['end'])
@@ -68,9 +68,12 @@ class StoreTests(unittest.TestCase):
         node = Node([Subscription('g', 'h')])
         item = wire(b'future raw', 'punkti/9:aa')
         item['h'] = 'g'*12
+        with self.assertRaises(ValueError):
+            node.admit(item)
+        del item['h']
         self.assertFalse(node.admit(item)['admitted'])
         self.assertFalse(node.candidates)
-        self.assertFalse(node.add(fixture(h='z'*12))['admitted'])
+        self.assertFalse(node.add(fixture(h='z'*12 + '_0'))['admitted'])
         self.assertTrue(node.add(fixture())['admitted'])
 
     def test_transport_and_resource_refusals(self):

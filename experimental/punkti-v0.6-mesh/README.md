@@ -14,9 +14,9 @@ python3 experimental/punkti-v0.6-mesh/tests/measure.py
 
 Run from repository root on a host permitting loopback TCP. The tests must create
 three actual HTTP servers. They intentionally fail rather than skip or mock the
-wire when sockets are prohibited. Current verified status: **all 27 tests pass**
-(including all 12 acceptance cases over real loopback HTTP), and the convergence
-measurement converges in one round at 12/96/384 atoms. See
+wire when sockets are prohibited. Current verified status: **all 37 tests pass**
+(including all 12 acceptance cases over real loopback HTTP), and the historical convergence
+measurement (not rerun for XY_Z) converged in one round at 12/96/384 atoms. See
 [docs/measurement.md](docs/measurement.md) for the measured reconciliation verdict.
 
 ## Modules
@@ -25,8 +25,8 @@ measurement converges in one round at 12/96/384 atoms. See
   verification and validation states. JSON import does not offer byte-exact export;
   network storage preserves raw R. Unsupported carrier versions require an explicit
   opaque wrapper rather than guessing a malformed envelope's version.
-- `src/spatial.py`: immutable h/z subscriptions; provisional 60-bit 3D altitude
-  decoder. h comparisons and cell-center elevation use only the spatial address.
+- `src/spatial.py`: standard 2D geohash encode/decode, canonical exact decimal Z,
+  immutable XY/Z subscriptions using lower-edge keys padded to 12 characters.
 - `src/mesh.py`: independent stores, separate bounded unverified candidates,
   configured-peer discovery hints, real HTTP PUSH and Range PULL, scoped sequence
   resume cursors and snapshot MID sweeps. Invalid records are rejected. Unverified
@@ -46,7 +46,7 @@ directions. Always `.stop()` nodes in a finally block. Call `.sync_known()`
 periodically to retry configured peers; `.discover()` returns peer hints for
 explicit selection. No central scheduler or coordinator is required.
 
-`Node([Subscription(h_lo='gggh', h_hi='gggj', z_min=0, z_max=100)])` accepts only
+`Node([Subscription(xy_lo='gggh', xy_hi='gggj', z_min='0', z_max='100')])` accepts only
 that range, independently of application payload. `Node()` subscribes to all;
 `Node([])` accepts nothing. `node.add(raw_R)` verifies and admits a local candidate
 under the same subscription policy. Network candidates also include declared
