@@ -19,8 +19,8 @@ Test status from `evidence/test_results.json`:
 
 - status: `OK`
 - return code: `0`
-- ran: `34`
-- seconds: `16.56`
+- ran: `38`
+- seconds: `18.034`
 
 ## 2) Exact directory/object examples (real run excerpts)
 
@@ -105,7 +105,7 @@ Verdict: this loopback pass shows Mesh wall-time advantage, but the dimensions d
 
 ## 9) Failure/hostile results
 
-Suite evidence from `evidence/test_results.json`: PASS (`status=OK`, `returncode=0`, `ran=34`, `seconds=16.56`).
+Suite evidence from `evidence/test_results.json`: PASS (`status=OK`, `returncode=0`, `ran=38`, `seconds=18.034`).
 
 - Truncation: `test_11_hostile_truncated_record_rejected` — PASS.
 - Stale head/root detection: `test_07_stale_root_then_refresh_detected` — PASS.
