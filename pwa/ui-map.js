@@ -11,7 +11,7 @@ import { decodeAtomLocation, FLOOR_HEIGHT_M } from './core/location.js';
 import { fmtCoords, fmtRelativeTime, fmtTime, escHtml, renderAtomText } from './core/display.js';
 import { stripPunktoPrefix, ensurePunktoPrefix } from './protocol/punkto-id.js';
 import { getAtomStableId } from './ui-text.js';
-import { isStableAtomId } from './protocol/atom-id.js';
+import { isPunktiMid, isStableAtomId } from './protocol/atom-id.js';
 
 const CATEGORY_META = {
   TEXT: { code: 'TEXT', label: 'Talk', cls: 'cat-talk', color: [224, 166, 96] },
@@ -257,15 +257,19 @@ export async function focusPunktoOnMap(id) {
   const focusAtoms = (await _getAllAtomsNewestFirst()).filter(a => !_isHiddenAtom(a));
   const focusedAtom = focusAtoms.find((atom) => {
     const pid = String(atom?.punkto || '').trim();
+    const atomId = String(atom?.atom_id || '').trim();
+    const mid = String(atom?.mid || '').trim();
     const stable = getAtomStableId(atom);
-    return stable === rawId || pid === ensurePunktoPrefix(rawId) || stripPunktoPrefix(pid) === rawId;
+    return stable === rawId || atomId === rawId || mid === rawId || pid === ensurePunktoPrefix(rawId) || stripPunktoPrefix(pid) === rawId;
   }) || null;
-  const punkto = focusedAtom?.punkto || (isStableAtomId(rawId) ? '' : ensurePunktoPrefix(rawId));
-  const loc = decodeAtomLocation(punkto);
+  const h = String(focusedAtom?.h || '').trim();
+  const loc = decodeAtomLocation(h || focusedAtom?.punkto || ((isStableAtomId(rawId) || isPunktiMid(rawId)) ? '' : ensurePunktoPrefix(rawId)));
   if (!loc || !map) return;
+  const markerKey = String(focusedAtom?.punkto || '').trim();
+  const titleIdentity = h || markerKey || rawId;
 
   map.flyTo({ center: [loc.lon, loc.lat], zoom: 16, duration: 1200 });
-  document.title = `Punkto · ${punkto}`;
+  document.title = `Punkto · ${titleIdentity}`;
 
   if (focusedPunktoId && focusedPunktoId !== rawId) {
     const prev = atomMarkers.get(`p:${focusedPunktoId}`);
@@ -277,7 +281,7 @@ export async function focusPunktoOnMap(id) {
   } else if (_onClearSelection) {
     _onClearSelection();
   }
-  const cur = atomMarkers.get(punkto);
+  const cur = markerKey ? atomMarkers.get(markerKey) : null;
   if (cur) cur.getElement().classList.add('atom-bubble--focus');
 }
 
@@ -1134,12 +1138,14 @@ function orbInnerLightColor(d) {
 
 function physicalAltitude(atom) {
   const alt = Number(atom?.alt);
-  return Number.isFinite(alt) && alt > 0 ? alt : 0;
+  return Number.isFinite(alt) ? alt : 0;
 }
 
 function formatSpatialHeightLabel(alt) {
   const height = Number(alt);
-  if (!Number.isFinite(height) || height < 1) return 'Ground';
+  if (!Number.isFinite(height)) return 'Unknown altitude';
+  if (Math.abs(height) < 1) return 'Ground';
+  if (height < 0) return `${Math.round(height)} m`;
   const meters = Math.round(height);
   const floor = Math.max(1, Math.round(height / FLOOR_HEIGHT_M));
   return `+${meters} m · ~Floor ${floor}`;

@@ -47,6 +47,7 @@ import { ensurePunktoPrefix, stripPunktoPrefix, parseDeepLinkPunktoId as parseDe
 import { canonicalAtomId, parsePublicPPath } from './protocol/exact-link.js';
 import { downloadPunktiPdf } from './print-pdf.js';
 import { createPunktiClient } from './sync/punkti-client.js';
+import { encode_h, format_z, normalize_scope } from './punkti/spatial.js';
 
 import { createSyncEngine } from './sync/sync-engine.js';
 
@@ -57,6 +58,7 @@ import { createSyncEngine } from './sync/sync-engine.js';
 const NODE_URL = window.location.origin;
 const SYNC_INTERVAL_MS = 30_000;
 const MAP_STYLE = 'https://tiles.openfreemap.org/styles/liberty';
+const XY_PRECISION = 12;
 
 // The local origin is the only browser data source; mesh sync belongs to the node.
 const punktiClient = createPunktiClient({ baseUrl: NODE_URL, identity: () => ensureIdentity() });
@@ -75,6 +77,8 @@ let syncBootPromise = null;
 let initialSyncDone = false;
 let deepLinkPunkto = null; // captured at boot, consumed after first refreshUI
 let deepLinkFocused = false;
+let currentWorldScope = normalize_scope({});
+let lastPublicationRead = null;
 // ============================================================
 // Two-view shell — Text / Map
 // ============================================================
@@ -198,7 +202,11 @@ function ensureSyncEngine() {
       onSyncStart: () => setSyncStatus('syncing'),
       onSyncDone: ({ anyError }) => {
         setSyncStatus(anyError ? 'error' : 'ok');
-        if (!anyError) lastSyncAtMs = Date.now();
+        if (!anyError) {
+          lastSyncAtMs = Date.now();
+          lastPublicationRead = punktiClient.getLastRead?.() || null;
+          renderTechnicalDebug();
+        }
       },
       onSyncError: () => setSyncStatus('error'),
       onAtomsChanged: (newAtomIds) => queueRefreshUI(newAtomIds, 50),
@@ -224,6 +232,76 @@ async function ensureAtomIds(atoms) {
       console.warn('[atom-id] could not derive canonical id:', err?.message || err);
     }
   }));
+}
+
+function stableJson(value) {
+  if (Array.isArray(value)) return '[' + value.map(stableJson).join(',') + ']';
+  if (value && typeof value === 'object') {
+    return '{' + Object.keys(value).sort().map((key) => `${JSON.stringify(key)}:${stableJson(value[key])}`).join(',') + '}';
+  }
+  return JSON.stringify(value);
+}
+
+function atomMatchesCurrentScope(atom) {
+  const h = typeof atom?.h === 'string' ? atom.h : '';
+  try {
+    return punktiClient.matchesScope(h);
+  } catch {
+    return true;
+  }
+}
+
+function getWorldScopeFromControls() {
+  const xyInput = document.getElementById('world-xy-prefix');
+  const zMinInput = document.getElementById('world-z-min');
+  const zMaxInput = document.getElementById('world-z-max');
+  const scope = {
+    xy_lo: null,
+    xy_hi: null,
+    z_min: null,
+    z_max: null,
+  };
+  const xyPrefix = String(xyInput?.value || '').trim().toLowerCase();
+  if (xyPrefix) {
+    scope.xy_lo = xyPrefix;
+    scope.xy_hi = `${xyPrefix}z`;
+  }
+  const zMin = String(zMinInput?.value || '').trim();
+  if (zMin) scope.z_min = format_z(zMin);
+  const zMax = String(zMaxInput?.value || '').trim();
+  if (zMax) scope.z_max = format_z(zMax);
+  return normalize_scope(scope);
+}
+
+async function applyWorldScopeFromControls() {
+  try {
+    currentWorldScope = getWorldScopeFromControls();
+  } catch (error) {
+    showBootError(`World filter is invalid: ${error?.message || error}`);
+    return;
+  }
+  punktiClient.setScope(currentWorldScope);
+  const engine = ensureSyncEngine();
+  await engine.syncFeed();
+  await refreshUI();
+}
+
+function renderTechnicalDebug() {
+  const statusEl = document.getElementById('settings-publication-status');
+  const seqEl = document.getElementById('settings-publication-seq');
+  const headEl = document.getElementById('settings-publication-head');
+  const sourceEl = document.getElementById('settings-publication-source');
+  const recordsEl = document.getElementById('settings-technical-records');
+  if (statusEl) statusEl.textContent = lastPublicationRead ? 'available' : 'not loaded';
+  if (seqEl) seqEl.textContent = lastPublicationRead?.seq != null ? String(lastPublicationRead.seq) : '—';
+  if (headEl) headEl.textContent = lastPublicationRead?.head || '—';
+  if (sourceEl) sourceEl.textContent = lastPublicationRead?.base || punktiClient.publicationBase;
+  if (recordsEl) {
+    const rows = (lastPublicationRead?.records || []).slice(0, 50);
+    recordsEl.innerHTML = rows.length
+      ? rows.map((record) => `<tr><td class="mono">${escHtml(record.mid)}</td><td class="mono">${escHtml(record.sha256)}</td><td class="mono">${escHtml(record.h || '')}</td><td>${escHtml(record.state || '')}</td></tr>`).join('')
+      : '<tr><td colspan="4">No records loaded.</td></tr>';
+  }
 }
 
 async function startSyncBoot() {
@@ -351,7 +429,7 @@ async function refreshUI(newAtomIds = null) {
   // Compute the visible-atom count (after filtering hidden system/test handles).
   // The full DB count is not exposed in the UI — users see only the clean subset.
   const allAtoms = await getAllAtomsNewestFirst();
-  const visibleAtoms = allAtoms.filter(a => !isHiddenAtom(a));
+  const visibleAtoms = allAtoms.filter((atom) => !isHiddenAtom(atom) && atomMatchesCurrentScope(atom));
   await ensureAtomIds(visibleAtoms);
   const total = visibleAtoms.length;
   elCountNum.textContent = total;
@@ -444,8 +522,8 @@ async function refreshUI(newAtomIds = null) {
       if (showBtn) {
         showBtn.addEventListener('click', (ev) => {
           ev.stopPropagation();
-          const id = String(a.punkto || '').replace(/^p:/, '');
-          focusPunkto(id);
+          const id = String(a.atom_id || a.mid || a.punkto || '').replace(/^p:/, '');
+          if (id) focusPunkto(id);
         });
       }
       elAtomList.appendChild(el);
@@ -505,6 +583,7 @@ function selectedBoardStableId(atom) {
 }
 
 function copyRootLocationFields(root, reply) {
+  if (root?.h != null) reply.h = String(root.h);
   if (root?.punkto) reply.punkto = root.punkto;
   const explicitFields = Array.isArray(root?.location_fields) ? new Set(root.location_fields) : new Set();
   for (const field of ['lat', 'lon', 'altitude_m', 'alt', 'z', 'floor', 'level']) {
@@ -525,7 +604,10 @@ function readablePublishError(err) {
   const code = err?.code || err?.detail?.error;
   if (code === 'rate_limited') return 'Publish was rate limited. Your draft is still here; wait a moment and try again.';
   if (code === 'atom_too_old') return 'The node rejected this timestamp. Your draft is still here; try publishing again.';
-  if (code === 'invalid_signature') return 'The node rejected the signature. Your draft is still here; check your identity or import it again.';
+  if (code === 'invalid_signature' || code === 'INVALID-provenance') return 'The node rejected signature provenance. Check your identity and try again.';
+  if (code === 'INVALID-structural') return 'The node rejected the record structure. Check spatial fields and try again.';
+  if (code === 'address mismatch') return 'The node rejected record identity (address mismatch). Try publishing again.';
+  if (code === 'invalid record') return 'The node rejected the record. Check XY_Z and required fields.';
   if (err?.name === 'TimeoutError') return 'Network timed out. Your draft is still here; try again when the connection returns.';
   return `Could not publish yet. Your draft is still here. ${err?.message || 'Check your connection and try again.'}`;
 }
@@ -553,12 +635,22 @@ async function submitBoardReply({ boardAtom, text }) {
   copyRootLocationFields(root, reply);
   if (author) reply.f = author;
   if (!reply.x) throw new Error('Write a public reply first.');
-  if (!reply.punkto) throw new Error('Cannot reply: board location is missing.');
+  if (!reply.h && !reply.punkto) throw new Error('Cannot reply: board location is missing.');
 
   try {
     const signedReply = await signAtomForSubmit(reply);
+    signedReply.x_payload = stableJson({
+      text: signedReply.x,
+      meta: {
+        author: signedReply.f || '',
+        category: signedReply.category || 'TEXT',
+        relation: 'reply',
+      },
+    });
     const result = await punktiClient.pushAtom(signedReply);
     if (result?.atom_id) signedReply.atom_id = result.atom_id;
+    if (result?.mid) signedReply.mid = result.mid;
+    if (result?.sha256) signedReply.sha256 = result.sha256;
     if (!signedReply.atom_id) signedReply.atom_id = await canonicalAtomId(signedReply);
     await upsertAtom(signedReply);
     await refreshUI();
@@ -618,10 +710,10 @@ async function ensureIdentity() {
 
 async function signAtomForSubmit(atom) {
   const identity = await ensureIdentity();
-  if (!identity || typeof window.signAtom !== 'function') {
+  if (!identity) {
     throw new Error('Create or import an identity in Settings before publishing.');
   }
-  return window.signAtom(atom, identity.secretKey, identity.pubkey);
+  return atom;
 }
 
 async function submitAtomFromModal({ text, author, category, draft }) {
@@ -632,20 +724,51 @@ async function submitAtomFromModal({ text, author, category, draft }) {
   }
   const map = getMapInstance();
   const center = draft ? { lat: draft.lat, lng: draft.lon } : map.getCenter();
-  const altMeters = draft?.altitude_m || 0;
-  const punkto = encodeLocation(center.lat, center.lng, altMeters);
+  const aglMeters = Number(draft?.altitude_m || 0);
+  const publishUnanchored = Boolean(draft?.unanchored);
+  const zInput = String(draft?.ellipsoidal_z || '').trim();
+  if (!publishUnanchored && !zInput) {
+    setCreateError('Enter ellipsoidal Z or choose unanchored publish.');
+    setCreateSubmitting(false);
+    return;
+  }
+  const h = publishUnanchored ? '' : encode_h(center.lat, center.lng, zInput, XY_PRECISION);
+  let punkto = '';
+  if (!publishUnanchored) {
+    try {
+      punkto = encodeLocation(center.lat, center.lng, Number(zInput));
+    } catch {
+      punkto = '';
+    }
+  }
   const t = Date.now();
+  const payload = {
+    text,
+    meta: {
+      category: String(category || draft?.category || 'TEXT').toUpperCase(),
+      author: String(author || '').trim(),
+      floor: draft?.floor_hint ?? null,
+      height_above_ground_m: aglMeters,
+      placement_mode: String(draft?.placement_mode || 'manual'),
+      ellipsoidal_z_m: publishUnanchored ? null : zInput,
+      anchored: !publishUnanchored,
+    },
+  };
   const atom = {
+    h,
     punkto,
     t,
     lat: center.lat,
     lon: center.lng,
-    altitude_m: altMeters,
+    altitude_m: aglMeters,
+    alt: publishUnanchored ? 0 : Number(zInput),
+    ellipsoidal_z: publishUnanchored ? null : zInput,
   };
   if (draft?.floor_hint != null) atom.floor = draft.floor_hint;
-  if (text) atom.x = text;
+  atom.x_payload = stableJson(payload);
+  atom.x = text;
   if (author) atom.f = author;
-  atom.category = String(category || draft?.category || 'TEXT').toUpperCase();
+  atom.category = payload.meta.category;
   setCreateSubmitting(true);
   setCreateError('');
   try {
@@ -653,14 +776,17 @@ async function submitAtomFromModal({ text, author, category, draft }) {
     const signedAtom = await signAtomForSubmit(atom);
     const result = await punktiClient.pushAtom(signedAtom);
     if (result?.atom_id) signedAtom.atom_id = result.atom_id;
+    if (result?.mid) signedAtom.mid = result.mid;
+    if (result?.sha256) signedAtom.sha256 = result.sha256;
+    if (result?.seq != null) signedAtom.publication_seq = result.seq;
+    if (result?.head) signedAtom.publication_head = result.head;
     if (!signedAtom.atom_id) signedAtom.atom_id = await canonicalAtomId(signedAtom);
     await upsertAtom(signedAtom);
     closeCreateModal();
     await refreshUI();
     requestAnimationFrame(() => { if (map) map.resize(); });
     setSyncStatus('ok');
-    const loc = decodeAtomLocation(punkto);
-    if (loc && map) map.flyTo({ center: [loc.lon, loc.lat], zoom: Math.max(map.getZoom(), 14) });
+    if (!publishUnanchored && map) map.flyTo({ center: [center.lng, center.lat], zoom: Math.max(map.getZoom(), 14) });
   } catch (err) {
     console.error('[addAtom]', err);
     setSyncStatus('error');
@@ -698,11 +824,21 @@ async function printPunktiForAtom(atom, button = null) {
 
 function updateCreateLocationDisplay(draft) {
   if (!elModalLocation || !draft) return;
-  const punkto = encodeLocation(draft.lat, draft.lon, draft.altitude_m || 0);
-  const loc = decodeAtomLocation(punkto);
-  elModalLocation.textContent = loc
-    ? `${punkto}  ·  ${fmtCoords(loc.lat, loc.lon, loc.alt)}`
-    : punkto;
+  if (draft.unanchored) {
+    elModalLocation.textContent = 'h = "" (unanchored) · no ellipsoidal height in address';
+    return;
+  }
+  const zInput = String(draft.ellipsoidal_z || '').trim();
+  if (!zInput) {
+    elModalLocation.textContent = 'Enter ellipsoidal Z (metres, WGS84) or choose unanchored';
+    return;
+  }
+  try {
+    const h = encode_h(draft.lat, draft.lon, zInput, XY_PRECISION);
+    elModalLocation.textContent = `${h}  ·  ${fmtCoords(draft.lat, draft.lon, Number(zInput))}`;
+  } catch (error) {
+    elModalLocation.textContent = `Invalid XY_Z: ${error?.message || error}`;
+  }
 }
 
 function openCreateOnMap() {
@@ -842,6 +978,7 @@ async function refreshPublicNodeStatus() {
 async function refreshSettingsNetworkInfo() {
   try {
     const info = await punktiClient.nodeInfo();
+    const publicationRoot = await punktiClient.publicationInfo().catch(() => null);
     const name = info.branding?.display_name || info.node.name;
     const about = `${name} · ${info.version}`;
     const footer = document.getElementById('node-about');
@@ -858,9 +995,19 @@ async function refreshSettingsNetworkInfo() {
         syncStatus: syncEngine?.isSyncing() ? 'syncing' : 'idle',
         lastSync: lastSyncAtMs ? fmtTime(lastSyncAtMs) : 'not synced yet' },
     });
+    if (publicationRoot) {
+      lastPublicationRead = {
+        ...(lastPublicationRead || {}),
+        seq: publicationRoot.seq,
+        head: publicationRoot.head,
+        base: punktiClient.publicationBase,
+      };
+    }
+    renderTechnicalDebug();
   } catch (err) {
     renderSettingsView({ nodeStatus: { status: 'unavailable', health: 'unreachable' },
       network: { nodeHtml: 'Node unavailable', syncStatus: 'error' } });
+    renderTechnicalDebug();
   }
 }
 
@@ -876,6 +1023,7 @@ async function openSettingsMenu() {
   // Kick off read-only node/network info refreshes (no await — menu is already visible).
   refreshPublicNodeStatus();
   refreshSettingsNetworkInfo();
+  renderTechnicalDebug();
 }
 
 function closeSettingsMenu() {
@@ -950,6 +1098,36 @@ function wireEvents() {
     }
   });
 
+  const worldApplyBtn = document.getElementById('world-apply');
+  const worldClearBtn = document.getElementById('world-clear');
+  const worldInputs = ['world-xy-prefix', 'world-z-min', 'world-z-max']
+    .map((id) => document.getElementById(id))
+    .filter(Boolean);
+  if (worldApplyBtn) {
+    worldApplyBtn.addEventListener('click', () => {
+      applyWorldScopeFromControls().catch((error) => {
+        showBootError(`World filter failed: ${error?.message || error}`);
+      });
+    });
+  }
+  if (worldClearBtn) {
+    worldClearBtn.addEventListener('click', () => {
+      for (const input of worldInputs) input.value = '';
+      applyWorldScopeFromControls().catch((error) => {
+        showBootError(`World filter failed: ${error?.message || error}`);
+      });
+    });
+  }
+  for (const input of worldInputs) {
+    input.addEventListener('keydown', (event) => {
+      if (event.key !== 'Enter') return;
+      event.preventDefault();
+      applyWorldScopeFromControls().catch((error) => {
+        showBootError(`World filter failed: ${error?.message || error}`);
+      });
+    });
+  }
+
   // Bottom navigation, feed-card delegation, and "Leave note here" CTA are
   // wired by the ui-shell.js and ui-text.js modules, registered in boot().
   setupKeyManagement(); // registered here, not from atom handler
@@ -1003,6 +1181,7 @@ async function boot() {
 
   wireEvents();
   renderSettingsView({ version: window.PUNKTO_APP_VERSION });
+  punktiClient.setScope(currentWorldScope);
 
   // Wire UI modules (shell / text / map). Callbacks delegate back to app.js
   // so app.js still owns data and lifecycle; modules own DOM/markup/state.
@@ -1037,7 +1216,7 @@ async function boot() {
   });
   initMapView({
     mapStyle: MAP_STYLE,
-    getAllAtomsNewestFirst,
+    getAllAtomsNewestFirst: async () => (await getAllAtomsNewestFirst()).filter((atom) => !isHiddenAtom(atom) && atomMatchesCurrentScope(atom)),
     isHiddenAtom,
     getAtomSelectionId,
     getSelectedAtomId: () => selectedAtomId,

@@ -41,7 +41,9 @@ export function fmtDistance(meters) {
 }
 
 export function fmtAltitudeLabel(alt) {
-  if (!Number.isFinite(alt) || Math.abs(alt) < 1) return '';
+  if (!Number.isFinite(alt)) return '';
+  if (Math.abs(alt) < 1) return '0 m';
+  if (alt < 0) return `${Math.round(alt)} m`;
   const floor = Math.round(alt / 3);
   if (floor >= 2) return `Floor ${floor}`;
   return `+${Math.round(alt)} m`;

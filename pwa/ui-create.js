@@ -47,6 +47,9 @@ const elModalFloorValue = document.getElementById('modal-floor-value');
 const elModalManualAltitude = document.getElementById('modal-manual-altitude-value');
 const elModalCategory = document.getElementById('modal-category');
 const elModalEmergencyHint = document.getElementById('modal-emergency-hint');
+const elModalEllipsoidalZ = document.getElementById('modal-ellipsoidal-z-value');
+const elModalUnanchored = document.getElementById('modal-unanchored');
+const elModalZNote = document.getElementById('modal-z-note');
 
 let callbacks = null;
 let modalAltitudeState = { mode: 'meter', building: null };
@@ -158,11 +161,27 @@ function emitPreview() {
   if (!draft) return;
   draft.altitude_m = altitudeMeters();
   draft.category = elModalCategory?.value || 'TEXT';
+  draft.ellipsoidal_z = String(elModalEllipsoidalZ?.value || '').trim();
+  draft.unanchored = Boolean(elModalUnanchored?.checked);
   draft.floor_hint = modalAltitudeState.mode === 'floor'
     ? Math.round(Number(elModalAltitudeSlider.value) || 0)
     : Math.round(draft.altitude_m / FLOOR_HEIGHT_M);
   callbacks?.onPreviewChanged?.({ ...draft });
   updatePlacementReadouts();
+}
+
+function updateAnchoringHint() {
+  if (!elModalZNote) return;
+  if (elModalUnanchored?.checked) {
+    elModalZNote.textContent = 'Unanchored publish selected: h = "". No ellipsoidal Z is written to h.';
+    return;
+  }
+  const z = String(elModalEllipsoidalZ?.value || '').trim();
+  if (!z) {
+    elModalZNote.textContent = 'Enter ellipsoidal Z (WGS84 metres) or choose unanchored.';
+    return;
+  }
+  elModalZNote.textContent = `Anchored publish: Z=${z} m (WGS84 ellipsoidal). Floor/height stay in Layer-4 payload.`;
 }
 
 function updateAltitudeLabels() {
@@ -328,18 +347,24 @@ function openWriteStage() {
 function requestDeviceAltitude() {
   if (!navigator.geolocation || !elModalDeviceAltBtn) return;
   elModalDeviceAltBtn.disabled = true;
-  elModalDeviceAltBtn.textContent = 'Finding altitude...';
+  elModalDeviceAltBtn.textContent = 'Finding ellipsoidal Z...';
   navigator.geolocation.getCurrentPosition((pos) => {
     const alt = pos?.coords?.altitude;
     if (alt == null || !Number.isFinite(alt)) {
-      elModalDeviceAltBtn.textContent = 'Altitude unavailable';
+      elModalDeviceAltBtn.textContent = 'Ellipsoidal Z unavailable';
+      elModalDeviceAltBtn.disabled = false;
       return;
     }
-    setAltitudeMeters(Math.round(alt), 'device');
-    elModalDeviceAltBtn.textContent = 'Use my altitude';
+    if (elModalEllipsoidalZ) {
+      elModalEllipsoidalZ.value = String(alt);
+    }
+    updateAnchoringHint();
+    emitPreview();
+    elModalDeviceAltBtn.textContent = 'Use device ellipsoidal Z';
     elModalDeviceAltBtn.disabled = false;
   }, () => {
-    elModalDeviceAltBtn.textContent = 'Altitude unavailable';
+    elModalDeviceAltBtn.textContent = 'Ellipsoidal Z unavailable';
+    elModalDeviceAltBtn.disabled = false;
   }, { enableHighAccuracy: true, timeout: 5000 });
 }
 
@@ -367,6 +392,15 @@ export function initCreateModal(opts) {
   elModalFloorValue?.addEventListener('input', () => setAltitudeMeters((Math.max(0, Number(elModalFloorValue.value) || 0)) * FLOOR_HEIGHT_M, 'manual'));
   elModalManualAltitude?.addEventListener('input', () => setAltitudeMeters(Number(elModalManualAltitude.value) || 0, 'manual'));
   elModalDeviceAltBtn?.addEventListener('click', requestDeviceAltitude);
+  elModalEllipsoidalZ?.addEventListener('input', () => {
+    if (elModalUnanchored && elModalEllipsoidalZ.value.trim()) elModalUnanchored.checked = false;
+    updateAnchoringHint();
+    emitPreview();
+  });
+  elModalUnanchored?.addEventListener('change', () => {
+    updateAnchoringHint();
+    emitPreview();
+  });
   elModalCategory?.addEventListener('change', () => {
     const isEmergency = elModalCategory.value === 'EMGC';
     if (elModalEmergencyHint) elModalEmergencyHint.style.display = isEmergency ? '' : 'none';
@@ -395,11 +429,22 @@ export function openCreateModal() {
   if (elModalRoofBtn) elModalRoofBtn.disabled = !building;
   if (elModalDeviceAltBtn) {
     elModalDeviceAltBtn.disabled = !navigator.geolocation;
-    elModalDeviceAltBtn.textContent = navigator.geolocation ? 'Use my altitude' : 'Altitude unavailable';
+    elModalDeviceAltBtn.textContent = navigator.geolocation ? 'Use device ellipsoidal Z' : 'Ellipsoidal Z unavailable';
   }
+  if (elModalEllipsoidalZ) elModalEllipsoidalZ.value = '';
+  if (elModalUnanchored) elModalUnanchored.checked = false;
   if (elModalCategory) elModalCategory.value = 'TEXT';
   if (elModalEmergencyHint) elModalEmergencyHint.style.display = 'none';
-  draft = { lat: context.center?.lat ?? 0, lon: context.center?.lng ?? 0, altitude_m: 0, floor_hint: 0, placement_mode: 'ground' };
+  draft = {
+    lat: context.center?.lat ?? 0,
+    lon: context.center?.lng ?? 0,
+    altitude_m: 0,
+    floor_hint: 0,
+    placement_mode: 'ground',
+    ellipsoidal_z: '',
+    unanchored: false,
+  };
+  updateAnchoringHint();
   updateAltitudeLabels();
   setCreateStage('height');
   stopViewportObservation();

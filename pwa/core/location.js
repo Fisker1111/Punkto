@@ -4,12 +4,25 @@
  */
 
 import { encode, decode } from '../geohash3d.js';
+import { decode_xy, parse_h } from '../punkti/spatial.js';
 
 export const FLOOR_HEIGHT_M = 3;
 
 export function decodeAtomLocation(punktoStr) {
   try {
-    const spatial = String(punktoStr || '').replace(/^p:/, '').split('-')[0];
+    const raw = String(punktoStr || '');
+    if (raw.includes('_')) {
+      const parsed = parse_h(raw);
+      if (!parsed) return null;
+      const xy = decode_xy(parsed.xy);
+      const altitude = Number(parsed.z);
+      return {
+        lat: xy.lat,
+        lon: xy.lon,
+        alt: Number.isFinite(altitude) ? altitude : 0,
+      };
+    }
+    const spatial = raw.replace(/^p:/, '').split('-')[0];
     if (spatial.length < 1) return null;
     return decode(spatial);
   } catch {
