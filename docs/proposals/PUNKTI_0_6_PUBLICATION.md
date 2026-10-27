@@ -130,7 +130,7 @@ over the target, `fsync` the directory).
 Content address = SHA-256 of exact canonical-JSON bytes.
 
 ```json
-{"index":{"<prefix>":"<64 hex>"},"pack_count":<int>,"prev":"<64 hex> | null","record_count":<int>","seq":<int>,"v":"punkti/pub/0.6"}
+{"index":{"<prefix>":"<64 hex>"},"pack_count":<int>,"prev":"<64 hex> | null","record_count":<int>,"seq":<int>,"v":"punkti/pub/0.6"}
 ```
 
 * `v` MUST equal `punkti/pub/0.6`; `seq` MUST equal the `seq` of the root pointer
@@ -142,6 +142,10 @@ Content address = SHA-256 of exact canonical-JSON bytes.
 * `pack_count` is the number of pack objects referenced by the publication.
 * `prev` is the content address of the previous manifest of this publication, or
   `null` for the first manifest.
+* The **first** manifest of a publication has `seq = 1` and `prev = null`;
+  every later manifest has `seq = previous seq + 1` and `prev` = the previous
+  manifest's content address. A reader MUST reject a manifest in which `seq` and
+  the nullness of `prev` disagree.
 * No other members.
 
 ### 3.1 Unanchored records
@@ -365,6 +369,15 @@ Reader algorithm:
    validate it with the accepted carrier validator, recompute the MID from `C`,
    and require the recomputed MID and `h` to equal the index entry's `mid` and
    `h`.
+   * A record that fails structural decoding yields **no** recomputable MID. Such
+     a record is a **per-record rejection** (§9): the reader MUST NOT admit it,
+     MUST NOT treat the missing MID as a metadata mismatch of the read, and MUST
+     continue with the remaining records of the read.
+   * A record that decodes but fails provenance verification DOES have a
+     recomputable MID (the signature is excluded from the MID). Its metadata is
+     therefore checked as above, and it is then a **per-record rejection**: it MUST
+     NOT be admitted, MUST NOT displace or poison the valid record with the same
+     MID, and MUST NOT abort the rest of the read.
 7. Admission, per record:
    * apply the scope to the record's exact `h` (XY **and** Z — Z is checked here,
      not on the prefix);
