@@ -1,13 +1,8 @@
 # Punkti 0.6 — restored XY_Z spatial address profile
 
-Status: **normative 0.6 spatial profile candidate for Founder review.** This document defines the
-restored human-readable spatial model for Punkti 0.6. It replaces the
-provisional 12-character interleaved 3D geohash profile as the *normative
-0.6 spatial profile*. It does not freeze, release, tag, merge or deploy
-anything, and it does not change the frozen v0.5.1 namespace.
+Status: **FROZEN — Punkti v0.6 Layer 3, Founder-approved 2026-10-27.** This document defines the human-readable spatial model for Punkti 0.6 and replaces the provisional interleaved 3D geohash profile. Frozen v0.5.1 remains unchanged.
 
-Normative inputs for every implementation of this profile: this document,
-plus `PUNKTI_0_6_MESH.md` and `PUNKTI_0_6_LAYER3_RESET.md`.
+Normative inputs for Punkti v0.6 Layer 3 are this document, `PUNKTI_0_6_LAYER3_RESET.md`, and `PUNKTI_0_6_PUBLICATION.md`. Dynamic Mesh is optional acceleration, not part of normative conformance.
 
 ---
 
