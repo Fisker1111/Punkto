@@ -25,6 +25,9 @@ function getCrypto() {
   return null;
 }
 
+export const MID_PREFIX = 'punkti/0.6:';
+const MID_RE = /^punkti\/0\.6:[0-9a-f]{64}$/;
+
 export async function computeAtomId(atom) {
   const cryptoImpl = getCrypto();
   if (!cryptoImpl) throw new Error('Web Crypto is unavailable');
@@ -36,4 +39,8 @@ export async function computeAtomId(atom) {
 
 export function isStableAtomId(value) {
   return typeof value === 'string' && /^[0-9a-f]{64}$/.test(value);
+}
+
+export function isPunktiMid(value) {
+  return typeof value === 'string' && MID_RE.test(value);
 }
