@@ -1,33 +1,43 @@
-# Publication contract blockers
+# Revision 2 publication contract blocker
 
-Implementation stopped before writing code, as required by `CODEX_TASK.md`:
-“STOP and report the specific counterexample”. The normative contract is
-unchanged. This report does not choose replacement rules.
+Implementation stopped under the task's instruction to “STOP and report the
+specific counterexample” when a new byte-framing inconsistency surfaced during
+testing. The normative contract has not been modified.
 
-## 1. Empty XY prefix intervals (§4.1 and §8 step 3)
+Revision 2 resolves the previously reported prefix-interval and collective
+pack-membership blockers. Neither is being reported again.
 
-Section 4.1 defines `K(xy) = xy.ljust(12, "0")`. Section 8 step 3
-defines prefix interval endpoints as `K(p).ljust(12,"0")` and
-`K(p).ljust(12,"z")`. Since `K(p)` already has length 12, both
-endpoints are identical for every publication prefix. Every interval is empty.
+## New counterexample: pack magic length (§6)
 
-For example, prefix `u4` yields `[u40000000000, u40000000000)`.
-An anchored record at `u4_0`, indexed under `u400000000`, lies in the
-requested scope `[K("u4"), K("u5"))`, but the prescribed prefix interval
-cannot overlap that scope. Literal implementation would exclude every XY
-subtree from every spatially constrained read, defeating the required XY
-selection behaviour and V6. The spec author must resolve the interval rule.
+Section 6 specifies:
 
-## 2. Pack membership for leaves larger than 256 records (§6)
+```text
+pack := "PUNKTIPACK1"            (10 ASCII bytes, no terminator)
+      || u32be(entry_count)
+      || entry_count × ( u32be(len(R)) || R )
+```
 
-Section 6 requires splitting the sorted leaf records into consecutive groups
-of at most 256. It also requires that “a pack's extracted set MUST equal
-exactly the leaf's record set”. A leaf with 257 distinct record objects
-requires groups of 256 and 1. Neither pack equals the 257-record leaf set.
-No pack encoding can satisfy both rules. Section 8 step 5 describes equality
-for the extracted set of the leaf's packs collectively, which does not remove
-the contradictory per-pack requirement in §6. There is no normative leaf
-record-count limit that excludes this case, including for the `~` leaf.
+The specified literal `PUNKTIPACK1` is **11 ASCII bytes**, not 10:
+
+```text
+P U N K T I P A C K 1
+1 2 3 4 5 6 7 8 9 10 11
+```
+
+Its exact hex encoding is `50554e4b54495041434b31`. Consequently no byte string
+can satisfy both the exact literal and its stated 10-byte length.
+
+For any one-entry pack following the literal, the count begins at offset 11
+and is `00 00 00 01`. A reader following the specified 10-byte header length
+instead reads offsets 10–13, `31 00 00 00`, as count **822083584**. Conversely,
+a publisher using only ten bytes of the literal emits `PUNKTIPACK` and fails
+the specified magic comparison. This counterexample applies regardless of the
+record's contents, including every valid canonical carrier `R`.
+
+The accepted experiment uses `len(MAGIC)` for parsing and therefore follows
+the 11-byte literal. That is evidence of the existing implementation's choice,
+not authorization to silently choose between conflicting contract requirements.
+The spec author must resolve the literal/length discrepancy.
 
 ## Reproduction
 
@@ -35,34 +45,56 @@ Command run from the repository root (exit 0):
 
 ```bash
 python3 - <<'PY'
-p = 'u4'
-k = lambda xy: xy.ljust(12, '0')
-lo, hi = k(p).ljust(12, '0'), k(p).ljust(12, 'z')
-print(f'prefix={p}; lower={lo}; upper={hi}; empty={lo == hi}')
-records = list(range(257))
-groups = [records[i:i+256] for i in range(0, len(records), 256)]
-print(f'leaf_records={len(records)}; pack_sizes={[len(g) for g in groups]}')
-print(f'each_pack_equals_leaf={[set(g) == set(records) for g in groups]}')
-assert lo == hi
-assert all(set(g) != set(records) for g in groups)
-print('2 counterexample checks passed')
+import struct
+magic = b'PUNKTIPACK1'
+record = b'R'
+raw = magic + struct.pack('>I', 1) + struct.pack('>I', len(record)) + record
+print('magic =', repr(magic))
+print('magic length =', len(magic))
+print('magic hex =', magic.hex())
+print('literal framing hex =', raw.hex())
+print('count at offset 10 =', struct.unpack('>I', raw[10:14])[0])
+print('count at offset 11 =', struct.unpack('>I', raw[11:15])[0])
+assert len(magic) == 11
+assert struct.unpack('>I', raw[10:14])[0] == 822083584
+assert struct.unpack('>I', raw[11:15])[0] == 1
+print('Counterexample confirmed')
 PY
 ```
+
+The single byte `R` is a framing demonstration only, not a claimed valid atom;
+none of the assertions depends on it or on carrier validation.
 
 Actual output:
 
 ```text
-prefix=u4; lower=u40000000000; upper=u40000000000; empty=True
-leaf_records=257; pack_sizes=[256, 1]
-each_pack_equals_leaf=[False, False]
-2 counterexample checks passed
+magic = b'PUNKTIPACK1'
+magic length = 11
+magic hex = 50554e4b54495041434b31
+literal framing hex = 50554e4b54495041434b31000000010000000152
+count at offset 10 = 822083584
+count at offset 11 = 1
+Counterexample confirmed
 ```
 
-## Delivery status
+## Implementation and verification status
 
-Only this evidence document was added. No publication implementation or vectors
-were created, and no normative rules were silently changed. Acceptance criteria
-remain unmet pending resolution by the spec author. The conformance/hostile
-suite, vector regeneration, static HTTP convergence and manual browser checks
-were not run: implementation stopped at contract review. The two checks above
-demonstrate the blockers; they are not conformance tests.
+A preliminary implementation and vector suite were written before discovering
+this inconsistency. The required discovery command was run:
+
+```bash
+python3 -m unittest discover -s experimental/punkti-v0.6-publication/tests -v
+```
+
+It reported `Ran 11 tests`, `FAILED (failures=6, errors=24)` (subtest failures
+and errors). Pack readers following the documented 10-byte length rejected
+packs emitted with the exact literal. This triggered the required stop; these
+results are not a conformance pass. The incomplete, uncommitted implementation
+and generated artifacts were removed rather than delivered as conforming work.
+Only this evidence document is changed.
+
+Acceptance criteria remain unmet. No successful full hostile suite, artifact
+regeneration acceptance check, or separate-process static-only convergence
+result is claimed. Manual browser verification is not applicable to this
+experiment. No contract, approved codec, accepted experiment, production code,
+or server state was changed. No push, PR, tag, deployment or merge was performed.
