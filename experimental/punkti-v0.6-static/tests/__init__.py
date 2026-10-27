@@ -1,0 +1,2 @@
+"""Static publication test suite."""
+

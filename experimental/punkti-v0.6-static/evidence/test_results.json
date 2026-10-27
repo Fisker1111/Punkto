@@ -1,0 +1,7 @@
+{
+  "command": "python3 -m unittest discover -s experimental/punkti-v0.6-static/tests -v",
+  "returncode": 0,
+  "status": "OK",
+  "ran": 34,
+  "seconds": 16.56
+}
