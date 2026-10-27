@@ -16,6 +16,13 @@ validation states — unchanged here), [PUNKTI_0_6_SPATIAL_XY_Z.md](PUNKTI_0_6_S
 (accepted architecture decision), [PUNKTI_0_6_MESH.md](PUNKTI_0_6_MESH.md) (dynamic mesh
 spec — optional acceleration only, see §11).
 
+**Revision history**
+
+| Rev | Change |
+|---|---|
+| 1 | Initial contract. |
+| 2 | Fixed two internal inconsistencies found by the implementing agent before any code was written: (a) the XY prefix-interval endpoints were degenerate (§8 step 3) — replaced by the explicit prefix-interval definition in §4.2; (b) the pack-membership rule contradicted the pack grouping rule for leaves with more than 256 records (§6) — replaced by a collective-union rule. No normative rule was weakened; §4.2 and §6 are now implementable as written. |
+
 ---
 
 ## 0. Principle
@@ -150,12 +157,16 @@ Content address = SHA-256 of exact canonical-JSON bytes.
 
 ### 4.1 Index geometry (normative)
 
-Let `K(xy) = xy.ljust(12, "0")` — the accepted lower-edge comparison key.
+The XY index is a prefix tree over the **12-character key space**.
 
-* A record with anchored address `h = <xy>_<z>` is filed under the leaf prefix
-  `K(xy)[:10]` (leaf depth `D = 10`).
+* `K(xy) = xy.ljust(12, "0")` — the accepted lower-edge comparison key, defined for
+  a geohash `xy` of 1–12 characters. `xy` itself is 4–12 characters in a canonical
+  address; a shorter `xy` denotes the cell that contains it, exactly as in the
+  accepted spatial profile.
+* A record with anchored address `h = <xy>_<z>` is filed under the **leaf prefix**
+  `L = K(xy)[:10]` (leaf depth `D = 10`).
 * The publication tree is: root → manifest → depth-2 shard → … → depth-10 leaf.
-  Interior shard prefixes are the successive prefixes of `K(xy)[:10]`.
+  Interior shard prefixes are the successive prefixes of `L`.
 * The manifest index therefore lists at most 1024 depth-2 prefixes plus `"~"`.
 * A shard at prefix `p` is only reachable through its parent prefix `p[:-1]`; a
   reader MUST verify the prefix chain while walking.
@@ -163,6 +174,47 @@ Let `K(xy) = xy.ljust(12, "0")` — the accepted lower-edge comparison key.
 
 The canonical address `h` never depends on this geometry; the geometry is an
 indexing layout only.
+
+### 4.2 Prefix intervals and scope intersection (normative)
+
+Prefix selection is defined over the 12-character key space, not over filesystem
+paths and not over decimal numbers.
+
+* The **key interval** of a XY prefix `p` of length `d` (2 ≤ d ≤ 12) is the
+  inclusive interval of 12-character keys
+
+  ```text
+  I(p) = [ p + "0" * (12 - d) ,  p + "z" * (12 - d) ]
+  ```
+
+  i.e. the smallest key that starts with `p` (with the minimum symbol `'0'`) up to
+  the largest key that starts with `p` (with the maximum symbol `'z'`). Both
+  endpoints are inclusive. `I(p)` is an over-approximation of the keys that can
+  actually occur under `p` (the geohash alphabet omits some letters); the
+  over-approximation is intentional and safe, because selection is refined later on
+  the record's exact `h`.
+* A **scope** is the accepted lower-edge scope of the spatial profile:
+  `xy_lo` / `xy_hi` (inclusive lower, exclusive upper, over `K`), `z_min` /
+  `z_max` (inclusive lower, exclusive upper, over exact decimals), each possibly
+  absent. A scope is *unrestricted* when all four members are absent.
+* The **XY interval** of a scope is
+  `[K(xy_lo), K(xy_hi))` when both bounds are present, `[K(xy_lo), +∞)` or
+  `(-∞, K(xy_hi))` when one is absent, and `(-∞, +∞)` when neither is.
+* A prefix `p` **intersects** a scope iff `I(p)` overlaps the scope's XY interval.
+  With an inclusive prefix interval and an exclusive scope upper bound, overlap is
+  exactly:
+
+  ```text
+  I(p).low  <  scope.XY.high   (or true when the scope has no upper bound)
+  I(p).high >= scope.XY.low    (or true when the scope has no lower bound)
+  ```
+
+* The `"~"` prefix is selected **only** by an unrestricted scope: any XY or Z
+  constraint excludes unanchored records.
+* Selection happens on prefixes only; the Z constraint cannot be applied to a
+  prefix, because Z is independent of XY and is not part of any index key. A
+  reader therefore applies X/Y filtering before fetching record content, and Z
+  filtering after the record's `h` has been read (§8 step 6–7).
 
 ---
 
@@ -196,10 +248,18 @@ pack := "PUNKTIPACK1"            (10 ASCII bytes, no terminator)
   compares it with the shard index entry.
 * **Membership is normative and deterministic**: take the leaf shard's record
   entries, sort ascending by `sha256` hex, and split them into consecutive
-  groups of at most 256 entries. Group *k* is pack *k* of that leaf.
+  groups of at most 256 entries. Group *k* is pack *k* of that leaf. A leaf with
+  *n* records therefore has `ceil(n / 256)` packs, and the packs of a leaf are
+  ordered by their group index.
+* **Per-pack rule**: every record extracted from a pack MUST be one of the
+  records listed by the leaf shard that the pack belongs to (matched by
+  `sha256`). A pack MUST NOT contain a foreign record, and a pack MUST NOT
+  contain the same record twice.
+* **Collective rule**: the union of the records extracted from all of a leaf's
+  packs MUST equal exactly the leaf's record set — no record of the leaf may be
+  missing from the packs, and no record outside the leaf may appear in them.
 * A reader MUST reject a pack whose trailing bytes are not consumed, whose count
-  does not match, or whose extracted records do not belong to the leaf shard
-  (a pack's extracted set MUST equal exactly the leaf's record set).
+  does not match, or that violates the per-pack or collective rule.
 * Packs are an **optional accelerator** (`--packs` profile). The canonical record
   objects are published in both profiles and remain the canonical addressable
   form of the data.
@@ -220,6 +280,12 @@ it:
 A reader MUST therefore never observe a head that references an object which is
 not present.
 
+* **State identity.** The *published state* of a publication is the triple
+  `(index, record_count, pack_count)` — i.e. everything a manifest says except
+  `seq` and `prev`. A publisher MUST NOT advance `seq` (and therefore MUST NOT
+  publish a new manifest, and MUST NOT rewrite the root pointer) when the
+  published state is unchanged. Otherwise `seq` advances by exactly 1 and `prev`
+  becomes the content address of the previous manifest.
 * **Idempotence / interruption.** An interrupted publication leaves the previous
   root pointer in place, naming the previous, fully valid manifest. The previous
   manifest, its shards and its records stay published, so the previous state
@@ -227,8 +293,8 @@ not present.
   rewrites whatever is missing; content addressing makes this idempotent.
 * **Determinism.** Publishing the same logical state twice produces byte-identical
   objects and therefore byte-identical root pointers. Publication uses no wall
-  clock: the manifest's `created_at`-style information does not exist (there is no
-  such member), and `seq` advances only when the published state changes.
+  clock: the manifest carries no creation timestamp, and `seq` advances only when
+  the published state changes.
 
 ---
 
@@ -245,27 +311,25 @@ Reader algorithm:
 2. Fetch the manifest named by `head`. **Verify `SHA256(bytes) == head`** — the
    content address is the only integrity guarantee of the pointer. Verify its
    shape per §3, and that `manifest.seq == root.seq`.
-3. For each manifest index key, decide whether the key can intersect the
-   requested scope:
-   * an XY prefix `p` intersects a scope when the 12-character interval
-     `[K(p).ljust(12,"0"), K(p).ljust(12,"z"))]` overlaps the scope's XY interval
-     `[K(xy_lo), K(xy_hi))` (lower inclusive, upper exclusive);
-   * the `"~"` key is selected **only** by an unrestricted scope (a scope with no
-     spatial constraint), because any spatial constraint excludes unanchored
-     records.
-4. Fetch the shard, verify its content address, validate its shape per §4, and
-   descend into `children` only while the child prefix still intersects the
-   scope. Verify the prefix chain at every level.
+3. For each manifest index key, decide whether it can intersect the requested
+   scope, using §4.2:
+   * an XY prefix key is selected iff its key interval `I(p)` overlaps the scope's
+     XY interval;
+   * the `"~"` key is selected only by an unrestricted scope.
+4. Fetch the selected shard, verify its content address, validate its shape per
+   §4, and descend into `children` only while the child prefix still intersects
+   the scope (§4.2). Verify the prefix chain at every level.
 5. For every selected leaf, obtain the records:
    * **pack profile** — fetch the leaf's packs (verifying each content address),
-     decode them per §6, and check that the extracted set equals the leaf's
-     record set exactly;
+     decode them per §6, and enforce the per-pack and collective rules;
    * **index-only profile** — fetch each record object by content address.
 6. For every fetched `R`: verify `SHA256(R)` against the index entry, decode and
    validate it with the accepted carrier validator, recompute the MID from `C`,
    and require the recomputed MID and `h` to equal the index entry's `mid` and
    `h`.
-7. Admission:
+7. Admission, per record:
+   * apply the scope to the record's exact `h` (XY **and** Z — Z is checked here,
+     not on the prefix);
    * `VALID` → the reader's valid store, keyed by MID (a duplicate MID is an
      idempotent no-op);
    * `UNVERIFIABLE-alg` (or the reserved `UNVERIFIABLE-key`) → a **separate**
@@ -295,6 +359,7 @@ NOT invalidate a valid record with the same MID.
 | **missing object** (any referenced object not retrievable) | fail this attempt; admit nothing | retryable |
 | **corrupt object** (bytes do not hash to the address that named them) | fail this attempt; admit nothing | retryable |
 | **publication race** (manifest `seq` ≠ root `seq`) | re-read the root pointer and restart the attempt (bounded retries) | retryable |
+| pack violates the per-pack or collective rule of §6 | fail this attempt; admit nothing | retryable |
 | record fails carrier validation (structural / provenance) | that record is rejected; the rest of the read continues | per-record |
 | unsupported algorithm | that record goes to the candidate store | per-record |
 
@@ -308,7 +373,7 @@ NOT invalidate a valid record with the same MID.
 ## 10. No completeness or freshness claim
 
 A successful read proves only that the objects it referenced were present and
-verified **at the time of that read**. Pointi 0.6 publications make **no** claim
+verified **at the time of that read**. Punkti 0.6 publications make **no** claim
 of global completeness, global freshness, authority or ordering across
 publications. Withholding, retention and partitions can hide records
 indefinitely; that is undetectable from a single publication.
