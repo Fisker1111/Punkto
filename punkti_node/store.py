@@ -275,6 +275,13 @@ class PersistentNode(Node):
         if method != 'GET':
             return None
         version = os.environ.get('PUNKTO_BUILD_VERSION') or VERSION
+        if path == '/nodes.json':
+            nodes = [{key: entry[key] for key in ('id', 'base', 'publication', 'submit') if key in entry}
+                     for entry in sorted(self.config['bootstrap']['nodes'],
+                                         key=lambda item: (item['id'].encode('utf-8'),
+                                                           json.dumps(item, sort_keys=True)))]
+            return Response(v='punkti/bootstrap/1', nodes=nodes,
+                            notice="Recommended bootstrap list. Not a trust authority and not a completeness claim: one node's publication is one published view, not all of Punkto.")
         if path == '/health':
             return Response(status='ok', service='punkti-node', version=version)
         if path == '/ready':

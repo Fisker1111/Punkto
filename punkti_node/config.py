@@ -1,14 +1,17 @@
 """Strict YAML configuration; environment overrides YAML overrides defaults."""
 from copy import deepcopy
+import json
 import math
 import os
 from pathlib import Path
 import yaml
+from urllib.parse import urlsplit
 from .mesh import peer_url
 from .spatial import Subscription
 
 DEFAULTS = {
-    'web': {'enabled': True, 'root': '/srv/pwa', 'spa_fallback': False},
+    'web': {'enabled': True, 'root': '/srv/pwa', 'spa_fallback': False, 'pages': {'/ai': 'ai.html'}},
+    'bootstrap': {'nodes': []},
     'publication': {'enabled': True, 'path': None, 'packs': False, 'serve_prefix': '/publication'},
     'node': {'name': 'punkti-node', 'public_url': '', 'description': '', 'operator_contact': ''},
     'network': {'listen_host': '0.0.0.0', 'listen_port': 8000, 'advertise_url': '',
@@ -17,6 +20,7 @@ DEFAULTS = {
     'logging': {'level': 'info'}, 'branding': {'display_name': 'Punkti Node'},
 }
 ENV = {
+    'PUNKTO_BOOTSTRAP_NODES': ('bootstrap', 'nodes', json.loads),
     'PUNKTO_WEB_ENABLED': ('web', 'enabled', lambda s: s.lower() not in ('0', 'false', 'no', 'off')),
     'PUNKTO_WEB_ROOT': ('web', 'root', str),
     'PUNKTO_HOST': ('network', 'listen_host', str),
@@ -62,7 +66,42 @@ def load_config(path=None, environ=None):
             for key, default in keys.items():
                 if isinstance(default, str) and not isinstance(config[section][key], str):
                     raise ValueError(f'{section}.{key} must be a string')
+    nodes = config['bootstrap']['nodes']
+    if not isinstance(nodes, list):
+        raise ValueError('bootstrap.nodes must be a list')
+    for entry in nodes:
+        if (not isinstance(entry, dict) or
+                not {'id', 'base', 'publication'} <= set(entry) or
+                set(entry) - {'id', 'base', 'publication', 'submit'}):
+            raise ValueError('invalid bootstrap node members')
+        if not isinstance(entry['id'], str) or not entry['id'].strip():
+            raise ValueError('bootstrap node id must be non-empty')
+        for key in ('base', 'publication', 'submit'):
+            if key not in entry:
+                continue
+            value = entry[key]
+            if not isinstance(value, str) or not value or value.endswith('/') or any(c.isspace() for c in value):
+                raise ValueError('invalid bootstrap URL')
+            parsed = urlsplit(value)
+            if parsed.scheme not in ('http', 'https') or not parsed.hostname or parsed.username or parsed.password or parsed.fragment:
+                raise ValueError('invalid bootstrap URL')
+            try:
+                parsed.port
+            except ValueError as exc:
+                raise ValueError('invalid bootstrap URL port') from exc
     web = config['web']
+    pages = web['pages']
+    if not isinstance(pages, dict):
+        raise ValueError('web.pages must be a mapping')
+    for route, filename in pages.items():
+        if (not isinstance(route, str) or not route.startswith('/') or
+                any(c in route for c in ('\\', '%', '?', '#', '\x00')) or
+                any(part in ('', '.', '..') for part in route.split('/')[1:])):
+            raise ValueError('invalid web.pages path')
+        if (not isinstance(filename, str) or not filename or Path(filename).is_absolute() or
+                any(c in filename for c in ('\\', '%', '\x00')) or
+                any(part in ('', '.', '..') for part in filename.split('/'))):
+            raise ValueError('invalid web.pages file')
     if type(web['enabled']) is not bool or type(web['spa_fallback']) is not bool:
         raise ValueError('web.enabled and web.spa_fallback must be booleans')
     if web['enabled']:

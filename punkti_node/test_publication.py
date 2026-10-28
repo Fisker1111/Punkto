@@ -80,6 +80,25 @@ class PublicationTests(unittest.TestCase):
         self.nodes = []
         self.addCleanup(self.close_nodes)
 
+    def test_bootstrap_deterministic_http(self):
+        entries = [dict(id='z', base='https://z.example', publication='https://z.example/publication'),
+                   dict(id='a', base='https://a.example', publication='https://a.example/publication', submit='https://a.example/submit')]
+        a = self.node('bootstrap-a', {'bootstrap': {'nodes': entries}})
+        b = self.node('bootstrap-b', {'bootstrap': {'nodes': [dict(reversed(list(e.items()))) for e in reversed(entries)]}})
+        with urlopen(a.url + '/nodes.json') as response:
+            self.assertEqual(response.headers.get_content_type(), 'application/json')
+            first = response.read()
+        with urlopen(b.url + '/nodes.json') as response:
+            self.assertEqual(first, response.read())
+        doc = json.loads(first)
+        self.assertEqual(doc['v'], 'punkti/bootstrap/1')
+        self.assertEqual([e['id'] for e in doc['nodes']], ['a', 'z'])
+        self.assertNotIn('submit', doc['nodes'][1])
+        self.assertEqual(doc['notice'], "Recommended bootstrap list. Not a trust authority and not a completeness claim: one node's publication is one published view, not all of Punkto.")
+        empty = self.node('bootstrap-empty')
+        with urlopen(empty.url + '/nodes.json') as response:
+            self.assertEqual(json.load(response)['nodes'], [])
+
     def close_nodes(self):
         for node in self.nodes:
             node.stop()

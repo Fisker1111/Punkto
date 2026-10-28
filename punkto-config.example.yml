@@ -27,6 +27,17 @@ branding:
 
 # Local UI hosting; enabled in the combined image.
 web:
+  pages:
+    /ai: ai.html
   enabled: true
   root: /srv/pwa
   spa_fallback: true                # Serve the PWA for client routes under /p/ only.
+
+# Recommendation-only discovery; no automatic self-entry.
+bootstrap:
+  nodes: []
+  # nodes:
+  #   - id: punkto-xyz
+  #     base: https://punkto.xyz
+  #     publication: https://punkto.xyz/publication
+  #     submit: https://punkto.xyz/submit

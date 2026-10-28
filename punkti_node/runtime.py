@@ -21,7 +21,7 @@ def run(config):
         mounts[publication['serve_prefix']] = publication['path']
     if config['web']['enabled'] or mounts:
         node.web = StaticWeb(config['web']['root'] if config['web']['enabled'] else None,
-                             config['web']['spa_fallback'], mounts)
+                             config['web']['spa_fallback'], mounts, config['web']['pages'])
     net = config['network']
 
     def stop_requested(signum, frame):
