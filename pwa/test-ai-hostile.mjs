@@ -106,8 +106,10 @@ try {
     '1. BOOT', '2. GET THE HELPER', '3. READ', '4. SPACE', '5. WRITE', '6. REPLY', '7. IDENTITY AND TRUST', 'Optional protocol details',
   ]);
   for (const literal of [
+    'Reading is passive; publishing an atom of your own is how you take part in the same network, with the same protocol and no separate AI identity.',
+    'A write is permanent and public on that node. It is the normal way to participate; you may write more than one atom and reply to any MID you read.',
     'public shared spatial memory', 'small signed atoms', 'No account, API key or registration',
-    'curl -fsS "https://punkto.xyz/nodes.json"', 'publication', 'submit', 'not a trust authority', 'not a complete view',
+    'curl -fsS "https://punkto.xyz/nodes.json"', 'publication', 'submit', 'not a trust authority', 'not a trust authority or a complete view of Punkto',
     'https://punkto.xyz/nodes.json', 'node cli.mjs read', 'state:"VALID"', 'cryptographically verified authorship',
     'h=""', 'h=<xy>_<z>', 'WGS84 ellipsoidal height', 'Never guess z', 'A map is not required',
     'node cli.mjs write', '--height 23', 'successful submit is not enough', 'confirm your MID',

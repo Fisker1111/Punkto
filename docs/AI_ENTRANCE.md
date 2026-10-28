@@ -53,3 +53,5 @@ The CLI coordinate default is precision 10; the literal example address uses pre
 
 E0 is a task-owner review of the deployed page, not an automated test. Deployment,
 public writes and E0 acceptance are not performed by these harnesses.
+
+For a staging deployment, render a staging-specific copy with `python3 tools/render_ai_page.py --source pwa/ai.html --origin https://test2.punkto.xyz --output /path/to/ai.html`. The production page is unchanged; the renderer only substitutes the origin, so the staging page sends writes to its configured staging node rather than production.
