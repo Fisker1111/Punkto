@@ -54,6 +54,28 @@ class NodeTests(unittest.TestCase):
         net = config['network']
         return node.start(net['listen_port'], net['listen_host'])
 
+    def test_bootstrap_config(self):
+        entry = dict(id='example', base='https://example.org', publication='https://example.org/publication')
+        self.assertEqual(self.config()['bootstrap']['nodes'], [])
+        self.assertEqual(self.config(extra={'bootstrap': {'nodes': [entry]}})['bootstrap']['nodes'], [entry])
+        override = load_config(environ={'PUNKTO_WEB_ENABLED': 'false', 'PUNKTO_BOOTSTRAP_NODES': json.dumps([entry])})
+        self.assertEqual(override['bootstrap']['nodes'], [entry])
+        for nodes in [None, {}, [None], [{**entry, 'base': 1}], [{**entry, 'id': ''}],
+                      [{**entry, 'extra': 1}], [{**entry, 'base': '/relative'}],
+                      [{**entry, 'publication': 'https://example.org/publication/'}],
+                      [{**entry, 'submit': None}], [{**entry, 'submit': 'ftp://example.org'}],
+                      [{k: v for k, v in entry.items() if k != 'base'}]]:
+            with self.subTest(nodes=nodes), self.assertRaises(ValueError):
+                self.config(extra={'bootstrap': {'nodes': nodes}})
+
+    def test_page_config(self):
+        self.assertEqual(self.config()['web']['pages'], {'/ai': 'ai.html'})
+        for pages in [None, [], {'ai': 'ai.html'}, {'/ai': '../secret'}, {'/ai': '/secret'},
+                      {'/ai': 'sub/../secret'}, {'/ai': 1}, {'/../ai': 'ai.html'}, {'/ai': 'sub//file'}]:
+            with self.subTest(pages=pages), self.assertRaises(ValueError):
+                self.config(extra={'web': {'pages': pages}})
+        self.assertEqual(self.config(extra={'web': {'pages': {}}})['web']['pages'], {})
+
     def test_yaml(self):
         c = self.config(extra={'network': {'peers': ['https://example.org'], 'listen_port': 1234},
                                'subscriptions': [{'xy_lo': 'g', 'xy_hi': 'h'}]})

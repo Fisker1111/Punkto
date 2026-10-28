@@ -26,6 +26,8 @@ branding:
 
 # Local UI hosting; disabled for the node-only image.
 web:
+  pages:
+    /ai: ai.html
   enabled: false
   root: /srv/pwa
   spa_fallback: false
@@ -35,3 +37,12 @@ publication:
   path: /data/publication
   packs: false
   serve_prefix: /publication
+
+# Recommendation-only discovery; no automatic self-entry.
+bootstrap:
+  nodes: []
+  # nodes:
+  #   - id: punkto-xyz
+  #     base: https://punkto.xyz
+  #     publication: https://punkto.xyz/publication
+  #     submit: https://punkto.xyz/submit

@@ -57,6 +57,8 @@ jobs:
       - run: node pwa/test-punkti-publication.mjs
       - run: node pwa/test-spatial-xy-z.mjs
       - run: node pwa/test-slice5.mjs
+      - run: node pwa/test-ai-coldstart.mjs
+      - run: node pwa/test-ai-hostile.mjs
       - run: |
           for test in relay/test_*.py tools/test_*.py; do
             test_data=$(mktemp -d)

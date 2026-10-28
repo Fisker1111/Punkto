@@ -11,9 +11,10 @@ class StaticWeb:
             '.map': 'application/json', '.txt': 'text/plain', '.wasm': 'application/wasm',
             '.woff': 'font/woff', '.woff2': 'font/woff2', '.jpg': 'image/jpeg'}
 
-    def __init__(self, root=None, spa_fallback=False, mounts=None):
+    def __init__(self, root=None, spa_fallback=False, mounts=None, pages=None):
         self.root = Path(root).resolve() if root else None
         self.spa_fallback = spa_fallback
+        self.pages = dict(pages or {})
         self.mounts = []
         for prefix, directory in (mounts or {}).items():
             if not isinstance(prefix, str) or not prefix.startswith('/') or (prefix != '/' and prefix.endswith('/')):
@@ -29,7 +30,7 @@ class StaticWeb:
             return None
         return target
 
-    def _serve_path(self, handler, root, decoded, spa_fallback=False):
+    def _serve_path(self, handler, root, decoded, spa_fallback=False, page_alias=False):
         target = self._resolve(root, decoded)
         if target is None:
             handler.send_error(404)
@@ -43,10 +44,10 @@ class StaticWeb:
             return True
         raw = target.read_bytes()
         handler.send_response(200)
-        handler.send_header('Content-Type', self.MIME.get(target.suffix, 'application/octet-stream'))
+        handler.send_header('Content-Type', 'text/html; charset=utf-8' if page_alias else self.MIME.get(target.suffix, 'application/octet-stream'))
         handler.send_header('Content-Length', str(len(raw)))
         handler.send_header('X-Content-Type-Options', 'nosniff')
-        handler.send_header('Cache-Control', 'no-cache, no-store, must-revalidate' if target.suffix in ('.html', '.js', '.mjs', '.json') else 'public, max-age=3600')
+        handler.send_header('Cache-Control', 'no-cache, no-store, must-revalidate' if page_alias or target.suffix in ('.html', '.js', '.mjs', '.json') else 'public, max-age=3600')
         handler.end_headers()
         if handler.command != 'HEAD':
             handler.wfile.write(raw)
@@ -66,4 +67,6 @@ class StaticWeb:
                 return self._serve_path(handler, root, relative, spa_fallback=False)
         if self.root is None:
             return False
+        if path in self.pages:
+            return self._serve_path(handler, self.root, '/' + self.pages[path], page_alias=True)
         return self._serve_path(handler, self.root, decoded, spa_fallback=self.spa_fallback)

@@ -67,6 +67,24 @@ class WebTests(unittest.TestCase):
         for path in ['/api/missing', '/api/missing.js', '/api']:
             self.assertEqual(self.get(path)[0], 400)
 
+    def test_page_alias(self):
+        (self.web / 'ai.html').write_text('<h1>machine entrance</h1>')
+        self.node.web = StaticWeb(self.web, True, pages=self.config['web']['pages'])
+        status, headers, raw = self.get('/ai')
+        self.assertEqual(status, 200)
+        self.assertEqual(raw, b'<h1>machine entrance</h1>')
+        self.assertEqual(headers['Content-Type'], 'text/html; charset=utf-8')
+        self.assertEqual(headers['X-Content-Type-Options'], 'nosniff')
+        self.assertEqual(headers['Cache-Control'], 'no-cache, no-store, must-revalidate')
+        self.assertEqual(self.get('/ai', 'HEAD')[2], b'')
+        self.assertEqual(self.get('/ai.html')[0], 200)
+        for route in ['/ai/', '/ai/child', '/aix', '/%61i']:
+            self.assertEqual(self.get(route)[0], 404)
+        self.node.web.pages['/leak'] = 'escape'
+        self.assertEqual(self.get('/leak')[0], 404)
+        self.node.web.pages['/leak'] = '../secret'
+        self.assertEqual(self.get('/leak')[0], 404)
+
     def test_aliases(self):
         for path in ['/hello', '/health', '/ready', '/node/info', '/pull?q=' + quote('{"limit":1}')]:
             native = self.get(path)
