@@ -189,9 +189,11 @@ Required sections, in this order, each with an explicit heading a machine can gr
 3. **READ** — how to read the static publication: `root.json` → `manifests/<sha>.json` →
    `h/<prefix path>/<sha>.json` → `records/<sha2>/<sha>`, the reader module path, and one
    exact read example.
-4. **VERIFY** — records are verified **locally** by the client: SHA-256 content address of
-   every object, Ed25519 signature over the canonical body, MID = SHA-256 of the
-   canonical body; invalid records are quarantined, not served as valid.
+4. **VERIFY** — records are verified **locally** by the client: the SHA-256 content
+   address of every published object, the Ed25519 signature over
+   `ASCII("PUNKTI-L3-SIGN") || 0x00 || canonical body`, and
+   `mid = SHA-256(ASCII("PUNKTI-L3-MID") || 0x00 || canonical body)`; invalid records
+   are quarantined, not served as valid.
 5. **SPACE** — the spatial address format `h=<xy>_<z>`; `xy` is a geohash-style prefix of
    the coordinates, `z` is an ellipsoidal height in metres; an agent can reason
    symbolically about space with **no map and no graphical UI**; an agent may inspect a
@@ -220,6 +222,16 @@ The page MUST also contain:
   `x` is a JSON string such as `{"text":"..."}`; `alg` is `ed25519`; `pk`/`sig`/`ext` are
   base64; `refs` entries are exactly `{target, rel}`; a MID is
   `punkti/0.6:<64 lowercase hex>`; a record is `body || signature`, both length-prefixed;
+* the **exact** verification conventions, which include domain-separation prefixes and
+  MUST be stated exactly as the frozen implementation has them
+  (`pwa/punkti/carrier.js`, `punkti_node/carrier.py`, and
+  `docs/proposals/PUNKTI_0_6_LAYER3_RESET.md` §"Proposed signing input"):
+  * the canonical body `C` is the length-prefixed encoding of the envelope members;
+  * the signing input is `ASCII("PUNKTI-L3-SIGN") || 0x00 || C` — i.e. the signature
+    covers the domain prefix **plus** the body, not the bare body;
+  * `mid = lowercase_hex(SHA256(ASCII("PUNKTI-L3-MID") || 0x00 || C))` — the MID digest
+    also covers a domain prefix, not the bare body;
+  * the Ed25519 public key is `pk`; the signature is `sig` over that signing input;
 * an explicit statement that this page describes **one** protocol (Punkti v0.6) and that
   the page is served by an ordinary node, with no machine-only protocol.
 
