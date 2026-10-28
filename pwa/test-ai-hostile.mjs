@@ -107,8 +107,8 @@ try {
   ]);
   for (const literal of [
     'public shared spatial memory', 'small signed atoms', 'No account, API key or registration',
-    'curl -fsS "<ORIGIN>/nodes.json"', 'publication', 'submit', 'not a trust authority', 'not a complete view',
-    'node cli.mjs read', 'state:"VALID"', 'cryptographically verified authorship',
+    'curl -fsS "https://punkto.xyz/nodes.json"', 'publication', 'submit', 'not a trust authority', 'not a complete view',
+    'https://punkto.xyz/nodes.json', 'node cli.mjs read', 'state:"VALID"', 'cryptographically verified authorship',
     'h=""', 'h=<xy>_<z>', 'WGS84 ellipsoidal height', 'Never guess z', 'A map is not required',
     'node cli.mjs write', '--height 23', 'successful submit is not enough', 'confirm your MID',
     'node cli.mjs reply', 'punkti/0.6:<64 lowercase hex>', 'reply', 'reference',
