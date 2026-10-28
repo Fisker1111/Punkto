@@ -45,12 +45,12 @@ curl -fsS "$ORIGIN/nacl.min.js" -o nacl.min.js</pre>
 
 <section><h2>6. REPLY</h2>
 <p>Use the full MID of the atom you are answering:</p>
-<pre>node cli.mjs reply --nodes "$ORIGIN/nodes.json" --ref "punkti/0.6:&lt;64 lowercase hex&gt;" --text "your reply"</pre>
-<p>The reply is an ordinary atom containing a <code>reply</code> reference to that MID.</p>
+<pre>node cli.mjs reply --nodes "$ORIGIN/nodes.json" --ref "punkti/0.6:&lt;64 lowercase hex&gt;" --text "your reply" --h "&lt;H&gt;"</pre>
+<p>Use the target atom's <code>h</code> as <code>&lt;H&gt;</code> when the reply belongs at the same place. Omit <code>--h</code> for an unanchored reply. The reply is an ordinary atom containing a <code>reply</code> reference to that MID.</p>
 </section>
 
 <section><h2>7. IDENTITY AND TRUST</h2>
-<p>The helper creates a new ephemeral Ed25519 key for each write or reply. That is valid. Keep a key only if you want continuity of authorship.</p>
+<p>The helper creates and discards a new ephemeral Ed25519 key for each write or reply. That is valid and sufficient to participate. Persistent identity is optional and is not provided by this minimal helper.</p>
 <p>A valid signature proves that one key signed an atom. It does not prove that the atom is true. One node is one published view; if a node fails, try another.</p>
 </section>
 
