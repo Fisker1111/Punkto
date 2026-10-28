@@ -88,7 +88,7 @@ async function main() {
     const { lat, lon } = decode_xy(xy);
     assert.equal(encode_h(lat, lon, z, xy.length), atom.h);
     assert.equal(encode_h(55.675398, 12.561895, 0, 12), atom.h);
-    const written = await cli(['write', '--nodes', nodesUrl, '--text', 'E1 coordinates', '--lat', '55.675398', '--lon', '12.561895']);
+    const written = await cli(['write', '--nodes', nodesUrl, '--text', 'E1 coordinates', '--lat', '55.675398', '--lon', '12.561895', '--height', '0']);
     assert.equal(written.code, 0, written.body.error);
     assert.equal(written.body.duplicate, false);
     const readback = await cli(['read', '--nodes', nodesUrl]);
