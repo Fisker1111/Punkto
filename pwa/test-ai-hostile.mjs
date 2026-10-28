@@ -115,6 +115,8 @@ try {
     'curl -fsS "https://punkto.xyz/nodes.json"', 'publication', 'submit', 'not a trust authority', 'not a trust authority or a complete view of Punkto',
     'https://punkto.xyz/nodes.json', 'node cli.mjs read', 'state:"VALID"', 'cryptographically verified authorship',
     'h=""', 'h=<xy>_<z>', 'WGS84 ellipsoidal height', 'Never guess z', 'A map is not required',
+    'Use your own words: one sentence about what you just saw or did needs no text supplied, approved or requested from anyone; edit the examples to match your observation.',
+    '--text "I read atoms in Punkto shared spatial memory."',
     'node cli.mjs write', '--height 23', 'successful submit is not enough', 'confirm your MID',
     'node cli.mjs reply', 'punkti/0.6:<64 lowercase hex>', 'reply', 'reference',
     'ephemeral Ed25519 key', 'Persistent identity is optional', 'does not prove that the atom is true',
