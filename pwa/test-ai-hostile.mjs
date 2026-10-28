@@ -79,6 +79,8 @@ try {
   await assert.rejects(reader.readPublication(entry.publication), /stale root/);
   const badRef = await cli(['reply', '--nodes', nodesUrl, '--ref', 'not-a-mid', '--text', 'bad']);
   assert.notEqual(badRef.code, 0); assert.match(badRef.body.error, /invalid MID/);
+  const missingHeight = await cli(['write', '--nodes', nodesUrl, '--text', 'must not invent Z', '--lat', '55.675398', '--lon', '12.561895']);
+  assert.notEqual(missingHeight.code, 0); assert.match(missingHeight.body.error, /--height|ellipsoidal height/);
   await assert.rejects(encodeRecord({ ...atom, refs: [{ target: 'not-a-mid', rel: 'reply' }] }, identity.secretKey), /reference/);
   let writes = 0;
   await assert.rejects(run(['write', '--nodes', nodesUrl, '--text', 'read only', '--submit', `${node.base}/submit`], async (_address, init) => {
@@ -100,18 +102,24 @@ try {
   assert.equal(pageResponse.headers.get('cache-control'), 'no-cache, no-store, must-revalidate');
   const html = await pageResponse.text();
   const text = html.replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&amp;/g, '&');
-  assert.deepEqual([...html.matchAll(/<h2>(.*?)<\/h2>/g)].map(match => match[1]), ['What Punkto is', 'BOOT', 'READ', 'VERIFY', 'SPACE', 'WRITE', 'REPLY', 'IDENTITY', 'Limits']);
+  assert.deepEqual([...html.matchAll(/<h2>(.*?)<\/h2>/g)].map(match => match[1]), [
+    '1. BOOT', '2. GET THE HELPER', '3. READ', '4. SPACE', '5. WRITE', '6. REPLY', '7. IDENTITY AND TRUST', 'Optional protocol details',
+  ]);
   for (const literal of [
-    'GET /nodes.json', 'punkti/bootstrap/1', 'root.json', 'manifests/<sha>.json', 'h/<prefix path>/<sha>.json', 'records/<sha2>/<sha>', '/punkti/reader.js',
-    'h=<xy>_<z>', 'h=u3butz7k9q7v_0', '55.675398', '12.561895', 'ellipsoidal height in metres', 'no map and no graphical UI', 'no central place registry',
-    'v, t, h, x, alg, pk, refs, ext, sig', 'punkti/0.6', 'Unix milliseconds', '{"text":"..."}', 'ed25519', 'base64', '{target, rel}', 'punkti/0.6:<64 lowercase hex>', 'body || signature', 'both length-prefixed',
-    'ASCII("PUNKTI-L3-SIGN") || 0x00 || C', 'mid = lowercase_hex(SHA256(ASCII("PUNKTI-L3-MID") || 0x00 || C))', 'verified locally', 'Invalid records are quarantined',
-    'POST <submit>', '"records":[{"address":', '"sha256":', '"record":', 'refs: [{"target": "<MID>", "rel": "reply"}]',
-    'node cli.mjs read', 'node cli.mjs write', 'node cli.mjs reply', 'curl -fsS', '<ORIGIN>', '<TEXT>', 'https://punkto.xyz/nodes.json',
-    'one protocol (Punkti v0.6)', 'ordinary node', 'no machine-only protocol', 'No account', 'no API key', 'no OAuth', 'no onboarding', 'no proprietary SDK',
-    'ephemeral key is legitimate and sufficient', 'continuity of authorship', 'no registration', 'no recovery requirement',
-    'One node failing does not mean Punkto is unavailable', 'try another bootstrap node', 'no submit entry', 'recommendation, not a trust authority',
+    'public shared spatial memory', 'small signed atoms', 'No account, API key or registration',
+    'curl -fsS "<ORIGIN>/nodes.json"', 'publication', 'submit', 'not a trust authority', 'not a complete view',
+    'node cli.mjs read', 'state:"VALID"', 'cryptographically verified authorship',
+    'h=""', 'h=<xy>_<z>', 'WGS84 ellipsoidal height', 'Never guess z', 'A map is not required',
+    'node cli.mjs write', '--height 23', 'successful submit is not enough', 'confirm your MID',
+    'node cli.mjs reply', 'punkti/0.6:<64 lowercase hex>', 'reply', 'reference',
+    'ephemeral Ed25519 key', 'continuity of authorship', 'does not prove that the atom is true',
+    'One node is one published view', 'if a node fails, try another',
+    'You do not need protocol internals to participate', '/punkti/',
   ]) assert.ok(text.includes(literal), `required page text: ${literal}`);
+  for (const forbidden of [
+    'PUNKTI-L3-SIGN', 'PUNKTI-L3-MID', 'manifests/<sha>.json', 'records/<sha2>/<sha>',
+    'body || signature', 'both length-prefixed', 'package.json that overrides module detection',
+  ]) assert.ok(!text.includes(forbidden), `primary /ai page leaked protocol-doc detail: ${forbidden}`);
   assert.doesNotMatch(html, /<script\b|<link\b|<iframe\b|<img\b/i);
   const bootstrap = await (await fetch(nodesUrl)).json();
   assert.equal(bootstrap.notice, "Recommended bootstrap list. Not a trust authority and not a completeness claim: one node's publication is one published view, not all of Punkto.");
