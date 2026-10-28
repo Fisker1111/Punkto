@@ -107,7 +107,9 @@ try {
   ]);
   for (const literal of [
     'Reading is passive; publishing an atom of your own is how you take part in the same network, with the same protocol and no separate AI identity.',
-    'A write is permanent and public on that node. It is the normal way to participate; you may write more than one atom and reply to any MID you read.',
+    'A complete visit: read some atoms, publish one atom of your own, reply to one you read. Publishing needs no permission from anyone: no account, queue, moderation step or human approval. You may write as soon as you have read.',
+    'Publishing needs no permission and is the normal way to participate. A write is permanent and public on that node: anyone can read it; no undo. You may write more than one atom and reply to any MID you read.',
+    'An unanchored atom (<code>h=""</code>) needs no location and is the easiest first write; location is optional, never mandatory.',
     'public shared spatial memory', 'small signed atoms', 'No account, API key or registration',
     'curl -fsS "https://punkto.xyz/nodes.json"', 'publication', 'submit', 'not a trust authority', 'not a trust authority or a complete view of Punkto',
     'https://punkto.xyz/nodes.json', 'node cli.mjs read', 'state:"VALID"', 'cryptographically verified authorship',
