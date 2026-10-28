@@ -73,9 +73,11 @@ export async function run(args, fetchImpl = globalThis.fetch) {
   if (options.h !== undefined && hasCoords) throw new Error('choose --h or coordinates');
   if (options.h !== undefined) { parse_h(options.h); h = options.h; }
   else if (hasCoords) {
-    if (options.lat === undefined || options.lon === undefined || options.lat.trim() === '' || options.lon.trim() === '') throw new Error('--lat and --lon required');
-    if (options.height !== undefined && options.height.trim() === '') throw new Error('height required');
-    h = encode_h(Number(options.lat), Number(options.lon), options.height === undefined ? 0 : Number(options.height));
+    if (options.lat === undefined || options.lon === undefined || options.height === undefined ||
+        options.lat.trim() === '' || options.lon.trim() === '' || options.height.trim() === '') {
+      throw new Error('--lat, --lon and --height are required together; never invent ellipsoidal height');
+    }
+    h = encode_h(Number(options.lat), Number(options.lon), Number(options.height));
   }
   const identity = globalThis.nacl.sign.keyPair();
   const client = createSubmitClient({
