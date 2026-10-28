@@ -59,6 +59,12 @@ jobs:
           node pwa/test-punkti-publication.mjs
           node pwa/test-spatial-xy-z.mjs
 
+      - name: Punkti /ai machine entrance harnesses
+        run: |
+          node pwa/test-ai-coldstart.mjs
+          node pwa/test-ai-hostile.mjs
+          node pwa/test-ai-cli.mjs
+
       - name: Required Pilot files exist
         run: |
           for f in \

@@ -37,11 +37,27 @@ export async function run(args, fetchImpl = globalThis.fetch) {
   const [command, ...flags] = args;
   if (!['read', 'write', 'reply'].includes(command)) throw new Error('expected read, write or reply');
   const allowed = new Set(['nodes', ...(command === 'read' ? ['publication', 'xy', 'z-min', 'z-max', 'limit'] : ['submit', 'text', 'lat', 'lon', 'height', 'h', ...(command === 'reply' ? ['ref'] : [])])]);
+  const parsed = [];
+  for (let i = 0; i < flags.length; i++) {
+    const token = flags[i];
+    if (!token.startsWith('--')) throw new Error('expected --option');
+    const separator = token.indexOf('=');
+    const key = token.slice(2, separator === -1 ? undefined : separator);
+    let value;
+    if (separator !== -1) value = token.slice(separator + 1);
+    else {
+      // A single leading minus belongs to the value, including negative coordinates.
+      if (flags[i + 1] === undefined || flags[i + 1].startsWith('--')) throw new Error(`missing value for --${key}`);
+      value = flags[++i];
+    }
+    parsed.push([key, value]);
+  }
   const options = {};
-  for (let i = 0; i < flags.length; i += 2) {
-    const key = flags[i].slice(2);
-    if (!flags[i].startsWith('--') || !allowed.has(key) || flags[i + 1] === undefined || Object.hasOwn(options, key)) throw new Error('invalid or repeated option');
-    options[key] = flags[i + 1];
+  for (const [key, value] of parsed) {
+    if (!allowed.has(key)) throw new Error(`unknown option --${key}`);
+    // Reject repeats in either syntax; never silently let the last value win.
+    if (Object.hasOwn(options, key)) throw new Error(`repeated option --${key}`);
+    options[key] = value;
   }
   if (!options.nodes) throw new Error('--nodes URL required');
   const timedFetch = (address, init = {}) => fetchImpl(address, { ...init, signal: AbortSignal.timeout(5000) });
