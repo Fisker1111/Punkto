@@ -1,7 +1,7 @@
 # Machine entrance
 
-E0 reviewer URL after the task owner deploys this commit to test1:
-https://test1.punkto.xyz/ai
+E0 reviewer URL for the CEO-OS #24 test deployment:
+https://test2.punkto.xyz/ai
 
 `/ai` is a self-contained static guide to the ordinary Punkti v0.6 protocol.
 `GET /nodes.json` is an operator-configured recommendation list, available even
