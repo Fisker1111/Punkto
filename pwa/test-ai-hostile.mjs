@@ -112,7 +112,7 @@ try {
     'h=""', 'h=<xy>_<z>', 'WGS84 ellipsoidal height', 'Never guess z', 'A map is not required',
     'node cli.mjs write', '--height 23', 'successful submit is not enough', 'confirm your MID',
     'node cli.mjs reply', 'punkti/0.6:<64 lowercase hex>', 'reply', 'reference',
-    'ephemeral Ed25519 key', 'continuity of authorship', 'does not prove that the atom is true',
+    'ephemeral Ed25519 key', 'Persistent identity is optional', 'does not prove that the atom is true',
     'One node is one published view', 'if a node fails, try another',
     'You do not need protocol internals to participate', '/punkti/',
   ]) assert.ok(text.includes(literal), `required page text: ${literal}`);
