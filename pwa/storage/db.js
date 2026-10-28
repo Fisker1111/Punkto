@@ -7,4 +7,9 @@ db.version(1).stores({
   meta: 'key',
 });
 
+db.version(2).stores({
+  atoms: '++id, atom_id, mid, h, punkto, t, lat, lon, alt',
+  meta: 'key',
+});
+
 export { db };

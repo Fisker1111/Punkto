@@ -56,13 +56,13 @@ class NodeTests(unittest.TestCase):
 
     def test_yaml(self):
         c = self.config(extra={'network': {'peers': ['https://example.org'], 'listen_port': 1234},
-                               'subscriptions': [{'h_lo': 'g', 'h_hi': 'h'}]})
+                               'subscriptions': [{'xy_lo': 'g', 'xy_hi': 'h'}]})
         self.assertEqual(c['node']['name'], 'a')
         self.assertEqual(c['network']['listen_host'], '127.0.0.1')
         self.assertEqual(c['network']['listen_port'], 1234)
         self.assertEqual(c['network']['peers'], ['https://example.org'])
         self.assertEqual(c['storage']['data_path'], str(self.root / 'a'))
-        self.assertEqual(c['subscriptions'][0]['h_lo'], 'g')
+        self.assertEqual(c['subscriptions'][0]['xy_lo'], 'g')
 
     def test_environment(self):
         self.config()
@@ -87,7 +87,7 @@ class NodeTests(unittest.TestCase):
         self.assertEqual(len(node.subscriptions), 1)
 
     def test_invalid_subscription(self):
-        for sub in [{'h_lo': 'INVALID'}, {'z_min': 5, 'z_max': 2}, {'extra': 0}]:
+        for sub in [{'xy_lo': 'INVALID'}, {'z_min': '5', 'z_max': '2'}, {'extra': 0}]:
             with self.subTest(sub=sub), self.assertRaisesRegex(ValueError, 'invalid subscription'):
                 self.config(extra={'subscriptions': [sub]})
 
@@ -130,10 +130,10 @@ class NodeTests(unittest.TestCase):
         self.assertEqual(b.store[validate(raw).address].raw, raw)
 
     def test_spatial_filtering(self):
-        node = self.node(extra={'subscriptions': [{'h_lo': 'g', 'h_hi': 'h'}]})
+        node = self.node(extra={'subscriptions': [{'xy_lo': 'g', 'xy_hi': 'h'}]})
         self.assertTrue(node.add(fixture())['admitted'])
-        self.assertFalse(node.add(fixture(1, h='z'*12))['admitted'])
-        altitude = self.node('altitude', {'subscriptions': [{'z_min': 50, 'z_max': 150}]})
+        self.assertFalse(node.add(fixture(1, h='zzzz00000000_0'))['admitted'])
+        altitude = self.node('altitude', {'subscriptions': [{'z_min': '50', 'z_max': '150'}]})
         self.assertTrue(altitude.add(fixture(h=geo(100)))['admitted'])
         self.assertFalse(altitude.add(fixture(h=geo(500)))['admitted'])
 

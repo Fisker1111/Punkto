@@ -1,10 +1,10 @@
 # Punkti v0.6 — Layer 3 Reset
 
-Status: Draft for peer review
-Scope: Design/review-only proposal for the minimal virtual Layer-3 carrier and provenance boundary.
-Compatibility: Frozen v0.5.1 atoms coexist unchanged with a proposed, explicitly branded v0.6 namespace.
+Status: **FROZEN — Punkti v0.6 Layer 3, Founder-approved 2026-10-27**
+Scope: Minimal virtual Layer-3 carrier and provenance boundary.
+Compatibility: Frozen v0.5.1 atoms coexist unchanged with the explicitly branded v0.6 namespace.
 
-Nothing is frozen by this document. It authorizes no implementation, production deployment, merge, or protocol freeze. Proposed requirements below describe a candidate contract; MUST protects the carrier boundary, while SHOULD indicates a recommended operational choice.
+This document is frozen together with the accepted XY_Z spatial profile and static publication contract. Layer-4 semantics, Punkto UI/product behavior, BRTH, messaging, trust/reputation and optional dynamic acceleration remain outside this freeze.
 
 **Founder decisions incorporated:** (1) Geo is native Layer 3: `h` is spatial addressing, not decorative/application metadata; XY denotes horizontal position, Z physical altitude, and ranges select spatial addresses. Spatial range subscriptions and range-scoped reconciliation are first-class requirements for the subsequent Mesh. (2) `x` remains opaque Layer-4/application payload. (3) BRTH is persistent actor identity at Layer 4, usable by AI instances as well as humans and other actors. Frozen v0.5.1 remains unchanged; PR #111 must not be modified during its frozen review state. This proposal does not start Mesh.
 
@@ -16,7 +16,7 @@ What is the smallest protocol a node must implement to carry, validate, address,
 
 Punkti is a virtual Layer 3: a carrier for immutable atoms with a native spatial address space. A node MUST be able to operate on spatial addresses and ranges and carry an atom without understanding its application, reference vocabulary, or Layer-4 identity. Unknown algorithms do not license interpreting or discarding the payload. Resource admission limits remain possible, but must be explicit and independent of application meaning.
 
-The successor tasks are **Punkti 0.6 — Mesh** (application-agnostic discovery, replication and reconciliation), **Punkti Identity — BRTH Layer 4 specification** (identity semantics), **NairobiDot — independent Punkti compatibility proof** (a non-Punkto implementation), and **Punkti Internet Red Team** (hostile network and scale review). Their contracts should follow this boundary rather than silently extending the core.
+Dynamic Mesh work is no longer normative for Punkti 0.6 and is retained only as optional acceleration evidence. The successor product tasks include **Punkti Identity — BRTH Layer 4 specification** (identity semantics), **NairobiDot — independent Punkti compatibility proof** (a non-Punkto implementation), and **Punkti Internet Red Team** (hostile network and scale review). Their contracts should follow this boundary rather than silently extending the core.
 
 ## Layer 3 vs Layer 4 boundary table
 
@@ -25,7 +25,7 @@ The successor tasks are **Punkti 0.6 — Mesh** (application-agnostic discovery,
 | Atom envelope/canonical bytes | Parse bounded structure; preserve canonical content | Interpret payload and extensions | Unknown application types remain admissible. |
 | Immutable content addressing (MID) | Compute immutable content digest | Assign domain meaning to addressed objects | An address is not a person. |
 | Timestamp | Carry a signed integer timestamp | Interpret event time, freshness and chronology | No trusted clock or global ordering is implied. |
-| Spatial address (`h`, geohash) | Carry, structurally check and operate on native spatial addresses/ranges | Interpret application meaning and physical claims | XY is horizontal position; Z is physical altitude, not application meaning. No proof of presence; legacy anchors stay unchanged. |
+| Spatial address (`h`, XY_Z) | Carry, structurally check and operate on native spatial addresses/ranges | Interpret application meaning and physical claims | XY is horizontal position; Z is physical altitude, not application meaning. No proof of presence; legacy anchors stay unchanged. |
 | Signature/provenance envelope | Verify supported signature schemes over defined bytes | Decide trust and authority | Verification proves control of a key only. |
 | Self-certifying public key | Embed key; bind it into signed content and MID | Associate keys with identities | No external registry prerequisite for v0.6. |
 | Algorithm/version identifiers | Dispatch explicitly; preserve unsupported values | Choose application assurance policy | Never guess or downgrade an algorithm. |
@@ -71,8 +71,8 @@ Proposed transport is a UTF-8 JSON object with exactly `v`, `t`, `h`, `x`, `alg`
 | Field | Proposed representation |
 |---|---|
 | `v` | Literal string `punkti/0.6`. |
-| `t` | JSON integer, 0 through 9007199254740991, Unix milliseconds; fractional/exponent spellings rejected. |
-| `h` | Empty string for no spatial anchor, otherwise 12 lowercase characters from `0123456789bcdefghjkmnpqrstuvwxyz`. Exact spatial encoding remains subject to the geohash profile review. |
+| `t` | JSON integer, Unix milliseconds; exact accepted spelling `0\|[1-9][0-9]*`, maximum 9007199254740991. Reject `-0`, negatives, leading zeros, plus signs, decimal points and exponents. |
+| `h` | Empty string for no spatial anchor, otherwise `<xy>_<z>` under [the normative spatial profile candidate](PUNKTI_0_6_SPATIAL_XY_Z.md): 4–12 lowercase 2D geohash characters, canonical decimal WGS84 ellipsoidal metres, at most 32 characters total. |
 | `x` | Application payload as a UTF-8 string; no required type prefix or schema. |
 | `alg` | Nonempty ASCII algorithm identifier, maximum 128 bytes; proposed known profile `ed25519`. Case-sensitive, no aliases. |
 | `pk` | Canonical padded RFC 4648 base64 public-key bytes; nonempty. |
@@ -87,6 +87,8 @@ Proposed admission limits are a 1 MiB canonical body, a 2 MiB transport record, 
 ### Canonical bytes and immutable addressing
 
 Define `U32(n)` as four-byte unsigned big-endian length/count, and `LP(b) = U32(length(b)) || b`. Every length is in bytes. `UTF8(s)` encodes the unnormalized scalar string. Base64 fields are decoded before framing; reject malformed padding, nonzero unused bits and noncanonical encodings by decode/re-encode comparison.
+
+JSON timestamp import MUST accept exactly `0|[1-9][0-9]*`, with value <=9007199254740991, and explicitly reject `-0`. Canonical framing uses minimal unsigned decimal with the same bound; this import rule does not change carrier bytes.
 
 The canonical body `C` is the concatenation, in this exact order:
 
@@ -126,11 +128,11 @@ The three requested primary states cannot honestly represent a forged supported 
 
 ### Synchronization semantics
 
-Proposed operations are **PUSH** of immutable records and **Range PULL** over lexicographically sorted full addresses. Range bounds are inclusive start/exclusive end; pages return records, the next address cursor, and an end marker. No timestamps define reconciliation order. A page size bounds work, and a receiver verifies the supplied address against the record whenever it understands that version.
+Proposed operations are **PUSH** of immutable records and **Range PULL** over lexicographically sorted full addresses. Range bounds are inclusive start/exclusive end; when both endpoints are present, equal or reversed bounds MUST be rejected (HTTP 400 in Mesh), while either null endpoint is unbounded; pages return records, the next address cursor, and an end marker. No timestamps define reconciliation order. A page size bounds work, and a receiver verifies the supplied address against the record whenever it understands that version.
 
 Mesh will define network framing, discovery, capability negotiation, snapshots and range summaries. The core contract is already precise: nodes MUST preserve transferred record bytes, deduplicate logical content by full namespace-qualified MID, preserve unknown application/reference/algorithm data, and avoid semantic interpretation. Transport record hashes may identify byte variants; they do not replace native MIDs.
 
-Spatial range subscriptions and range-scoped reconciliation are first-class requirements for that subsequent Mesh. A spatial range selects atoms by `h`, independently of their opaque `x`; it is distinct from the lexicographic MID ranges used by Range PULL above. A node can subscribe to such a spatial range and carry unknown Layer-4 atoms within it. Mesh must define subscription and reconciliation mechanics separately; no new wire encoding or Mesh implementation is authorized here.
+Spatial range subscriptions and range-scoped reconciliation are first-class requirements for that subsequent Mesh. Spatial XY and Z ranges follow the restored profile: reject `K(xy_lo) >= K(xy_hi)` with K padded right to 12 characters using `0`, and `z_min >= z_max` by exact decimal comparison of canonical strings when both endpoints are present; null is unbounded. Selection uses lower-edge key containment, not region overlap. Subscription construction MUST fail fast for invalid bounds. A spatial range selects atoms by `h`, independently of their opaque `x`; it is distinct from the lexicographic MID ranges used by Range PULL above. A node can subscribe to such a spatial range and carry unknown Layer-4 atoms within it. Mesh must define subscription and reconciliation mechanics separately; no new wire encoding or Mesh implementation is authorized here.
 
 Because signatures are excluded from MID, a bad signature variant must not poison the address permanently. Check a newly received variant before treating it as an already verified duplicate. Store a bounded set of variants or quarantine candidates separately; retain a verified representative when available. Unknown-alg variants cannot safely be assumed equivalent in provenance.
 
@@ -207,3 +209,20 @@ L3 cannot establish real-world identity, truthful location or time, trustworthin
 ## Guiding principle line
 
 A Punkti L3 node carries atoms it does not understand; provenance is self-certifying, identity is an application.
+
+
+## Founder-accepted replication architecture (2026-10-27)
+
+Punkti 0.6 adopts **static-first publication as the normative correctness and replication path**.
+
+> Nodes validate/write Punkti. Ordinary HTTP serves a static Punkti publication. Other nodes replicate by reading, independently verifying, deduplicating and republishing it.
+
+A serving peer MAY be only a publication base URL. Replication correctness MUST NOT require a live Punkti daemon, peer session, reciprocal callback, dynamic range-query API, PUSH endpoint or notification channel.
+
+Dynamic PUSH / Range PULL / notifications / sessions MAY remain available as optional performance accelerators, but are not required for conformance.
+
+The accepted publication model is a tiny mutable discovery root pointing to immutable content-addressed manifests/indexes/replication packs and canonical individual R objects. Exact record variants remain distinguishable by SHA256(R); logical atom identity remains MID. Static spatial discovery uses the accepted human-readable `h=<xy>_<z>` model, with XY prefix locality and independent exact-decimal Z filtering.
+
+The first experiment is preserved under `experimental/punkti-v0.6-static/` and demonstrated daemon-free replication through a plain static HTTP server, two-/three-node convergence, hostile/failure handling, and a strong request-count advantage for immutable replication packs.
+
+This section records the accepted architecture direction only. Punkti 0.6 is **not frozen** until the final normative publication specification and deterministic vectors are Founder-approved.

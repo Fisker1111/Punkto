@@ -134,7 +134,7 @@ class Node:
     def after_sync(self):
         pass
 
-    def special_route(self, method, path, query):
+    def special_route(self, method, path, query, body=None):
         return None
 
     def add(self, raw):
@@ -306,6 +306,9 @@ class Node:
                     data = json.loads(self.rfile.read(length))
                     if not isinstance(data, dict):
                         raise ValueError('request object required')
+                    special = node.special_route(self.command, parsed.path, parsed.query, data)
+                    if special is not None:
+                        return special
                     if parsed.path == '/push':
                         records = data['records']
                         if not isinstance(records, list) or not 1 <= len(records) <= MAX_PAGE:

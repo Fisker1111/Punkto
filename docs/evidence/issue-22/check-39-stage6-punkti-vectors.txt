@@ -1,0 +1,3 @@
+$ node pwa/test-punkti-vectors.mjs
+XY_Z: 203 assertions passed; carrier: 18 fixtures byte-identical; JS==Python: OK
+carrier assertions: 288

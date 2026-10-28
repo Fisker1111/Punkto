@@ -1,0 +1,12 @@
+$ PLAYWRIGHT_MODULE=file:///home/hermes/.hermes/profiles/punkto-worker/cache/scratch/tmp.00Dm1ea8Rv/node_modules/playwright/index.mjs node pwa/test-punkti-static-e2e.mjs
+browserType.launch: Executable doesn't exist at /home/hermes/.cache/ms-playwright/chromium_headless_shell-1248/chrome-headless-shell-linux64/chrome-headless-shell
+╔════════════════════════════════════════════════════════════╗
+║ Looks like Playwright was just installed or updated.       ║
+║ Please run the following command to download new browsers: ║
+║                                                            ║
+║     npx playwright install                                 ║
+║                                                            ║
+║ <3 Playwright Team                                         ║
+╚════════════════════════════════════════════════════════════╝
+    at staticReadAcidTest (/home/hermes/.hermes/kanban/workspaces/t_3d146aba/punkto/pwa/test-punkti-static-e2e.mjs:113:47)
+    at async main (/home/hermes/.hermes/kanban/workspaces/t_3d146aba/punkto/pwa/test-punkti-static-e2e.mjs:256:3)

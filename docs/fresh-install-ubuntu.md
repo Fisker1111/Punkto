@@ -220,12 +220,11 @@ sleep 10
 docker compose ps
 ```
 
-Expected output (both containers should show `Up`):
+Expected output (single combined container should show `Up`):
 
 ```
-NAME                IMAGE                                STATUS   PORTS
-punkto-web-1        ghcr.io/fisker1111/punkto-web:latest   Up      80→80
-punkto-relay-1      ghcr.io/fisker1111/punkto-relay:latest Up      8000→8000
+NAME                IMAGE                                           STATUS   PORTS
+punkto-app-1        ghcr.io/fisker1111/punkto@sha256:<digest>      Up       127.0.0.1:18080->8000/tcp
 ```
 
 ### Run Node Doctor

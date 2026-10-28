@@ -25,7 +25,10 @@ class WebTests(unittest.TestCase):
         (self.web / 'dir/index.html').write_text('directory')
         self.config = load_config(environ={'PUNKTO_WEB_ROOT': str(self.web), 'PUNKTO_DATA_DIR': str(self.root / 'data')})
         self.node = PersistentNode(self.config).start(0, '127.0.0.1')
-        self.node.web = StaticWeb(self.web, True)
+        self.publication = self.root / 'data' / 'publication'
+        self.publication.mkdir(parents=True, exist_ok=True)
+        (self.publication / 'root.json').write_text('{"head":"0"}')
+        self.node.web = StaticWeb(self.web, True, {'/publication': self.publication})
         self.addCleanup(self.node.durable.close)
         self.addCleanup(self.node.stop)
 
@@ -50,6 +53,7 @@ class WebTests(unittest.TestCase):
         self.assertEqual(raw, b'')
         self.assertEqual(headers['Content-Length'], '6')
         self.assertEqual(self.get('/dir/')[2], b'directory')
+        self.assertEqual(self.get('/publication/root.json')[0], 200)
         self.assertEqual(self.get('/p/exact-link')[2], b'index.html')
         # SPA fallback must not turn unknown API-like paths into HTML 200s.
         for path in ['/atom', '/feed', '/latest', '/atoms/v1/info', '/missing']:
@@ -77,8 +81,9 @@ class WebTests(unittest.TestCase):
             self.assertEqual((native[0], native[2]), (alias[0], alias[2]))
 
     def test_disabled_and_config(self):
-        self.node.web = None
+        self.node.web = StaticWeb(None, False, {'/publication': self.publication})
         self.assertEqual(self.get('/')[0], 400)
+        self.assertEqual(self.get('/publication/root.json')[0], 200)
         for value in ['0', 'false', 'no', 'off']:
             self.assertFalse(load_config(environ={'PUNKTO_WEB_ENABLED': value})['web']['enabled'])
         for root in ['relative', str(self.root / 'missing')]:

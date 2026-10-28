@@ -1,4 +1,4 @@
-import { computeAtomId, isStableAtomId } from './atom-id.js';
+import { computeAtomId, isPunktiMid, isStableAtomId } from './atom-id.js';
 import { normalizePunktoId, stripPunktoPrefix } from './punkto-id.js';
 
 const LOCAL_ONLY_FIELDS = new Set(['id', 'atom_id', 'distance', 'location_fields']);
@@ -14,7 +14,10 @@ export function sanitizeAtomForCanonicalId(atom) {
 }
 
 export async function canonicalAtomId(atom) {
+  const mid = String(atom?.mid || '').trim();
+  if (isPunktiMid(mid)) return mid;
   const direct = String(atom?.atom_id || '').trim();
+  if (isPunktiMid(direct)) return direct;
   if (isStableAtomId(direct)) return direct;
   return computeAtomId(sanitizeAtomForCanonicalId(atom));
 }
@@ -28,6 +31,7 @@ export function parsePublicPPath(pathname) {
   } catch {
     return null;
   }
+  if (isPunktiMid(raw)) return { kind: 'atom', id: raw };
   if (isStableAtomId(raw)) return { kind: 'atom', id: raw };
   const spatial = normalizePunktoId(raw);
   if (spatial) return { kind: 'spatial', id: spatial };
@@ -37,15 +41,16 @@ export function parsePublicPPath(pathname) {
 export function canonicalAtomPath(atomOrId) {
   const id = typeof atomOrId === 'string'
     ? atomOrId.trim()
-    : String(atomOrId?.atom_id || '').trim();
-  if (!isStableAtomId(id)) return '';
+    : String(atomOrId?.mid || atomOrId?.atom_id || '').trim();
+  if (!isPunktiMid(id) && !isStableAtomId(id)) return '';
   return `/p/${encodeURIComponent(id)}`;
 }
 
 export async function canonicalAtomUrl(atomOrId, origin = globalThis.location?.origin || '') {
   const id = typeof atomOrId === 'string' ? atomOrId.trim() : await canonicalAtomId(atomOrId);
-  if (!isStableAtomId(id)) return '';
-  return `${String(origin || '').replace(/\/$/, '')}${canonicalAtomPath(id)}`;
+  const path = canonicalAtomPath(id);
+  if (!path) return '';
+  return `${String(origin || '').replace(/\/$/, '')}${path}`;
 }
 
 export function legacySpatialPath(punkto) {

@@ -27,7 +27,7 @@ class CarrierTests(unittest.TestCase):
 
     def test_every_signed_field_bound(self):
         original = atom(refs=[dict(target='future:aa', rel='one'), dict(target='future:bb', rel='two')])
-        changes = dict(t=1, h='gggj00000000', x='changed', pk=atom(1)['pk'],
+        changes = dict(t=1, h='gggj00000000_0', x='changed', pk=atom(1)['pk'],
                        refs=list(reversed(original['refs'])), ext=b64(b'changed'))
         for field, value in changes.items():
             with self.subTest(field=field):
@@ -41,7 +41,7 @@ class CarrierTests(unittest.TestCase):
     def test_json_strictness(self):
         good = json.dumps(atom()).encode()
         self.assertEqual(import_json(good), fixture())
-        for raw in [good.replace(b'"t": 0', b'"t": 0.0'), good.replace(b'"t": 0', b'"t": 0e0'),
+        for raw in [good.replace(b'"t": 0', b'"t": -0'), good.replace(b'"t": 0', b'"t": 0.0'), good.replace(b'"t": 0', b'"t": 0e0'),
                     good.replace(b'"t": 0', b'"t": true'), good.replace(b'"t": 0', b'"t": -1'),
                     good.replace(b'"t": 0', b'"t": 9007199254740992'),
                     good.replace(b'"t": 0', b'"t": 0, "t": 0'),
@@ -67,15 +67,15 @@ class CarrierTests(unittest.TestCase):
 
     def test_spatial_boundaries(self):
         scope = Subscription('gggh', 'gggj')
-        self.assertTrue(scope.matches('gggh00000000'))
-        self.assertFalse(scope.matches('gggj00000000'))
+        self.assertTrue(scope.matches('gggh00000000_0'))
+        self.assertFalse(scope.matches('gggj00000000_0'))
         self.assertFalse(scope.matches(''))
         self.assertTrue(Subscription().matches(''))
         h = geo(100)
         z = altitude(h)
         self.assertAlmostEqual(z, 100, delta=0.005)
-        self.assertTrue(Subscription(z_min=z, z_max=z+1).matches(h))
-        self.assertFalse(Subscription(z_max=z).matches(h))
-        for args in [dict(h_lo='i'), dict(h_lo='z', h_hi='a'), dict(z_min=float('nan'))]:
+        self.assertTrue(Subscription(z_min=str(z), z_max=str(z+1)).matches(h))
+        self.assertFalse(Subscription(z_max=str(z)).matches(h))
+        for args in [dict(xy_lo='i'), dict(xy_lo='z', xy_hi='a'), dict(z_min=float('nan'))]:
             with self.assertRaises(ValueError):
                 Subscription(**args)

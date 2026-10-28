@@ -53,6 +53,12 @@ jobs:
       - name: Slice 5 deterministic helper tests
         run: node pwa/test-slice5.mjs
 
+      - name: Punkti 0.6 protocol/vector suites
+        run: |
+          node pwa/test-punkti-vectors.mjs
+          node pwa/test-punkti-publication.mjs
+          node pwa/test-spatial-xy-z.mjs
+
       - name: Required Pilot files exist
         run: |
           for f in \

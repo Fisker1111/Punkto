@@ -11,31 +11,34 @@ class StaticWeb:
             '.map': 'application/json', '.txt': 'text/plain', '.wasm': 'application/wasm',
             '.woff': 'font/woff', '.woff2': 'font/woff2', '.jpg': 'image/jpeg'}
 
-    def __init__(self, root, spa_fallback=False):
-        self.root = Path(root).resolve()
+    def __init__(self, root=None, spa_fallback=False, mounts=None):
+        self.root = Path(root).resolve() if root else None
         self.spa_fallback = spa_fallback
+        self.mounts = []
+        for prefix, directory in (mounts or {}).items():
+            if not isinstance(prefix, str) or not prefix.startswith('/') or (prefix != '/' and prefix.endswith('/')):
+                raise ValueError('mount prefix')
+            self.mounts.append((prefix, Path(directory).resolve()))
+        self.mounts.sort(key=lambda item: len(item[0]), reverse=True)
 
-    def serve(self, handler, path):
-        if handler.command not in ('GET', 'HEAD'):
-            return False
-        decoded = unquote(path)
-        if decoded == '/api' or decoded.startswith('/api/'):
-            return False
+    def _resolve(self, root, decoded):
         if not decoded.startswith('/') or decoded.startswith('//') or '\\' in decoded or '\x00' in decoded or '..' in decoded.split('/') or '%' in decoded:
-            handler.send_error(404)
-            return True
-        target = (self.root / decoded.lstrip('/')).resolve()
-        if not target.is_relative_to(self.root):
+            return None
+        target = (root / decoded.lstrip('/')).resolve()
+        if not target.is_relative_to(root):
+            return None
+        return target
+
+    def _serve_path(self, handler, root, decoded, spa_fallback=False):
+        target = self._resolve(root, decoded)
+        if target is None:
             handler.send_error(404)
             return True
         if decoded.endswith('/'):
             target = (target / 'index.html').resolve()
-        # SPA fallback is limited to client-side routes (exact links) so that
-        # unknown operational/API-looking paths still 404 instead of returning
-        # HTML with a 200.
-        if not target.is_file() and self.spa_fallback and decoded.startswith(self.SPA_PREFIXES):
-            target = (self.root / 'index.html').resolve()
-        if not target.is_relative_to(self.root) or not target.is_file():
+        if not target.is_file() and spa_fallback and decoded.startswith(self.SPA_PREFIXES):
+            target = (root / 'index.html').resolve()
+        if not target.is_relative_to(root) or not target.is_file():
             handler.send_error(404)
             return True
         raw = target.read_bytes()
@@ -48,3 +51,19 @@ class StaticWeb:
         if handler.command != 'HEAD':
             handler.wfile.write(raw)
         return True
+
+    def serve(self, handler, path):
+        if handler.command not in ('GET', 'HEAD'):
+            return False
+        decoded = unquote(path)
+        if decoded == '/api' or decoded.startswith('/api/'):
+            return False
+        for prefix, root in self.mounts:
+            if decoded == prefix or decoded.startswith(prefix + '/'):
+                relative = decoded[len(prefix):] or '/'
+                if not relative.startswith('/'):
+                    relative = '/' + relative
+                return self._serve_path(handler, root, relative, spa_fallback=False)
+        if self.root is None:
+            return False
+        return self._serve_path(handler, self.root, decoded, spa_fallback=self.spa_fallback)

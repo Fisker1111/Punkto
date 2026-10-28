@@ -1,0 +1,2 @@
+$ node pwa/test-punkti-publication.mjs
+publication vectors: 119 assertions passed

@@ -1,0 +1,2 @@
+$ node pwa/test-exact-identity.mjs
+exact identity tests passed

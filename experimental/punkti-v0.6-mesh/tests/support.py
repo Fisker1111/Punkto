@@ -7,7 +7,7 @@ from cryptography.hazmat.primitives import serialization
 from carrier import ALPHABET, SIGN_DOMAIN, b64, canonical, record
 
 
-def atom(i=0, h='gggh00000000', x=None, **changes):
+def atom(i=0, h='gggh00000000_0', x=None, **changes):
     key = Ed25519PrivateKey.from_private_bytes(hashlib.sha256(f'mesh-key-{i % 3}'.encode()).digest())
     a = dict(v='punkti/0.6', t=i, h=h, x=f'opaque-{i}' if x is None else x,
              alg='ed25519', pk=b64(key.public_key().public_bytes(
@@ -23,7 +23,4 @@ def fixture(i=0, **kwargs):
 
 
 def geo(z):
-    # Independent fixture encoder, latitude/longitude both at their minima.
-    n = int((z + 500) / 9000 * (1 << 20))
-    bits = ''.join('00' + str((n >> bit) & 1) for bit in range(19, -1, -1))
-    return ''.join(ALPHABET[int(bits[i:i+5], 2)] for i in range(0, 60, 5))
+    return '0000000000_' + str(z)

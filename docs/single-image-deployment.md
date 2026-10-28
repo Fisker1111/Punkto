@@ -39,7 +39,9 @@ image: the same digest runs unchanged for any domain.
 | --- | --- |
 | `/`, `/*.js`, `/*.json`, assets | bundled PWA |
 | `/p/<id>` | PWA (client route, SPA fallback) |
-| `/api/hello`, `/api/pull`, `/api/push`, `/api/sync` | node protocol aliases |
+| `/submit` | browser publish endpoint |
+| `/publication/root.json` + immutable objects | static publication read path |
+| `/api/hello`, `/api/pull`, `/api/push`, `/api/sync` | node protocol aliases (mesh compatibility) |
 | `/api/health`, `/api/ready`, `/api/node/info` | operational aliases |
 | `/hello`, `/pull`, `/push`, `/sync`, `/health`, `/ready`, `/node/info` | native peer/ops surface |
 

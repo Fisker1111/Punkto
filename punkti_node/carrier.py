@@ -10,6 +10,8 @@ from enum import Enum
 from cryptography.exceptions import InvalidSignature
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PublicKey
 
+from spatial import parse_h
+
 VERSION = 'punkti/0.6'
 ALPHABET = '0123456789bcdefghjkmnpqrstuvwxyz'
 BODY_LIMIT = 1024 * 1024
@@ -69,8 +71,7 @@ def canonical(atom):
     if type(atom['t']) is not int or not 0 <= atom['t'] <= 9007199254740991:
         raise ValueError('timestamp')
     h = atom['h']
-    if not isinstance(h, str) or (h and (len(h) != 12 or any(c not in ALPHABET for c in h))):
-        raise ValueError('spatial address')
+    parse_h(h)
     alg = utf8(atom['alg'])
     if not 1 <= len(alg) <= 128 or not alg.isascii():
         raise ValueError('algorithm')
@@ -172,12 +173,18 @@ def reject_number(_):
     raise ValueError('noninteger JSON number')
 
 
+def unsigned_integer(spelling):
+    if not re.fullmatch(r'0|[1-9][0-9]*', spelling):
+        raise ValueError('timestamp spelling: expected 0|[1-9][0-9]*')
+    return int(spelling)
+
+
 def import_json(raw):
     """Import only; no byte-exact JSON export is offered. R is the wire format."""
     if len(raw) > RECORD_LIMIT:
         raise ResourceLimit('JSON transport limit')
     atom = json.loads(raw.decode('utf-8'), object_pairs_hook=unique_object,
-                      parse_float=reject_number, parse_constant=reject_number)
+                      parse_int=unsigned_integer, parse_float=reject_number, parse_constant=reject_number)
     return record(atom)
 
 

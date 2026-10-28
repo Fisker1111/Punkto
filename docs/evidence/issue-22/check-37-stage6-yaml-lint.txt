@@ -1,0 +1,9 @@
+$ for f in .github/workflows/*.yml *.yml; do python3 -c "import yaml,sys;yaml.safe_load(open(sys.argv[1]))" "$f" || exit 1; done
++ yaml.safe_load .github/workflows/deployment-verify.yml
++ yaml.safe_load .github/workflows/pilot-ci.yml
++ yaml.safe_load .github/workflows/punkto-image.yml
++ yaml.safe_load docker-compose.node.yml
++ yaml.safe_load docker-compose.punkto.yml
++ yaml.safe_load node-config.example.yml
++ yaml.safe_load node-config.punkto-xyz.example.yml
++ yaml.safe_load punkto-config.example.yml

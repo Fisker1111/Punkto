@@ -54,10 +54,10 @@ network:
   peers: []                     # Exact origins; no credentials/path/query/fragment.
   sync_interval_seconds: 30     # First attempt after 2s, then interval after completion.
 subscriptions:                 # Omit = global; [] = accept nothing.
-  - h_lo: null                 # Inclusive 1–12 character spatial lower bound.
-    h_hi: null                 # Exclusive spatial upper bound; null = unbounded.
-    z_min: null                # Inclusive decoded altitude in meters, or unbounded.
-    z_max: null                # Exclusive decoded altitude in meters, or unbounded.
+  - xy_lo: null                # Inclusive 1–12 character XY lower bound.
+    xy_hi: null                # Exclusive XY upper bound; null = unbounded.
+    z_min: null                # Inclusive canonical decimal Z string, or unbounded.
+    z_max: null                # Exclusive canonical decimal Z string, or unbounded.
 storage:
   data_path: /data             # Durable volume, one writer.
 logging:
@@ -151,8 +151,8 @@ A bbox-style lexicographic h range:
 
 ```yaml
 subscriptions:
-  - h_lo: gggh
-    h_hi: gggj
+  - xy_lo: gggh
+    xy_hi: gggj
 ```
 
 These are intervals in the reference's provisional **3D** spatial hash, not
@@ -163,10 +163,10 @@ Altitude window, optionally intersected with an h range:
 
 ```yaml
 subscriptions:
-  - h_lo: g
-    h_hi: h
-    z_min: 50
-    z_max: 150
+  - xy_lo: g
+    xy_hi: h
+    z_min: "50"
+    z_max: "150"
 ```
 
 Altitude comes from the authenticated 12-character spatial address, never from

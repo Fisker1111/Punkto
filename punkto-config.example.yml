@@ -14,10 +14,10 @@ network:
 # Omitted subscriptions = one global subscription; [] = ACCEPT NOTHING.
 # Bounds are lower-inclusive, upper-exclusive; null means unbounded.
 subscriptions:
-  - h_lo: null                      # Geohash alphabet, 1–12 characters.
-    h_hi: null                      # Lexicographic spatial upper bound.
-    z_min: null                     # Minimum decoded altitude in meters.
-    z_max: null                     # Exclusive maximum decoded altitude in meters.
+  - xy_lo: null                     # XY geohash lower bound, 1–12 characters.
+    xy_hi: null                     # Lexicographic XY upper bound.
+    z_min: null                     # Canonical decimal Z string lower bound.
+    z_max: null                     # Canonical decimal Z string upper bound (exclusive).
 storage:
   data_path: /data                  # Persistent mounted directory; one writer only.
 logging:

@@ -1,0 +1,37 @@
+{
+  "root": {
+    "head": "a2dfa8560eed4a63b3ae0172bd9df41576aaa194150b756f774b1a859c72b2c9",
+    "seq": 1,
+    "updated_at": "1970-01-01T00:00:00.003Z",
+    "v": "punkti/pub/0.6-draft"
+  },
+  "manifest": {
+    "created_at": "1970-01-01T00:00:00.003Z",
+    "depth": 2,
+    "index": {
+      "u4": "6f6f854e6e1df0d2aa9765c13655fe9404857ee6bb9672c8e89f88c53847a9a3"
+    },
+    "pack_count": 3,
+    "prev": null,
+    "record_count": 3,
+    "seq": 1,
+    "v": "punkti/pub/0.6-draft"
+  },
+  "leaf_shard": {
+    "children": {},
+    "packs": [
+      "64e5ca3efb52c2f7ed7b7c4799b8702b27a5d35e9c9ebe0a651acdf10576cc98"
+    ],
+    "prefix": "u4pruydqqv",
+    "records": [
+      {
+        "h": "u4pruydqqv_0",
+        "mid": "punkti/0.6:501ef2d57b50f5332bdfc9476d0e7475b835d97d2894fb9760644fec24e5bb4c",
+        "sha256": "b9b334ccd633c9890461932b6324ecc88ec8691a81e34b2965d53fec09f1b67f"
+      }
+    ],
+    "v": "punkti/pub/0.6-draft"
+  },
+  "record_example_path": "records/77/7787b43cfef3b0b58abb98cba1352d8b60a99a27b45991a1aae8635564d48a99",
+  "segment_example_path": "segments/5f/5f81ec921ae501d3163587ccfa95c89ef2c51061f3976723927c6a41b8ed52cf"
+}

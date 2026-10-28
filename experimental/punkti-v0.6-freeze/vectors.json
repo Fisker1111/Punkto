@@ -1,0 +1,2186 @@
+{
+  "fixtures": {
+    "canonical": {
+      "C": "0000000a70756e6b74692f302e360000000d313730303030303030303030300000000f7330303030303030303030305f3233000000236f706171756520667265657a65207061796c6f6164200020e4b896e7958c20f09f8c8d0000000765643235353139000000209fdc14a7085469ce9113511a2033acf5593d6e9cdab18cf2770b5888044f1a66000000020000000e756e6b6e6f776e2f613a3030666600000013756e7265636f676e697a65642fe585b3e7b3bb0000000e6675747572652f76393a61626364000000000000000300ff00",
+      "MID": "82444945204576099501248b1a615c1c841b44981ae8e8bd1f89eb4e093f73ba",
+      "R": "AAAA0gAAAApwdW5rdGkvMC42AAAADTE3MDAwMDAwMDAwMDAAAAAPczAwMDAwMDAwMDAwXzIzAAAAI29wYXF1ZSBmcmVlemUgcGF5bG9hZCAAIOS4lueVjCDwn4yNAAAAB2VkMjU1MTkAAAAgn9wUpwhUac6RE1EaIDOs9Vk9bpzasYzydwtYiARPGmYAAAACAAAADnVua25vd24vYTowMGZmAAAAE3VucmVjb2duaXplZC/lhbPns7sAAAAOZnV0dXJlL3Y5OmFiY2QAAAAAAAAAAwD/AAAAAECRFUq9ar2aYWpQNHl4ezXHk5ua/1bLrlkEocLtrQKEpq4Wq/FGlWi1jI92O/YegH2v+neF03YqD4kT/EpuIswF",
+      "S": "50554e4b54492d4c332d5349474e000000000a70756e6b74692f302e360000000d313730303030303030303030300000000f7330303030303030303030305f3233000000236f706171756520667265657a65207061796c6f6164200020e4b896e7958c20f09f8c8d0000000765643235353139000000209fdc14a7085469ce9113511a2033acf5593d6e9cdab18cf2770b5888044f1a66000000020000000e756e6b6e6f776e2f613a3030666600000013756e7265636f676e697a65642fe585b3e7b3bb0000000e6675747572652f76393a61626364000000000000000300ff00",
+      "address": "punkti/0.6:82444945204576099501248b1a615c1c841b44981ae8e8bd1f89eb4e093f73ba",
+      "atom": {
+        "alg": "ed25519",
+        "ext": "AP8A",
+        "h": "s00000000000_23",
+        "pk": "n9wUpwhUac6RE1EaIDOs9Vk9bpzasYzydwtYiARPGmY=",
+        "refs": [
+          {
+            "rel": "unrecognized/\u5173\u7cfb",
+            "target": "unknown/a:00ff"
+          },
+          {
+            "rel": "",
+            "target": "future/v9:abcd"
+          }
+        ],
+        "sig": "kRVKvWq9mmFqUDR5eHs1x5Obmv9Wy65ZBKHC7a0ChKauFqvxRpVotYyPdjv2HoB9r/p3hdN2Kg+JE/xKbiLMBQ==",
+        "t": 1700000000000,
+        "v": "punkti/0.6",
+        "x": "opaque freeze payload \u0000 \u4e16\u754c \ud83c\udf0d"
+      },
+      "sha256_R": "53388006f408fd3c04aaab96e52357d41c4003a594ce68f1fc91a31b89ac0762",
+      "sig": "kRVKvWq9mmFqUDR5eHs1x5Obmv9Wy65ZBKHC7a0ChKauFqvxRpVotYyPdjv2HoB9r/p3hdN2Kg+JE/xKbiLMBQ==",
+      "spec": {
+        "alg": "ed25519",
+        "ext": "AP8A",
+        "h": "s00000000000_23",
+        "refs": [
+          {
+            "rel": "unrecognized/\u5173\u7cfb",
+            "target": "unknown/a:00ff"
+          },
+          {
+            "rel": "",
+            "target": "future/v9:abcd"
+          }
+        ],
+        "seed": "punkti-0.6-freeze-vectors",
+        "t": 1700000000000,
+        "x": "opaque freeze payload \u0000 \u4e16\u754c \ud83c\udf0d"
+      },
+      "state": "VALID"
+    },
+    "decimal": {
+      "C": "0000000a70756e6b74692f302e360000000d313730303030303030303030300000001175336275747a376b39715f32332e303235000000236f706171756520667265657a65207061796c6f6164200020e4b896e7958c20f09f8c8d0000000765643235353139000000209fdc14a7085469ce9113511a2033acf5593d6e9cdab18cf2770b5888044f1a66000000020000000e756e6b6e6f776e2f613a3030666600000013756e7265636f676e697a65642fe585b3e7b3bb0000000e6675747572652f76393a61626364000000000000000300ff00",
+      "MID": "86cec2a65c1e4bec34d5e1cc2c8ba0ffd423b235d51a1def994db432be51fbd6",
+      "R": "AAAA1AAAAApwdW5rdGkvMC42AAAADTE3MDAwMDAwMDAwMDAAAAARdTNidXR6N2s5cV8yMy4wMjUAAAAjb3BhcXVlIGZyZWV6ZSBwYXlsb2FkIAAg5LiW55WMIPCfjI0AAAAHZWQyNTUxOQAAACCf3BSnCFRpzpETURogM6z1WT1unNqxjPJ3C1iIBE8aZgAAAAIAAAAOdW5rbm93bi9hOjAwZmYAAAATdW5yZWNvZ25pemVkL+WFs+ezuwAAAA5mdXR1cmUvdjk6YWJjZAAAAAAAAAADAP8AAAAAQJ8bz1e3o50+8IP22k+Mv5024FFL+T8GKybRVmfDY41QxiRx5d2C0H5AGRtp3OWRbNad3FHw4AW5Ht7DQdOOQgg=",
+      "S": "50554e4b54492d4c332d5349474e000000000a70756e6b74692f302e360000000d313730303030303030303030300000001175336275747a376b39715f32332e303235000000236f706171756520667265657a65207061796c6f6164200020e4b896e7958c20f09f8c8d0000000765643235353139000000209fdc14a7085469ce9113511a2033acf5593d6e9cdab18cf2770b5888044f1a66000000020000000e756e6b6e6f776e2f613a3030666600000013756e7265636f676e697a65642fe585b3e7b3bb0000000e6675747572652f76393a61626364000000000000000300ff00",
+      "address": "punkti/0.6:86cec2a65c1e4bec34d5e1cc2c8ba0ffd423b235d51a1def994db432be51fbd6",
+      "atom": {
+        "alg": "ed25519",
+        "ext": "AP8A",
+        "h": "u3butz7k9q_23.025",
+        "pk": "n9wUpwhUac6RE1EaIDOs9Vk9bpzasYzydwtYiARPGmY=",
+        "refs": [
+          {
+            "rel": "unrecognized/\u5173\u7cfb",
+            "target": "unknown/a:00ff"
+          },
+          {
+            "rel": "",
+            "target": "future/v9:abcd"
+          }
+        ],
+        "sig": "nxvPV7ejnT7wg/baT4y/nTbgUUv5PwYrJtFWZ8NjjVDGJHHl3YLQfkAZG2nc5ZFs1p3cUfDgBbke3sNB045CCA==",
+        "t": 1700000000000,
+        "v": "punkti/0.6",
+        "x": "opaque freeze payload \u0000 \u4e16\u754c \ud83c\udf0d"
+      },
+      "sha256_R": "b0269c0aa91725d23f620814b4e9f7a00c22ef55fbd53fef923da6db15b36a04",
+      "sig": "nxvPV7ejnT7wg/baT4y/nTbgUUv5PwYrJtFWZ8NjjVDGJHHl3YLQfkAZG2nc5ZFs1p3cUfDgBbke3sNB045CCA==",
+      "spec": {
+        "alg": "ed25519",
+        "ext": "AP8A",
+        "h": "u3butz7k9q_23.025",
+        "refs": [
+          {
+            "rel": "unrecognized/\u5173\u7cfb",
+            "target": "unknown/a:00ff"
+          },
+          {
+            "rel": "",
+            "target": "future/v9:abcd"
+          }
+        ],
+        "seed": "punkti-0.6-freeze-vectors",
+        "t": 1700000000000,
+        "x": "opaque freeze payload \u0000 \u4e16\u754c \ud83c\udf0d"
+      },
+      "state": "VALID"
+    },
+    "height23": {
+      "C": "0000000a70756e6b74692f302e360000000d313730303030303030303030300000000d75336275747a376b39715f3233000000236f706171756520667265657a65207061796c6f6164200020e4b896e7958c20f09f8c8d0000000765643235353139000000209fdc14a7085469ce9113511a2033acf5593d6e9cdab18cf2770b5888044f1a66000000020000000e756e6b6e6f776e2f613a3030666600000013756e7265636f676e697a65642fe585b3e7b3bb0000000e6675747572652f76393a61626364000000000000000300ff00",
+      "MID": "98f2628a42b6c0fe197c9a60025526185c6b74f668137cbd36d4526db5b839ea",
+      "R": "AAAA0AAAAApwdW5rdGkvMC42AAAADTE3MDAwMDAwMDAwMDAAAAANdTNidXR6N2s5cV8yMwAAACNvcGFxdWUgZnJlZXplIHBheWxvYWQgACDkuJbnlYwg8J+MjQAAAAdlZDI1NTE5AAAAIJ/cFKcIVGnOkRNRGiAzrPVZPW6c2rGM8ncLWIgETxpmAAAAAgAAAA51bmtub3duL2E6MDBmZgAAABN1bnJlY29nbml6ZWQv5YWz57O7AAAADmZ1dHVyZS92OTphYmNkAAAAAAAAAAMA/wAAAABAne9StIIn2rLI6XNofHkj48ElHQb0a5Fcb4HTbgv6cXng9eH+/THaRmgKQIYu3jnW4wej8opXW16Gg4HXlsjZCQ==",
+      "S": "50554e4b54492d4c332d5349474e000000000a70756e6b74692f302e360000000d313730303030303030303030300000000d75336275747a376b39715f3233000000236f706171756520667265657a65207061796c6f6164200020e4b896e7958c20f09f8c8d0000000765643235353139000000209fdc14a7085469ce9113511a2033acf5593d6e9cdab18cf2770b5888044f1a66000000020000000e756e6b6e6f776e2f613a3030666600000013756e7265636f676e697a65642fe585b3e7b3bb0000000e6675747572652f76393a61626364000000000000000300ff00",
+      "address": "punkti/0.6:98f2628a42b6c0fe197c9a60025526185c6b74f668137cbd36d4526db5b839ea",
+      "atom": {
+        "alg": "ed25519",
+        "ext": "AP8A",
+        "h": "u3butz7k9q_23",
+        "pk": "n9wUpwhUac6RE1EaIDOs9Vk9bpzasYzydwtYiARPGmY=",
+        "refs": [
+          {
+            "rel": "unrecognized/\u5173\u7cfb",
+            "target": "unknown/a:00ff"
+          },
+          {
+            "rel": "",
+            "target": "future/v9:abcd"
+          }
+        ],
+        "sig": "ne9StIIn2rLI6XNofHkj48ElHQb0a5Fcb4HTbgv6cXng9eH+/THaRmgKQIYu3jnW4wej8opXW16Gg4HXlsjZCQ==",
+        "t": 1700000000000,
+        "v": "punkti/0.6",
+        "x": "opaque freeze payload \u0000 \u4e16\u754c \ud83c\udf0d"
+      },
+      "sha256_R": "7d3d69942586b8ed0d38ef9cd5df24a3053950f930a108cb4242f9c4363f7b30",
+      "sig": "ne9StIIn2rLI6XNofHkj48ElHQb0a5Fcb4HTbgv6cXng9eH+/THaRmgKQIYu3jnW4wej8opXW16Gg4HXlsjZCQ==",
+      "spec": {
+        "alg": "ed25519",
+        "ext": "AP8A",
+        "h": "u3butz7k9q_23",
+        "refs": [
+          {
+            "rel": "unrecognized/\u5173\u7cfb",
+            "target": "unknown/a:00ff"
+          },
+          {
+            "rel": "",
+            "target": "future/v9:abcd"
+          }
+        ],
+        "seed": "punkti-0.6-freeze-vectors",
+        "t": 1700000000000,
+        "x": "opaque freeze payload \u0000 \u4e16\u754c \ud83c\udf0d"
+      },
+      "state": "VALID"
+    },
+    "negative": {
+      "C": "0000000a70756e6b74692f302e360000000d313730303030303030303030300000000e75336275747a376b39715f2d3138000000236f706171756520667265657a65207061796c6f6164200020e4b896e7958c20f09f8c8d0000000765643235353139000000209fdc14a7085469ce9113511a2033acf5593d6e9cdab18cf2770b5888044f1a66000000020000000e756e6b6e6f776e2f613a3030666600000013756e7265636f676e697a65642fe585b3e7b3bb0000000e6675747572652f76393a61626364000000000000000300ff00",
+      "MID": "c9185899abc56ac3acf3b6b0629c40c1e8f3f5e88d7d1dd65d6aa6d60cc219ab",
+      "R": "AAAA0QAAAApwdW5rdGkvMC42AAAADTE3MDAwMDAwMDAwMDAAAAAOdTNidXR6N2s5cV8tMTgAAAAjb3BhcXVlIGZyZWV6ZSBwYXlsb2FkIAAg5LiW55WMIPCfjI0AAAAHZWQyNTUxOQAAACCf3BSnCFRpzpETURogM6z1WT1unNqxjPJ3C1iIBE8aZgAAAAIAAAAOdW5rbm93bi9hOjAwZmYAAAATdW5yZWNvZ25pemVkL+WFs+ezuwAAAA5mdXR1cmUvdjk6YWJjZAAAAAAAAAADAP8AAAAAQH/XIfkqFCzEE9z73uQv0ogWpTNc9n5M1sYTROS46iE36TLkRhISc/2t2Se8JAe95cmadHnAjCFbYHVE5QNulwU=",
+      "S": "50554e4b54492d4c332d5349474e000000000a70756e6b74692f302e360000000d313730303030303030303030300000000e75336275747a376b39715f2d3138000000236f706171756520667265657a65207061796c6f6164200020e4b896e7958c20f09f8c8d0000000765643235353139000000209fdc14a7085469ce9113511a2033acf5593d6e9cdab18cf2770b5888044f1a66000000020000000e756e6b6e6f776e2f613a3030666600000013756e7265636f676e697a65642fe585b3e7b3bb0000000e6675747572652f76393a61626364000000000000000300ff00",
+      "address": "punkti/0.6:c9185899abc56ac3acf3b6b0629c40c1e8f3f5e88d7d1dd65d6aa6d60cc219ab",
+      "atom": {
+        "alg": "ed25519",
+        "ext": "AP8A",
+        "h": "u3butz7k9q_-18",
+        "pk": "n9wUpwhUac6RE1EaIDOs9Vk9bpzasYzydwtYiARPGmY=",
+        "refs": [
+          {
+            "rel": "unrecognized/\u5173\u7cfb",
+            "target": "unknown/a:00ff"
+          },
+          {
+            "rel": "",
+            "target": "future/v9:abcd"
+          }
+        ],
+        "sig": "f9ch+SoULMQT3Pve5C/SiBalM1z2fkzWxhNE5LjqITfpMuRGEhJz/a3ZJ7wkB73lyZp0ecCMIVtgdUTlA26XBQ==",
+        "t": 1700000000000,
+        "v": "punkti/0.6",
+        "x": "opaque freeze payload \u0000 \u4e16\u754c \ud83c\udf0d"
+      },
+      "sha256_R": "a191dffd6142fcc3a8c2694aa3e20d44d8fd98d05da9d5b8181affba6143f851",
+      "sig": "f9ch+SoULMQT3Pve5C/SiBalM1z2fkzWxhNE5LjqITfpMuRGEhJz/a3ZJ7wkB73lyZp0ecCMIVtgdUTlA26XBQ==",
+      "spec": {
+        "alg": "ed25519",
+        "ext": "AP8A",
+        "h": "u3butz7k9q_-18",
+        "refs": [
+          {
+            "rel": "unrecognized/\u5173\u7cfb",
+            "target": "unknown/a:00ff"
+          },
+          {
+            "rel": "",
+            "target": "future/v9:abcd"
+          }
+        ],
+        "seed": "punkti-0.6-freeze-vectors",
+        "t": 1700000000000,
+        "x": "opaque freeze payload \u0000 \u4e16\u754c \ud83c\udf0d"
+      },
+      "state": "VALID"
+    },
+    "opaque": {
+      "C": "0000000a70756e6b74692f302e360000000d313730303030303030303030300000000f7330303030303030303030305f3233000000106f70617175650020f09f8c8d2065cc81000000106675747572652d7369676e6174757265000000209fdc14a7085469ce9113511a2033acf5593d6e9cdab18cf2770b5888044f1a66000000020000000e756e6b6e6f776e2f613a3030666600000013756e7265636f676e697a65642fe585b3e7b3bb0000000e6675747572652f76393a616263640000000000000008ff006f7061717565",
+      "MID": "8b6dca8bc139ff96f5b7e6c8841e88f6f5b5e50c45fc9e31e53be68e74c00969",
+      "R": "AAAAzQAAAApwdW5rdGkvMC42AAAADTE3MDAwMDAwMDAwMDAAAAAPczAwMDAwMDAwMDAwXzIzAAAAEG9wYXF1ZQAg8J+MjSBlzIEAAAAQZnV0dXJlLXNpZ25hdHVyZQAAACCf3BSnCFRpzpETURogM6z1WT1unNqxjPJ3C1iIBE8aZgAAAAIAAAAOdW5rbm93bi9hOjAwZmYAAAATdW5yZWNvZ25pemVkL+WFs+ezuwAAAA5mdXR1cmUvdjk6YWJjZAAAAAAAAAAI/wBvcGFxdWUAAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+      "S": "50554e4b54492d4c332d5349474e000000000a70756e6b74692f302e360000000d313730303030303030303030300000000f7330303030303030303030305f3233000000106f70617175650020f09f8c8d2065cc81000000106675747572652d7369676e6174757265000000209fdc14a7085469ce9113511a2033acf5593d6e9cdab18cf2770b5888044f1a66000000020000000e756e6b6e6f776e2f613a3030666600000013756e7265636f676e697a65642fe585b3e7b3bb0000000e6675747572652f76393a616263640000000000000008ff006f7061717565",
+      "address": "punkti/0.6:8b6dca8bc139ff96f5b7e6c8841e88f6f5b5e50c45fc9e31e53be68e74c00969",
+      "atom": {
+        "alg": "future-signature",
+        "ext": "/wBvcGFxdWU=",
+        "h": "s00000000000_23",
+        "pk": "n9wUpwhUac6RE1EaIDOs9Vk9bpzasYzydwtYiARPGmY=",
+        "refs": [
+          {
+            "rel": "unrecognized/\u5173\u7cfb",
+            "target": "unknown/a:00ff"
+          },
+          {
+            "rel": "",
+            "target": "future/v9:abcd"
+          }
+        ],
+        "sig": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+        "t": 1700000000000,
+        "v": "punkti/0.6",
+        "x": "opaque\u0000 \ud83c\udf0d e\u0301"
+      },
+      "sha256_R": "e8ec8916f3b1ee2552f467cd2b7bc065569b5447eb2dcd8902edc8600ed1ecaa",
+      "sig": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+      "spec": {
+        "alg": "future-signature",
+        "ext": "/wBvcGFxdWU=",
+        "h": "s00000000000_23",
+        "refs": [
+          {
+            "rel": "unrecognized/\u5173\u7cfb",
+            "target": "unknown/a:00ff"
+          },
+          {
+            "rel": "",
+            "target": "future/v9:abcd"
+          }
+        ],
+        "seed": "punkti-0.6-freeze-vectors",
+        "t": 1700000000000,
+        "x": "opaque\u0000 \ud83c\udf0d e\u0301"
+      },
+      "state": "UNVERIFIABLE-alg"
+    },
+    "selection0": {
+      "C": "0000000a70756e6b74692f302e360000000d3137303030303030303030303000000007753362755f3233000000236f706171756520667265657a65207061796c6f6164200020e4b896e7958c20f09f8c8d0000000765643235353139000000209fdc14a7085469ce9113511a2033acf5593d6e9cdab18cf2770b5888044f1a66000000020000000e756e6b6e6f776e2f613a3030666600000013756e7265636f676e697a65642fe585b3e7b3bb0000000e6675747572652f76393a61626364000000000000000300ff00",
+      "MID": "5a840df386f557234dd0914a0c1287a7b81d9ffaf09515c1f7586dcba5286f91",
+      "R": "AAAAygAAAApwdW5rdGkvMC42AAAADTE3MDAwMDAwMDAwMDAAAAAHdTNidV8yMwAAACNvcGFxdWUgZnJlZXplIHBheWxvYWQgACDkuJbnlYwg8J+MjQAAAAdlZDI1NTE5AAAAIJ/cFKcIVGnOkRNRGiAzrPVZPW6c2rGM8ncLWIgETxpmAAAAAgAAAA51bmtub3duL2E6MDBmZgAAABN1bnJlY29nbml6ZWQv5YWz57O7AAAADmZ1dHVyZS92OTphYmNkAAAAAAAAAAMA/wAAAABAC4dHFFQlSbJahngUfjj7Q4Ob+/67Fy+GZXjI81gL9X30LGnVyvNBI7BJpQP0cByI0EdhLkih8suLlACG2JJ7Bw==",
+      "S": "50554e4b54492d4c332d5349474e000000000a70756e6b74692f302e360000000d3137303030303030303030303000000007753362755f3233000000236f706171756520667265657a65207061796c6f6164200020e4b896e7958c20f09f8c8d0000000765643235353139000000209fdc14a7085469ce9113511a2033acf5593d6e9cdab18cf2770b5888044f1a66000000020000000e756e6b6e6f776e2f613a3030666600000013756e7265636f676e697a65642fe585b3e7b3bb0000000e6675747572652f76393a61626364000000000000000300ff00",
+      "address": "punkti/0.6:5a840df386f557234dd0914a0c1287a7b81d9ffaf09515c1f7586dcba5286f91",
+      "atom": {
+        "alg": "ed25519",
+        "ext": "AP8A",
+        "h": "u3bu_23",
+        "pk": "n9wUpwhUac6RE1EaIDOs9Vk9bpzasYzydwtYiARPGmY=",
+        "refs": [
+          {
+            "rel": "unrecognized/\u5173\u7cfb",
+            "target": "unknown/a:00ff"
+          },
+          {
+            "rel": "",
+            "target": "future/v9:abcd"
+          }
+        ],
+        "sig": "C4dHFFQlSbJahngUfjj7Q4Ob+/67Fy+GZXjI81gL9X30LGnVyvNBI7BJpQP0cByI0EdhLkih8suLlACG2JJ7Bw==",
+        "t": 1700000000000,
+        "v": "punkti/0.6",
+        "x": "opaque freeze payload \u0000 \u4e16\u754c \ud83c\udf0d"
+      },
+      "sha256_R": "a6dcb0b7d499440ac27ba3179dc076edfb4bf4731c10e5117193a1c61004bde9",
+      "sig": "C4dHFFQlSbJahngUfjj7Q4Ob+/67Fy+GZXjI81gL9X30LGnVyvNBI7BJpQP0cByI0EdhLkih8suLlACG2JJ7Bw==",
+      "spec": {
+        "alg": "ed25519",
+        "ext": "AP8A",
+        "h": "u3bu_23",
+        "refs": [
+          {
+            "rel": "unrecognized/\u5173\u7cfb",
+            "target": "unknown/a:00ff"
+          },
+          {
+            "rel": "",
+            "target": "future/v9:abcd"
+          }
+        ],
+        "seed": "punkti-0.6-freeze-vectors",
+        "t": 1700000000000,
+        "x": "opaque freeze payload \u0000 \u4e16\u754c \ud83c\udf0d"
+      },
+      "state": "VALID"
+    },
+    "selection1": {
+      "C": "0000000a70756e6b74692f302e360000000d313730303030303030303030300000000d75336275747a376b39715f3233000000236f706171756520667265657a65207061796c6f6164200020e4b896e7958c20f09f8c8d0000000765643235353139000000209fdc14a7085469ce9113511a2033acf5593d6e9cdab18cf2770b5888044f1a66000000020000000e756e6b6e6f776e2f613a3030666600000013756e7265636f676e697a65642fe585b3e7b3bb0000000e6675747572652f76393a61626364000000000000000300ff00",
+      "MID": "98f2628a42b6c0fe197c9a60025526185c6b74f668137cbd36d4526db5b839ea",
+      "R": "AAAA0AAAAApwdW5rdGkvMC42AAAADTE3MDAwMDAwMDAwMDAAAAANdTNidXR6N2s5cV8yMwAAACNvcGFxdWUgZnJlZXplIHBheWxvYWQgACDkuJbnlYwg8J+MjQAAAAdlZDI1NTE5AAAAIJ/cFKcIVGnOkRNRGiAzrPVZPW6c2rGM8ncLWIgETxpmAAAAAgAAAA51bmtub3duL2E6MDBmZgAAABN1bnJlY29nbml6ZWQv5YWz57O7AAAADmZ1dHVyZS92OTphYmNkAAAAAAAAAAMA/wAAAABAne9StIIn2rLI6XNofHkj48ElHQb0a5Fcb4HTbgv6cXng9eH+/THaRmgKQIYu3jnW4wej8opXW16Gg4HXlsjZCQ==",
+      "S": "50554e4b54492d4c332d5349474e000000000a70756e6b74692f302e360000000d313730303030303030303030300000000d75336275747a376b39715f3233000000236f706171756520667265657a65207061796c6f6164200020e4b896e7958c20f09f8c8d0000000765643235353139000000209fdc14a7085469ce9113511a2033acf5593d6e9cdab18cf2770b5888044f1a66000000020000000e756e6b6e6f776e2f613a3030666600000013756e7265636f676e697a65642fe585b3e7b3bb0000000e6675747572652f76393a61626364000000000000000300ff00",
+      "address": "punkti/0.6:98f2628a42b6c0fe197c9a60025526185c6b74f668137cbd36d4526db5b839ea",
+      "atom": {
+        "alg": "ed25519",
+        "ext": "AP8A",
+        "h": "u3butz7k9q_23",
+        "pk": "n9wUpwhUac6RE1EaIDOs9Vk9bpzasYzydwtYiARPGmY=",
+        "refs": [
+          {
+            "rel": "unrecognized/\u5173\u7cfb",
+            "target": "unknown/a:00ff"
+          },
+          {
+            "rel": "",
+            "target": "future/v9:abcd"
+          }
+        ],
+        "sig": "ne9StIIn2rLI6XNofHkj48ElHQb0a5Fcb4HTbgv6cXng9eH+/THaRmgKQIYu3jnW4wej8opXW16Gg4HXlsjZCQ==",
+        "t": 1700000000000,
+        "v": "punkti/0.6",
+        "x": "opaque freeze payload \u0000 \u4e16\u754c \ud83c\udf0d"
+      },
+      "sha256_R": "7d3d69942586b8ed0d38ef9cd5df24a3053950f930a108cb4242f9c4363f7b30",
+      "sig": "ne9StIIn2rLI6XNofHkj48ElHQb0a5Fcb4HTbgv6cXng9eH+/THaRmgKQIYu3jnW4wej8opXW16Gg4HXlsjZCQ==",
+      "spec": {
+        "alg": "ed25519",
+        "ext": "AP8A",
+        "h": "u3butz7k9q_23",
+        "refs": [
+          {
+            "rel": "unrecognized/\u5173\u7cfb",
+            "target": "unknown/a:00ff"
+          },
+          {
+            "rel": "",
+            "target": "future/v9:abcd"
+          }
+        ],
+        "seed": "punkti-0.6-freeze-vectors",
+        "t": 1700000000000,
+        "x": "opaque freeze payload \u0000 \u4e16\u754c \ud83c\udf0d"
+      },
+      "state": "VALID"
+    },
+    "selection2": {
+      "C": "0000000a70756e6b74692f302e360000000d3137303030303030303030303000000007753363305f3233000000236f706171756520667265657a65207061796c6f6164200020e4b896e7958c20f09f8c8d0000000765643235353139000000209fdc14a7085469ce9113511a2033acf5593d6e9cdab18cf2770b5888044f1a66000000020000000e756e6b6e6f776e2f613a3030666600000013756e7265636f676e697a65642fe585b3e7b3bb0000000e6675747572652f76393a61626364000000000000000300ff00",
+      "MID": "808ad2a53eb49f538225800f36da445e828a00000a9a7513f5d3e816c627e949",
+      "R": "AAAAygAAAApwdW5rdGkvMC42AAAADTE3MDAwMDAwMDAwMDAAAAAHdTNjMF8yMwAAACNvcGFxdWUgZnJlZXplIHBheWxvYWQgACDkuJbnlYwg8J+MjQAAAAdlZDI1NTE5AAAAIJ/cFKcIVGnOkRNRGiAzrPVZPW6c2rGM8ncLWIgETxpmAAAAAgAAAA51bmtub3duL2E6MDBmZgAAABN1bnJlY29nbml6ZWQv5YWz57O7AAAADmZ1dHVyZS92OTphYmNkAAAAAAAAAAMA/wAAAABAceH7vewnN28+6qBN2m3kWepUyMWVvuS0WLj9x+DcjjE5BjcwArSP1ECWbkTXR/4zxe+OIBqhP9l4U3Erd6jvAg==",
+      "S": "50554e4b54492d4c332d5349474e000000000a70756e6b74692f302e360000000d3137303030303030303030303000000007753363305f3233000000236f706171756520667265657a65207061796c6f6164200020e4b896e7958c20f09f8c8d0000000765643235353139000000209fdc14a7085469ce9113511a2033acf5593d6e9cdab18cf2770b5888044f1a66000000020000000e756e6b6e6f776e2f613a3030666600000013756e7265636f676e697a65642fe585b3e7b3bb0000000e6675747572652f76393a61626364000000000000000300ff00",
+      "address": "punkti/0.6:808ad2a53eb49f538225800f36da445e828a00000a9a7513f5d3e816c627e949",
+      "atom": {
+        "alg": "ed25519",
+        "ext": "AP8A",
+        "h": "u3c0_23",
+        "pk": "n9wUpwhUac6RE1EaIDOs9Vk9bpzasYzydwtYiARPGmY=",
+        "refs": [
+          {
+            "rel": "unrecognized/\u5173\u7cfb",
+            "target": "unknown/a:00ff"
+          },
+          {
+            "rel": "",
+            "target": "future/v9:abcd"
+          }
+        ],
+        "sig": "ceH7vewnN28+6qBN2m3kWepUyMWVvuS0WLj9x+DcjjE5BjcwArSP1ECWbkTXR/4zxe+OIBqhP9l4U3Erd6jvAg==",
+        "t": 1700000000000,
+        "v": "punkti/0.6",
+        "x": "opaque freeze payload \u0000 \u4e16\u754c \ud83c\udf0d"
+      },
+      "sha256_R": "a5fdd033f233a8d37bf247925304f66ad0811e84981eb8b42665236cafb816a8",
+      "sig": "ceH7vewnN28+6qBN2m3kWepUyMWVvuS0WLj9x+DcjjE5BjcwArSP1ECWbkTXR/4zxe+OIBqhP9l4U3Erd6jvAg==",
+      "spec": {
+        "alg": "ed25519",
+        "ext": "AP8A",
+        "h": "u3c0_23",
+        "refs": [
+          {
+            "rel": "unrecognized/\u5173\u7cfb",
+            "target": "unknown/a:00ff"
+          },
+          {
+            "rel": "",
+            "target": "future/v9:abcd"
+          }
+        ],
+        "seed": "punkti-0.6-freeze-vectors",
+        "t": 1700000000000,
+        "x": "opaque freeze payload \u0000 \u4e16\u754c \ud83c\udf0d"
+      },
+      "state": "VALID"
+    },
+    "selection3": {
+      "C": "0000000a70756e6b74692f302e360000000d313730303030303030303030300000000a753362755f32332e3032000000236f706171756520667265657a65207061796c6f6164200020e4b896e7958c20f09f8c8d0000000765643235353139000000209fdc14a7085469ce9113511a2033acf5593d6e9cdab18cf2770b5888044f1a66000000020000000e756e6b6e6f776e2f613a3030666600000013756e7265636f676e697a65642fe585b3e7b3bb0000000e6675747572652f76393a61626364000000000000000300ff00",
+      "MID": "6cee0c46877405489f05523c12c857af7785aa1d43bbd92f59825b1bf338c46e",
+      "R": "AAAAzQAAAApwdW5rdGkvMC42AAAADTE3MDAwMDAwMDAwMDAAAAAKdTNidV8yMy4wMgAAACNvcGFxdWUgZnJlZXplIHBheWxvYWQgACDkuJbnlYwg8J+MjQAAAAdlZDI1NTE5AAAAIJ/cFKcIVGnOkRNRGiAzrPVZPW6c2rGM8ncLWIgETxpmAAAAAgAAAA51bmtub3duL2E6MDBmZgAAABN1bnJlY29nbml6ZWQv5YWz57O7AAAADmZ1dHVyZS92OTphYmNkAAAAAAAAAAMA/wAAAABA4irsAicaYeRNLnGNfbuWkE5WS9xnW2KMk81UUbBWLEX+fURYlqS5bs+DC9x74f8XiJsLrNzzK9B3S3TkPoheBg==",
+      "S": "50554e4b54492d4c332d5349474e000000000a70756e6b74692f302e360000000d313730303030303030303030300000000a753362755f32332e3032000000236f706171756520667265657a65207061796c6f6164200020e4b896e7958c20f09f8c8d0000000765643235353139000000209fdc14a7085469ce9113511a2033acf5593d6e9cdab18cf2770b5888044f1a66000000020000000e756e6b6e6f776e2f613a3030666600000013756e7265636f676e697a65642fe585b3e7b3bb0000000e6675747572652f76393a61626364000000000000000300ff00",
+      "address": "punkti/0.6:6cee0c46877405489f05523c12c857af7785aa1d43bbd92f59825b1bf338c46e",
+      "atom": {
+        "alg": "ed25519",
+        "ext": "AP8A",
+        "h": "u3bu_23.02",
+        "pk": "n9wUpwhUac6RE1EaIDOs9Vk9bpzasYzydwtYiARPGmY=",
+        "refs": [
+          {
+            "rel": "unrecognized/\u5173\u7cfb",
+            "target": "unknown/a:00ff"
+          },
+          {
+            "rel": "",
+            "target": "future/v9:abcd"
+          }
+        ],
+        "sig": "4irsAicaYeRNLnGNfbuWkE5WS9xnW2KMk81UUbBWLEX+fURYlqS5bs+DC9x74f8XiJsLrNzzK9B3S3TkPoheBg==",
+        "t": 1700000000000,
+        "v": "punkti/0.6",
+        "x": "opaque freeze payload \u0000 \u4e16\u754c \ud83c\udf0d"
+      },
+      "sha256_R": "a238de38cd9bfce4b62da0fd22f64c6c9df2297259e4de535ae8f0f80ded889b",
+      "sig": "4irsAicaYeRNLnGNfbuWkE5WS9xnW2KMk81UUbBWLEX+fURYlqS5bs+DC9x74f8XiJsLrNzzK9B3S3TkPoheBg==",
+      "spec": {
+        "alg": "ed25519",
+        "ext": "AP8A",
+        "h": "u3bu_23.02",
+        "refs": [
+          {
+            "rel": "unrecognized/\u5173\u7cfb",
+            "target": "unknown/a:00ff"
+          },
+          {
+            "rel": "",
+            "target": "future/v9:abcd"
+          }
+        ],
+        "seed": "punkti-0.6-freeze-vectors",
+        "t": 1700000000000,
+        "x": "opaque freeze payload \u0000 \u4e16\u754c \ud83c\udf0d"
+      },
+      "state": "VALID"
+    },
+    "selection4": {
+      "C": "0000000a70756e6b74692f302e360000000d313730303030303030303030300000000b753362755f32332e303235000000236f706171756520667265657a65207061796c6f6164200020e4b896e7958c20f09f8c8d0000000765643235353139000000209fdc14a7085469ce9113511a2033acf5593d6e9cdab18cf2770b5888044f1a66000000020000000e756e6b6e6f776e2f613a3030666600000013756e7265636f676e697a65642fe585b3e7b3bb0000000e6675747572652f76393a61626364000000000000000300ff00",
+      "MID": "8dfc43a121603aa47fe7c6ed47c011548252ca6fc7ca11e96a400c656eba2a61",
+      "R": "AAAAzgAAAApwdW5rdGkvMC42AAAADTE3MDAwMDAwMDAwMDAAAAALdTNidV8yMy4wMjUAAAAjb3BhcXVlIGZyZWV6ZSBwYXlsb2FkIAAg5LiW55WMIPCfjI0AAAAHZWQyNTUxOQAAACCf3BSnCFRpzpETURogM6z1WT1unNqxjPJ3C1iIBE8aZgAAAAIAAAAOdW5rbm93bi9hOjAwZmYAAAATdW5yZWNvZ25pemVkL+WFs+ezuwAAAA5mdXR1cmUvdjk6YWJjZAAAAAAAAAADAP8AAAAAQApcdF2HYyWnSzjub4ZwMC5ZFaSZqDpTCDswZAc9JrmmSXVbWwwLFKar01cjcGtfhiRHlXnDA61XULMVyDkiAwI=",
+      "S": "50554e4b54492d4c332d5349474e000000000a70756e6b74692f302e360000000d313730303030303030303030300000000b753362755f32332e303235000000236f706171756520667265657a65207061796c6f6164200020e4b896e7958c20f09f8c8d0000000765643235353139000000209fdc14a7085469ce9113511a2033acf5593d6e9cdab18cf2770b5888044f1a66000000020000000e756e6b6e6f776e2f613a3030666600000013756e7265636f676e697a65642fe585b3e7b3bb0000000e6675747572652f76393a61626364000000000000000300ff00",
+      "address": "punkti/0.6:8dfc43a121603aa47fe7c6ed47c011548252ca6fc7ca11e96a400c656eba2a61",
+      "atom": {
+        "alg": "ed25519",
+        "ext": "AP8A",
+        "h": "u3bu_23.025",
+        "pk": "n9wUpwhUac6RE1EaIDOs9Vk9bpzasYzydwtYiARPGmY=",
+        "refs": [
+          {
+            "rel": "unrecognized/\u5173\u7cfb",
+            "target": "unknown/a:00ff"
+          },
+          {
+            "rel": "",
+            "target": "future/v9:abcd"
+          }
+        ],
+        "sig": "Clx0XYdjJadLOO5vhnAwLlkVpJmoOlMIOzBkBz0muaZJdVtbDAsUpqvTVyNwa1+GJEeVecMDrVdQsxXIOSIDAg==",
+        "t": 1700000000000,
+        "v": "punkti/0.6",
+        "x": "opaque freeze payload \u0000 \u4e16\u754c \ud83c\udf0d"
+      },
+      "sha256_R": "199d5009c9f0f781fc27467f28fbfe0191c75e517f924544969faf50a9e3e40a",
+      "sig": "Clx0XYdjJadLOO5vhnAwLlkVpJmoOlMIOzBkBz0muaZJdVtbDAsUpqvTVyNwa1+GJEeVecMDrVdQsxXIOSIDAg==",
+      "spec": {
+        "alg": "ed25519",
+        "ext": "AP8A",
+        "h": "u3bu_23.025",
+        "refs": [
+          {
+            "rel": "unrecognized/\u5173\u7cfb",
+            "target": "unknown/a:00ff"
+          },
+          {
+            "rel": "",
+            "target": "future/v9:abcd"
+          }
+        ],
+        "seed": "punkti-0.6-freeze-vectors",
+        "t": 1700000000000,
+        "x": "opaque freeze payload \u0000 \u4e16\u754c \ud83c\udf0d"
+      },
+      "state": "VALID"
+    },
+    "selection5": {
+      "C": "0000000a70756e6b74692f302e360000000d313730303030303030303030300000000b753362755f32322e393939000000236f706171756520667265657a65207061796c6f6164200020e4b896e7958c20f09f8c8d0000000765643235353139000000209fdc14a7085469ce9113511a2033acf5593d6e9cdab18cf2770b5888044f1a66000000020000000e756e6b6e6f776e2f613a3030666600000013756e7265636f676e697a65642fe585b3e7b3bb0000000e6675747572652f76393a61626364000000000000000300ff00",
+      "MID": "6ac5260a26fddfe152d41f4b7206d8b51e72a56763db63988625a3526527500b",
+      "R": "AAAAzgAAAApwdW5rdGkvMC42AAAADTE3MDAwMDAwMDAwMDAAAAALdTNidV8yMi45OTkAAAAjb3BhcXVlIGZyZWV6ZSBwYXlsb2FkIAAg5LiW55WMIPCfjI0AAAAHZWQyNTUxOQAAACCf3BSnCFRpzpETURogM6z1WT1unNqxjPJ3C1iIBE8aZgAAAAIAAAAOdW5rbm93bi9hOjAwZmYAAAATdW5yZWNvZ25pemVkL+WFs+ezuwAAAA5mdXR1cmUvdjk6YWJjZAAAAAAAAAADAP8AAAAAQHrioKNmCZqHLN6MGJP4LUEZ/FzRrcrFdSUM0r58rGMV8R3JeH25Y2JHdYz2SD0v49SGndEShouA4fMKcucOOwc=",
+      "S": "50554e4b54492d4c332d5349474e000000000a70756e6b74692f302e360000000d313730303030303030303030300000000b753362755f32322e393939000000236f706171756520667265657a65207061796c6f6164200020e4b896e7958c20f09f8c8d0000000765643235353139000000209fdc14a7085469ce9113511a2033acf5593d6e9cdab18cf2770b5888044f1a66000000020000000e756e6b6e6f776e2f613a3030666600000013756e7265636f676e697a65642fe585b3e7b3bb0000000e6675747572652f76393a61626364000000000000000300ff00",
+      "address": "punkti/0.6:6ac5260a26fddfe152d41f4b7206d8b51e72a56763db63988625a3526527500b",
+      "atom": {
+        "alg": "ed25519",
+        "ext": "AP8A",
+        "h": "u3bu_22.999",
+        "pk": "n9wUpwhUac6RE1EaIDOs9Vk9bpzasYzydwtYiARPGmY=",
+        "refs": [
+          {
+            "rel": "unrecognized/\u5173\u7cfb",
+            "target": "unknown/a:00ff"
+          },
+          {
+            "rel": "",
+            "target": "future/v9:abcd"
+          }
+        ],
+        "sig": "euKgo2YJmocs3owYk/gtQRn8XNGtysV1JQzSvnysYxXxHcl4fbljYkd1jPZIPS/j1Iad0RKGi4Dh8wpy5w47Bw==",
+        "t": 1700000000000,
+        "v": "punkti/0.6",
+        "x": "opaque freeze payload \u0000 \u4e16\u754c \ud83c\udf0d"
+      },
+      "sha256_R": "1191ab273b0eaaf937b188947d36807dafd815bb8ba5ba3d24e2180a36674212",
+      "sig": "euKgo2YJmocs3owYk/gtQRn8XNGtysV1JQzSvnysYxXxHcl4fbljYkd1jPZIPS/j1Iad0RKGi4Dh8wpy5w47Bw==",
+      "spec": {
+        "alg": "ed25519",
+        "ext": "AP8A",
+        "h": "u3bu_22.999",
+        "refs": [
+          {
+            "rel": "unrecognized/\u5173\u7cfb",
+            "target": "unknown/a:00ff"
+          },
+          {
+            "rel": "",
+            "target": "future/v9:abcd"
+          }
+        ],
+        "seed": "punkti-0.6-freeze-vectors",
+        "t": 1700000000000,
+        "x": "opaque freeze payload \u0000 \u4e16\u754c \ud83c\udf0d"
+      },
+      "state": "VALID"
+    },
+    "selection6": {
+      "C": "0000000a70756e6b74692f302e360000000d3137303030303030303030303000000008753362755f2d3138000000236f706171756520667265657a65207061796c6f6164200020e4b896e7958c20f09f8c8d0000000765643235353139000000209fdc14a7085469ce9113511a2033acf5593d6e9cdab18cf2770b5888044f1a66000000020000000e756e6b6e6f776e2f613a3030666600000013756e7265636f676e697a65642fe585b3e7b3bb0000000e6675747572652f76393a61626364000000000000000300ff00",
+      "MID": "575e51cb059c11e8b595cf9ffb20deed2a970d2b8fae7d4242e7eeeb57db1202",
+      "R": "AAAAywAAAApwdW5rdGkvMC42AAAADTE3MDAwMDAwMDAwMDAAAAAIdTNidV8tMTgAAAAjb3BhcXVlIGZyZWV6ZSBwYXlsb2FkIAAg5LiW55WMIPCfjI0AAAAHZWQyNTUxOQAAACCf3BSnCFRpzpETURogM6z1WT1unNqxjPJ3C1iIBE8aZgAAAAIAAAAOdW5rbm93bi9hOjAwZmYAAAATdW5yZWNvZ25pemVkL+WFs+ezuwAAAA5mdXR1cmUvdjk6YWJjZAAAAAAAAAADAP8AAAAAQGLrgxrOSdrTmfXPRURmhqwXQdpmV9CtSCN/Y2WQklguveY4D1QFrNrfW+nu1/H+fBfsx4zAh00SHJNKXS3Gjwg=",
+      "S": "50554e4b54492d4c332d5349474e000000000a70756e6b74692f302e360000000d3137303030303030303030303000000008753362755f2d3138000000236f706171756520667265657a65207061796c6f6164200020e4b896e7958c20f09f8c8d0000000765643235353139000000209fdc14a7085469ce9113511a2033acf5593d6e9cdab18cf2770b5888044f1a66000000020000000e756e6b6e6f776e2f613a3030666600000013756e7265636f676e697a65642fe585b3e7b3bb0000000e6675747572652f76393a61626364000000000000000300ff00",
+      "address": "punkti/0.6:575e51cb059c11e8b595cf9ffb20deed2a970d2b8fae7d4242e7eeeb57db1202",
+      "atom": {
+        "alg": "ed25519",
+        "ext": "AP8A",
+        "h": "u3bu_-18",
+        "pk": "n9wUpwhUac6RE1EaIDOs9Vk9bpzasYzydwtYiARPGmY=",
+        "refs": [
+          {
+            "rel": "unrecognized/\u5173\u7cfb",
+            "target": "unknown/a:00ff"
+          },
+          {
+            "rel": "",
+            "target": "future/v9:abcd"
+          }
+        ],
+        "sig": "YuuDGs5J2tOZ9c9FRGaGrBdB2mZX0K1II39jZZCSWC695jgPVAWs2t9b6e7X8f58F+zHjMCHTRIck0pdLcaPCA==",
+        "t": 1700000000000,
+        "v": "punkti/0.6",
+        "x": "opaque freeze payload \u0000 \u4e16\u754c \ud83c\udf0d"
+      },
+      "sha256_R": "696bfab07c08acc5564d03144c33bde8f6b01e75bdeaf37c4baee797f56ae558",
+      "sig": "YuuDGs5J2tOZ9c9FRGaGrBdB2mZX0K1II39jZZCSWC695jgPVAWs2t9b6e7X8f58F+zHjMCHTRIck0pdLcaPCA==",
+      "spec": {
+        "alg": "ed25519",
+        "ext": "AP8A",
+        "h": "u3bu_-18",
+        "refs": [
+          {
+            "rel": "unrecognized/\u5173\u7cfb",
+            "target": "unknown/a:00ff"
+          },
+          {
+            "rel": "",
+            "target": "future/v9:abcd"
+          }
+        ],
+        "seed": "punkti-0.6-freeze-vectors",
+        "t": 1700000000000,
+        "x": "opaque freeze payload \u0000 \u4e16\u754c \ud83c\udf0d"
+      },
+      "state": "VALID"
+    },
+    "selection7": {
+      "C": "0000000a70756e6b74692f302e360000000d3137303030303030303030303000000000000000236f706171756520667265657a65207061796c6f6164200020e4b896e7958c20f09f8c8d0000000765643235353139000000209fdc14a7085469ce9113511a2033acf5593d6e9cdab18cf2770b5888044f1a66000000020000000e756e6b6e6f776e2f613a3030666600000013756e7265636f676e697a65642fe585b3e7b3bb0000000e6675747572652f76393a61626364000000000000000300ff00",
+      "MID": "8b43c5af563c190e9aa74ead22a5a5e32761aa5cc793deede4ad381f87cd17a6",
+      "R": "AAAAwwAAAApwdW5rdGkvMC42AAAADTE3MDAwMDAwMDAwMDAAAAAAAAAAI29wYXF1ZSBmcmVlemUgcGF5bG9hZCAAIOS4lueVjCDwn4yNAAAAB2VkMjU1MTkAAAAgn9wUpwhUac6RE1EaIDOs9Vk9bpzasYzydwtYiARPGmYAAAACAAAADnVua25vd24vYTowMGZmAAAAE3VucmVjb2duaXplZC/lhbPns7sAAAAOZnV0dXJlL3Y5OmFiY2QAAAAAAAAAAwD/AAAAAECwH4xJFUKOHqaZLVzxfrS/+hR+6XbWauY+2jrZXUuYmSvV3cPXdlBDyfHNHv1vT/zc1ffZ2IpFTG27M0Z4I8YA",
+      "S": "50554e4b54492d4c332d5349474e000000000a70756e6b74692f302e360000000d3137303030303030303030303000000000000000236f706171756520667265657a65207061796c6f6164200020e4b896e7958c20f09f8c8d0000000765643235353139000000209fdc14a7085469ce9113511a2033acf5593d6e9cdab18cf2770b5888044f1a66000000020000000e756e6b6e6f776e2f613a3030666600000013756e7265636f676e697a65642fe585b3e7b3bb0000000e6675747572652f76393a61626364000000000000000300ff00",
+      "address": "punkti/0.6:8b43c5af563c190e9aa74ead22a5a5e32761aa5cc793deede4ad381f87cd17a6",
+      "atom": {
+        "alg": "ed25519",
+        "ext": "AP8A",
+        "h": "",
+        "pk": "n9wUpwhUac6RE1EaIDOs9Vk9bpzasYzydwtYiARPGmY=",
+        "refs": [
+          {
+            "rel": "unrecognized/\u5173\u7cfb",
+            "target": "unknown/a:00ff"
+          },
+          {
+            "rel": "",
+            "target": "future/v9:abcd"
+          }
+        ],
+        "sig": "sB+MSRVCjh6mmS1c8X60v/oUful21mrmPto62V1LmJkr1d3D13ZQQ8nxzR79b0/83NX32diKRUxtuzNGeCPGAA==",
+        "t": 1700000000000,
+        "v": "punkti/0.6",
+        "x": "opaque freeze payload \u0000 \u4e16\u754c \ud83c\udf0d"
+      },
+      "sha256_R": "fdacbde6020b844be314ab71f3635af3c6a6e66aed75a96b0da03598f4f33dfa",
+      "sig": "sB+MSRVCjh6mmS1c8X60v/oUful21mrmPto62V1LmJkr1d3D13ZQQ8nxzR79b0/83NX32diKRUxtuzNGeCPGAA==",
+      "spec": {
+        "alg": "ed25519",
+        "ext": "AP8A",
+        "h": "",
+        "refs": [
+          {
+            "rel": "unrecognized/\u5173\u7cfb",
+            "target": "unknown/a:00ff"
+          },
+          {
+            "rel": "",
+            "target": "future/v9:abcd"
+          }
+        ],
+        "seed": "punkti-0.6-freeze-vectors",
+        "t": 1700000000000,
+        "x": "opaque freeze payload \u0000 \u4e16\u754c \ud83c\udf0d"
+      },
+      "state": "VALID"
+    },
+    "spatial0": {
+      "C": "0000000a70756e6b74692f302e360000000d31373030303030303030303030000000103030303030303030303030305f2d31380000000a626f756e646172792d300000000765643235353139000000209fdc14a7085469ce9113511a2033acf5593d6e9cdab18cf2770b5888044f1a66000000020000000e756e6b6e6f776e2f613a3030666600000013756e7265636f676e697a65642fe585b3e7b3bb0000000e6675747572652f76393a61626364000000000000000300ff00",
+      "MID": "b794c104861488e804b57a559bf62987731e79580267c007afe01568ff3233d6",
+      "R": "AAAAugAAAApwdW5rdGkvMC42AAAADTE3MDAwMDAwMDAwMDAAAAAQMDAwMDAwMDAwMDAwXy0xOAAAAApib3VuZGFyeS0wAAAAB2VkMjU1MTkAAAAgn9wUpwhUac6RE1EaIDOs9Vk9bpzasYzydwtYiARPGmYAAAACAAAADnVua25vd24vYTowMGZmAAAAE3VucmVjb2duaXplZC/lhbPns7sAAAAOZnV0dXJlL3Y5OmFiY2QAAAAAAAAAAwD/AAAAAECimV2bKy5WvWblc2Vdt9JojzWnQz1ZtDJ9YZomj/4I0Y4JAOq3DSbeis1uaTb8Vt39h9h/6WUmfmXUWJEL+PoF",
+      "S": "50554e4b54492d4c332d5349474e000000000a70756e6b74692f302e360000000d31373030303030303030303030000000103030303030303030303030305f2d31380000000a626f756e646172792d300000000765643235353139000000209fdc14a7085469ce9113511a2033acf5593d6e9cdab18cf2770b5888044f1a66000000020000000e756e6b6e6f776e2f613a3030666600000013756e7265636f676e697a65642fe585b3e7b3bb0000000e6675747572652f76393a61626364000000000000000300ff00",
+      "address": "punkti/0.6:b794c104861488e804b57a559bf62987731e79580267c007afe01568ff3233d6",
+      "atom": {
+        "alg": "ed25519",
+        "ext": "AP8A",
+        "h": "000000000000_-18",
+        "pk": "n9wUpwhUac6RE1EaIDOs9Vk9bpzasYzydwtYiARPGmY=",
+        "refs": [
+          {
+            "rel": "unrecognized/\u5173\u7cfb",
+            "target": "unknown/a:00ff"
+          },
+          {
+            "rel": "",
+            "target": "future/v9:abcd"
+          }
+        ],
+        "sig": "opldmysuVr1m5XNlXbfSaI81p0M9WbQyfWGaJo/+CNGOCQDqtw0m3orNbmk2/Fbd/YfYf+llJn5l1FiRC/j6BQ==",
+        "t": 1700000000000,
+        "v": "punkti/0.6",
+        "x": "boundary-0"
+      },
+      "sha256_R": "69a5d544ba686f45e9435cf31b29d26530ce93d04fe3c8c841d0d31964b110cf",
+      "sig": "opldmysuVr1m5XNlXbfSaI81p0M9WbQyfWGaJo/+CNGOCQDqtw0m3orNbmk2/Fbd/YfYf+llJn5l1FiRC/j6BQ==",
+      "spec": {
+        "alg": "ed25519",
+        "ext": "AP8A",
+        "h": "000000000000_-18",
+        "refs": [
+          {
+            "rel": "unrecognized/\u5173\u7cfb",
+            "target": "unknown/a:00ff"
+          },
+          {
+            "rel": "",
+            "target": "future/v9:abcd"
+          }
+        ],
+        "seed": "punkti-0.6-freeze-vectors",
+        "t": 1700000000000,
+        "x": "boundary-0"
+      },
+      "state": "VALID"
+    },
+    "spatial1": {
+      "C": "0000000a70756e6b74692f302e360000000d313730303030303030303030300000000f7330303030303030303030305f32330000000a626f756e646172792d310000000765643235353139000000209fdc14a7085469ce9113511a2033acf5593d6e9cdab18cf2770b5888044f1a66000000020000000e756e6b6e6f776e2f613a3030666600000013756e7265636f676e697a65642fe585b3e7b3bb0000000e6675747572652f76393a61626364000000000000000300ff00",
+      "MID": "64787c65702b2091e07fca6d588dcccda806654248d9f62978af640994ad5342",
+      "R": "AAAAuQAAAApwdW5rdGkvMC42AAAADTE3MDAwMDAwMDAwMDAAAAAPczAwMDAwMDAwMDAwXzIzAAAACmJvdW5kYXJ5LTEAAAAHZWQyNTUxOQAAACCf3BSnCFRpzpETURogM6z1WT1unNqxjPJ3C1iIBE8aZgAAAAIAAAAOdW5rbm93bi9hOjAwZmYAAAATdW5yZWNvZ25pemVkL+WFs+ezuwAAAA5mdXR1cmUvdjk6YWJjZAAAAAAAAAADAP8AAAAAQMfNAAkoSWubuHek911B+fJTGhuKJHUjPWRczvuMRHNB9TCLTVaApLsAe92Ce8NrOBxwa5XM6PLumRv7wHZK6ww=",
+      "S": "50554e4b54492d4c332d5349474e000000000a70756e6b74692f302e360000000d313730303030303030303030300000000f7330303030303030303030305f32330000000a626f756e646172792d310000000765643235353139000000209fdc14a7085469ce9113511a2033acf5593d6e9cdab18cf2770b5888044f1a66000000020000000e756e6b6e6f776e2f613a3030666600000013756e7265636f676e697a65642fe585b3e7b3bb0000000e6675747572652f76393a61626364000000000000000300ff00",
+      "address": "punkti/0.6:64787c65702b2091e07fca6d588dcccda806654248d9f62978af640994ad5342",
+      "atom": {
+        "alg": "ed25519",
+        "ext": "AP8A",
+        "h": "s00000000000_23",
+        "pk": "n9wUpwhUac6RE1EaIDOs9Vk9bpzasYzydwtYiARPGmY=",
+        "refs": [
+          {
+            "rel": "unrecognized/\u5173\u7cfb",
+            "target": "unknown/a:00ff"
+          },
+          {
+            "rel": "",
+            "target": "future/v9:abcd"
+          }
+        ],
+        "sig": "x80ACShJa5u4d6T3XUH58lMaG4okdSM9ZFzO+4xEc0H1MItNVoCkuwB73YJ7w2s4HHBrlczo8u6ZG/vAdkrrDA==",
+        "t": 1700000000000,
+        "v": "punkti/0.6",
+        "x": "boundary-1"
+      },
+      "sha256_R": "4a44a0eabf2fceefead5547c3bba2dd2ed738b6ff0225bcaab1bbd3d35a8619b",
+      "sig": "x80ACShJa5u4d6T3XUH58lMaG4okdSM9ZFzO+4xEc0H1MItNVoCkuwB73YJ7w2s4HHBrlczo8u6ZG/vAdkrrDA==",
+      "spec": {
+        "alg": "ed25519",
+        "ext": "AP8A",
+        "h": "s00000000000_23",
+        "refs": [
+          {
+            "rel": "unrecognized/\u5173\u7cfb",
+            "target": "unknown/a:00ff"
+          },
+          {
+            "rel": "",
+            "target": "future/v9:abcd"
+          }
+        ],
+        "seed": "punkti-0.6-freeze-vectors",
+        "t": 1700000000000,
+        "x": "boundary-1"
+      },
+      "state": "VALID"
+    },
+    "spatial2": {
+      "C": "0000000a70756e6b74692f302e360000000d31373030303030303030303030000000137330303030303030303030315f32332e3032350000000a626f756e646172792d320000000765643235353139000000209fdc14a7085469ce9113511a2033acf5593d6e9cdab18cf2770b5888044f1a66000000020000000e756e6b6e6f776e2f613a3030666600000013756e7265636f676e697a65642fe585b3e7b3bb0000000e6675747572652f76393a61626364000000000000000300ff00",
+      "MID": "40d073c1656d7025c2342d2904800fa0ac2699254016277a61fd5432c8af5479",
+      "R": "AAAAvQAAAApwdW5rdGkvMC42AAAADTE3MDAwMDAwMDAwMDAAAAATczAwMDAwMDAwMDAxXzIzLjAyNQAAAApib3VuZGFyeS0yAAAAB2VkMjU1MTkAAAAgn9wUpwhUac6RE1EaIDOs9Vk9bpzasYzydwtYiARPGmYAAAACAAAADnVua25vd24vYTowMGZmAAAAE3VucmVjb2duaXplZC/lhbPns7sAAAAOZnV0dXJlL3Y5OmFiY2QAAAAAAAAAAwD/AAAAAEA7MOOGFiD4LAWZSK2N5l7Wff89Qx0O+MdLxp3boTNl11OoGty15ZxvzaajuhllveEsBSyBdRfbDkcw8zqE954L",
+      "S": "50554e4b54492d4c332d5349474e000000000a70756e6b74692f302e360000000d31373030303030303030303030000000137330303030303030303030315f32332e3032350000000a626f756e646172792d320000000765643235353139000000209fdc14a7085469ce9113511a2033acf5593d6e9cdab18cf2770b5888044f1a66000000020000000e756e6b6e6f776e2f613a3030666600000013756e7265636f676e697a65642fe585b3e7b3bb0000000e6675747572652f76393a61626364000000000000000300ff00",
+      "address": "punkti/0.6:40d073c1656d7025c2342d2904800fa0ac2699254016277a61fd5432c8af5479",
+      "atom": {
+        "alg": "ed25519",
+        "ext": "AP8A",
+        "h": "s00000000001_23.025",
+        "pk": "n9wUpwhUac6RE1EaIDOs9Vk9bpzasYzydwtYiARPGmY=",
+        "refs": [
+          {
+            "rel": "unrecognized/\u5173\u7cfb",
+            "target": "unknown/a:00ff"
+          },
+          {
+            "rel": "",
+            "target": "future/v9:abcd"
+          }
+        ],
+        "sig": "OzDjhhYg+CwFmUitjeZe1n3/PUMdDvjHS8ad26EzZddTqBrcteWcb82mo7oZZb3hLAUsgXUX2w5HMPM6hPeeCw==",
+        "t": 1700000000000,
+        "v": "punkti/0.6",
+        "x": "boundary-2"
+      },
+      "sha256_R": "036cb81b5cd1fe29bfd4892bf3008ca93025427943231bede3cbc865de533fa0",
+      "sig": "OzDjhhYg+CwFmUitjeZe1n3/PUMdDvjHS8ad26EzZddTqBrcteWcb82mo7oZZb3hLAUsgXUX2w5HMPM6hPeeCw==",
+      "spec": {
+        "alg": "ed25519",
+        "ext": "AP8A",
+        "h": "s00000000001_23.025",
+        "refs": [
+          {
+            "rel": "unrecognized/\u5173\u7cfb",
+            "target": "unknown/a:00ff"
+          },
+          {
+            "rel": "",
+            "target": "future/v9:abcd"
+          }
+        ],
+        "seed": "punkti-0.6-freeze-vectors",
+        "t": 1700000000000,
+        "x": "boundary-2"
+      },
+      "state": "VALID"
+    },
+    "spatial3": {
+      "C": "0000000a70756e6b74692f302e360000000d31373030303030303030303030000000117a7a7a7a7a7a7a7a7a7a7a7a5f393030300000000a626f756e646172792d330000000765643235353139000000209fdc14a7085469ce9113511a2033acf5593d6e9cdab18cf2770b5888044f1a66000000020000000e756e6b6e6f776e2f613a3030666600000013756e7265636f676e697a65642fe585b3e7b3bb0000000e6675747572652f76393a61626364000000000000000300ff00",
+      "MID": "d71670ee11209e93d50c73b645714a57cea67a511c232ffb7d88f9ce80f96025",
+      "R": "AAAAuwAAAApwdW5rdGkvMC42AAAADTE3MDAwMDAwMDAwMDAAAAARenp6enp6enp6enp6XzkwMDAAAAAKYm91bmRhcnktMwAAAAdlZDI1NTE5AAAAIJ/cFKcIVGnOkRNRGiAzrPVZPW6c2rGM8ncLWIgETxpmAAAAAgAAAA51bmtub3duL2E6MDBmZgAAABN1bnJlY29nbml6ZWQv5YWz57O7AAAADmZ1dHVyZS92OTphYmNkAAAAAAAAAAMA/wAAAABAYCCiQmTDf+OWIwYuB5NTwzFy5MfsLP5hJW5BnR9hUEB8bzOLzwAXBkfZ3J+Bp/6x5Ib70gqdExeUnT7AwAPEBg==",
+      "S": "50554e4b54492d4c332d5349474e000000000a70756e6b74692f302e360000000d31373030303030303030303030000000117a7a7a7a7a7a7a7a7a7a7a7a5f393030300000000a626f756e646172792d330000000765643235353139000000209fdc14a7085469ce9113511a2033acf5593d6e9cdab18cf2770b5888044f1a66000000020000000e756e6b6e6f776e2f613a3030666600000013756e7265636f676e697a65642fe585b3e7b3bb0000000e6675747572652f76393a61626364000000000000000300ff00",
+      "address": "punkti/0.6:d71670ee11209e93d50c73b645714a57cea67a511c232ffb7d88f9ce80f96025",
+      "atom": {
+        "alg": "ed25519",
+        "ext": "AP8A",
+        "h": "zzzzzzzzzzzz_9000",
+        "pk": "n9wUpwhUac6RE1EaIDOs9Vk9bpzasYzydwtYiARPGmY=",
+        "refs": [
+          {
+            "rel": "unrecognized/\u5173\u7cfb",
+            "target": "unknown/a:00ff"
+          },
+          {
+            "rel": "",
+            "target": "future/v9:abcd"
+          }
+        ],
+        "sig": "YCCiQmTDf+OWIwYuB5NTwzFy5MfsLP5hJW5BnR9hUEB8bzOLzwAXBkfZ3J+Bp/6x5Ib70gqdExeUnT7AwAPEBg==",
+        "t": 1700000000000,
+        "v": "punkti/0.6",
+        "x": "boundary-3"
+      },
+      "sha256_R": "da48bd708955eb206d3e76f0d47ff8d81eb3513f9d57f1ba396f119f8796eec9",
+      "sig": "YCCiQmTDf+OWIwYuB5NTwzFy5MfsLP5hJW5BnR9hUEB8bzOLzwAXBkfZ3J+Bp/6x5Ib70gqdExeUnT7AwAPEBg==",
+      "spec": {
+        "alg": "ed25519",
+        "ext": "AP8A",
+        "h": "zzzzzzzzzzzz_9000",
+        "refs": [
+          {
+            "rel": "unrecognized/\u5173\u7cfb",
+            "target": "unknown/a:00ff"
+          },
+          {
+            "rel": "",
+            "target": "future/v9:abcd"
+          }
+        ],
+        "seed": "punkti-0.6-freeze-vectors",
+        "t": 1700000000000,
+        "x": "boundary-3"
+      },
+      "state": "VALID"
+    },
+    "zero": {
+      "C": "0000000a70756e6b74692f302e3600000001300000000f7330303030303030303030305f3233000000236f706171756520667265657a65207061796c6f6164200020e4b896e7958c20f09f8c8d0000000765643235353139000000209fdc14a7085469ce9113511a2033acf5593d6e9cdab18cf2770b5888044f1a66000000020000000e756e6b6e6f776e2f613a3030666600000013756e7265636f676e697a65642fe585b3e7b3bb0000000e6675747572652f76393a61626364000000000000000300ff00",
+      "MID": "16c16c69428c89562f5eef5f5d1c1986585356292889cc5350ae5ebecc682608",
+      "R": "AAAAxgAAAApwdW5rdGkvMC42AAAAATAAAAAPczAwMDAwMDAwMDAwXzIzAAAAI29wYXF1ZSBmcmVlemUgcGF5bG9hZCAAIOS4lueVjCDwn4yNAAAAB2VkMjU1MTkAAAAgn9wUpwhUac6RE1EaIDOs9Vk9bpzasYzydwtYiARPGmYAAAACAAAADnVua25vd24vYTowMGZmAAAAE3VucmVjb2duaXplZC/lhbPns7sAAAAOZnV0dXJlL3Y5OmFiY2QAAAAAAAAAAwD/AAAAAECJZ3pNmuQvxUTByQl131JUyBYWLlDWtIwQJ+GAn+N1vMQEycfaGZqafUK/mu/VL6INCNFf3Wl25kFi4FHHcuUM",
+      "S": "50554e4b54492d4c332d5349474e000000000a70756e6b74692f302e3600000001300000000f7330303030303030303030305f3233000000236f706171756520667265657a65207061796c6f6164200020e4b896e7958c20f09f8c8d0000000765643235353139000000209fdc14a7085469ce9113511a2033acf5593d6e9cdab18cf2770b5888044f1a66000000020000000e756e6b6e6f776e2f613a3030666600000013756e7265636f676e697a65642fe585b3e7b3bb0000000e6675747572652f76393a61626364000000000000000300ff00",
+      "address": "punkti/0.6:16c16c69428c89562f5eef5f5d1c1986585356292889cc5350ae5ebecc682608",
+      "atom": {
+        "alg": "ed25519",
+        "ext": "AP8A",
+        "h": "s00000000000_23",
+        "pk": "n9wUpwhUac6RE1EaIDOs9Vk9bpzasYzydwtYiARPGmY=",
+        "refs": [
+          {
+            "rel": "unrecognized/\u5173\u7cfb",
+            "target": "unknown/a:00ff"
+          },
+          {
+            "rel": "",
+            "target": "future/v9:abcd"
+          }
+        ],
+        "sig": "iWd6TZrkL8VEwckJdd9SVMgWFi5Q1rSMECfhgJ/jdbzEBMnH2hmamn1Cv5rv1S+iDQjRX91pduZBYuBRx3LlDA==",
+        "t": 0,
+        "v": "punkti/0.6",
+        "x": "opaque freeze payload \u0000 \u4e16\u754c \ud83c\udf0d"
+      },
+      "sha256_R": "9e9f6b8b978e3b82529697199aaf7319868e0fe31fe2242b425b1cd854f30e94",
+      "sig": "iWd6TZrkL8VEwckJdd9SVMgWFi5Q1rSMECfhgJ/jdbzEBMnH2hmamn1Cv5rv1S+iDQjRX91pduZBYuBRx3LlDA==",
+      "spec": {
+        "alg": "ed25519",
+        "ext": "AP8A",
+        "h": "s00000000000_23",
+        "refs": [
+          {
+            "rel": "unrecognized/\u5173\u7cfb",
+            "target": "unknown/a:00ff"
+          },
+          {
+            "rel": "",
+            "target": "future/v9:abcd"
+          }
+        ],
+        "seed": "punkti-0.6-freeze-vectors",
+        "t": 0,
+        "x": "opaque freeze payload \u0000 \u4e16\u754c \ud83c\udf0d"
+      },
+      "state": "VALID"
+    }
+  },
+  "format": "punkti-freeze-vectors/1",
+  "non_normative_observations": {
+    "nb": {
+      "empty_push": [
+        200,
+        {
+          "results": []
+        }
+      ]
+    },
+    "ref": {
+      "empty_push": [
+        400,
+        {
+          "error": "push batch size"
+        }
+      ]
+    }
+  },
+  "seed_hex": "623d095ee124c3c8270c69bdfaa98f0930527f7cc0b4140d05afd3cb5bd6ba7d",
+  "seed_literal": "punkti-0.6-freeze-vectors",
+  "vectors": [
+    {
+      "expected": {
+        "admitted": [
+          true,
+          false
+        ],
+        "description": "VALID; canonical values equal pinned fixture; complete framing; first admission then duplicate.",
+        "duplicate_reason": "duplicate",
+        "http_status": 200,
+        "import_ok": true,
+        "state": "VALID"
+      },
+      "id": "V1",
+      "input": {
+        "description": "Import exact JSON; decode R; push twice into empty node.",
+        "fixture": "canonical",
+        "json_utf8": "{\"alg\":\"ed25519\",\"ext\":\"AP8A\",\"h\":\"s00000000000_23\",\"pk\":\"n9wUpwhUac6RE1EaIDOs9Vk9bpzasYzydwtYiARPGmY=\",\"refs\":[{\"rel\":\"unrecognized/\\u5173\\u7cfb\",\"target\":\"unknown/a:00ff\"},{\"rel\":\"\",\"target\":\"future/v9:abcd\"}],\"sig\":\"kRVKvWq9mmFqUDR5eHs1x5Obmv9Wy65ZBKHC7a0ChKauFqvxRpVotYyPdjv2HoB9r/p3hdN2Kg+JE/xKbiLMBQ==\",\"t\":1700000000000,\"v\":\"punkti/0.6\",\"x\":\"opaque freeze payload \\u0000 \\u4e16\\u754c \\ud83c\\udf0d\"}",
+        "request": {
+          "body_utf8": "{\"records\":[{\"address\":\"punkti/0.6:82444945204576099501248b1a615c1c841b44981ae8e8bd1f89eb4e093f73ba\",\"record\":\"AAAA0gAAAApwdW5rdGkvMC42AAAADTE3MDAwMDAwMDAwMDAAAAAPczAwMDAwMDAwMDAwXzIzAAAAI29wYXF1ZSBmcmVlemUgcGF5bG9hZCAAIOS4lueVjCDwn4yNAAAAB2VkMjU1MTkAAAAgn9wUpwhUac6RE1EaIDOs9Vk9bpzasYzydwtYiARPGmYAAAACAAAADnVua25vd24vYTowMGZmAAAAE3VucmVjb2duaXplZC/lhbPns7sAAAAOZnV0dXJlL3Y5OmFiY2QAAAAAAAAAAwD/AAAAAECRFUq9ar2aYWpQNHl4ezXHk5ua/1bLrlkEocLtrQKEpq4Wq/FGlWi1jI92O/YegH2v+neF03YqD4kT/EpuIswF\",\"sha256\":\"53388006f408fd3c04aaab96e52357d41c4003a594ce68f1fc91a31b89ac0762\"}]}",
+          "method": "POST",
+          "target": "/push"
+        }
+      },
+      "state_transition": {
+        "description": "Empty \u2192 one VALID record/log entry \u2192 unchanged on duplicate.",
+        "final_per_node": {
+          "candidates": 0,
+          "log": 1,
+          "valid": 1
+        }
+      },
+      "title": "canonical-record"
+    },
+    {
+      "expected": {
+        "description": "Empty MID after=null, empty spatial after=0; nonempty MID after=[address,sha256_R]; repeated empty request identical.",
+        "empty_end": true,
+        "empty_mid_after": null,
+        "empty_records": [],
+        "empty_spatial_after": 0,
+        "http_status": 200,
+        "page_addresses": [
+          "punkti/0.6:40d073c1656d7025c2342d2904800fa0ac2699254016277a61fd5432c8af5479",
+          "punkti/0.6:64787c65702b2091e07fca6d588dcccda806654248d9f62978af640994ad5342"
+        ],
+        "scope_pattern": "[0-9a-f]{64}"
+      },
+      "id": "V2",
+      "input": {
+        "continuation": "Same first query plus cursor equal to the complete first response token.",
+        "description": "Empty MID request twice; empty spatial; seed three fixtures then two MID pages, echoing the first token.",
+        "empty_mid": {
+          "method": "GET",
+          "query": {
+            "mode": "mid"
+          },
+          "target": "/pull?q=%7B%22mode%22%3A%22mid%22%7D"
+        },
+        "empty_spatial": {
+          "method": "GET",
+          "query": {
+            "limit": 1,
+            "mode": "spatial"
+          },
+          "target": "/pull?q=%7B%22limit%22%3A1%2C%22mode%22%3A%22spatial%22%7D"
+        },
+        "first": {
+          "method": "GET",
+          "query": {
+            "limit": 1,
+            "mode": "mid"
+          },
+          "target": "/pull?q=%7B%22limit%22%3A1%2C%22mode%22%3A%22mid%22%7D"
+        },
+        "fixtures": [
+          "spatial0",
+          "spatial1",
+          "spatial2"
+        ]
+      },
+      "state_transition": {
+        "description": "PULL does not change store/candidates/log/epoch.",
+        "final_per_node": {
+          "candidates": 0,
+          "log": 3,
+          "valid": 3
+        }
+      },
+      "title": "initial-mid-cursor"
+    },
+    {
+      "expected": {
+        "description": "Equal/reversed bounds reject; single unbounded endpoints accept.",
+        "statuses": [
+          400,
+          400,
+          400,
+          400,
+          400,
+          400,
+          200,
+          200,
+          200
+        ]
+      },
+      "id": "V3",
+      "input": {
+        "A": "punkti/0.6:64787c65702b2091e07fca6d588dcccda806654248d9f62978af640994ad5342",
+        "B": "punkti/0.6:b794c104861488e804b57a559bf62987731e79580267c007afe01568ff3233d6",
+        "description": "Seed canonical record; issue each exact range request.",
+        "fixtures": [
+          "canonical"
+        ],
+        "requests": [
+          {
+            "method": "GET",
+            "query": {
+              "hi": "punkti/0.6:64787c65702b2091e07fca6d588dcccda806654248d9f62978af640994ad5342",
+              "lo": "punkti/0.6:64787c65702b2091e07fca6d588dcccda806654248d9f62978af640994ad5342",
+              "mode": "mid"
+            },
+            "target": "/pull?q=%7B%22hi%22%3A%22punkti%2F0.6%3A64787c65702b2091e07fca6d588dcccda806654248d9f62978af640994ad5342%22%2C%22lo%22%3A%22punkti%2F0.6%3A64787c65702b2091e07fca6d588dcccda806654248d9f62978af640994ad5342%22%2C%22mode%22%3A%22mid%22%7D"
+          },
+          {
+            "method": "GET",
+            "query": {
+              "hi": "punkti/0.6:64787c65702b2091e07fca6d588dcccda806654248d9f62978af640994ad5342",
+              "lo": "punkti/0.6:b794c104861488e804b57a559bf62987731e79580267c007afe01568ff3233d6",
+              "mode": "mid"
+            },
+            "target": "/pull?q=%7B%22hi%22%3A%22punkti%2F0.6%3A64787c65702b2091e07fca6d588dcccda806654248d9f62978af640994ad5342%22%2C%22lo%22%3A%22punkti%2F0.6%3Ab794c104861488e804b57a559bf62987731e79580267c007afe01568ff3233d6%22%2C%22mode%22%3A%22mid%22%7D"
+          },
+          {
+            "method": "GET",
+            "query": {
+              "mode": "spatial",
+              "scope": {
+                "xy_hi": "g",
+                "xy_lo": "g"
+              }
+            },
+            "target": "/pull?q=%7B%22mode%22%3A%22spatial%22%2C%22scope%22%3A%7B%22xy_hi%22%3A%22g%22%2C%22xy_lo%22%3A%22g%22%7D%7D"
+          },
+          {
+            "method": "GET",
+            "query": {
+              "scope": {
+                "xy_hi": "g",
+                "xy_lo": "t"
+              }
+            },
+            "target": "/pull?q=%7B%22scope%22%3A%7B%22xy_hi%22%3A%22g%22%2C%22xy_lo%22%3A%22t%22%7D%7D"
+          },
+          {
+            "method": "GET",
+            "query": {
+              "mode": "spatial",
+              "scope": {
+                "z_max": "1",
+                "z_min": "1"
+              }
+            },
+            "target": "/pull?q=%7B%22mode%22%3A%22spatial%22%2C%22scope%22%3A%7B%22z_max%22%3A%221%22%2C%22z_min%22%3A%221%22%7D%7D"
+          },
+          {
+            "method": "GET",
+            "query": {
+              "scope": {
+                "z_max": "-1",
+                "z_min": "1"
+              }
+            },
+            "target": "/pull?q=%7B%22scope%22%3A%7B%22z_max%22%3A%22-1%22%2C%22z_min%22%3A%221%22%7D%7D"
+          },
+          {
+            "method": "GET",
+            "query": {
+              "lo": "punkti/0.6:64787c65702b2091e07fca6d588dcccda806654248d9f62978af640994ad5342",
+              "mode": "mid"
+            },
+            "target": "/pull?q=%7B%22lo%22%3A%22punkti%2F0.6%3A64787c65702b2091e07fca6d588dcccda806654248d9f62978af640994ad5342%22%2C%22mode%22%3A%22mid%22%7D"
+          },
+          {
+            "method": "GET",
+            "query": {
+              "mode": "spatial",
+              "scope": {
+                "xy_lo": "g"
+              }
+            },
+            "target": "/pull?q=%7B%22mode%22%3A%22spatial%22%2C%22scope%22%3A%7B%22xy_lo%22%3A%22g%22%7D%7D"
+          },
+          {
+            "method": "GET",
+            "query": {
+              "scope": {
+                "z_max": "1"
+              }
+            },
+            "target": "/pull?q=%7B%22scope%22%3A%7B%22z_max%22%3A%221%22%7D%7D"
+          }
+        ]
+      },
+      "state_transition": {
+        "description": "Each request leaves store, candidates, log and epoch unchanged.",
+        "final_per_node": {
+          "candidates": 0,
+          "log": 1,
+          "valid": 1
+        }
+      },
+      "title": "range-rejection"
+    },
+    {
+      "expected": {
+        "addresses": [
+          [
+            "punkti/0.6:64787c65702b2091e07fca6d588dcccda806654248d9f62978af640994ad5342"
+          ],
+          [
+            "punkti/0.6:64787c65702b2091e07fca6d588dcccda806654248d9f62978af640994ad5342"
+          ],
+          [],
+          [
+            "punkti/0.6:40d073c1656d7025c2342d2904800fa0ac2699254016277a61fd5432c8af5479"
+          ]
+        ],
+        "description": "Exactly lower boundary for XY and bounded Z; none below lower altitude; exactly upper record at z_min=alt1.",
+        "http_status": 200
+      },
+      "id": "V4",
+      "input": {
+        "altitudes": {
+          "000000000000_-18": "-18",
+          "s00000000000_23": "23",
+          "s00000000001_23.025": "23.025",
+          "zzzzzzzzzzzz_9000": "9000"
+        },
+        "description": "Four-record store; lower-edge XY and exact decimal Z half-open boundaries.",
+        "fixtures": [
+          "spatial0",
+          "spatial1",
+          "spatial2",
+          "spatial3"
+        ],
+        "requests": [
+          {
+            "method": "GET",
+            "query": {
+              "mode": "spatial",
+              "scope": {
+                "xy_hi": "s00000000001",
+                "xy_lo": "s00000000000"
+              }
+            },
+            "target": "/pull?q=%7B%22mode%22%3A%22spatial%22%2C%22scope%22%3A%7B%22xy_hi%22%3A%22s00000000001%22%2C%22xy_lo%22%3A%22s00000000000%22%7D%7D"
+          },
+          {
+            "method": "GET",
+            "query": {
+              "mode": "spatial",
+              "scope": {
+                "xy_hi": "s00000000002",
+                "xy_lo": "s00000000000",
+                "z_max": "23.025",
+                "z_min": "23"
+              }
+            },
+            "target": "/pull?q=%7B%22mode%22%3A%22spatial%22%2C%22scope%22%3A%7B%22xy_hi%22%3A%22s00000000002%22%2C%22xy_lo%22%3A%22s00000000000%22%2C%22z_max%22%3A%2223.025%22%2C%22z_min%22%3A%2223%22%7D%7D"
+          },
+          {
+            "method": "GET",
+            "query": {
+              "mode": "spatial",
+              "scope": {
+                "xy_hi": "s00000000002",
+                "xy_lo": "s00000000000",
+                "z_max": "23"
+              }
+            },
+            "target": "/pull?q=%7B%22mode%22%3A%22spatial%22%2C%22scope%22%3A%7B%22xy_hi%22%3A%22s00000000002%22%2C%22xy_lo%22%3A%22s00000000000%22%2C%22z_max%22%3A%2223%22%7D%7D"
+          },
+          {
+            "method": "GET",
+            "query": {
+              "mode": "spatial",
+              "scope": {
+                "xy_hi": "s00000000002",
+                "xy_lo": "s00000000000",
+                "z_min": "23.025"
+              }
+            },
+            "target": "/pull?q=%7B%22mode%22%3A%22spatial%22%2C%22scope%22%3A%7B%22xy_hi%22%3A%22s00000000002%22%2C%22xy_lo%22%3A%22s00000000000%22%2C%22z_min%22%3A%2223.025%22%7D%7D"
+          }
+        ]
+      },
+      "state_transition": {
+        "description": "PULL only: no store/candidate/log/epoch mutation. The XY scope excludes both extreme h fixtures.",
+        "final_per_node": {
+          "candidates": 0,
+          "log": 4,
+          "valid": 4
+        }
+      },
+      "title": "spatial-boundary"
+    },
+    {
+      "expected": {
+        "description": "All four normative descriptor cases HTTP 400; store and log empty.",
+        "empty_batch": {
+          "nb": [
+            200,
+            {
+              "results": []
+            }
+          ],
+          "non_normative": true,
+          "ref": [
+            400,
+            {
+              "error": "push batch size"
+            }
+          ]
+        },
+        "statuses": [
+          400,
+          400,
+          400,
+          400
+        ]
+      },
+      "id": "V5",
+      "input": {
+        "description": "Malformed wrappers are prevalidated before admission; empty batch is observational only.",
+        "empty_batch": {
+          "non_normative": true,
+          "request": {
+            "body_utf8": "{\"records\":[]}",
+            "method": "POST",
+            "target": "/push"
+          }
+        },
+        "requests": [
+          {
+            "body_utf8": "{\"records\":[{\"address\":\"punkti/0.6:82444945204576099501248b1a615c1c841b44981ae8e8bd1f89eb4e093f73ba\",\"record\":\"AAAA0gAAAApwdW5rdGkvMC42AAAADTE3MDAwMDAwMDAwMDAAAAAPczAwMDAwMDAwMDAwXzIzAAAAI29wYXF1ZSBmcmVlemUgcGF5bG9hZCAAIOS4lueVjCDwn4yNAAAAB2VkMjU1MTkAAAAgn9wUpwhUac6RE1EaIDOs9Vk9bpzasYzydwtYiARPGmYAAAACAAAADnVua25vd24vYTowMGZmAAAAE3VucmVjb2duaXplZC/lhbPns7sAAAAOZnV0dXJlL3Y5OmFiY2QAAAAAAAAAAwD/AAAAAECRFUq9ar2aYWpQNHl4ezXHk5ua/1bLrlkEocLtrQKEpq4Wq/FGlWi1jI92O/YegH2v+neF03YqD4kT/EpuIswF\",\"sha256\":\"53388006f408fd3c04aaab96e52357d41c4003a594ce68f1fc91a31b89ac0762\"},{\"address\":\"punkti/0.6:82444945204576099501248b1a615c1c841b44981ae8e8bd1f89eb4e093f73ba\",\"record\":\"AAAA0gAAAApwdW5rdGkvMC42AAAADTE3MDAwMDAwMDAwMDAAAAAPczAwMDAwMDAwMDAwXzIzAAAAI29wYXF1ZSBmcmVlemUgcGF5bG9hZCAAIOS4lueVjCDwn4yNAAAAB2VkMjU1MTkAAAAgn9wUpwhUac6RE1EaIDOs9Vk9bpzasYzydwtYiARPGmYAAAACAAAADnVua25vd24vYTowMGZmAAAAE3VucmVjb2duaXplZC/lhbPns7sAAAAOZnV0dXJlL3Y5OmFiY2QAAAAAAAAAAwD/AAAAAECRFUq9ar2aYWpQNHl4ezXHk5ua/1bLrlkEocLtrQKEpq4Wq/FGlWi1jI92O/YegH2v+neF03YqD4kT/EpuIswF\",\"sha256\":\"ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff\"}]}",
+            "method": "POST",
+            "target": "/push"
+          },
+          {
+            "body_utf8": "{\"records\":[{\"address\":\"punkti/0.6:0000000000000000000000000000000000000000000000000000000000000000\",\"record\":\"AAAA0gAAAApwdW5rdGkvMC42AAAADTE3MDAwMDAwMDAwMDAAAAAPczAwMDAwMDAwMDAwXzIzAAAAI29wYXF1ZSBmcmVlemUgcGF5bG9hZCAAIOS4lueVjCDwn4yNAAAAB2VkMjU1MTkAAAAgn9wUpwhUac6RE1EaIDOs9Vk9bpzasYzydwtYiARPGmYAAAACAAAADnVua25vd24vYTowMGZmAAAAE3VucmVjb2duaXplZC/lhbPns7sAAAAOZnV0dXJlL3Y5OmFiY2QAAAAAAAAAAwD/AAAAAECRFUq9ar2aYWpQNHl4ezXHk5ua/1bLrlkEocLtrQKEpq4Wq/FGlWi1jI92O/YegH2v+neF03YqD4kT/EpuIswF\",\"sha256\":\"53388006f408fd3c04aaab96e52357d41c4003a594ce68f1fc91a31b89ac0762\"}]}",
+            "method": "POST",
+            "target": "/push"
+          },
+          {
+            "body_utf8": "{\"records\":[{\"address\":\"punkti/0.6:82444945204576099501248b1a615c1c841b44981ae8e8bd1f89eb4e093f73ba\",\"extra\":1,\"record\":\"AAAA0gAAAApwdW5rdGkvMC42AAAADTE3MDAwMDAwMDAwMDAAAAAPczAwMDAwMDAwMDAwXzIzAAAAI29wYXF1ZSBmcmVlemUgcGF5bG9hZCAAIOS4lueVjCDwn4yNAAAAB2VkMjU1MTkAAAAgn9wUpwhUac6RE1EaIDOs9Vk9bpzasYzydwtYiARPGmYAAAACAAAADnVua25vd24vYTowMGZmAAAAE3VucmVjb2duaXplZC/lhbPns7sAAAAOZnV0dXJlL3Y5OmFiY2QAAAAAAAAAAwD/AAAAAECRFUq9ar2aYWpQNHl4ezXHk5ua/1bLrlkEocLtrQKEpq4Wq/FGlWi1jI92O/YegH2v+neF03YqD4kT/EpuIswF\",\"sha256\":\"53388006f408fd3c04aaab96e52357d41c4003a594ce68f1fc91a31b89ac0762\"}]}",
+            "method": "POST",
+            "target": "/push"
+          },
+          {
+            "body_utf8": "{\"records\":[{\"address\":\"punkti/0.6:82444945204576099501248b1a615c1c841b44981ae8e8bd1f89eb4e093f73ba\",\"record\":\"AAAA0gAAAApwdW5rdGkvMC42AAAADTE3MDAwMDAwMDAwMDAAAAAPczAwMDAwMDAwMDAwXzIzAAAAI29wYXF1ZSBmcmVlemUgcGF5bG9hZCAAIOS4lueVjCDwn4yNAAAAB2VkMjU1MTkAAAAgn9wUpwhUac6RE1EaIDOs9Vk9bpzasYzydwtYiARPGmYAAAACAAAADnVua25vd24vYTowMGZmAAAAE3VucmVjb2duaXplZC/lhbPns7sAAAAOZnV0dXJlL3Y5OmFiY2QAAAAAAAAAAwD/AAAAAECRFUq9ar2aYWpQNHl4ezXHk5ua/1bLrlkEocLtrQKEpq4Wq/FGlWi1jI92O/YegH2v+neF03YqD4kT/EpuIswF=\",\"sha256\":\"53388006f408fd3c04aaab96e52357d41c4003a594ce68f1fc91a31b89ac0762\"}]}",
+            "method": "POST",
+            "target": "/push"
+          }
+        ]
+      },
+      "state_transition": {
+        "description": "Descriptor error \u2192 no admission from the entire request; empty batch does not mutate state.",
+        "final_per_node": {
+          "candidates": 0,
+          "log": 0,
+          "valid": 0
+        }
+      },
+      "title": "descriptor-errors"
+    },
+    {
+      "expected": {
+        "description": "HTTP 200 per request; content failure does not poison the valid address.",
+        "http_status": 200,
+        "results": [
+          [
+            {
+              "admitted": true,
+              "state": "VALID"
+            },
+            {
+              "admitted": false,
+              "state": "INVALID-provenance"
+            }
+          ],
+          [
+            {
+              "admitted": false,
+              "state": "INVALID-structural"
+            }
+          ]
+        ],
+        "valid": [
+          "punkti/0.6:82444945204576099501248b1a615c1c841b44981ae8e8bd1f89eb4e093f73ba"
+        ]
+      },
+      "id": "V6",
+      "input": {
+        "description": "Push VALID and signature-flipped R together; then structurally truncated R with correct digest.",
+        "requests": [
+          {
+            "body_utf8": "{\"records\":[{\"address\":\"punkti/0.6:82444945204576099501248b1a615c1c841b44981ae8e8bd1f89eb4e093f73ba\",\"record\":\"AAAA0gAAAApwdW5rdGkvMC42AAAADTE3MDAwMDAwMDAwMDAAAAAPczAwMDAwMDAwMDAwXzIzAAAAI29wYXF1ZSBmcmVlemUgcGF5bG9hZCAAIOS4lueVjCDwn4yNAAAAB2VkMjU1MTkAAAAgn9wUpwhUac6RE1EaIDOs9Vk9bpzasYzydwtYiARPGmYAAAACAAAADnVua25vd24vYTowMGZmAAAAE3VucmVjb2duaXplZC/lhbPns7sAAAAOZnV0dXJlL3Y5OmFiY2QAAAAAAAAAAwD/AAAAAECRFUq9ar2aYWpQNHl4ezXHk5ua/1bLrlkEocLtrQKEpq4Wq/FGlWi1jI92O/YegH2v+neF03YqD4kT/EpuIswF\",\"sha256\":\"53388006f408fd3c04aaab96e52357d41c4003a594ce68f1fc91a31b89ac0762\"},{\"address\":\"punkti/0.6:82444945204576099501248b1a615c1c841b44981ae8e8bd1f89eb4e093f73ba\",\"record\":\"AAAA0gAAAApwdW5rdGkvMC42AAAADTE3MDAwMDAwMDAwMDAAAAAPczAwMDAwMDAwMDAwXzIzAAAAI29wYXF1ZSBmcmVlemUgcGF5bG9hZCAAIOS4lueVjCDwn4yNAAAAB2VkMjU1MTkAAAAgn9wUpwhUac6RE1EaIDOs9Vk9bpzasYzydwtYiARPGmYAAAACAAAADnVua25vd24vYTowMGZmAAAAE3VucmVjb2duaXplZC/lhbPns7sAAAAOZnV0dXJlL3Y5OmFiY2QAAAAAAAAAAwD/AAAAAECRFUq9ar2aYWpQNHl4ezXHk5ua/1bLrlkEocLtrQKEpq4Wq/FGlWi1jI92O/YegH2v+neF03YqD4kT/EpuIswE\",\"sha256\":\"45717119d70ec464c2a00d55e1045255e52c7a9f3a0af906eb7eadc6d9ee413b\"}]}",
+            "method": "POST",
+            "target": "/push"
+          },
+          {
+            "body_utf8": "{\"records\":[{\"address\":\"punkti/0.6:82444945204576099501248b1a615c1c841b44981ae8e8bd1f89eb4e093f73ba\",\"record\":\"AAAA0gAAAApwdW5rdGkvMC42AAAADTE3MDAwMDAwMDAwMDAAAAAPczAwMDAwMDAwMDAwXzIzAAAAI29wYXF1ZSBmcmVlemUgcGF5bG9hZCAAIOS4lueVjCDwn4yNAAAAB2VkMjU1MTkAAAAgn9wUpwhUac6RE1EaIDOs9Vk9bpzasYzydwtYiARPGmYAAAACAAAADnVua25vd24vYTowMGZmAAAAE3VucmVjb2duaXplZC/lhbPns7sAAAAOZnV0dXJlL3Y5OmFiY2QAAAAAAAAAAwD/AAAAAECRFUq9ar2aYWpQNHl4ezXHk5ua/1bLrlkEocLtrQKEpq4Wq/FGlWi1jI92O/YegH2v+neF03YqD4kT/A==\",\"sha256\":\"bfc7b90c7f400dc793e3c4f11925c307a4d9cf0623a8414ae406b1fc6ce61f3b\"}]}",
+            "method": "POST",
+            "target": "/push"
+          }
+        ]
+      },
+      "state_transition": {
+        "description": "Empty \u2192 exactly one VALID record/log entry; no candidate retained for either invalid item.",
+        "final_per_node": {
+          "candidates": 0,
+          "log": 1,
+          "valid": 1
+        }
+      },
+      "title": "content-errors"
+    },
+    {
+      "expected": {
+        "description": "Only unsigned integer spelling 0 accepts; accepted object has the pinned zero fixture canonical bytes.",
+        "ok": [
+          true,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false
+        ]
+      },
+      "id": "V7",
+      "input": {
+        "cases": [
+          {
+            "json_utf8": "{\"alg\":\"ed25519\",\"ext\":\"AP8A\",\"h\":\"s00000000000_23\",\"pk\":\"n9wUpwhUac6RE1EaIDOs9Vk9bpzasYzydwtYiARPGmY=\",\"refs\":[{\"rel\":\"unrecognized/\\u5173\\u7cfb\",\"target\":\"unknown/a:00ff\"},{\"rel\":\"\",\"target\":\"future/v9:abcd\"}],\"sig\":\"iWd6TZrkL8VEwckJdd9SVMgWFi5Q1rSMECfhgJ/jdbzEBMnH2hmamn1Cv5rv1S+iDQjRX91pduZBYuBRx3LlDA==\",\"t\":0,\"v\":\"punkti/0.6\",\"x\":\"opaque freeze payload \\u0000 \\u4e16\\u754c \\ud83c\\udf0d\"}",
+            "spelling": "0"
+          },
+          {
+            "json_utf8": "{\"alg\":\"ed25519\",\"ext\":\"AP8A\",\"h\":\"s00000000000_23\",\"pk\":\"n9wUpwhUac6RE1EaIDOs9Vk9bpzasYzydwtYiARPGmY=\",\"refs\":[{\"rel\":\"unrecognized/\\u5173\\u7cfb\",\"target\":\"unknown/a:00ff\"},{\"rel\":\"\",\"target\":\"future/v9:abcd\"}],\"sig\":\"iWd6TZrkL8VEwckJdd9SVMgWFi5Q1rSMECfhgJ/jdbzEBMnH2hmamn1Cv5rv1S+iDQjRX91pduZBYuBRx3LlDA==\",\"t\":-0,\"v\":\"punkti/0.6\",\"x\":\"opaque freeze payload \\u0000 \\u4e16\\u754c \\ud83c\\udf0d\"}",
+            "spelling": "-0"
+          },
+          {
+            "json_utf8": "{\"alg\":\"ed25519\",\"ext\":\"AP8A\",\"h\":\"s00000000000_23\",\"pk\":\"n9wUpwhUac6RE1EaIDOs9Vk9bpzasYzydwtYiARPGmY=\",\"refs\":[{\"rel\":\"unrecognized/\\u5173\\u7cfb\",\"target\":\"unknown/a:00ff\"},{\"rel\":\"\",\"target\":\"future/v9:abcd\"}],\"sig\":\"iWd6TZrkL8VEwckJdd9SVMgWFi5Q1rSMECfhgJ/jdbzEBMnH2hmamn1Cv5rv1S+iDQjRX91pduZBYuBRx3LlDA==\",\"t\":-1,\"v\":\"punkti/0.6\",\"x\":\"opaque freeze payload \\u0000 \\u4e16\\u754c \\ud83c\\udf0d\"}",
+            "spelling": "-1"
+          },
+          {
+            "json_utf8": "{\"alg\":\"ed25519\",\"ext\":\"AP8A\",\"h\":\"s00000000000_23\",\"pk\":\"n9wUpwhUac6RE1EaIDOs9Vk9bpzasYzydwtYiARPGmY=\",\"refs\":[{\"rel\":\"unrecognized/\\u5173\\u7cfb\",\"target\":\"unknown/a:00ff\"},{\"rel\":\"\",\"target\":\"future/v9:abcd\"}],\"sig\":\"iWd6TZrkL8VEwckJdd9SVMgWFi5Q1rSMECfhgJ/jdbzEBMnH2hmamn1Cv5rv1S+iDQjRX91pduZBYuBRx3LlDA==\",\"t\":01,\"v\":\"punkti/0.6\",\"x\":\"opaque freeze payload \\u0000 \\u4e16\\u754c \\ud83c\\udf0d\"}",
+            "spelling": "01"
+          },
+          {
+            "json_utf8": "{\"alg\":\"ed25519\",\"ext\":\"AP8A\",\"h\":\"s00000000000_23\",\"pk\":\"n9wUpwhUac6RE1EaIDOs9Vk9bpzasYzydwtYiARPGmY=\",\"refs\":[{\"rel\":\"unrecognized/\\u5173\\u7cfb\",\"target\":\"unknown/a:00ff\"},{\"rel\":\"\",\"target\":\"future/v9:abcd\"}],\"sig\":\"iWd6TZrkL8VEwckJdd9SVMgWFi5Q1rSMECfhgJ/jdbzEBMnH2hmamn1Cv5rv1S+iDQjRX91pduZBYuBRx3LlDA==\",\"t\":1.0,\"v\":\"punkti/0.6\",\"x\":\"opaque freeze payload \\u0000 \\u4e16\\u754c \\ud83c\\udf0d\"}",
+            "spelling": "1.0"
+          },
+          {
+            "json_utf8": "{\"alg\":\"ed25519\",\"ext\":\"AP8A\",\"h\":\"s00000000000_23\",\"pk\":\"n9wUpwhUac6RE1EaIDOs9Vk9bpzasYzydwtYiARPGmY=\",\"refs\":[{\"rel\":\"unrecognized/\\u5173\\u7cfb\",\"target\":\"unknown/a:00ff\"},{\"rel\":\"\",\"target\":\"future/v9:abcd\"}],\"sig\":\"iWd6TZrkL8VEwckJdd9SVMgWFi5Q1rSMECfhgJ/jdbzEBMnH2hmamn1Cv5rv1S+iDQjRX91pduZBYuBRx3LlDA==\",\"t\":1e3,\"v\":\"punkti/0.6\",\"x\":\"opaque freeze payload \\u0000 \\u4e16\\u754c \\ud83c\\udf0d\"}",
+            "spelling": "1e3"
+          },
+          {
+            "json_utf8": "{\"alg\":\"ed25519\",\"ext\":\"AP8A\",\"h\":\"s00000000000_23\",\"pk\":\"n9wUpwhUac6RE1EaIDOs9Vk9bpzasYzydwtYiARPGmY=\",\"refs\":[{\"rel\":\"unrecognized/\\u5173\\u7cfb\",\"target\":\"unknown/a:00ff\"},{\"rel\":\"\",\"target\":\"future/v9:abcd\"}],\"sig\":\"iWd6TZrkL8VEwckJdd9SVMgWFi5Q1rSMECfhgJ/jdbzEBMnH2hmamn1Cv5rv1S+iDQjRX91pduZBYuBRx3LlDA==\",\"t\":+1,\"v\":\"punkti/0.6\",\"x\":\"opaque freeze payload \\u0000 \\u4e16\\u754c \\ud83c\\udf0d\"}",
+            "spelling": "+1"
+          }
+        ],
+        "description": "Exact UTF-8 JSON bytes passed as base64 to import_json; only t spelling changes.",
+        "fixture": "zero"
+      },
+      "state_transition": {
+        "description": "JSON import only; no store mutation.",
+        "final_per_node": {
+          "candidates": 0,
+          "log": 0,
+          "valid": 0
+        }
+      },
+      "title": "timestamp-grammar"
+    },
+    {
+      "expected": {
+        "cursors": [
+          null,
+          null,
+          {
+            "after": 1,
+            "ceiling": 1,
+            "epoch": "stub-epoch",
+            "scope": "07eea3d4eef7a2c6dd24f0385438ddaddbdc96e7780f1211285449eeb4e2b399"
+          }
+        ],
+        "description": "First pull fails without admission; retry succeeds from null; next pull echoes the successful token.",
+        "log_count": 1,
+        "ok": [
+          false,
+          true,
+          true
+        ],
+        "valid": [
+          "punkti/0.6:82444945204576099501248b1a615c1c841b44981ae8e8bd1f89eb4e093f73ba"
+        ]
+      },
+      "id": "V8",
+      "input": {
+        "adapter_command": "pull_from",
+        "clean_page_utf8": "{\"cursor\":{\"after\":1,\"ceiling\":1,\"epoch\":\"stub-epoch\",\"scope\":\"07eea3d4eef7a2c6dd24f0385438ddaddbdc96e7780f1211285449eeb4e2b399\"},\"end\":true,\"records\":[{\"address\":\"punkti/0.6:82444945204576099501248b1a615c1c841b44981ae8e8bd1f89eb4e093f73ba\",\"record\":\"AAAA0gAAAApwdW5rdGkvMC42AAAADTE3MDAwMDAwMDAwMDAAAAAPczAwMDAwMDAwMDAwXzIzAAAAI29wYXF1ZSBmcmVlemUgcGF5bG9hZCAAIOS4lueVjCDwn4yNAAAAB2VkMjU1MTkAAAAgn9wUpwhUac6RE1EaIDOs9Vk9bpzasYzydwtYiARPGmYAAAACAAAADnVua25vd24vYTowMGZmAAAAE3VucmVjb2duaXplZC/lhbPns7sAAAAOZnV0dXJlL3Y5OmFiY2QAAAAAAAAAAwD/AAAAAECRFUq9ar2aYWpQNHl4ezXHk5ua/1bLrlkEocLtrQKEpq4Wq/FGlWi1jI92O/YegH2v+neF03YqD4kT/EpuIswF\",\"sha256\":\"53388006f408fd3c04aaab96e52357d41c4003a594ce68f1fc91a31b89ac0762\"}]}",
+        "declared_length": 739,
+        "description": "Fresh target for each failure mode; stub first page is short HTTP or decoded invalid-content batch, then clean retry and cursor-resume probe.",
+        "hello_utf8": "{\"epoch\":\"stub-epoch\",\"peers\":[],\"protocol\":\"punkti-mesh/0.6-draft\",\"subscriptions\":[{}]}",
+        "invalid_page_utf8": "{\"cursor\":{\"after\":2,\"ceiling\":2,\"epoch\":\"stub-epoch\",\"scope\":\"07eea3d4eef7a2c6dd24f0385438ddaddbdc96e7780f1211285449eeb4e2b399\"},\"end\":true,\"records\":[{\"address\":\"punkti/0.6:82444945204576099501248b1a615c1c841b44981ae8e8bd1f89eb4e093f73ba\",\"record\":\"AAAA0gAAAApwdW5rdGkvMC42AAAADTE3MDAwMDAwMDAwMDAAAAAPczAwMDAwMDAwMDAwXzIzAAAAI29wYXF1ZSBmcmVlemUgcGF5bG9hZCAAIOS4lueVjCDwn4yNAAAAB2VkMjU1MTkAAAAgn9wUpwhUac6RE1EaIDOs9Vk9bpzasYzydwtYiARPGmYAAAACAAAADnVua25vd24vYTowMGZmAAAAE3VucmVjb2duaXplZC/lhbPns7sAAAAOZnV0dXJlL3Y5OmFiY2QAAAAAAAAAAwD/AAAAAECRFUq9ar2aYWpQNHl4ezXHk5ua/1bLrlkEocLtrQKEpq4Wq/FGlWi1jI92O/YegH2v+neF03YqD4kT/EpuIswF\",\"sha256\":\"53388006f408fd3c04aaab96e52357d41c4003a594ce68f1fc91a31b89ac0762\"},{\"address\":\"punkti/0.6:82444945204576099501248b1a615c1c841b44981ae8e8bd1f89eb4e093f73ba\",\"record\":\"AAAA0gAAAApwdW5rdGkvMC42AAAADTE3MDAwMDAwMDAwMDAAAAAPczAwMDAwMDAwMDAwXzIzAAAAI29wYXF1ZSBmcmVlemUgcGF5bG9hZCAAIOS4lueVjCDwn4yNAAAAB2VkMjU1MTkAAAAgn9wUpwhUac6RE1EaIDOs9Vk9bpzasYzydwtYiARPGmYAAAACAAAADnVua25vd24vYTowMGZmAAAAE3VucmVjb2duaXplZC/lhbPns7sAAAAOZnV0dXJlL3Y5OmFiY2QAAAAAAAAAAwD/AAAAAECRFUq9ar2aYWpQNHl4ezXHk5ua/1bLrlkEocLtrQKEpq4Wq/FGlWi1jI92O/YegH2v+neF03YqD4kT/EpuIswE\",\"sha256\":\"45717119d70ec464c2a00d55e1045255e52c7a9f3a0af906eb7eadc6d9ee413b\"}]}",
+        "mode": "spatial",
+        "resume_page_utf8": "{\"cursor\":{\"after\":1,\"ceiling\":1,\"epoch\":\"stub-epoch\",\"scope\":\"07eea3d4eef7a2c6dd24f0385438ddaddbdc96e7780f1211285449eeb4e2b399\"},\"end\":true,\"records\":[]}",
+        "scope": {},
+        "truncated_body_utf8": "{\"cursor\":{\"after\":1,\"ceiling\":1,\"epoch\":\"stub-epoch\",\"scope\":\"07eea3d4eef7a2c6dd24f0385438ddaddbdc96e7780f1211285449eeb4e2b399\"},\"end\":true,\"records\":[{\"address\":\"punkti/0.6:82444945204576099501248b1a615c1c841b44981ae8e8bd1f89eb4e093f73ba\",\"record\":\"AAAA0gAAAApwdW5rdGkvMC42AAAADTE3MDAwMDAwMDAwMDAAAAAPczAwMDAwMDAwMDAwXzIzAAAAI29wYXF1ZSBmcmVlemUgcGF5bG9hZCAAIOS4lueVjCDwn4yNAAAAB2VkMjU1MTkAAAAgn9wUpwhUac6RE1EaIDOs9Vk9bpzasYzydwtYiARPGmYAAAACAAAADnVua25vd24vYTowMGZmAAAAE3VucmVjb2duaXplZC/lhbPns7sAAAAOZnV0dXJlL3Y5OmFiY2QAAAAAAAAAAwD/AAAAAECRFUq9ar2aYWpQNHl4ezXHk5ua/1bLrlkEocLtrQKEpq4Wq/FGlWi1jI92O/YegH2v+neF03YqD4kT/EpuIswF\",\"sha256\":\"53388006f408fd3c04aaab96e52357d41c4003a594ce68f1fc91a31b89ac0762\"}]"
+      },
+      "state_transition": {
+        "description": "Failed page \u2192 empty store/log and retained null cursor; success \u2192 one admission then cursor advances; resume adds nothing.",
+        "final_per_node": {
+          "candidates": 0,
+          "log": 1,
+          "valid": 1
+        }
+      },
+      "title": "interrupted-page-atomicity"
+    },
+    {
+      "expected": {
+        "admitted": true,
+        "candidates": [
+          "punkti/0.6:8b6dca8bc139ff96f5b7e6c8841e88f6f5b5e50c45fc9e31e53be68e74c00969"
+        ],
+        "description": "Exact R and decoded atom preserved on both nodes; unsupported algorithm remains candidate.",
+        "http_status": 200,
+        "state": "UNVERIFIABLE-alg",
+        "valid": [
+          "punkti/0.6:82444945204576099501248b1a615c1c841b44981ae8e8bd1f89eb4e093f73ba"
+        ]
+      },
+      "id": "V9",
+      "input": {
+        "description": "Mint future-signature with opaque Unicode/refs/ext; push to unrestricted source, pull into second node; retain a distinct VALID fixture at both.",
+        "fixture": "opaque",
+        "request": {
+          "body_utf8": "{\"records\":[{\"address\":\"punkti/0.6:8b6dca8bc139ff96f5b7e6c8841e88f6f5b5e50c45fc9e31e53be68e74c00969\",\"record\":\"AAAAzQAAAApwdW5rdGkvMC42AAAADTE3MDAwMDAwMDAwMDAAAAAPczAwMDAwMDAwMDAwXzIzAAAAEG9wYXF1ZQAg8J+MjSBlzIEAAAAQZnV0dXJlLXNpZ25hdHVyZQAAACCf3BSnCFRpzpETURogM6z1WT1unNqxjPJ3C1iIBE8aZgAAAAIAAAAOdW5rbm93bi9hOjAwZmYAAAATdW5yZWNvZ25pemVkL+WFs+ezuwAAAA5mdXR1cmUvdjk6YWJjZAAAAAAAAAAI/wBvcGFxdWUAAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==\",\"sha256\":\"e8ec8916f3b1ee2552f467cd2b7bc065569b5447eb2dcd8902edc8600ed1ecaa\"}]}",
+          "method": "POST",
+          "target": "/push"
+        },
+        "valid_fixture": "canonical"
+      },
+      "state_transition": {
+        "description": "Each node retains one VALID and one candidate; unsupported algorithm never promotes or replaces VALID.",
+        "final_per_node": {
+          "candidates": 1,
+          "log": 2,
+          "valid": 1
+        }
+      },
+      "title": "opaque-preservation"
+    },
+    {
+      "expected": {
+        "capabilities": [
+          "push",
+          "range-mid",
+          "range-spatial",
+          "opaque-wrapper"
+        ],
+        "description": "Exact normative limits, capabilities and protocol.",
+        "http_status": 200,
+        "limits": {
+          "body": 1048576,
+          "candidates": 128,
+          "http": 8388608,
+          "page": 32,
+          "record": 2097152
+        },
+        "protocol": "punkti-mesh/0.6-draft"
+      },
+      "id": "V10",
+      "input": {
+        "description": "GET /hello on fresh served node.",
+        "method": "GET",
+        "target": "/hello"
+      },
+      "state_transition": {
+        "description": "No state mutation.",
+        "final_per_node": {
+          "candidates": 0,
+          "log": 0,
+          "valid": 0
+        }
+      },
+      "title": "hello-limits"
+    },
+    {
+      "expected": {
+        "description": "Distinct h/C/MID/address for same XY with different Z; structural rejection of every malformed h; exact total Z order.",
+        "invalid_state": "INVALID-structural",
+        "state": "VALID"
+      },
+      "id": "V11",
+      "input": {
+        "description": "Historical signed addresses, rejected spellings and all pairs of exact Z order.",
+        "fixtures": [
+          "height23",
+          "negative",
+          "decimal"
+        ],
+        "invalid_h": [
+          "u3bu_+23",
+          "u3bu_2.3e1",
+          "u3bu_023",
+          "u3bu_23.",
+          "u3bu_23.0",
+          "u3bu_23.50",
+          "u3bu_-0",
+          "u3bu_0.0",
+          "u3bu_0.00",
+          "u3bu_\u0662\u0663",
+          "u3bu_.5",
+          "u3bu_23 ",
+          "u3bu_23\n",
+          "u3b_23",
+          "uuuuuuuuuuuuu_0",
+          "u3bu23",
+          "u3bu__23",
+          "u3bu_",
+          "u3bu_1111111111111111111111111111",
+          "u3butz7k9q_1111111111111111111111",
+          "s00000000000"
+        ],
+        "order": [
+          "-99999999999999999999999999",
+          "-18",
+          "-0.5",
+          "0",
+          "0.05",
+          "0.5",
+          "23",
+          "23.02",
+          "23.025",
+          "999999999999999999999999998",
+          "999999999999999999999999999"
+        ]
+      },
+      "state_transition": {
+        "description": "Mint and validate only; no store mutation.",
+        "final_per_node": {
+          "candidates": 0,
+          "log": 0,
+          "valid": 0
+        }
+      },
+      "title": "canonical-XY_Z-and-order"
+    },
+    {
+      "expected": {
+        "count": 24,
+        "description": "Encode equals pinned XY; decode equals independent integer-grid oracle; centre re-encodes."
+      },
+      "id": "V12",
+      "input": {
+        "cells": [
+          {
+            "decoded": {
+              "lat": 55.634765625,
+              "lat_max": 55.72265625,
+              "lat_min": 55.546875,
+              "lon": 12.48046875,
+              "lon_max": 12.65625,
+              "lon_min": 12.3046875
+            },
+            "lat": 55.675398,
+            "lon": 12.561895,
+            "precision": 4,
+            "xy": "u3bu"
+          },
+          {
+            "decoded": {
+              "lat": 55.67539840936661,
+              "lat_max": 55.67540109157562,
+              "lat_min": 55.67539572715759,
+              "lon": 12.561895251274109,
+              "lon_max": 12.561900615692139,
+              "lon_min": 12.561889886856079
+            },
+            "lat": 55.675398,
+            "lon": 12.561895,
+            "precision": 10,
+            "xy": "u3butz7k9q"
+          },
+          {
+            "decoded": {
+              "lat": 55.67539799027145,
+              "lat_max": 55.67539807409048,
+              "lat_min": 55.67539790645242,
+              "lon": 12.561895083636045,
+              "lon_max": 12.561895251274109,
+              "lon_min": 12.561894915997982
+            },
+            "lat": 55.675398,
+            "lon": 12.561895,
+            "precision": 12,
+            "xy": "u3butz7k9q7v"
+          },
+          {
+            "decoded": {
+              "lat": 51.591796875,
+              "lat_max": 51.6796875,
+              "lat_min": 51.50390625,
+              "lon": -0.17578125,
+              "lon_max": 0.0,
+              "lon_min": -0.3515625
+            },
+            "lat": 51.5074,
+            "lon": -0.1278,
+            "precision": 4,
+            "xy": "gcpv"
+          },
+          {
+            "decoded": {
+              "lat": 51.507401168346405,
+              "lat_max": 51.50740385055542,
+              "lat_min": 51.50739848613739,
+              "lon": -0.12779653072357178,
+              "lon_max": -0.127791166305542,
+              "lon_min": -0.12780189514160156
+            },
+            "lat": 51.5074,
+            "lon": -0.1278,
+            "precision": 10,
+            "xy": "gcpvj0duq5"
+          },
+          {
+            "decoded": {
+              "lat": 51.50740007869899,
+              "lat_max": 51.507400162518024,
+              "lat_min": 51.50739999487996,
+              "lon": -0.12780005112290382,
+              "lon_max": -0.1277998834848404,
+              "lon_min": -0.12780021876096725
+            },
+            "lat": 51.5074,
+            "lon": -0.1278,
+            "precision": 12,
+            "xy": "gcpvj0duq533"
+          },
+          {
+            "decoded": {
+              "lat": 35.595703125,
+              "lat_max": 35.68359375,
+              "lat_min": 35.5078125,
+              "lon": 139.74609375,
+              "lon_max": 139.921875,
+              "lon_min": 139.5703125
+            },
+            "lat": 35.6762,
+            "lon": 139.6503,
+            "precision": 4,
+            "xy": "xn76"
+          },
+          {
+            "decoded": {
+              "lat": 35.67619889974594,
+              "lat_max": 35.676201581954956,
+              "lat_min": 35.676196217536926,
+              "lon": 139.65030133724213,
+              "lon_max": 139.65030670166016,
+              "lon_min": 139.6502959728241
+            },
+            "lat": 35.6762,
+            "lon": 139.6503,
+            "precision": 10,
+            "xy": "xn76cydhzv"
+          },
+          {
+            "decoded": {
+              "lat": 35.67619998939335,
+              "lat_max": 35.676200073212385,
+              "lat_min": 35.67619990557432,
+              "lon": 139.65030016377568,
+              "lon_max": 139.65030033141375,
+              "lon_min": 139.65029999613762
+            },
+            "lat": 35.6762,
+            "lon": 139.6503,
+            "precision": 12,
+            "xy": "xn76cydhzven"
+          },
+          {
+            "decoded": {
+              "lat": 40.693359375,
+              "lat_max": 40.78125,
+              "lat_min": 40.60546875,
+              "lon": -74.00390625,
+              "lon_max": -73.828125,
+              "lon_min": -74.1796875
+            },
+            "lat": 40.7128,
+            "lon": -74.006,
+            "precision": 4,
+            "xy": "dr5r"
+          },
+          {
+            "decoded": {
+              "lat": 40.71279734373093,
+              "lat_max": 40.71280002593994,
+              "lat_min": 40.71279466152191,
+              "lon": -74.00600373744965,
+              "lon_max": -74.00599837303162,
+              "lon_min": -74.00600910186768
+            },
+            "lat": 40.7128,
+            "lon": -74.006,
+            "precision": 10,
+            "xy": "dr5regw3pp"
+          },
+          {
+            "decoded": {
+              "lat": 40.71279994212091,
+              "lat_max": 40.71280002593994,
+              "lat_min": 40.71279985830188,
+              "lon": -74.00599988177419,
+              "lon_max": -74.00599971413612,
+              "lon_min": -74.00600004941225
+            },
+            "lat": 40.7128,
+            "lon": -74.006,
+            "precision": 12,
+            "xy": "dr5regw3ppyz"
+          },
+          {
+            "decoded": {
+              "lat": 59.853515625,
+              "lat_max": 59.94140625,
+              "lat_min": 59.765625,
+              "lon": 10.72265625,
+              "lon_max": 10.8984375,
+              "lon_min": 10.546875
+            },
+            "lat": 59.9139,
+            "lon": 10.7522,
+            "precision": 4,
+            "xy": "u4xs"
+          },
+          {
+            "decoded": {
+              "lat": 59.91390019655228,
+              "lat_max": 59.91390287876129,
+              "lat_min": 59.91389751434326,
+              "lon": 10.752198100090027,
+              "lon_max": 10.752203464508057,
+              "lon_min": 10.752192735671997
+            },
+            "lat": 59.9139,
+            "lon": 10.7522,
+            "precision": 10,
+            "xy": "u4xsudvxb2"
+          },
+          {
+            "decoded": {
+              "lat": 59.91389994509518,
+              "lat_max": 59.91390002891421,
+              "lat_min": 59.91389986127615,
+              "lon": 10.752199944108725,
+              "lon_max": 10.752200111746788,
+              "lon_min": 10.752199776470661
+            },
+            "lat": 59.9139,
+            "lon": 10.7522,
+            "precision": 12,
+            "xy": "u4xsudvxb2mq"
+          },
+          {
+            "decoded": {
+              "lat": 0.087890625,
+              "lat_max": 0.17578125,
+              "lat_min": 0.0,
+              "lon": 0.17578125,
+              "lon_max": 0.3515625,
+              "lon_min": 0.0
+            },
+            "lat": 0.0,
+            "lon": 0.0,
+            "precision": 4,
+            "xy": "s000"
+          },
+          {
+            "decoded": {
+              "lat": 2.682209014892578e-06,
+              "lat_max": 5.364418029785156e-06,
+              "lat_min": 0.0,
+              "lon": 5.364418029785156e-06,
+              "lon_max": 1.0728836059570312e-05,
+              "lon_min": 0.0
+            },
+            "lat": 0.0,
+            "lon": 0.0,
+            "precision": 10,
+            "xy": "s000000000"
+          },
+          {
+            "decoded": {
+              "lat": 8.381903171539307e-08,
+              "lat_max": 1.6763806343078613e-07,
+              "lat_min": 0.0,
+              "lon": 1.6763806343078613e-07,
+              "lon_max": 3.3527612686157227e-07,
+              "lon_min": 0.0
+            },
+            "lat": 0.0,
+            "lon": 0.0,
+            "precision": 12,
+            "xy": "s00000000000"
+          },
+          {
+            "decoded": {
+              "lat": -89.912109375,
+              "lat_max": -89.82421875,
+              "lat_min": -90.0,
+              "lon": -179.82421875,
+              "lon_max": -179.6484375,
+              "lon_min": -180.0
+            },
+            "lat": -90.0,
+            "lon": -180.0,
+            "precision": 4,
+            "xy": "0000"
+          },
+          {
+            "decoded": {
+              "lat": -89.99999731779099,
+              "lat_max": -89.99999463558197,
+              "lat_min": -90.0,
+              "lon": -179.99999463558197,
+              "lon_max": -179.99998927116394,
+              "lon_min": -180.0
+            },
+            "lat": -90.0,
+            "lon": -180.0,
+            "precision": 10,
+            "xy": "0000000000"
+          },
+          {
+            "decoded": {
+              "lat": -89.99999991618097,
+              "lat_max": -89.99999983236194,
+              "lat_min": -90.0,
+              "lon": -179.99999983236194,
+              "lon_max": -179.99999966472387,
+              "lon_min": -180.0
+            },
+            "lat": -90.0,
+            "lon": -180.0,
+            "precision": 12,
+            "xy": "000000000000"
+          },
+          {
+            "decoded": {
+              "lat": 89.912109375,
+              "lat_max": 90.0,
+              "lat_min": 89.82421875,
+              "lon": 179.82421875,
+              "lon_max": 180.0,
+              "lon_min": 179.6484375
+            },
+            "lat": 90.0,
+            "lon": 180.0,
+            "precision": 4,
+            "xy": "zzzz"
+          },
+          {
+            "decoded": {
+              "lat": 89.99999731779099,
+              "lat_max": 90.0,
+              "lat_min": 89.99999463558197,
+              "lon": 179.99999463558197,
+              "lon_max": 180.0,
+              "lon_min": 179.99998927116394
+            },
+            "lat": 90.0,
+            "lon": 180.0,
+            "precision": 10,
+            "xy": "zzzzzzzzzz"
+          },
+          {
+            "decoded": {
+              "lat": 89.99999991618097,
+              "lat_max": 90.0,
+              "lat_min": 89.99999983236194,
+              "lon": 179.99999983236194,
+              "lon_max": 180.0,
+              "lon_min": 179.99999966472387
+            },
+            "lat": 90.0,
+            "lon": 180.0,
+            "precision": 12,
+            "xy": "zzzzzzzzzzzz"
+          }
+        ],
+        "description": "All eight profile rows at precisions 4, 10 and 12, including endpoints and midpoint."
+      },
+      "state_transition": {
+        "description": "Pure codec operations; no store mutation.",
+        "final_per_node": {
+          "candidates": 0,
+          "log": 0,
+          "valid": 0
+        }
+      },
+      "title": "geohash-ground-truth"
+    },
+    {
+      "expected": {
+        "addresses": [
+          [
+            "punkti/0.6:575e51cb059c11e8b595cf9ffb20deed2a970d2b8fae7d4242e7eeeb57db1202",
+            "punkti/0.6:5a840df386f557234dd0914a0c1287a7b81d9ffaf09515c1f7586dcba5286f91",
+            "punkti/0.6:6ac5260a26fddfe152d41f4b7206d8b51e72a56763db63988625a3526527500b",
+            "punkti/0.6:6cee0c46877405489f05523c12c857af7785aa1d43bbd92f59825b1bf338c46e",
+            "punkti/0.6:808ad2a53eb49f538225800f36da445e828a00000a9a7513f5d3e816c627e949",
+            "punkti/0.6:8b43c5af563c190e9aa74ead22a5a5e32761aa5cc793deede4ad381f87cd17a6",
+            "punkti/0.6:8dfc43a121603aa47fe7c6ed47c011548252ca6fc7ca11e96a400c656eba2a61",
+            "punkti/0.6:98f2628a42b6c0fe197c9a60025526185c6b74f668137cbd36d4526db5b839ea"
+          ],
+          [
+            "punkti/0.6:575e51cb059c11e8b595cf9ffb20deed2a970d2b8fae7d4242e7eeeb57db1202",
+            "punkti/0.6:5a840df386f557234dd0914a0c1287a7b81d9ffaf09515c1f7586dcba5286f91",
+            "punkti/0.6:6ac5260a26fddfe152d41f4b7206d8b51e72a56763db63988625a3526527500b",
+            "punkti/0.6:6cee0c46877405489f05523c12c857af7785aa1d43bbd92f59825b1bf338c46e",
+            "punkti/0.6:8dfc43a121603aa47fe7c6ed47c011548252ca6fc7ca11e96a400c656eba2a61",
+            "punkti/0.6:98f2628a42b6c0fe197c9a60025526185c6b74f668137cbd36d4526db5b839ea"
+          ],
+          [
+            "punkti/0.6:575e51cb059c11e8b595cf9ffb20deed2a970d2b8fae7d4242e7eeeb57db1202",
+            "punkti/0.6:5a840df386f557234dd0914a0c1287a7b81d9ffaf09515c1f7586dcba5286f91",
+            "punkti/0.6:6ac5260a26fddfe152d41f4b7206d8b51e72a56763db63988625a3526527500b",
+            "punkti/0.6:6cee0c46877405489f05523c12c857af7785aa1d43bbd92f59825b1bf338c46e",
+            "punkti/0.6:8dfc43a121603aa47fe7c6ed47c011548252ca6fc7ca11e96a400c656eba2a61"
+          ],
+          [
+            "punkti/0.6:98f2628a42b6c0fe197c9a60025526185c6b74f668137cbd36d4526db5b839ea"
+          ],
+          [
+            "punkti/0.6:5a840df386f557234dd0914a0c1287a7b81d9ffaf09515c1f7586dcba5286f91",
+            "punkti/0.6:6cee0c46877405489f05523c12c857af7785aa1d43bbd92f59825b1bf338c46e",
+            "punkti/0.6:808ad2a53eb49f538225800f36da445e828a00000a9a7513f5d3e816c627e949",
+            "punkti/0.6:98f2628a42b6c0fe197c9a60025526185c6b74f668137cbd36d4526db5b839ea"
+          ],
+          [
+            "punkti/0.6:5a840df386f557234dd0914a0c1287a7b81d9ffaf09515c1f7586dcba5286f91",
+            "punkti/0.6:6cee0c46877405489f05523c12c857af7785aa1d43bbd92f59825b1bf338c46e",
+            "punkti/0.6:98f2628a42b6c0fe197c9a60025526185c6b74f668137cbd36d4526db5b839ea"
+          ]
+        ],
+        "description": "Lower-edge containment regardless of region size; exact half-open Z; equal padded keys and malformed bounds HTTP 400.",
+        "invalid_statuses": [
+          400,
+          400,
+          400,
+          400,
+          400,
+          400,
+          400,
+          400,
+          400,
+          400,
+          400,
+          400
+        ]
+      },
+      "id": "V13",
+      "input": {
+        "description": "Seed coarse/fine XY, Z endpoints and unanchored fixtures; issue exact PULL queries.",
+        "fixtures": [
+          "selection0",
+          "selection1",
+          "selection2",
+          "selection3",
+          "selection4",
+          "selection5",
+          "selection6",
+          "selection7"
+        ],
+        "invalid_requests": [
+          {
+            "method": "GET",
+            "query": {
+              "mode": "spatial",
+              "scope": {
+                "xy_hi": "u3b0",
+                "xy_lo": "u3b"
+              }
+            },
+            "target": "/pull?q=%7B%22mode%22%3A%22spatial%22%2C%22scope%22%3A%7B%22xy_hi%22%3A%22u3b0%22%2C%22xy_lo%22%3A%22u3b%22%7D%7D"
+          },
+          {
+            "method": "GET",
+            "query": {
+              "mode": "spatial",
+              "scope": {
+                "xy_hi": "u3b",
+                "xy_lo": "u3b0"
+              }
+            },
+            "target": "/pull?q=%7B%22mode%22%3A%22spatial%22%2C%22scope%22%3A%7B%22xy_hi%22%3A%22u3b%22%2C%22xy_lo%22%3A%22u3b0%22%7D%7D"
+          },
+          {
+            "method": "GET",
+            "query": {
+              "mode": "spatial",
+              "scope": {
+                "xy_hi": "u3b",
+                "xy_lo": "u3c"
+              }
+            },
+            "target": "/pull?q=%7B%22mode%22%3A%22spatial%22%2C%22scope%22%3A%7B%22xy_hi%22%3A%22u3b%22%2C%22xy_lo%22%3A%22u3c%22%7D%7D"
+          },
+          {
+            "method": "GET",
+            "query": {
+              "mode": "spatial",
+              "scope": {
+                "z_max": "23",
+                "z_min": "23"
+              }
+            },
+            "target": "/pull?q=%7B%22mode%22%3A%22spatial%22%2C%22scope%22%3A%7B%22z_max%22%3A%2223%22%2C%22z_min%22%3A%2223%22%7D%7D"
+          },
+          {
+            "method": "GET",
+            "query": {
+              "mode": "spatial",
+              "scope": {
+                "z_max": "23",
+                "z_min": "23.025"
+              }
+            },
+            "target": "/pull?q=%7B%22mode%22%3A%22spatial%22%2C%22scope%22%3A%7B%22z_max%22%3A%2223%22%2C%22z_min%22%3A%2223.025%22%7D%7D"
+          },
+          {
+            "method": "GET",
+            "query": {
+              "mode": "spatial",
+              "scope": {
+                "z_min": 23
+              }
+            },
+            "target": "/pull?q=%7B%22mode%22%3A%22spatial%22%2C%22scope%22%3A%7B%22z_min%22%3A23%7D%7D"
+          },
+          {
+            "method": "GET",
+            "query": {
+              "mode": "spatial",
+              "scope": {
+                "z_min": "\u0662\u0663"
+              }
+            },
+            "target": "/pull?q=%7B%22mode%22%3A%22spatial%22%2C%22scope%22%3A%7B%22z_min%22%3A%22%5Cu0662%5Cu0663%22%7D%7D"
+          },
+          {
+            "method": "GET",
+            "query": {
+              "mode": "spatial",
+              "scope": {
+                "z_min": "23.0"
+              }
+            },
+            "target": "/pull?q=%7B%22mode%22%3A%22spatial%22%2C%22scope%22%3A%7B%22z_min%22%3A%2223.0%22%7D%7D"
+          },
+          {
+            "method": "GET",
+            "query": {
+              "mode": "spatial",
+              "scope": {
+                "xy_lo": ""
+              }
+            },
+            "target": "/pull?q=%7B%22mode%22%3A%22spatial%22%2C%22scope%22%3A%7B%22xy_lo%22%3A%22%22%7D%7D"
+          },
+          {
+            "method": "GET",
+            "query": {
+              "mode": "spatial",
+              "scope": {
+                "xy_hi": "uuuuuuuuuuuuu"
+              }
+            },
+            "target": "/pull?q=%7B%22mode%22%3A%22spatial%22%2C%22scope%22%3A%7B%22xy_hi%22%3A%22uuuuuuuuuuuuu%22%7D%7D"
+          },
+          {
+            "method": "GET",
+            "query": {
+              "mode": "spatial",
+              "scope": {
+                "xy_lo": "U"
+              }
+            },
+            "target": "/pull?q=%7B%22mode%22%3A%22spatial%22%2C%22scope%22%3A%7B%22xy_lo%22%3A%22U%22%7D%7D"
+          },
+          {
+            "method": "GET",
+            "query": {
+              "mode": "spatial",
+              "scope": {
+                "h_lo": "u3b"
+              }
+            },
+            "target": "/pull?q=%7B%22mode%22%3A%22spatial%22%2C%22scope%22%3A%7B%22h_lo%22%3A%22u3b%22%7D%7D"
+          }
+        ],
+        "requests": [
+          {
+            "method": "GET",
+            "query": {
+              "mode": "spatial",
+              "scope": {}
+            },
+            "target": "/pull?q=%7B%22mode%22%3A%22spatial%22%2C%22scope%22%3A%7B%7D%7D"
+          },
+          {
+            "method": "GET",
+            "query": {
+              "mode": "spatial",
+              "scope": {
+                "xy_hi": "u3c",
+                "xy_lo": "u3b"
+              }
+            },
+            "target": "/pull?q=%7B%22mode%22%3A%22spatial%22%2C%22scope%22%3A%7B%22xy_hi%22%3A%22u3c%22%2C%22xy_lo%22%3A%22u3b%22%7D%7D"
+          },
+          {
+            "method": "GET",
+            "query": {
+              "mode": "spatial",
+              "scope": {
+                "xy_hi": "u3bu000001",
+                "xy_lo": "u3bu"
+              }
+            },
+            "target": "/pull?q=%7B%22mode%22%3A%22spatial%22%2C%22scope%22%3A%7B%22xy_hi%22%3A%22u3bu000001%22%2C%22xy_lo%22%3A%22u3bu%22%7D%7D"
+          },
+          {
+            "method": "GET",
+            "query": {
+              "mode": "spatial",
+              "scope": {
+                "xy_hi": "u3butz7k9r",
+                "xy_lo": "u3butz7k9q"
+              }
+            },
+            "target": "/pull?q=%7B%22mode%22%3A%22spatial%22%2C%22scope%22%3A%7B%22xy_hi%22%3A%22u3butz7k9r%22%2C%22xy_lo%22%3A%22u3butz7k9q%22%7D%7D"
+          },
+          {
+            "method": "GET",
+            "query": {
+              "mode": "spatial",
+              "scope": {
+                "z_max": "23.025",
+                "z_min": "23"
+              }
+            },
+            "target": "/pull?q=%7B%22mode%22%3A%22spatial%22%2C%22scope%22%3A%7B%22z_max%22%3A%2223.025%22%2C%22z_min%22%3A%2223%22%7D%7D"
+          },
+          {
+            "method": "GET",
+            "query": {
+              "mode": "spatial",
+              "scope": {
+                "xy_hi": "u3c",
+                "xy_lo": "u3b",
+                "z_max": "23.025",
+                "z_min": "23"
+              }
+            },
+            "target": "/pull?q=%7B%22mode%22%3A%22spatial%22%2C%22scope%22%3A%7B%22xy_hi%22%3A%22u3c%22%2C%22xy_lo%22%3A%22u3b%22%2C%22z_max%22%3A%2223.025%22%2C%22z_min%22%3A%2223%22%7D%7D"
+          }
+        ]
+      },
+      "state_transition": {
+        "description": "Eight seeded records; PULL and rejected queries never mutate state.",
+        "final_per_node": {
+          "candidates": 0,
+          "log": 8,
+          "valid": 8
+        }
+      },
+      "title": "exact-XY_Z-wire-scopes"
+    }
+  ]
+}

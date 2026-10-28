@@ -73,8 +73,11 @@ class AcceptanceTests(NetworkCase):
         forged = good[:-1] + bytes([good[-1] ^ 1])
         for node in self.nodes:
             for raw, state in [(b'corrupt', State.STRUCTURAL), (forged, State.PROVENANCE)]:
-                item = wire(raw)
-                item['state'] = 'VALID'  # Malicious peer claim must have no effect.
+                item = wire(raw, validate(good).address)
+                with self.assertRaises(HTTPError) as error:
+                    request(node.url, '/push', dict(records=[dict(item, state='VALID')]))
+                self.assertEqual(error.exception.code, 400)
+                error.exception.close()
                 result = request(node.url, '/push', dict(records=[item]))
                 self.assertEqual(result['results'][0]['state'], state.value)
             self.assertFalse(node.store)
@@ -118,7 +121,7 @@ class AcceptanceTests(NetworkCase):
     def test_07_single_range(self):
         s = Subscription('gggh', 'gggj')
         a, b, c = self.network([None, [s], [s]])
-        inside, outside = fixture(0), fixture(1, h='zzzz00000000')
+        inside, outside = fixture(0), fixture(1, h='zzzz00000000_0')
         a.add(inside)
         a.add(outside)
         self.round()
@@ -130,11 +133,11 @@ class AcceptanceTests(NetworkCase):
     def test_08_overlapping_subscriptions(self):
         left, right = Subscription('g', 'j'), Subscription('h', 'k')
         a, b, c = self.network([[left], [right], None])
-        records = [fixture(i, h=h*12) for i, h in enumerate('ghj')]
+        records = [fixture(i, h=h*12 + '_0') for i, h in enumerate('ghj')]
         for raw in records:
             c.add(raw)
-        a.add(fixture(10, h='h'*12))
-        b.add(fixture(11, h='h'*12))
+        a.add(fixture(10, h='h'*12 + '_0'))
+        b.add(fixture(11, h='h'*12 + '_0'))
         self.round()
         union = list(c.store.values())
         self.assertEqual(set(a.store), {e.address for e in union if left.matches(e.h)})
@@ -147,14 +150,14 @@ class AcceptanceTests(NetworkCase):
         a, b, c = self.network([[s], [s], [Subscription('z', None)]])
         a.add(fixture(0))
         for i in range(20):
-            c.add(fixture(i, h='z'*12))
+            c.add(fixture(i, h='z'*12 + '_0'))
         c.stop()  # No access to outside records is needed.
         a.connect(b.url)
         self.assertEqual(set(a.store), set(b.store))
         self.assertEqual(len(b.store), 1)
 
     def test_10_elevation_address_only(self):
-        band = Subscription(z_min=50, z_max=150)
+        band = Subscription(z_min='50', z_max='150')
         a, b, c = self.network([None, [band], [band]])
         records = [fixture(i, h=geo(z), x='claims altitude 100') for i, z in enumerate([-100, 100, 500])]
         for raw in records:
@@ -175,7 +178,7 @@ class AcceptanceTests(NetworkCase):
         b.stop()
         for i in range(8, 13):
             a.add(fixture(i))
-        a.add(fixture(14, h='z'*12))
+        a.add(fixture(14, h='z'*12 + '_0'))
         a.connect(c.url)
         b.start(port)
         before = a.metrics['pull_records']
@@ -189,7 +192,7 @@ class AcceptanceTests(NetworkCase):
         s = Subscription('g', 'h')
         a, b, c = self.network([None, [s], [s]])
         inside = fixture(0, x='NairobiDot-v999:\x00not-json<>')
-        outside = fixture(1, h='z'*12, x='NairobiDot-v999:\x00not-json<>')
+        outside = fixture(1, h='z'*12 + '_0', x='NairobiDot-v999:\x00not-json<>')
         a.add(inside)
         a.add(outside)
         self.round()
@@ -230,11 +233,12 @@ class WireTests(NetworkCase):
         a, b, c = self.network()
         a.add(fixture())
         cursor = b.pull(a.url)
-        for query in [dict(cursor=cursor, scope=dict(h_lo='z')), dict(cursor=dict(cursor, epoch='wrong')),
+        for query in [dict(cursor=cursor, scope=dict(xy_lo='z')), dict(cursor=dict(cursor, epoch='wrong')),
                       dict(limit=0), dict(limit=33), dict(cursor=dict(cursor, after=-1))]:
             with self.assertRaises(HTTPError) as error:
                 request(a.url, '/pull?' + urlencode({'q': packed(query).decode()}))
-            self.assertEqual(error.exception.code, 400)
+            self.assertEqual(error.exception.code, 413 if query.get('limit') == 33 else 400)
+            error.exception.close()
         # Store replacement invalidates saved cursor; pull automatically starts afresh.
         a.epoch = 'new-store'
         a.add(fixture(2))

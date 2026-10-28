@@ -1,0 +1,1 @@
+publication vectors: 119 assertions passed

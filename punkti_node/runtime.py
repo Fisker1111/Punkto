@@ -15,8 +15,13 @@ LOG = logging.getLogger(__name__)
 def run(config):
     stopping = threading.Event()
     node = PersistentNode(config)
-    if config['web']['enabled']:
-        node.web = StaticWeb(config['web']['root'], config['web']['spa_fallback'])
+    publication = config['publication']
+    mounts = {}
+    if publication['enabled']:
+        mounts[publication['serve_prefix']] = publication['path']
+    if config['web']['enabled'] or mounts:
+        node.web = StaticWeb(config['web']['root'] if config['web']['enabled'] else None,
+                             config['web']['spa_fallback'], mounts)
     net = config['network']
 
     def stop_requested(signum, frame):

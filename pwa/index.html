@@ -1734,6 +1734,32 @@
 
     <div class="settings-separator"></div>
 
+    <div class="settings-section-title">Technical / Debug</div>
+    <div class="settings-info" id="settings-technical-section">
+      <div><span class="k">Publication status</span><span class="v" id="settings-publication-status">not loaded</span></div>
+      <div><span class="k">Publication seq</span><span class="v mono" id="settings-publication-seq">—</span></div>
+      <div><span class="k">Publication head</span><span class="v mono" id="settings-publication-head">—</span></div>
+      <div><span class="k">Publication source</span><span class="v mono" id="settings-publication-source">—</span></div>
+      <div>
+        <span class="k">Records (MID / SHA256(R) / h / state)</span>
+        <table style="width:100%;border-collapse:collapse;margin-top:8px;">
+          <thead>
+            <tr>
+              <th style="text-align:left;font-size:11px;opacity:.7;padding:4px;">MID</th>
+              <th style="text-align:left;font-size:11px;opacity:.7;padding:4px;">SHA256(R)</th>
+              <th style="text-align:left;font-size:11px;opacity:.7;padding:4px;">h</th>
+              <th style="text-align:left;font-size:11px;opacity:.7;padding:4px;">State</th>
+            </tr>
+          </thead>
+          <tbody id="settings-technical-records">
+            <tr><td colspan="4">No records loaded.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="settings-separator"></div>
+
     <!-- Identity -->
     <div class="settings-section-title">Your Punkto Identity</div>
     <div class="settings-info" id="settings-identity-info">
@@ -1804,6 +1830,18 @@
       <div class="main-category-chips" aria-label="Text mode tabs" role="tablist">
         <button class="main-chip ui-tab active" type="button" data-action="text-tab" data-tab="visible" role="tab" aria-selected="true">Visible</button>
         <button class="main-chip ui-tab" type="button" data-action="text-tab" data-tab="activity" role="tab" aria-selected="false">Activity</button>
+      </div>
+      <div class="main-card ui-card" style="margin-top:10px;display:grid;gap:8px;">
+        <div style="font-size:12px;opacity:.85;">World view filters (static publication)</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;">
+          <input id="world-xy-prefix" type="text" placeholder="XY prefix (e.g. u3b)" />
+          <input id="world-z-min" type="text" placeholder="Z min" />
+          <input id="world-z-max" type="text" placeholder="Z max" />
+        </div>
+        <div style="display:flex;gap:8px;">
+          <button class="btn btn-primary" id="world-apply" type="button">Apply world scope</button>
+          <button class="btn btn-secondary" id="world-clear" type="button">Clear scope</button>
+        </div>
       </div>
       <div id="main-feed-list"></div>
 
@@ -1917,14 +1955,23 @@
         <div id="modal-altitude">
           <div id="modal-altitude-primary">Ground level</div>
           <input id="modal-altitude-slider" type="range" min="0" max="100" step="1" value="0" />
-          <div id="modal-altitude-secondary">+0 m above ground</div>
+          <div id="modal-altitude-secondary">+0 m above ground (Layer-4 metadata)</div>
           <div id="modal-altitude-hint"></div>
+        </div>
+        <div id="modal-ellipsoidal-z" style="margin-top:10px;display:grid;gap:8px;">
+          <label for="modal-ellipsoidal-z-value"><strong>Punkti Z (ellipsoidal metres, WGS84)</strong></label>
+          <input id="modal-ellipsoidal-z-value" type="text" placeholder="e.g. 23.4 or -12" />
+          <label style="display:flex;align-items:center;gap:8px;">
+            <input id="modal-unanchored" type="checkbox" />
+            Publish unanchored (h = "")
+          </label>
+          <div id="modal-z-note" style="font-size:12px;color:var(--text-dim);">Floor and height-above-ground remain Layer-4 metadata in payload x.</div>
         </div>
         <div id="modal-placement-controls">
           <div id="modal-placement-modes">
             <button class="btn btn-secondary" id="modal-ground-btn" type="button">Ground</button>
             <button class="btn btn-secondary" id="modal-roof-btn" type="button">Roof</button>
-            <button class="btn btn-secondary" id="modal-device-alt-btn" type="button">Use my altitude</button>
+            <button class="btn btn-secondary" id="modal-device-alt-btn" type="button">Use device ellipsoidal Z</button>
           </div>
           <div id="modal-floor-stepper">
             <span>Floor</span>

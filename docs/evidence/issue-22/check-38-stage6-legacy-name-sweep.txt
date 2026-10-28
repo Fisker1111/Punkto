@@ -1,0 +1,24 @@
+$ grep -rn "punkto-web\|punkto-relay" --include='*.md' --include='*.yml' --include='*.yaml' --include='*.sh' --include='*.ps1' . | grep -v '^./docs/CODEX_TASK_22'
+./CHANGELOG.md:104:- `relay/systemd/punkto-relay.service` — superseded by Docker
+./CHANGELOG.md:123:  - `relay/README.md`, `relay/.env.example`, `relay/test_relay.py`, `relay/systemd/punkto-relay.service`
+./relay/README.md:1:# punkto-relay v0.1
+./relay/README.md:88:- `systemd/punkto-relay.service` — Debian/Ubuntu unit file
+./relay/README.md:113:sudo systemctl status punkto-relay         # active and enabled
+./relay/README.md:114:sudo journalctl -u punkto-relay -n 50      # recent log lines
+./relay/README.md:125:If any of these fail or report unexpected values, check `sudo journalctl -u punkto-relay -n 200` for clues, and consult [`../punkto.relay.md`](../punkto.relay.md) for the expected behaviour.
+./docs/launch-candidate-checklist.md:125:| Relay image | `ghcr.io/fisker1111/punkto-relay:latest` (sha256:cdf61fb9...) |
+./docs/launch-candidate-checklist.md:126:| Web image | `ghcr.io/fisker1111/punkto-web:latest` (sha256:30b5f191...) |
+./docs/pre-release-step-plan.md:621:| relay image | `ghcr.io/fisker1111/punkto-relay:latest` |
+./docs/pre-release-step-plan.md:648:docker build -t punkto-relay:prerelease-test relay/
+./docs/pre-release-step-plan.md:649:docker build -t punkto-web:prerelease-test pwa/
+./docs/pre-release-step-plan.md:655:    image: punkto-web:prerelease-test
+./docs/pre-release-step-plan.md:657:    image: punkto-relay:prerelease-test
+./docs/pre-release-step-plan.md:668:| relay | `punkto-relay:prerelease-test` | `b23080606915` |
+./docs/pre-release-step-plan.md:669:| web | `punkto-web:prerelease-test` | `c1125104ac2c` |
+./docs/INTEGRATION_22.md:8:- `.github/workflows/docker.yml` — retired legacy dual-image (`punkto-web`/`punkto-relay`) publish path to enforce one canonical combined-image workflow.
+./docs/INTEGRATION_22.md:15:- Repo-wide `punkto-web|punkto-relay` sweep reviewed hit-by-hit; only historical evidence/changelog/legacy references were retained as historical records.
+./docs/INTEGRATION_22.md:24:- `punkto.identity.md` (1 hit): protocol-history note (`punkto-relay v0.2+`) in identity history context; retained as historical narrative.
+./docs/single-image-deployment.md:29:- Caddy (`punkto-web-1`, host `~/punkto/Caddyfile`) terminates TLS for
+./docs/single-image-deployment.md:93:Legacy containers (`punkto-web-1`, `punkto-relay-1`, `punkto-atoms-1`) and the
+./docs/single-image-deployment.md:101:docker exec punkto-web-1 caddy reload --config /etc/caddy/Caddyfile
+./punkto.identity.md:317:- **`punkto.relay.md`**: relay v0.1 stores `sig` and `pubkey` if present but does not verify in v0.1. `punkto-relay v0.2+` will verify and reject invalid signatures when `PUNKTO_REQUIRE_SIG=true` is set.
