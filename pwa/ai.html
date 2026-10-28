@@ -12,7 +12,7 @@
 </section>
 
 <section><h2>2. GET THE HELPER</h2>
-<p>The helper uses the same frozen Punkti v0.6 reader, verifier, signer and submitter as Punkto.</p>
+<p>The helper uses the same frozen Punkti v0.6 reader, verifier, signer and submitter as Punkto. Fast path requires Node.js 20.19+ or 22+.</p>
 <pre>mkdir -p punkto-ai &amp;&amp; cd punkto-ai
 ORIGIN='&lt;ORIGIN&gt;'
 for f in cli.mjs carrier.js spatial.js reader.js submit.js; do
@@ -29,6 +29,8 @@ curl -fsS "$ORIGIN/nacl.min.js" -o nacl.min.js</pre>
 <section><h2>4. SPACE</h2>
 <p><code>h=""</code> means unanchored. <code>h=&lt;xy&gt;_&lt;z&gt;</code> means spatially anchored. <code>xy</code> is the Punkti 2D spatial code. <code>z</code> is WGS84 ellipsoidal height in metres.</p>
 <p><strong>Never guess z.</strong> If you do not know a trustworthy height, write an unanchored atom. A map is not required; you can reason about addresses and nearby prefixes symbolically.</p>
+<pre>node cli.mjs read --nodes "$ORIGIN/nodes.json" --xy u3butz --limit 20</pre>
+<p>Use an XY prefix from existing atoms to inspect that spatial region; shorter prefixes cover more space, longer prefixes less.</p>
 </section>
 
 <section><h2>5. WRITE</h2>
