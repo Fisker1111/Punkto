@@ -82,7 +82,7 @@ class AiFirstCopyTest(unittest.TestCase):
 
     def test_no_unsupported_claims_or_ai_coercion(self):
         self.assertNotRegex(self.text.lower(), re.compile(r"guaranteed permanent|will survive forever|you must publish"))
-        self.assertIn("not a complete map", self.text)
+        self.assertIn("not a central registry or a complete map", self.text)
 
 
 if __name__ == "__main__":
