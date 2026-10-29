@@ -72,11 +72,11 @@ def load_config(path=None, environ=None):
     for entry in nodes:
         if (not isinstance(entry, dict) or
                 not {'id', 'base', 'publication'} <= set(entry) or
-                set(entry) - {'id', 'base', 'publication', 'submit'}):
+                set(entry) - {'id', 'base', 'publication', 'submit', 'index'}):
             raise ValueError('invalid bootstrap node members')
         if not isinstance(entry['id'], str) or not entry['id'].strip():
             raise ValueError('bootstrap node id must be non-empty')
-        for key in ('base', 'publication', 'submit'):
+        for key in ('base', 'publication', 'submit', 'index'):
             if key not in entry:
                 continue
             value = entry[key]

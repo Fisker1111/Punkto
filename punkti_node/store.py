@@ -276,7 +276,7 @@ class PersistentNode(Node):
             return None
         version = os.environ.get('PUNKTO_BUILD_VERSION') or VERSION
         if path == '/nodes.json':
-            nodes = [{key: entry[key] for key in ('id', 'base', 'publication', 'submit') if key in entry}
+            nodes = [{key: entry[key] for key in ('id', 'base', 'publication', 'submit', 'index') if key in entry}
                      for entry in sorted(self.config['bootstrap']['nodes'],
                                          key=lambda item: (item['id'].encode('utf-8'),
                                                            json.dumps(item, sort_keys=True)))]
