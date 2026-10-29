@@ -66,11 +66,22 @@ try {
     assert.deepEqual(Object.keys(result.body), ['error']);
     assert.match(result.body.error, message);
   }
-  for (const command of ['write', 'post', 'reply']) {
-    const result = await cli([command, `--nodes=${nodes}`, '--text=missing h', `--ref=${anchored.body.mid}`]);
+  // Only valid commands/options can reach the required-spatial-address gate.
+  // 'post' is not a CLI command; 'write --ref' is an unknown option.
+  for (const [command, extra] of [
+    ['write', []],
+    ['reply', [`--ref=${anchored.body.mid}`]],
+  ]) {
+    const result = await cli([command, `--nodes=${nodes}`, '--text=missing h', ...extra]);
     assert.equal(result.code, 1);
     assert.match(result.body.error, /spatial address required: pass --h <xy>_<z> or --lat\/--lon\/--height/);
   }
+  const badCommand = await cli(['post', `--nodes=${nodes}`, '--text=missing h']);
+  assert.equal(badCommand.code, 1);
+  assert.match(badCommand.body.error, /expected read, write or reply/);
+  const badWriteOption = await cli(['write', `--nodes=${nodes}`, '--text=missing h', `--ref=${anchored.body.mid}`]);
+  assert.equal(badWriteOption.code, 1);
+  assert.match(badWriteOption.body.error, /unknown option --ref/);
   for (const h of ['', 'broken', 'u3bu_-0', 'U3bu_0']) {
     const result = await cli(['write', `--nodes=${nodes}`, '--text=invalid h', `--h=${h}`]);
     assert.equal(result.code, 1);
