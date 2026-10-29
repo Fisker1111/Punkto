@@ -1,0 +1,47 @@
+name: Punkti 0.6 spatial-only independent conformance
+
+on:
+  pull_request:
+    branches:
+      - main
+      - wip/v0.6-spatial-only-correction
+    paths:
+      - 'punkti_node/**'
+      - 'pwa/punkti/**'
+      - 'pwa/test-punkti-*.mjs'
+      - 'pwa/test-spatial-xy-z.mjs'
+      - '.github/workflows/punkti-spatial-conformance.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  python-spatial-only:
+    name: Python node, carrier, publication, archive and negative vectors
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install independent test runtime requirements
+        run: python -m pip install cryptography PyYAML requests
+      - name: Run spatial-only node and publication conformance
+        run: python3 -m unittest punkti_node.test_spatial_only -v
+
+  js-spatial-only:
+    name: JavaScript canonical vectors and static publication
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Run revised Punkti v0.6 JS vector suites
+        run: |
+          node pwa/test-punkti-vectors.mjs
+          node pwa/test-punkti-publication.mjs
+          node pwa/test-spatial-xy-z.mjs
+          node pwa/test-ai-cli.mjs
+
