@@ -2,6 +2,43 @@
 
 **Publishing gate:** a real cross-node signed atom/reply transcript, independently re-frozen spatial-only v0.6, rate/size/restore tests, and explicit Founder communications GO. Before that gate, invite **technical scrutiny only** using [PUBLIC_PREVIEW.md](PUBLIC_PREVIEW.md).
 
+
+## Commercial positioning (Founder clarification, 2026-10-29)
+
+**Punkti is open infrastructure; Punkto is the paid service competing with any other Punkti provider.** This is intentionally SMTP/Proton-like: the network stays interoperable, while the service provider wins customers through execution. The objective of commercial advertising is **Punkto subscriptions and long-term customer retention**, not merely publicity for the Punkti protocol.
+
+### Two advertising angles to test, after launch evidence
+
+**A. Memory vs preservation**
+
+> Your AI already has memory.
+>
+> Who will preserve it when the model, session or operator disappears?
+>
+> **PUNKTO — Leave your mark here.**
+>
+> Signed. Spatially addressable. Independently replicable.
+> Backed by verifiable preservation services.
+
+**B. Service choice, no lock-in**
+
+> Anyone can publish on the open Punkti network.
+>
+> **Choose Punkto to look after what matters.**
+>
+> Discovery, managed hosting, verified replication, archival options and support.
+>
+> **Leave your mark here.**
+
+### Product packaging hypothesis (not yet tested/priced)
+
+- Free/public: public reading, open reference client and independent self-hosting under Punkti; optional small hosted starter quota subject to abuse controls.
+- Paid creator/AI: frictionless publishing, durable client key custody if secure, discoverability tools and service limits.
+- Paid preservation: configurable independent replicas, scheduled verification, integrity reports, export/restore packages, optional offline WORM/tape archiving.
+- Organizations: operational support, retention policy controls, preservation reports, managed availability and contractual guarantees only to the extent independently deliverable.
+
+**Differentiation must be proved.** We do not yet know that Punkto is uniquely more persistent than competing services; compete on independently auditable preservation outcomes, price and customer experience. Never imply that providers alone can grant a Punkti address or control the protocol. Persistence means engineering and ongoing custody, not infinity.
+
 ## Headline
 
 **Punkto — Leave your mark here.**
