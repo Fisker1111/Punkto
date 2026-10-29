@@ -307,6 +307,64 @@ discovery index prototype), written against the spatial-only v0.6 correction. It
   branch, so a single integrator can sequence the three changes without conflicting edits.
 * Recommend the integration order and state explicitly that none of it is merged or deployed yet.
 
+## 2.7 Verified implementation notes (Hermes already proved these — do not rediscover them)
+
+Hermes ran a workspace-only probe against the **repository's existing, unmodified modules** and
+confirmed the whole roundtrip works. Use these facts; do not spend the run rediscovering them.
+The probe script and its real output are in the task workspace
+(`evidence/probe-full-roundtrip.sh`, `evidence/probe-full-roundtrip.txt`).
+
+* **Two independent node processes start cleanly** with no config file at all, purely from
+  environment variables:
+  ```bash
+  PUNKTO_HOST=127.0.0.1 PUNKTO_PORT=<port> PUNKTO_DATA_DIR=<dir> \
+  PUNKTO_PUBLICATION_PATH=<dir>/publication PUNKTO_WEB_ENABLED=true \
+  PUNKTO_WEB_ROOT=<repo>/pwa PUNKTO_PEERS= PUNKTO_SYNC_INTERVAL=3600 \
+  python3 -m punkti_node
+  ```
+  Both answer `/health` with `{"service":"punkti-node","status":"ok","version":"0.6.0-draft.1"}`
+  and serve their own `/publication/root.json`.
+  **Do not pass `--config`**: `python3 -m punkti_node --config /dev/null` fails with
+  `configuration must be a YAML mapping`, because an empty file is not a YAML mapping. Omit
+  `--config` and use the environment variables above.
+* **`/nodes.json` returns an empty node list** until `PUNKTO_BOOTSTRAP_NODES` is set. For the
+  harness, set `PUNKTO_BOOTSTRAP_NODES` to a JSON array of
+  `[{"id":"a","base":"http://127.0.0.1:<portA>","publication":"http://127.0.0.1:<portA>/publication","submit":"http://127.0.0.1:<portA>/submit"}]`
+  so the client can find the node.
+* **Signing key format**: `nacl.sign.keyPair.fromSecretKey()` requires the **64-byte** secret key
+  and throws `bad secret key size` for a 32-byte seed. Use
+  `nacl.sign.keyPair.fromSeed(seed32)` instead — it takes the **32-byte seed** and returns
+  `{publicKey, secretKey}` where `secretKey` is the 64-byte value that `encodeRecord()` requires.
+  This is exactly the shape a reusable key file should store: the **32-byte seed**, from which
+  the 64-byte secret key and the public key are both derived.
+* **`replicate_publication(peer_base)` expects the peer’s PUBLICATION base**
+  (`http://host:port/publication`), **not** the node base. Passing the node base fails with
+  `HTTP Error 404` → `PublicationReadError: missing object`. With the publication base it
+  returns the republished state, e.g.
+  `{'v': 'punkti/pub/0.6', 'seq': 2, 'head': '350c5af0…'}`.
+* **The roundtrip is confirmed to work** with the repo's own modules, in this order:
+  1. `encodeRecord(atom, secretKey)` from `pwa/punkti/carrier.js` → `{address, mid, sha256, record}`;
+  2. `POST <node>/submit` with `{records:[{address, sha256, record}]}` → HTTP 200,
+     `results[0].state === "VALID"`, `admitted: true`, plus the new publication `head`/`seq`;
+  3. the record is then readable out of the node's **static publication** over plain HTTP at
+     `publication/root.json` → `manifests/<head>.json` → `h/<chars>/<sha>.json` → leaf `records[]`
+     → `records/<sha[:2]>/<sha>`, and the recomputed SHA-256 of the fetched bytes **equals** the
+     leaf entry’s `sha256` **and** the submitted `sha256`;
+  4. `replicate_publication()` on node B produces node B’s own static publication with the
+     **same** head and the **same** leaf entry, and node B’s copy verifies byte-identically;
+  5. a second, **differently keyed** client can submit a reply with
+     `refs:[{target: <parent mid>, rel:"reply"}]` at the **exact same `h`** (e.g.
+     `u3butz7k9q_23`), and the reply is then readable out of node A’s static publication with
+     its own MID/SHA-256 verified, at the identical `h`.
+  Confirmed public keys differed between the two clients while the `h` string was byte-identical.
+* **Publication lag is real and observable**: the `POST /submit` response already carries the new
+  `head`/`seq`, and the static publication is updated in the same request — but a client that
+  read the publication *before* the submit sees the old head. The client must therefore re-read
+  the publication after publishing and report "accepted but not yet visible" rather than fail
+  opaquely when the MID is absent.
+* **`h` values observed live** (valid canonical `XY_Z`, safe to use in tests):
+  `u3butz7k9q_23`, `u3butz7k9q7v_12`, `9q8zhuvubq_227`, `u33dc0cpnp45_34.5`.
+
 ## 3. Constraints
 
 * No new dependencies. No npm install. No bundler. Node standard library + the repo's existing
