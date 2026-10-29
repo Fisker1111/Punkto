@@ -26,8 +26,11 @@ jobs:
         id: probe
         continue-on-error: true
         run: |
-          python3 scripts/qa/ai_preflight.py --timeout 4 > ai-preflight-live.json
+          exit_code=0
+          python3 scripts/qa/ai_preflight.py --timeout 4 > ai-preflight-live.json 2>&1 || exit_code=$?
           cat ai-preflight-live.json
+          echo "Preflight diagnostic exit code: $exit_code"
+          exit "$exit_code"
       - name: Publish observed read-only result
         if: always()
         run: |
