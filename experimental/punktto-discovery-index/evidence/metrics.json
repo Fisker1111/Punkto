@@ -3,29 +3,29 @@
     "atoms": 7,
     "addresses": 5,
     "discovery": {
-      "files": 11,
-      "bytes": 5735
+      "files": 13,
+      "bytes": 6479
     }
   },
   "http": {
     "unknown_discovery": {
-      "requests": 20,
-      "bytes": 7288,
+      "requests": 22,
+      "bytes": 8038,
       "records": 7
     },
     "unknown_frozen": {
-      "requests": 38,
-      "bytes": 7164,
+      "requests": 46,
+      "bytes": 8410,
       "records": 7
     },
     "known_discovery": {
       "requests": 9,
-      "bytes": 3781,
+      "bytes": 3773,
       "records": 3
     },
     "known_frozen": {
       "requests": 15,
-      "bytes": 3274,
+      "bytes": 3275,
       "records": 3
     }
   },

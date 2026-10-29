@@ -35,8 +35,6 @@ class RobustnessTests(Fixture):
                 obj = index.validate(raw)
                 def visit(node):
                     descs = list(node.get('children', {}).values())
-                    if 'unanchored' in node:
-                        descs.append(node['unanchored'])
                     for desc in descs:
                         data = (Path(path).parent / desc['href']).read_bytes()
                         self.assertEqual(pub.digest(data), desc['sha256'])
@@ -86,7 +84,12 @@ class RobustnessTests(Fixture):
             self.assertEqual(len(result['records']), 7)
             self.assertEqual(result['source']['head'], self.head['head'])
         path.write_bytes(raw)
-        result = Client(self.http(False)).read(exact_h='bcde_0')
+        base = self.http(False)
+        result = Client(base).read(cross_check=True)
+        self.assertTrue(result['fallback'])
+        self.assertEqual({e['raw'] for e in result['records']}, set(self.records))
+        self.assertEqual(len({e['h'] for e in result['records']}), self.root['addresses'])
+        result = Client(base).read(exact_h='bcde_0')
         self.assertTrue(result['fallback'])
         self.assertEqual(result['fallback_reason'], 'index absent')
         self.assertEqual(len(result['records']), 1)
@@ -98,7 +101,7 @@ class RobustnessTests(Fixture):
             Client(self.http()).read()
 
     def test_path_and_shape_sanitization(self):
-        for bad in ['..', '/absolute', 'a/b', 'a\n', '', 'ab//c', 'abc', '0' * 13]:
+        for bad in ['..', '/absolute', 'a/b', 'a\n', '', '~', 'ab//c', 'abc', '0' * 13]:
             with self.subTest(bad=bad), self.assertRaises(ValueError):
                 index.prefix(bad)
         for bad in ['..', '/absolute', 'A' * 64, '0' * 63, '0' * 64 + '\n']:
@@ -113,6 +116,17 @@ class RobustnessTests(Fixture):
             obj[field] = value
             with self.assertRaises(ValueError):
                 index.validate(pub.canonical(obj))
+        for bad in ('', None, 'bcde', 'bcde_00'):
+            with self.assertRaises(ValueError):
+                index.leaf_prefix(bad)
+        obj = dict(self.root, unanchored=next(iter(self.root['children'].values())))
+        with self.assertRaises(ValueError):
+            index.validate(pub.canonical(obj))
+        obj = dict(self.root)
+        del obj['children']
+        obj['entries'] = []
+        with self.assertRaises(ValueError):
+            index.validate(pub.canonical(obj))
         with self.assertRaises(ValueError):
             index.validate(b'{"v":1,"v":2}')
         with self.assertRaises(ValueError):

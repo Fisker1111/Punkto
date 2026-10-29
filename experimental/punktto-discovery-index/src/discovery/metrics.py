@@ -30,9 +30,9 @@ def server(directory):
 
 
 def fixture_records():
-    # Reuse the repository's deterministic, signed frozen-carrier test fixture.
+    # Sign fresh synthetic records; 0000_0 is an explicit test address, not a default.
     from punkti_node.test_publication import fixture
-    addresses = ['9q8zhuwqcp_0'] * 3 + ['9q8zhuwqcp_12.5', 'u4pruydqqv_-2', 'bcde_0', '']
+    addresses = ['9q8zhuwqcp_0'] * 3 + ['9q8zhuwqcp_12.5', 'u4pruydqqv_-2', 'bcde_0', '0000_0']
     return [fixture(i, h=h) for i, h in enumerate(addresses)]
 
 

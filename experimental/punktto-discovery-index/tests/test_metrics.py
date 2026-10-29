@@ -11,7 +11,7 @@ class MetricsTests(unittest.TestCase):
         self.assertEqual(result['fixture'], evidence['fixture'])
         self.assertEqual(result['http'], evidence['http'])
         self.assertEqual(result['synthetic'], evidence['synthetic'][:2])
-        self.assertEqual(result['fixture']['discovery']['files'], 11)
+        self.assertEqual(result['fixture']['discovery']['files'], 13)
         self.assertEqual(result['http']['unknown_discovery']['records'], 7)
         self.assertEqual(result['http']['known_discovery']['records'], 3)
         for scenario in ('unknown', 'known'):

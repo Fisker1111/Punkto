@@ -19,7 +19,7 @@ npm, bundler, mandatory JavaScript, or new dependencies.
 ```bash
 python3 -c "import cryptography, yaml"
 export PYTHONPATH=experimental/punktto-discovery-index/src:.
-python3 -m unittest discover -s experimental/punktto-discovery-index/tests -t .
+(cd experimental/punktto-discovery-index && PYTHONPATH=../.. python3 -m unittest discover -s tests -p 'test_*.py' -t .)
 python3 -m unittest punkti_node.test_node punkti_node.test_web punkti_node.test_publication
 python3 -m unittest discover -s experimental/punkti-v0.6-mesh/tests
 python3 -m discovery.generator /path/to/publication
@@ -72,7 +72,17 @@ No running node configuration is changed by this prototype.
 Generation reuses frozen root/manifest/shard validators and verifies source
 object hashes. Counts distinguish record variants from distinct exact addresses.
 Short XY spellings remain exact in entries while indexing under padded-10
-leaves. Unanchored atoms have a separate terminal, never an invented ground Z.
+leaves. Every entry requires a canonical anchored `h = <xy>_<z>`; an
+unrestricted scope selects all anchored records through the same XY tree.
+The derived format is now `punkti/discovery/0.2`: the former unanchored root
+member and empty-prefix terminal are rejected. Older derived indexes trigger
+the GET-only publication fallback and can be regenerated.
+
+The synthetic fixture signs fresh records at explicitly chosen addresses,
+including `0000_0` (the all-zero geohash cell, not a default location or height).
+Historical signed fixtures are not rewritten; Stage B preserves them separately
+under `legacy-unanchored/` archives. Only derived objects and measurements are
+regenerated here.
 
 All children are fsynced before an atomic same-directory root replacement.
 The source root is reread before exposure; a changed head aborts. An interrupted
@@ -105,16 +115,16 @@ discovery also includes its freshness root GET. Bytes are uncompressed response
 bodies, excluding headers. Optional authorship cross-check traffic is excluded
 from both paths. The known-place scenario fetches the three atoms at
 `9q8zhuwqcp_0`; the unknown visitor fetches all seven atoms across five exact
-addresses, including unanchored. No cached results or packs are used.
+anchored addresses, including `0000_0`. No cached results or packs are used.
 
-The seven-atom fixture produces **11 files / 5,735 bytes**.
+The seven-atom fixture produces **13 files / 6,479 bytes**.
 
 | Scenario | Path | GETs | Body bytes | Records |
 |---|---|---:|---:|---:|
-| unknown | discovery | 20 | 7,288 | 7 |
-| unknown | frozen | 38 | 7,164 | 7 |
-| known | discovery | 9 | 3,781 | 3 |
-| known | frozen | 15 | 3,274 | 3 |
+| unknown | discovery | 22 | 8,038 | 7 |
+| unknown | frozen | 46 | 8,410 | 7 |
+| known | discovery | 9 | 3,773 | 3 |
+| known | frozen | 15 | 3,275 | 3 |
 
 | Synthetic atoms / distinct cells | Discovery files | Total bytes |
 |---:|---:|---:|
@@ -123,9 +133,9 @@ The seven-atom fixture produces **11 files / 5,735 bytes**.
 | 1,000 | 2,381 | 1,160,976 |
 | 10,000 | 20,956 | 10,587,214 |
 
-Discovery reduces fixture requests from 38 to 20 (unknown) and 15 to 9
-(known), while increasing body bytes from 7,164 to 7,288 and from 3,274
-to 3,781 respectively. These are measured tradeoffs, not bandwidth savings.
+Discovery reduces fixture requests from 46 to 22 (unknown) and 15 to 9
+(known). Body bytes decrease from 8,410 to 8,038 for the unknown visitor
+and increase from 3,275 to 3,773 for the known place. These are corpus-specific tradeoffs.
 
 File totals below measure only actual generated discovery files in fresh
 directories, not the underlying frozen publication or filesystem block overhead.
@@ -141,8 +151,8 @@ per atom plus shared depth-2 branches: tiny-file growth remains material.
 
 ## Tests and boundaries
 
-Tests exercise every level's counts, exact heights and short XY, unanchored and
-empty regions, independent GeoHash encoding and reference vectors, real GET-only
+Tests exercise every level's counts, exact heights and short XY, the all-zero
+geohash cell and empty regions, independent GeoHash encoding and reference vectors, real GET-only
 reads, frozen-reader verification, legacy bootstrap compatibility, deterministic
 regeneration, stale snapshots, head-change failure, interrupted writes, atomic
 ordering, malicious paths, missing/corrupt objects, and measured corpus growth.

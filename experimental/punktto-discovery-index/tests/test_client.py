@@ -1,3 +1,4 @@
+from punkti_node import publication as pub
 from punkti_node.test_publication import fixture
 from discovery.generator import generate
 from discovery.client import Client
@@ -15,6 +16,13 @@ class ClientTests(Fixture):
         self.assertFalse(result['fallback'])
         self.assertEqual(result['source']['head'], self.head['head'])
         self.assertTrue(client.http.paths[0].endswith('/nodes.json'))
+        # Unrestricted discovery and a direct publication walk select identical bytes.
+        expected = {pub.digest(raw) for raw in self.records}
+        for read in (result, Client(client.base).read(baseline=True, cross_check=True)):
+            self.assertEqual({e['sha256'] for e in read['records']}, expected)
+            self.assertEqual(len(read['records']), self.root['atoms'])
+            self.assertEqual(len({e['h'] for e in read['records']}), self.root['addresses'])
+            self.assertTrue(all(e['h'] for e in read['records']))
         result = Client(client.base).read(exact_h='9q8zhuwqcp_0', cross_check=True)
         self.assertEqual(len(result['records']), 3)
         self.assertTrue(result['cross_checked'])
@@ -26,10 +34,10 @@ class ClientTests(Fixture):
         self.assertEqual({e['h'] for e in result['records']}, {'9q8zhuwqcp_0', '9q8zhuwqcp_12.5'})
         self.assertEqual(len(result['records']), 4)
 
-    def test_empty_short_unanchored_and_fine_prefix(self):
+    def test_empty_region_short_zero_cell_and_fine_prefix(self):
         base = self.http()
         for kwargs, count in [({'prefix': 'zz'}, 0), ({'exact_h': 'bcde_0'}, 1),
-                              ({'exact_h': ''}, 1), ({'prefix': '9q8zhuwqcp00'}, 4)]:
+                              ({'exact_h': '0000_0'}, 1), ({'prefix': '9q8zhuwqcp00'}, 4)]:
             self.assertEqual(len(Client(base).read(**kwargs)['records']), count)
 
     def test_unknown_algorithm_is_not_verified_authorship(self):
