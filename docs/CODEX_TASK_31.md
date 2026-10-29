@@ -43,9 +43,20 @@ docs/CODEX_TASK_28.md             (added by PR #125)
 ```
 
 **You must not edit any file in that list, and you must not rebase onto, merge, or cherry-pick any
-unmerged #30/#124/#125 branch.** This task is deliberately **additive**: new files only, plus the
+unmerged #30/#124/#125/#127 branch.** This task is deliberately **additive**: new files only, plus the
 two documentation files named explicitly in §5. If a requirement cannot be met without editing a
 listed file, **stop and report** the exact conflict instead of editing it.
+
+**PR #127 additionally owns these files** (branch `copy/ai-first-participation-roles-20261029`,
+OPEN, not merged). Do not edit them and do not merge/rebase/cherry-pick #127 — see §2.8 for the
+reconciliation you must produce instead:
+
+```
+pwa/ai.html                              (also inside #30's change set)
+pwa/test-ai-hostile.mjs                  (also inside #30's change set)
+scripts/qa/tests/test_ai_entrance_copy.py
+.github/workflows/ai-first-copy.yml
+```
 
 If you believe the list is incomplete, re-check `git diff --stat origin/main...origin/wip/v0.6-spatial-only-correction`
 (on the remote branch if fetchable) and extend the do-not-touch list before editing anything.
@@ -365,6 +376,82 @@ The probe script and its real output are in the task workspace
 * **`h` values observed live** (valid canonical `XY_Z`, safe to use in tests):
   `u3butz7k9q_23`, `u3butz7k9q7v_12`, `9q8zhuvubq_227`, `u33dc0cpnp45_34.5`.
 
+## 2.8 Reconcile PR #127's AI-first narrative into the Stage-0 machine entrance
+
+The Founder issued a new direction while this task was running (CEO-OS #31 comment
+"AI-first /ai is a product entrance, not just technical API docs"):
+
+> **[Punkto PR #127]** (branch `copy/ai-first-participation-roles-20261029`, head
+> `bcad9b4601607cf90e4212a1a2f2354cf0ccc42b`, OPEN, MERGEABLE, **not merged, not deployed**)
+> rewrites `pwa/ai.html` around a new narrative and four **voluntary** participation roles.
+> **Integrate/reconcile** it with your staged functional `/ai` implementation. Do **not** simply
+> deploy obsolete `h=""` or require an SDK to read. **Reconcile changes file-by-file; do not
+> blindly merge this draft on top of concurrent agent work.** Do not merge simultaneously over
+> `pwa/ai.html` or production deploy.
+
+**What PR #127 does** (4 files, 217 additions / 58 deletions):
+
+| File | Change |
+|---|---|
+| `pwa/ai.html` | rewritten: opens "Leave your mark here. Addressability. Distribution. Persistence."; adds a "Choose how you participate" section with four voluntary roles — **Explore / harvest, Publish / discuss, Store / serve, Replicate / preserve**; keeps discovery as plain HTTP GET; requires v0.6 mandatory `h=XY_Z`; bounds authorship/persistence claims honestly |
+| `pwa/test-ai-hostile.mjs` | the old hostile copy assertions updated to the new direction, rest of the hostile suite intact |
+| `scripts/qa/tests/test_ai_entrance_copy.py` | new copy-conformance test (89 lines) |
+| `.github/workflows/ai-first-copy.yml` | new CI job gating that copy test |
+
+**Your task — reconcile, do not merge.** PR #127 edits `pwa/ai.html`, which is on the §0
+do-not-touch list (it is inside #30's change set). So:
+
+1. **Do NOT edit `pwa/ai.html`. Do NOT merge, rebase onto, or cherry-pick PR #127.** Do not
+   touch `pwa/test-ai-hostile.mjs`, `scripts/qa/tests/test_ai_entrance_copy.py` or
+   `.github/workflows/ai-first-copy.yml` either.
+2. **Carry PR #127's narrative into your own new file `pwa/ai-first/index.html`**, which is yours
+   to create and does not conflict with anything. Your page must:
+   * open with the same framing intent — a visiting AI may freely **explore/harvest,
+     publish/discuss, store/serve, or replicate/preserve**; these are **voluntary, overlapping,
+     interoperable activities, NOT new Punkti Layer-3 atom types or required capabilities**;
+   * state plainly that Punkti is the **open public protocol** (CC0, provider-neutral) and that
+     Punkto is **one competing commercial provider** selling managed service — *not* a monopoly on
+     addresses, no pay-to-own address, no closed Layer-3 feature, no artificial captivity;
+   * put **standard HTTP GET reading and geographic discovery FIRST**, before any optional
+     signing/write instructions, and make explicit that **reading needs no SDK and no account**;
+   * still require an **explicit** `XY_Z` and never show an unanchored write;
+   * keep the §2.3 requirements (BOOT/DISCOVER/PUBLISH/VERIFY/REPLY/LIMITS, minimal, self-contained,
+     no external assets) — PR #127's narrative is additive to that structure, not a replacement.
+3. **Extend `docs/AI_FIRST_RECONCILIATION.md`** (§2.6) with a third entry: a **file-by-file
+   reconciliation table for PR #127** against your Stage-0 branch and against #30 — for each of
+   the 4 files PR #127 touches, say whether #127's version or the Stage-0/#30 version should win
+   at integration, and why. Concretely:
+   * `pwa/ai.html` — #127's copy wins for narrative, but **only after #30 lands** (it is inside
+     #30's change set); the Stage-0 `pwa/ai-first/index.html` is the interim entrance.
+   * `pwa/test-ai-hostile.mjs` — #127's version wins; it is the newer hostile-suite expectation.
+   * `scripts/qa/tests/test_ai_entrance_copy.py` + `.github/workflows/ai-first-copy.yml` — #127's
+     versions win as-is; they are additive and conflict with nothing in Stage 0.
+   * State the integration order and that nothing is merged or deployed yet.
+4. **Add a `pwa/ai-first/copy-conformance` check to your own test suite** asserting your
+   `pwa/ai-first/index.html` contains the four role names and the "not required for reading"
+   statement, so the reconciliation is machine-checked rather than asserted in prose. Keep it
+   inside `pwa/test-ai-first-agent.mjs` — do **not** create a second CI workflow.
+5. Note in `docs/AI_FIRST_WALKTHROUGH.md` and `docs/AI_FIRST_ROLLOUT.md` that the entrance
+   presents the four voluntary roles and the provider-neutral/open-protocol position.
+
+## 2.9 Founder's additional direction (same comment thread)
+
+* **"Preserve a reproducible sanitized real transcript to be usable by #32; don't count scripted
+  fake actors as independent agents."** Your Stage-0 harness is a **scripted harness**, not a
+  blind-AI experiment — say so in `pwa/ai-first/README.md` in exactly those terms, and do not
+  describe the harness output as an "independent agent". The genuine blind-agent evidence is
+  Hermes' separate cold-agent archive, not this PR. Make the distinction explicit so #32 does not
+  cite scripted runs as agents.
+* **Do not post the proposed #126 pilot seed atoms** (`ge0q7k_0`, `umgjh0_0`, `9q8zhu_0`) on
+  obsolete staging or production. Stage 0 publishes **nothing** to any shared host.
+* The Founder also states the commercial doctrine (CEO.md §21): **Punkti stays universal/CC0/open
+  and competitive-provider-neutral; Punkto is the Founder's revenue-generating commercial
+  service.** Treat provider independence as a feature. Reflect this in `README.md` and in the
+  entrance copy, without claiming unique eternal persistence.
+* **#32** (first engagement) is tracked separately and stays `status:backlog` until #31's genuine
+  AI-first two-node read→write→verify→same-`h` reply demonstration and #30's re-freeze pass. Do
+  not create tasks or deploy anything for #32.
+
 ## 3. Constraints
 
 * No new dependencies. No npm install. No bundler. Node standard library + the repo's existing
@@ -411,7 +498,11 @@ The probe script and its real output are in the task workspace
     relay and the older `punkto.*.md` docs are **legacy** and describe an earlier protocol;
   - gives exactly **one** current runnable path for the v0.6 static publication + submit flow,
     pointing at `pwa/ai-first/README.md`, `docs/AI_FIRST_WALKTHROUGH.md` and the `/ai` page;
-  - does not delete or rewrite any legacy section, and does not claim that any of it is current.
+  - does not delete or rewrite any legacy section, and does not claim that any of it is current;
+  - states that **Punkti is the open, universal, CC0, provider-neutral protocol** and that
+    **Punkto is one commercial provider** of managed service on top of it — not a monopoly on
+    addresses, no pay-to-own address, no closed Layer-3 feature, no artificial captivity (CEO.md
+    §21), and does not claim unique eternal persistence.
 * `CONTRIBUTING.md` — add **one** clearly delimited section "Working on the current Punkto 0.6
   path" pointing contributors at `AGENTS.md`, `docs/AI_FIRST_WALKTHROUGH.md` and this task's
   additive-first rule; mark the older relay-era instructions as legacy.
@@ -442,7 +533,16 @@ Report, in plain text:
   used in the two-node roundtrip;
 * precisely what the two-node test exercised and what it did **not** exercise;
 * any place where you had to deviate from this brief, and why;
-* confirmation that `git diff --name-only origin/main...HEAD` contains no §0 do-not-touch file.
+* confirmation that `git diff --name-only origin/main...HEAD` contains no §0 do-not-touch file;
+* the **file-by-file PR #127 reconciliation** (§2.8): for each of PR #127's 4 files, which version
+  should win at integration and why, and confirmation that PR #127 was **not** merged, rebased
+  onto or cherry-picked;
+* the **four voluntary participation roles** and the **provider-neutral / open-protocol** position
+  as they actually appear in `pwa/ai-first/index.html`, and the result of the copy-conformance
+  check inside `pwa/test-ai-first-agent.mjs`;
+* an explicit statement that the harness is **scripted**, not a blind-AI experiment, and that the
+  genuine blind-agent transcript lives in Hermes' separate cold-agent archive (so #32 does not
+  cite scripted runs as independent agents).
 
 **Do not push, do not tag, do not merge, do not deploy.** Hermes reviews the diff, then pushes the
 branch and opens the draft PR.
