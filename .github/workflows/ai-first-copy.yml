@@ -1,0 +1,17 @@
+name: AI-first entrance copy conformance
+on:
+  pull_request:
+    paths:
+      - 'pwa/ai.html'
+      - 'scripts/qa/tests/test_ai_entrance_copy.py'
+      - '.github/workflows/ai-first-copy.yml'
+  workflow_dispatch:
+jobs:
+  ai-copy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - name: AI-first HTML and protocol-messaging regression tests
+        run: python3 -m unittest discover -s scripts/qa/tests -p 'test_ai_entrance_copy.py' -v
