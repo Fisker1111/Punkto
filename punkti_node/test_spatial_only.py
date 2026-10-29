@@ -44,6 +44,13 @@ class SpatialOnly(unittest.TestCase):
     def test_spatial_roundtrip_and_cell_size(self):
         for p in (4, 10, 12):
             for z in ('0', '23', '-18', '23.025', '-0.000000000000000001'):
+                # The whole h has a normative 32-character limit. An otherwise
+                # canonical Z can become too long with a 12-character XY.
+                if p + 1 + len(z) > 32:
+                    with self.subTest(xy_precision=p, z=z):
+                        with self.assertRaises(ValueError):
+                            spatial.encode_h(55.675398, 12.561895, z, p)
+                    continue
                 h = spatial.encode_h(55.675398, 12.561895, z, p)
                 xy, exact_z = spatial.parse_h(h)
                 self.assertEqual(h, xy + '_' + exact_z)
