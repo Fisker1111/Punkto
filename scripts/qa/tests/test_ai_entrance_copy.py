@@ -55,10 +55,12 @@ class AiFirstCopyTest(unittest.TestCase):
 
     def test_read_before_optional_signer(self):
         self.assertLess(self.raw.index("id=\"discover\""), self.raw.index("id=\"publish\""))
-        self.assertLess(self.raw.index("GET https://punkto.xyz/nodes.json"), self.raw.index("node cli.mjs"))
+        self.assertLess(self.raw.index("GET /nodes.json"), self.raw.index("node cli.mjs"))
         self.assertIn("not required for reading", self.text)
         self.assertIn("root.json", self.raw)
         self.assertIn("node.index", self.raw)
+        self.assertIn("origin of this /ai page", self.raw)
+        self.assertNotIn("ORIGIN=\'https://punkto.xyz\'", self.raw)
 
     def test_spatial_only_and_exact_reply(self):
         self.assertIn("Missing or empty spatial addresses are invalid", self.text)
