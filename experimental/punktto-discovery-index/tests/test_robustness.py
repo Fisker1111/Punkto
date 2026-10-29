@@ -35,8 +35,6 @@ class RobustnessTests(Fixture):
                 obj = index.validate(raw)
                 def visit(node):
                     descs = list(node.get('children', {}).values())
-                    if 'unanchored' in node:
-                        descs.append(node['unanchored'])
                     for desc in descs:
                         data = (Path(path).parent / desc['href']).read_bytes()
                         self.assertEqual(pub.digest(data), desc['sha256'])

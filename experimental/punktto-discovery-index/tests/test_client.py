@@ -26,10 +26,10 @@ class ClientTests(Fixture):
         self.assertEqual({e['h'] for e in result['records']}, {'9q8zhuwqcp_0', '9q8zhuwqcp_12.5'})
         self.assertEqual(len(result['records']), 4)
 
-    def test_empty_short_unanchored_and_fine_prefix(self):
+    def test_empty_region_short_zero_cell_and_fine_prefix(self):
         base = self.http()
         for kwargs, count in [({'prefix': 'zz'}, 0), ({'exact_h': 'bcde_0'}, 1),
-                              ({'exact_h': ''}, 1), ({'prefix': '9q8zhuwqcp00'}, 4)]:
+                              ({'exact_h': '0000_0'}, 1), ({'prefix': '9q8zhuwqcp00'}, 4)]:
             self.assertEqual(len(Client(base).read(**kwargs)['records']), count)
 
     def test_unknown_algorithm_is_not_verified_authorship(self):

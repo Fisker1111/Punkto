@@ -40,11 +40,13 @@ def generate(publication, output=None):
                 raise ValueError('duplicate record')
             seen.add(checksum)
             read(pub.object_path('records', checksum), checksum)
-            groups.setdefault(pub.leaf_key(entry['h']), {}).setdefault(entry['h'], []).append(
+            groups.setdefault(index.leaf_prefix(entry['h']), {}).setdefault(entry['h'], []).append(
                 dict(mid=entry['mid'], sha256=checksum, href='../' + pub.object_path('records', checksum)))
         for child, child_sha in node['children'].items():
             walk(child, child_sha)
 
+    for p in manifest['index']:
+        index.prefix(p)
     for p, checksum in manifest['index'].items():
         walk(p, checksum)
     if len(seen) != manifest['record_count'] or pack_count != manifest['pack_count']:
@@ -52,38 +54,32 @@ def generate(publication, output=None):
 
     objects = {}
 
-    def make(p, *, entries=None, children=None, unanchored=None):
+    def make(p, *, entries=None, children=None):
         obj = dict(v=index.VERSION, source=source, prefix=p)
         if entries is not None:
             obj.update(entries=entries, atoms=sum(len(e['atoms']) for e in entries), addresses=len(entries))
         else:
-            descs = list(children.values()) + ([unanchored] if unanchored else [])
+            descs = list(children.values())
             obj.update(children=children, atoms=sum(d['atoms'] for d in descs),
                        addresses=sum(d['addresses'] for d in descs))
-            if unanchored:
-                obj['unanchored'] = unanchored
         raw = pub.canonical(obj)
         index.validate(raw)
         checksum = pub.digest(raw)
         objects[checksum] = raw
         return dict(atoms=obj['atoms'], addresses=obj['addresses'], href=f'd/{checksum}.json', sha256=checksum)
 
-    leaves, unanchored = {}, None
+    leaves = {}
     for p, addresses in sorted(groups.items()):
         entries = [dict(h=h, atoms=sorted(atoms, key=lambda a: (a['mid'], a['sha256'])))
                    for h, atoms in sorted(addresses.items())]
-        desc = make('' if p == pub.UNANCHORED else p, entries=entries)
-        if p == pub.UNANCHORED:
-            unanchored = desc
-        else:
-            leaves[p] = desc
+        leaves[p] = make(p, entries=entries)
     level = leaves
     for depth in (6, 2):
         parents = {}
         for p, desc in sorted(level.items()):
             parents.setdefault(p[:depth], {})[p] = desc
         level = {p: make(p, children=children) for p, children in sorted(parents.items())}
-    root_desc = make('', children=level, unanchored=unanchored)
+    root_desc = make('', children=level)
     root_raw = objects.pop(root_desc['sha256'])
     # Immutable children may remain after an interrupted run; no root is exposed.
     for checksum, raw in sorted(objects.items()):

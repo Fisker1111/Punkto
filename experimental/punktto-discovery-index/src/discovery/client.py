@@ -54,8 +54,7 @@ class Client:
 
     def read(self, *, exact_h=None, prefix=None, baseline=False, cross_check=False):
         if exact_h is not None:
-            parts = parse_h(exact_h)
-            selected = pub.leaf_key(exact_h) if parts else ''
+            selected = index.leaf_prefix(exact_h)
         else:
             selected = index.prefix(prefix) if prefix is not None else ''
         bootstrap = json.loads(self.http.get(self.nodes_url))
@@ -69,13 +68,9 @@ class Client:
         def wanted(h):
             if exact_h is not None:
                 return h == exact_h
-            return not selected or (bool(h) and xy_key(parse_h(h)[0]).startswith(selected))
+            return not selected or xy_key(parse_h(h)[0]).startswith(selected)
 
         def intersects(p):
-            if p == pub.UNANCHORED:
-                return exact_h == '' or (exact_h is None and not selected)
-            if exact_h == '':
-                return False
             return not selected or p.startswith(selected) or selected.startswith(p)
 
         records = []
@@ -87,6 +82,8 @@ class Client:
             manifest = pub.manifest(self.http.get(urljoin(publication, f"manifests/{root['head']}.json"), root['head']))
             if root['seq'] != manifest['seq']:
                 raise ValueError('source sequence')
+            for p in manifest['index']:
+                index.prefix(p)
             counts = [0, 0]
 
             def walk(p, checksum):
@@ -130,11 +127,9 @@ class Client:
                                     records.append(dict(atom, h=entry['h'], raw=raw))
                         return
                     children = [(p, d) for p, d in obj['children'].items() if intersects(p)]
-                    if 'unanchored' in obj and intersects(pub.UNANCHORED):
-                        children.append(('', obj['unanchored']))
                     for p, desc in children:
                         child = index.validate(self.http.get(urljoin(directory, index.href(desc['href'], desc['sha256'])), desc['sha256']), source, p)
-                        if (p == '' and 'entries' not in child) or any(child[k] != desc[k] for k in ('atoms', 'addresses')):
+                        if any(child[k] != desc[k] for k in ('atoms', 'addresses')):
                             raise ValueError('child descriptor mismatch')
                         walk(child)
                 walk(root)

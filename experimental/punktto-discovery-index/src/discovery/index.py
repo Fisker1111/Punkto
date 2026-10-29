@@ -1,11 +1,20 @@
 """Strict derived-object validation. Fixed record links allow one parent hop only."""
 import re
 from punkti_node import publication as pub
+from punkti_node.spatial import parse_h, xy_key
 from .geohash import ALPHABET
 
-VERSION = 'punkti/discovery/0.1'
+VERSION = 'punkti/discovery/0.2'
 canonical = pub.canonical
 digest = pub.digest
+
+
+def leaf_prefix(h):
+    """Require canonical XY_Z even with a pre-correction spatial parser."""
+    if not isinstance(h, str) or not 6 <= len(h) <= 32:
+        raise ValueError('spatial address')
+    xy, _ = parse_h(h)
+    return xy_key(xy)[:10]
 
 
 def sha(value):
@@ -50,8 +59,6 @@ def validate(raw, source=None, expected_prefix=None):
         raise ValueError('version')
     terminal = 'entries' in obj
     allowed = common | ({'entries'} if terminal else {'children'})
-    if not terminal and obj.get('prefix') == '' and 'unanchored' in obj:
-        allowed.add('unanchored')
     if set(obj) != allowed:
         raise ValueError('shape')
     binding = obj['source']
@@ -69,14 +76,14 @@ def validate(raw, source=None, expected_prefix=None):
     integer(obj['atoms'])
     integer(obj['addresses'])
     if terminal:
-        if len(p) not in (0, 10) or not isinstance(obj['entries'], list) or not obj['entries']:
+        if len(p) != 10 or not isinstance(obj['entries'], list) or not obj['entries']:
             raise ValueError('terminal')
         hs, ids = [], []
         for entry in obj['entries']:
             if not isinstance(entry, dict) or set(entry) != {'h', 'atoms'}:
                 raise ValueError('entry')
             h = entry['h']
-            if pub.leaf_key(h) != (p or pub.UNANCHORED):
+            if leaf_prefix(h) != p:
                 raise ValueError('placement')
             hs.append(h)
             if not isinstance(entry['atoms'], list) or not entry['atoms']:
@@ -106,9 +113,6 @@ def validate(raw, source=None, expected_prefix=None):
             if len(child) != depth or not child.startswith(p):
                 raise ValueError('child prefix')
             descriptor(desc)
-        if 'unanchored' in obj:
-            descriptor(obj['unanchored'])
-            descriptors.append(obj['unanchored'])
         counts = tuple(sum(d[key] for d in descriptors) for key in ('atoms', 'addresses'))
         if p and not descriptors:
             raise ValueError('empty branch')
