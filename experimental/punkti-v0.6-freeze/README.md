@@ -37,4 +37,4 @@ See `docs/FREEZE_REPORT.md` for review scope, limitations and complete suite cou
 V11 pins historical XY_Z addresses, canonical grammar and exact total Z order.
 V12 pins all eight geohash rows at three precisions, including decoded bounds and
 centres. V13 pins lower-edge containment, the coarse/fine counterexample, exact
-Z boundaries, unanchored selection, and HTTP 400 for equal padded XY keys.
+Z boundaries, anchored-only selection, and HTTP 400 for equal padded XY keys.

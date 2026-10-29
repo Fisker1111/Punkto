@@ -58,6 +58,7 @@ jobs:
           node pwa/test-punkti-vectors.mjs
           node pwa/test-punkti-publication.mjs
           node pwa/test-spatial-xy-z.mjs
+          node pwa/test-spatial-only-agreement.mjs
 
       - name: Punkti /ai machine entrance harnesses
         run: |

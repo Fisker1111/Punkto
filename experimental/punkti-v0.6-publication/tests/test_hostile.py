@@ -212,7 +212,7 @@ class Hostile(unittest.TestCase):
         self.check_failure(rewrite(self.base, edit, lambda m: m.update(pack_count=0)), packs=False)
 
     def test_multiple_packs_257_and_independent_publication(self):
-        records = [fixture(i) for i in range(257)] + [fixture(1000, '')]
+        records = [fixture(i) for i in range(257)] + [fixture(1000, 'u3bu_23')]
         for packs in (False, True):
             with tempfile.TemporaryDirectory() as a, tempfile.TemporaryDirectory() as b:
                 Publisher(a, packs).publish(records)
@@ -346,7 +346,7 @@ class StagingAndGeometry(unittest.TestCase):
                     self.assertEqual((len(reader.store.valid), len(reader.store.candidates)), (2, 1))
 
     def test_scope_can_skip_withheld_unselected_subtree(self):
-        records = [fixture(310, '0000_0'), fixture(311, 'zzzz_0'), fixture(312, '')]
+        records = [fixture(310, '0000_0'), fixture(311, 'zzzz_0'), fixture(312, 'zzzy_23')]
         snap = snapshot(records)
         del snap['objects'][o.digest(records[1])]
         del snap['objects'][o.digest(records[2])]

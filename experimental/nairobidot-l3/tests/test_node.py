@@ -101,7 +101,7 @@ class NodeTests(unittest.TestCase):
         self.assertEqual(b.candidates[future['sha256']].item(), future)
         limited = self.node([{'z_min': '-1000'}])
         self.assertEqual(limited.add(future)['reason'], 'out-of-scope')
-        self.assertEqual(limited.add(item())['reason'], 'out-of-scope')
+        self.assertEqual(limited.add(item(h='u3bu_-1001'))['reason'], 'out-of-scope')
         self.assertTrue(limited.add(item(h='000000000000_-18'))['admitted'])
         self.assertFalse(self.node([]).add(item())['admitted'])
 
@@ -154,7 +154,7 @@ class NodeTests(unittest.TestCase):
         self.assertTrue(third['end'])
         self.assertEqual(len(third['records']), 1)
         self.assertEqual(third['cursor']['after'], 6)
-        n.add(item(6))
+        n.add(item(6, 'ezs42_99'))
         empty = n.page({'scope': scope, 'cursor': third['cursor']})
         self.assertEqual(empty['records'], [])
         self.assertEqual(empty['cursor']['after'], 7)

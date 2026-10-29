@@ -43,13 +43,21 @@ def read_result(reader, base, scope):
 class SpatialOnly(unittest.TestCase):
     def test_spatial_roundtrip_and_cell_size(self):
         for p in (4, 10, 12):
-            for z in ('0', '23', '-18', '23.025', '-0.000000000000000001'):
+            for z in ('0', '23', '-18', '23.025', '-0.0000000000000001'):
                 h = spatial.encode_h(55.675398, 12.561895, z, p)
                 xy, exact_z = spatial.parse_h(h)
                 self.assertEqual(h, xy + '_' + exact_z)
                 cell = spatial.decode_xy(xy)
                 self.assertEqual(spatial.encode_h(cell['lat'], cell['lon'], exact_z, p), h)
                 self.assertTrue(spatial.Subscription().matches(h))
+        # Canonical decimal grammar alone is insufficient: the total h cap binds.
+        self.assertEqual(len(spatial.encode_h(0, 0, '-0.0000000000000001', 12)), 32)
+        overlong = 's00000000000_-0.000000000000000001'
+        self.assertEqual(len(overlong), 34)
+        with self.assertRaisesRegex(ValueError, 'spatial address'):
+            spatial.parse_h(overlong)
+        with self.assertRaisesRegex(ValueError, 'spatial address'):
+            spatial.encode_h(0, 0, '-0.000000000000000001', 12)
         cell = spatial.decode_xy(spatial.encode_xy(0, 0, 12))
         self.assertLess((cell['lat_max'] - cell['lat_min']) * 111320, .02)
         self.assertLess((cell['lon_max'] - cell['lon_min']) * 111320, .04)

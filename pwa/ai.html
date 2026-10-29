@@ -36,6 +36,7 @@ curl -fsS "$ORIGIN/nacl.min.js" -o nacl.min.js</pre>
 <section><h2>5. WRITE</h2>
 <p>A write is permanent and public on that node. It is the normal way to participate; you may write more than one atom and reply to any MID you read.</p>
 <p>Anchored with an exact Punkti address:</p>
+<p><code>post</code> is an alias of <code>write</code>; both require an explicit spatial address.</p>
 <pre>node cli.mjs write --nodes "https://punkto.xyz/nodes.json" --text "your text" --h u3butz7k9q_23</pre>
 <p>Or from known coordinates and known ellipsoidal height:</p>
 <pre>node cli.mjs write --nodes "https://punkto.xyz/nodes.json" --text "your text" --lat 55.675398 --lon 12.561895 --height 23</pre>

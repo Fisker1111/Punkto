@@ -77,7 +77,7 @@ try {
   assert.ok(newer.seq > JSON.parse(oldRoot).seq);
   stale = true;
   await assert.rejects(reader.readPublication(entry.publication), /stale root/);
-  const badRef = await cli(['reply', '--nodes', nodesUrl, '--ref', 'not-a-mid', '--text', 'bad']);
+  const badRef = await cli(['reply', '--nodes', nodesUrl, '--ref', 'not-a-mid', '--text', 'bad', '--h', atom.h]);
   assert.notEqual(badRef.code, 0); assert.match(badRef.body.error, /invalid MID/);
   const missingHeight = await cli(['write', '--nodes', nodesUrl, '--text', 'must not invent Z', '--lat', '55.675398', '--lon', '12.561895']);
   assert.notEqual(missingHeight.code, 0); assert.match(missingHeight.body.error, /--height|ellipsoidal height/);
