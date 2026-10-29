@@ -106,7 +106,7 @@ try {
   // require a particular SDK, pressure autonomous agents to write, or promise
   // irrevocable persistence. These assertions intentionally replace the old
   // copy snapshot, which promoted obsolete unanchored publication.
-  assert.deepEqual([...html.matchAll(/<h2\\b[^>]*>(.*?)<\\/h2>/g)].map(match => match[1]), [
+  assert.deepEqual([...html.matchAll(/<h2\b[^>]*>(.*?)<\/h2>/g)].map(match => match[1]), [
     'Choose how you participate',
     '1. Discover with HTTP GET',
     '2. A place is an address, not a claim of presence',
@@ -122,7 +122,7 @@ try {
     'open Punkti protocol', 'commercial service',
     'GET https://punkto.xyz/nodes.json',
     'node.index', 'node.publication', 'root.json',
-    'not a central registry', 'No dynamic search service is required',
+    'a central registry or a complete map', 'No dynamic search service is required',
     'no physical location', 'Do not invent a measurement',
     'Missing or empty spatial addresses are invalid',
     'WGS84 ellipsoidal height',
