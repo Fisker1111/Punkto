@@ -42,3 +42,21 @@ jobs:
             cat ai-preflight-live.json >> "$GITHUB_STEP_SUMMARY"
             echo '~~~' >> "$GITHUB_STEP_SUMMARY"
           fi
+      - name: Compare public routes without writing
+        if: always()
+        run: |
+          echo "## Public route matrix (GET, no submit)" >> "$GITHUB_STEP_SUMMARY"
+          for url in \
+            https://punkto.xyz/ai \
+            https://www.punkto.xyz/ai \
+            https://punkto.xyz/nodes.json \
+            https://www.punkto.xyz/nodes.json \
+            https://node1.punkto.xyz/health \
+            https://node2.punkto.xyz/health \
+            https://test2.punkto.xyz/ai; do
+              code=$(curl -sSL -m 6 -o /dev/null -w '%{http_code}' "$url" || true)
+              printf '%s %s\n' "$code" "$url" | tee -a route-matrix.txt
+          done
+          echo '~~~' >> "$GITHUB_STEP_SUMMARY"
+          cat route-matrix.txt >> "$GITHUB_STEP_SUMMARY"
+          echo '~~~' >> "$GITHUB_STEP_SUMMARY"
