@@ -1,0 +1,217 @@
+BASE=http://127.0.0.1:40643 TARGET_H="u3butz7k9q_23" LEAF=u3butz7k9q
+GET http://127.0.0.1:40643/root.json
+  bytes=104 sha256=18edcb989a552b7ef5df8bc7cc4bd34fdc52cd9c44baf2a9cb35000d76244e0c
+  source=mutable pointer; no upstream digest
+  digest=OBSERVED ONLY (mutable root is not content-addressed)
+HEAD=365833609786e474dcc5597d318fd07694efaf82da86a5565a12b45ef964036e
+GET http://127.0.0.1:40643/manifests/365833609786e474dcc5597d318fd07694efaf82da86a5565a12b45ef964036e.json
+  bytes=227 sha256=365833609786e474dcc5597d318fd07694efaf82da86a5565a12b45ef964036e
+  source=root.json.head
+  digest=MATCH
+GET http://127.0.0.1:40643/h/u/3/a8d99b59c664e44225297969aa545830c8506738f6e42f3a4c66481d078e2d98.json
+  bytes=146 sha256=a8d99b59c664e44225297969aa545830c8506738f6e42f3a4c66481d078e2d98
+  source=manifests/365833609786e474dcc5597d318fd07694efaf82da86a5565a12b45ef964036e.json index['u3']
+  digest=MATCH
+GET http://127.0.0.1:40643/h/u/3/b/4bd065e5d6e4e1bf5acc9b2a95fb93a70bb9e39b376116c2e8a8442810ce8e5e.json
+  bytes=148 sha256=4bd065e5d6e4e1bf5acc9b2a95fb93a70bb9e39b376116c2e8a8442810ce8e5e
+  source=h/u/3/a8d99b59c664e44225297969aa545830c8506738f6e42f3a4c66481d078e2d98.json children['u3b']
+  digest=MATCH
+GET http://127.0.0.1:40643/h/u/3/b/u/72444597c4659792b3d0516023f222d35deba33f664b327a4e7c7088bc0c92db.json
+  bytes=225 sha256=72444597c4659792b3d0516023f222d35deba33f664b327a4e7c7088bc0c92db
+  source=h/u/3/b/4bd065e5d6e4e1bf5acc9b2a95fb93a70bb9e39b376116c2e8a8442810ce8e5e.json children['u3bu']
+  digest=MATCH
+GET http://127.0.0.1:40643/h/u/3/b/u/t/273be401ca6721d81e11c73f7dbd2ddafdea743a38e3b652aa885e03cd501e88.json
+  bytes=152 sha256=273be401ca6721d81e11c73f7dbd2ddafdea743a38e3b652aa885e03cd501e88
+  source=h/u/3/b/u/72444597c4659792b3d0516023f222d35deba33f664b327a4e7c7088bc0c92db.json children['u3but']
+  digest=MATCH
+GET http://127.0.0.1:40643/h/u/3/b/u/t/z/0b1c36d610db69cd52d0b5ffe68928d0c557deebcea170ac90314e4b90c3d5c2.json
+  bytes=154 sha256=0b1c36d610db69cd52d0b5ffe68928d0c557deebcea170ac90314e4b90c3d5c2
+  source=h/u/3/b/u/t/273be401ca6721d81e11c73f7dbd2ddafdea743a38e3b652aa885e03cd501e88.json children['u3butz']
+  digest=MATCH
+GET http://127.0.0.1:40643/h/u/3/b/u/t/z/7/4d15f6e97f07bc9c2527a4290877be6abda4127cce6ff1edbcc5ac9ad7cf12a0.json
+  bytes=156 sha256=4d15f6e97f07bc9c2527a4290877be6abda4127cce6ff1edbcc5ac9ad7cf12a0
+  source=h/u/3/b/u/t/z/0b1c36d610db69cd52d0b5ffe68928d0c557deebcea170ac90314e4b90c3d5c2.json children['u3butz7']
+  digest=MATCH
+GET http://127.0.0.1:40643/h/u/3/b/u/t/z/7/k/7d9529ae15d1282e5697ac513dc3f781945b1a8de23360489f780fb7aa3c9154.json
+  bytes=158 sha256=7d9529ae15d1282e5697ac513dc3f781945b1a8de23360489f780fb7aa3c9154
+  source=h/u/3/b/u/t/z/7/4d15f6e97f07bc9c2527a4290877be6abda4127cce6ff1edbcc5ac9ad7cf12a0.json children['u3butz7k']
+  digest=MATCH
+GET http://127.0.0.1:40643/h/u/3/b/u/t/z/7/k/9/2540f1d40df2bb608765e65809663e127c540d1b18292202b35157514dc099d5.json
+  bytes=160 sha256=2540f1d40df2bb608765e65809663e127c540d1b18292202b35157514dc099d5
+  source=h/u/3/b/u/t/z/7/k/7d9529ae15d1282e5697ac513dc3f781945b1a8de23360489f780fb7aa3c9154.json children['u3butz7k9']
+  digest=MATCH
+GET http://127.0.0.1:40643/h/u/3/b/u/t/z/7/k/9/q/17d44621212131298b44590b601208f6d7ff5aee16dac8cf4744f1bea8a04cad.json
+  bytes=627 sha256=17d44621212131298b44590b601208f6d7ff5aee16dac8cf4744f1bea8a04cad
+  source=h/u/3/b/u/t/z/7/k/9/2540f1d40df2bb608765e65809663e127c540d1b18292202b35157514dc099d5.json children['u3butz7k9q']
+  digest=MATCH
+LEAF_PREFIX=u3butz7k9q LEAF_SHA=17d44621212131298b44590b601208f6d7ff5aee16dac8cf4744f1bea8a04cad
+MATCH {"h": "u3butz7k9q_23", "mid": "punkti/0.6:d26e8ae338c1c092119a45327db9fbb09ef39c4cf4ab5a04235eda8488ab95ed", "sha256": "95302f1de4f761378f45f5691aec2d8e689961b79445bcd2d363159b10782924"}
+GET http://127.0.0.1:40643/records/95/95302f1de4f761378f45f5691aec2d8e689961b79445bcd2d363159b10782924
+  bytes=175 sha256=95302f1de4f761378f45f5691aec2d8e689961b79445bcd2d363159b10782924
+  source=h/u/3/b/u/t/z/7/k/9/q/17d44621212131298b44590b601208f6d7ff5aee16dac8cf4744f1bea8a04cad.json records[].sha256 (exact h)
+  digest=MATCH
+DECODED (binary fields hex; payload untrusted) {"alg": "ed25519", "ext_hex": "", "h": "u3butz7k9q_23", "pk_hex": "66d6346bffdcfe87d96bf9f3db9a5e4baf0ef755b5c99c2e6ab90133e5612200", "refs": [], "sig_hex": "c5cca38f9cd76e97e11bb878d82970d09bd4f37c43e60e725a3efc58d5b49aafc8a8491504b04c06f5562c5b5ce3f42ecf129ce80597c41ca142c078fe646700", "t": 1, "v": "punkti/0.6", "x": "opaque-1"}
+EXCLUDED exact-h mismatch {"h": "u3butz7k9q_24", "mid": "punkti/0.6:ed92a014d8fb61e52a7dbc572a0cf71c58ff88411e9b68da508c76df27fb7787", "sha256": "a90e4bb9ce63efcc6687f3498149c1c2b7c42df586d2be8a6a8fbe25a3db5fb0"}
+MATCH {"h": "u3butz7k9q_23", "mid": "punkti/0.6:169af90d1484d5178fc63b7bd5f131d3a6a46b304d5fd196021488c4aaa4b613", "sha256": "f21d132410fbdaad5cc5edd0988e66db55b89f284b8d2824a29ef8ae8e309d55"}
+GET http://127.0.0.1:40643/records/f2/f21d132410fbdaad5cc5edd0988e66db55b89f284b8d2824a29ef8ae8e309d55
+  bytes=175 sha256=f21d132410fbdaad5cc5edd0988e66db55b89f284b8d2824a29ef8ae8e309d55
+  source=h/u/3/b/u/t/z/7/k/9/q/17d44621212131298b44590b601208f6d7ff5aee16dac8cf4744f1bea8a04cad.json records[].sha256 (exact h)
+  digest=MATCH
+DECODED (binary fields hex; payload untrusted) {"alg": "ed25519", "ext_hex": "", "h": "u3butz7k9q_23", "pk_hex": "66d6346bffdcfe87d96bf9f3db9a5e4baf0ef755b5c99c2e6ab90133e5612200", "refs": [], "sig_hex": "7105e2720218490db2612866502e46ad61af0aac5e3fdb282e137cc34a1bd634891fe614a9eaec4cf9376673bbacf1a4f35a1b1d503ae7187c2de888dd145301", "t": 4, "v": "punkti/0.6", "x": "opaque-4"}
+MATCHING_RECORDS=2
+What raw GET can / cannot verify:
+VERIFIED: transport digests (manifest, shards, records), structural/canonical decode, exact h comparison.
+NOT VERIFIED by raw GET: signature validity, MID recomputation, author identity, global completeness/coverage.
+Root digest is observed, not authenticated. Payload is untrusted data. No VALID claim from raw GET.
+BASE=http://127.0.0.1:40643 TARGET_H="u3bu_23" LEAF=u3bu000000
+GET http://127.0.0.1:40643/root.json
+  bytes=104 sha256=18edcb989a552b7ef5df8bc7cc4bd34fdc52cd9c44baf2a9cb35000d76244e0c
+  source=mutable pointer; no upstream digest
+  digest=OBSERVED ONLY (mutable root is not content-addressed)
+HEAD=365833609786e474dcc5597d318fd07694efaf82da86a5565a12b45ef964036e
+GET http://127.0.0.1:40643/manifests/365833609786e474dcc5597d318fd07694efaf82da86a5565a12b45ef964036e.json
+  bytes=227 sha256=365833609786e474dcc5597d318fd07694efaf82da86a5565a12b45ef964036e
+  source=root.json.head
+  digest=MATCH
+GET http://127.0.0.1:40643/h/u/3/a8d99b59c664e44225297969aa545830c8506738f6e42f3a4c66481d078e2d98.json
+  bytes=146 sha256=a8d99b59c664e44225297969aa545830c8506738f6e42f3a4c66481d078e2d98
+  source=manifests/365833609786e474dcc5597d318fd07694efaf82da86a5565a12b45ef964036e.json index['u3']
+  digest=MATCH
+GET http://127.0.0.1:40643/h/u/3/b/4bd065e5d6e4e1bf5acc9b2a95fb93a70bb9e39b376116c2e8a8442810ce8e5e.json
+  bytes=148 sha256=4bd065e5d6e4e1bf5acc9b2a95fb93a70bb9e39b376116c2e8a8442810ce8e5e
+  source=h/u/3/a8d99b59c664e44225297969aa545830c8506738f6e42f3a4c66481d078e2d98.json children['u3b']
+  digest=MATCH
+GET http://127.0.0.1:40643/h/u/3/b/u/72444597c4659792b3d0516023f222d35deba33f664b327a4e7c7088bc0c92db.json
+  bytes=225 sha256=72444597c4659792b3d0516023f222d35deba33f664b327a4e7c7088bc0c92db
+  source=h/u/3/b/4bd065e5d6e4e1bf5acc9b2a95fb93a70bb9e39b376116c2e8a8442810ce8e5e.json children['u3bu']
+  digest=MATCH
+GET http://127.0.0.1:40643/h/u/3/b/u/0/b837ded2dd7bb68ed2f0d509293c07c4a68e18f9912d9d76498e1812343e453e.json
+  bytes=152 sha256=b837ded2dd7bb68ed2f0d509293c07c4a68e18f9912d9d76498e1812343e453e
+  source=h/u/3/b/u/72444597c4659792b3d0516023f222d35deba33f664b327a4e7c7088bc0c92db.json children['u3bu0']
+  digest=MATCH
+GET http://127.0.0.1:40643/h/u/3/b/u/0/0/9fb7050a3227c4341a58a2cb463f47227a2b151151223d43a50a476f28f770d5.json
+  bytes=154 sha256=9fb7050a3227c4341a58a2cb463f47227a2b151151223d43a50a476f28f770d5
+  source=h/u/3/b/u/0/b837ded2dd7bb68ed2f0d509293c07c4a68e18f9912d9d76498e1812343e453e.json children['u3bu00']
+  digest=MATCH
+GET http://127.0.0.1:40643/h/u/3/b/u/0/0/0/04f4114da1b45d59aef350ed93d1ef45f82e187a7c8c646bd72789435591f675.json
+  bytes=156 sha256=04f4114da1b45d59aef350ed93d1ef45f82e187a7c8c646bd72789435591f675
+  source=h/u/3/b/u/0/0/9fb7050a3227c4341a58a2cb463f47227a2b151151223d43a50a476f28f770d5.json children['u3bu000']
+  digest=MATCH
+GET http://127.0.0.1:40643/h/u/3/b/u/0/0/0/0/1a615a76d78a58246e129e0042516fd972500dc9e1b0932e25d543af5690ac86.json
+  bytes=158 sha256=1a615a76d78a58246e129e0042516fd972500dc9e1b0932e25d543af5690ac86
+  source=h/u/3/b/u/0/0/0/04f4114da1b45d59aef350ed93d1ef45f82e187a7c8c646bd72789435591f675.json children['u3bu0000']
+  digest=MATCH
+GET http://127.0.0.1:40643/h/u/3/b/u/0/0/0/0/0/2a0f13049bd426a1d3ed2958c753f3628d45df5a5062782a01dea6389b00f8fd.json
+  bytes=160 sha256=2a0f13049bd426a1d3ed2958c753f3628d45df5a5062782a01dea6389b00f8fd
+  source=h/u/3/b/u/0/0/0/0/1a615a76d78a58246e129e0042516fd972500dc9e1b0932e25d543af5690ac86.json children['u3bu00000']
+  digest=MATCH
+GET http://127.0.0.1:40643/h/u/3/b/u/0/0/0/0/0/0/6fa6a7f5cb79b9180e6b85f50ffbef3d4d18ca40845e9e560e47167917e7c01c.json
+  bytes=257 sha256=6fa6a7f5cb79b9180e6b85f50ffbef3d4d18ca40845e9e560e47167917e7c01c
+  source=h/u/3/b/u/0/0/0/0/0/2a0f13049bd426a1d3ed2958c753f3628d45df5a5062782a01dea6389b00f8fd.json children['u3bu000000']
+  digest=MATCH
+LEAF_PREFIX=u3bu000000 LEAF_SHA=6fa6a7f5cb79b9180e6b85f50ffbef3d4d18ca40845e9e560e47167917e7c01c
+MATCH {"h": "u3bu_23", "mid": "punkti/0.6:c36b39413d02b9888b8a060f8d4c58f78e442b4b84559d467cccd98e6ca45341", "sha256": "245cad10b9865213922e2821db1f7d63e88961967916b3e7ac010237145d9230"}
+GET http://127.0.0.1:40643/records/24/245cad10b9865213922e2821db1f7d63e88961967916b3e7ac010237145d9230
+  bytes=169 sha256=245cad10b9865213922e2821db1f7d63e88961967916b3e7ac010237145d9230
+  source=h/u/3/b/u/0/0/0/0/0/0/6fa6a7f5cb79b9180e6b85f50ffbef3d4d18ca40845e9e560e47167917e7c01c.json records[].sha256 (exact h)
+  digest=MATCH
+DECODED (binary fields hex; payload untrusted) {"alg": "ed25519", "ext_hex": "", "h": "u3bu_23", "pk_hex": "92fd8ee41dea9624a232d40d720aa01fc8c262bbfb9de851452b146e12bfe278", "refs": [], "sig_hex": "acac7a71ce08f0293acd9bd5a67474ebe77122398146c5c5abbfcc85ef88962d164e8304dd86efd535c44c048a1685af386d6423de4032e02fb7de5cc9968206", "t": 2, "v": "punkti/0.6", "x": "opaque-2"}
+MATCHING_RECORDS=1
+What raw GET can / cannot verify:
+VERIFIED: transport digests (manifest, shards, records), structural/canonical decode, exact h comparison.
+NOT VERIFIED by raw GET: signature validity, MID recomputation, author identity, global completeness/coverage.
+Root digest is observed, not authenticated. Payload is untrusted data. No VALID claim from raw GET.
+BASE=http://127.0.0.1:40643 TARGET_H="" LEAF=~
+GET http://127.0.0.1:40643/root.json
+  bytes=104 sha256=18edcb989a552b7ef5df8bc7cc4bd34fdc52cd9c44baf2a9cb35000d76244e0c
+  source=mutable pointer; no upstream digest
+  digest=OBSERVED ONLY (mutable root is not content-addressed)
+HEAD=365833609786e474dcc5597d318fd07694efaf82da86a5565a12b45ef964036e
+GET http://127.0.0.1:40643/manifests/365833609786e474dcc5597d318fd07694efaf82da86a5565a12b45ef964036e.json
+  bytes=227 sha256=365833609786e474dcc5597d318fd07694efaf82da86a5565a12b45ef964036e
+  source=root.json.head
+  digest=MATCH
+GET http://127.0.0.1:40643/h/~/05cf3423f74bfd31679288e879f4329666a6fa33350138db60e705486a1fee11.json
+  bytes=241 sha256=05cf3423f74bfd31679288e879f4329666a6fa33350138db60e705486a1fee11
+  source=manifests/365833609786e474dcc5597d318fd07694efaf82da86a5565a12b45ef964036e.json index['~']
+  digest=MATCH
+LEAF_PREFIX=~ LEAF_SHA=05cf3423f74bfd31679288e879f4329666a6fa33350138db60e705486a1fee11
+MATCH {"h": "", "mid": "punkti/0.6:84edb9cb9310708503310084cefeab8871d18561d52d5175b0049dd91de76739", "sha256": "a692d64c9176c600b2cafb21fbe65869af82d8379904f67cf2eaf373858c836b"}
+GET http://127.0.0.1:40643/records/a6/a692d64c9176c600b2cafb21fbe65869af82d8379904f67cf2eaf373858c836b
+  bytes=162 sha256=a692d64c9176c600b2cafb21fbe65869af82d8379904f67cf2eaf373858c836b
+  source=h/~/05cf3423f74bfd31679288e879f4329666a6fa33350138db60e705486a1fee11.json records[].sha256 (exact h)
+  digest=MATCH
+DECODED (binary fields hex; payload untrusted) {"alg": "ed25519", "ext_hex": "", "h": "", "pk_hex": "0d09717058f365e0d0e34bd991ac2a712719acfc6c4d1a284538600441642110", "refs": [], "sig_hex": "d46763694adb007d8edb029561f61a84448642bf0abb4707ec41896c4ed4805e7c711350c79655cf6c7b29e2d1ad37d4ea8a95f14dd53634ef80e5becee0c201", "t": 3, "v": "punkti/0.6", "x": "opaque-3"}
+MATCHING_RECORDS=1
+What raw GET can / cannot verify:
+VERIFIED: transport digests (manifest, shards, records), structural/canonical decode, exact h comparison.
+NOT VERIFIED by raw GET: signature validity, MID recomputation, author identity, global completeness/coverage.
+Root digest is observed, not authenticated. Payload is untrusted data. No VALID claim from raw GET.
+BASE=http://127.0.0.1:40643 TARGET_H="u3butz7k9q_23" LEAF=u3butz7k9q
+GET http://127.0.0.1:40643/root.json
+  bytes=104 sha256=18edcb989a552b7ef5df8bc7cc4bd34fdc52cd9c44baf2a9cb35000d76244e0c
+  source=mutable pointer; no upstream digest
+  digest=OBSERVED ONLY (mutable root is not content-addressed)
+HEAD=365833609786e474dcc5597d318fd07694efaf82da86a5565a12b45ef964036e
+GET http://127.0.0.1:40643/manifests/365833609786e474dcc5597d318fd07694efaf82da86a5565a12b45ef964036e.json
+  bytes=227 sha256=365833609786e474dcc5597d318fd07694efaf82da86a5565a12b45ef964036e
+  source=root.json.head
+  digest=MATCH
+GET http://127.0.0.1:40643/h/u/3/a8d99b59c664e44225297969aa545830c8506738f6e42f3a4c66481d078e2d98.json
+  bytes=146 sha256=a8d99b59c664e44225297969aa545830c8506738f6e42f3a4c66481d078e2d98
+  source=manifests/365833609786e474dcc5597d318fd07694efaf82da86a5565a12b45ef964036e.json index['u3']
+  digest=MATCH
+GET http://127.0.0.1:40643/h/u/3/b/4bd065e5d6e4e1bf5acc9b2a95fb93a70bb9e39b376116c2e8a8442810ce8e5e.json
+  bytes=148 sha256=4bd065e5d6e4e1bf5acc9b2a95fb93a70bb9e39b376116c2e8a8442810ce8e5e
+  source=h/u/3/a8d99b59c664e44225297969aa545830c8506738f6e42f3a4c66481d078e2d98.json children['u3b']
+  digest=MATCH
+GET http://127.0.0.1:40643/h/u/3/b/u/72444597c4659792b3d0516023f222d35deba33f664b327a4e7c7088bc0c92db.json
+  bytes=225 sha256=72444597c4659792b3d0516023f222d35deba33f664b327a4e7c7088bc0c92db
+  source=h/u/3/b/4bd065e5d6e4e1bf5acc9b2a95fb93a70bb9e39b376116c2e8a8442810ce8e5e.json children['u3bu']
+  digest=MATCH
+GET http://127.0.0.1:40643/h/u/3/b/u/t/273be401ca6721d81e11c73f7dbd2ddafdea743a38e3b652aa885e03cd501e88.json
+  bytes=152 sha256=273be401ca6721d81e11c73f7dbd2ddafdea743a38e3b652aa885e03cd501e88
+  source=h/u/3/b/u/72444597c4659792b3d0516023f222d35deba33f664b327a4e7c7088bc0c92db.json children['u3but']
+  digest=MATCH
+GET http://127.0.0.1:40643/h/u/3/b/u/t/z/0b1c36d610db69cd52d0b5ffe68928d0c557deebcea170ac90314e4b90c3d5c2.json
+  bytes=154 sha256=0b1c36d610db69cd52d0b5ffe68928d0c557deebcea170ac90314e4b90c3d5c2
+  source=h/u/3/b/u/t/273be401ca6721d81e11c73f7dbd2ddafdea743a38e3b652aa885e03cd501e88.json children['u3butz']
+  digest=MATCH
+GET http://127.0.0.1:40643/h/u/3/b/u/t/z/7/4d15f6e97f07bc9c2527a4290877be6abda4127cce6ff1edbcc5ac9ad7cf12a0.json
+  bytes=156 sha256=4d15f6e97f07bc9c2527a4290877be6abda4127cce6ff1edbcc5ac9ad7cf12a0
+  source=h/u/3/b/u/t/z/0b1c36d610db69cd52d0b5ffe68928d0c557deebcea170ac90314e4b90c3d5c2.json children['u3butz7']
+  digest=MATCH
+GET http://127.0.0.1:40643/h/u/3/b/u/t/z/7/k/7d9529ae15d1282e5697ac513dc3f781945b1a8de23360489f780fb7aa3c9154.json
+  bytes=158 sha256=7d9529ae15d1282e5697ac513dc3f781945b1a8de23360489f780fb7aa3c9154
+  source=h/u/3/b/u/t/z/7/4d15f6e97f07bc9c2527a4290877be6abda4127cce6ff1edbcc5ac9ad7cf12a0.json children['u3butz7k']
+  digest=MATCH
+GET http://127.0.0.1:40643/h/u/3/b/u/t/z/7/k/9/2540f1d40df2bb608765e65809663e127c540d1b18292202b35157514dc099d5.json
+  bytes=160 sha256=2540f1d40df2bb608765e65809663e127c540d1b18292202b35157514dc099d5
+  source=h/u/3/b/u/t/z/7/k/7d9529ae15d1282e5697ac513dc3f781945b1a8de23360489f780fb7aa3c9154.json children['u3butz7k9']
+  digest=MATCH
+GET http://127.0.0.1:40643/h/u/3/b/u/t/z/7/k/9/q/17d44621212131298b44590b601208f6d7ff5aee16dac8cf4744f1bea8a04cad.json
+  bytes=627 sha256=17d44621212131298b44590b601208f6d7ff5aee16dac8cf4744f1bea8a04cad
+  source=h/u/3/b/u/t/z/7/k/9/2540f1d40df2bb608765e65809663e127c540d1b18292202b35157514dc099d5.json children['u3butz7k9q']
+  digest=MATCH
+LEAF_PREFIX=u3butz7k9q LEAF_SHA=17d44621212131298b44590b601208f6d7ff5aee16dac8cf4744f1bea8a04cad
+MATCH {"h": "u3butz7k9q_23", "mid": "punkti/0.6:d26e8ae338c1c092119a45327db9fbb09ef39c4cf4ab5a04235eda8488ab95ed", "sha256": "95302f1de4f761378f45f5691aec2d8e689961b79445bcd2d363159b10782924"}
+GET http://127.0.0.1:40643/records/95/95302f1de4f761378f45f5691aec2d8e689961b79445bcd2d363159b10782924
+  bytes=175 sha256=95302f1de4f761378f45f5691aec2d8e689961b79445bcd2d363159b10782924
+  source=h/u/3/b/u/t/z/7/k/9/q/17d44621212131298b44590b601208f6d7ff5aee16dac8cf4744f1bea8a04cad.json records[].sha256 (exact h)
+  digest=MATCH
+DECODED (binary fields hex; payload untrusted) {"alg": "ed25519", "ext_hex": "", "h": "u3butz7k9q_23", "pk_hex": "66d6346bffdcfe87d96bf9f3db9a5e4baf0ef755b5c99c2e6ab90133e5612200", "refs": [], "sig_hex": "c5cca38f9cd76e97e11bb878d82970d09bd4f37c43e60e725a3efc58d5b49aafc8a8491504b04c06f5562c5b5ce3f42ecf129ce80597c41ca142c078fe646700", "t": 1, "v": "punkti/0.6", "x": "opaque-1"}
+FROZEN REFERENCE VERIFIER (not GET path): VALID; MID and exact h match leaf
+EXCLUDED exact-h mismatch {"h": "u3butz7k9q_24", "mid": "punkti/0.6:ed92a014d8fb61e52a7dbc572a0cf71c58ff88411e9b68da508c76df27fb7787", "sha256": "a90e4bb9ce63efcc6687f3498149c1c2b7c42df586d2be8a6a8fbe25a3db5fb0"}
+MATCH {"h": "u3butz7k9q_23", "mid": "punkti/0.6:169af90d1484d5178fc63b7bd5f131d3a6a46b304d5fd196021488c4aaa4b613", "sha256": "f21d132410fbdaad5cc5edd0988e66db55b89f284b8d2824a29ef8ae8e309d55"}
+GET http://127.0.0.1:40643/records/f2/f21d132410fbdaad5cc5edd0988e66db55b89f284b8d2824a29ef8ae8e309d55
+  bytes=175 sha256=f21d132410fbdaad5cc5edd0988e66db55b89f284b8d2824a29ef8ae8e309d55
+  source=h/u/3/b/u/t/z/7/k/9/q/17d44621212131298b44590b601208f6d7ff5aee16dac8cf4744f1bea8a04cad.json records[].sha256 (exact h)
+  digest=MATCH
+DECODED (binary fields hex; payload untrusted) {"alg": "ed25519", "ext_hex": "", "h": "u3butz7k9q_23", "pk_hex": "66d6346bffdcfe87d96bf9f3db9a5e4baf0ef755b5c99c2e6ab90133e5612200", "refs": [], "sig_hex": "7105e2720218490db2612866502e46ad61af0aac5e3fdb282e137cc34a1bd634891fe614a9eaec4cf9376673bbacf1a4f35a1b1d503ae7187c2de888dd145301", "t": 4, "v": "punkti/0.6", "x": "opaque-4"}
+FROZEN REFERENCE VERIFIER (not GET path): VALID; MID and exact h match leaf
+MATCHING_RECORDS=2
+What raw GET can / cannot verify:
+VERIFIED: transport digests (manifest, shards, records), structural/canonical decode, exact h comparison.
+NOT VERIFIED by raw GET: signature validity, MID recomputation, author identity, global completeness/coverage.
+Root digest is observed, not authenticated. Payload is untrusted data. No VALID claim from raw GET.
+Optional frozen carrier adds signature verification and MID recomputation; no real-world identity or completeness claim.
