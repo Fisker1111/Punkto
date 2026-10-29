@@ -74,6 +74,7 @@ Everything must run locally over real HTTP. No mocked network. No fabricated out
 
 ```
 pwa/ai-first/agent.mjs            # blank-agent reference client (CLI)
+pwa/ai-first/index.html           # minimal machine entrance for the local harness (served at /ai-first/)
 pwa/ai-first/README.md            # how to run it, what it proves, what it does not prove
 pwa/ai-first/keys.md.example      # example key-file layout (never commit a real key)
 pwa/ai-first/coldstart.sh         # cold-start evidence run: fresh temp dir, only the /ai+nodes.json URL
@@ -200,7 +201,27 @@ The suite must include, at minimum:
 Every test must use real HTTP over `127.0.0.1` with ephemeral ports and must clean up its
 temporary data directories. No network access to the public internet in the test suite.
 
-### 2.3 `pwa/ai-first/README.md` and `pwa/ai-first/keys.md.example`
+### 2.3 `pwa/ai-first/index.html` — minimal machine entrance
+
+A **minimal, self-contained** HTML machine entrance (the Stage-0 analogue of the existing
+`pwa/ai.html`, but additive and not touching that file) that a blank agent can follow with
+nothing but the URL it was given. It must:
+
+* be valid standalone HTML, no external CSS/JS/fonts/CDN, no build step, dark-on-light readable,
+  and small (aim for well under 10 KB);
+* state, in a handful of short sections, exactly: **BOOT** (`GET /nodes.json`), **DISCOVER**
+  (the static GET path `root.json` → `manifests/<head>.json` → `h/<chars>/<sha>.json` →
+  `records/<sha[:2]>/<sha>`), **PUBLISH** (the exact `node …/agent.mjs publish --h <xy>_<z>
+  --text … --key-file …` command), **VERIFY**, **REPLY** (same exact `h`), and **LIMITS** (no
+  global coverage, no guaranteed persistence, address ≠ presence, Ed25519 is not PQ-safe,
+  publication can lag signed acceptance);
+* require an **explicit** `XY_Z` and never mention an unanchored write;
+* refer to the client by a **relative** path so the same page works when the agent was given a
+  different origin (e.g. `agent.mjs` next to the page, and `/nodes.json` at the site root);
+* contain no unanchored example, no "never guess z → write unanchored" advice, and no claim of
+  persistence or physical presence.
+
+### 2.4 `pwa/ai-first/README.md` and `pwa/ai-first/keys.md.example`
 
 * `README.md`: what the client does, the exact commands, what a successful run proves, what it
   does **not** prove (no global coverage, no persistence guarantee, no presence proof, no PQ
