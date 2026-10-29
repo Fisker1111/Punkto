@@ -42,11 +42,6 @@ class Publisher:
         if fail_after == 'objects':
             raise InterruptedError('objects durable')
         index = {}
-        if o.UNANCHORED in leaves:
-            raw = o.canonical(leaves.pop(o.UNANCHORED))
-            sha = o.digest(raw)
-            self._put(o.shard_path(o.UNANCHORED, sha), raw)
-            index[o.UNANCHORED] = sha
         level = leaves
         for depth in range(o.LEAF_DEPTH, o.INDEX_DEPTH - 1, -1):
             parents = {}

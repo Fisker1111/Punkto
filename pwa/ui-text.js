@@ -2,6 +2,16 @@
  * ui-text.js — Punkto PWA Text feed + board-detail view
  */
 
+import { parse_h } from './punkti/spatial.js';
+
+// Punkto L4: reply placement is the parent's exact signed spatial address.
+export function replyAddress(parent) {
+  try { parse_h(parent?.h); } catch {
+    throw new Error('Cannot reply: parent has no valid spatial address.');
+  }
+  return parent.h;
+}
+
 import { stripPunktoPrefix } from './protocol/punkto-id.js';
 
 let _onShowOnMap = null;
@@ -279,6 +289,7 @@ async function submitBoardReply() {
   if (statusEl) statusEl.textContent = '';
   if (button) button.disabled = true;
   try {
+    replyAddress(_selectedBoardAtom);
     await _onPostReply({ boardAtom: _selectedBoardAtom, text });
     _replyDraft = '';
     if (textarea) textarea.value = '';

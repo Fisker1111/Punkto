@@ -19,7 +19,6 @@ KEY_LEN = 12
 INDEX_DEPTH = 2
 LEAF_DEPTH = 10
 ALPHABET = '0123456789bcdefghjkmnpqrstuvwxyz'
-UNANCHORED = '~'
 MAGIC = b'PUNKTIPACK1'
 PACK_MAX = 256
 MID_PREFIX = 'punkti/0.6:'
@@ -84,7 +83,7 @@ def _sha_ok(value):
 
 def _prefix_ok(prefix, depth):
     if not isinstance(prefix, str) or len(prefix) != depth or any(c not in ALPHABET for c in prefix):
-        raise ValueError('prefix')
+        raise PublicationReadError('non-conforming geographical key')
 
 
 def _shape(value, members):
@@ -115,23 +114,20 @@ def manifest(raw):
         _sha_ok(value['prev'])
     if (value['seq'] == 1) != (value['prev'] is None):
         raise ValueError('previous manifest')
-    if not isinstance(value['index'], dict) or len(value['index']) > 1025:
+    if not isinstance(value['index'], dict) or len(value['index']) > 1024:
         raise ValueError('index')
     for prefix, shard_sha in value['index'].items():
-        if prefix != UNANCHORED:
-            _prefix_ok(prefix, INDEX_DEPTH)
+        _prefix_ok(prefix, INDEX_DEPTH)
         _sha_ok(shard_sha)
     return value
 
 
 def leaf_key(h):
     parts = parse_h(h)
-    return xy_key(parts[0])[:LEAF_DEPTH] if parts else UNANCHORED
+    return xy_key(parts[0])[:LEAF_DEPTH]
 
 
 def intersects(prefix, scope):
-    if prefix == UNANCHORED:
-        return scope == Subscription()
     return (
         (scope.xy_hi is None or prefix.ljust(KEY_LEN, '0') < xy_key(scope.xy_hi)) and
         (scope.xy_lo is None or prefix.ljust(KEY_LEN, 'z') >= xy_key(scope.xy_lo))
@@ -141,6 +137,9 @@ def intersects(prefix, scope):
 def shard(raw, prefix):
     value = parse(raw)
     _shape(value, SHARD_MEMBERS)
+    if not isinstance(value['prefix'], str):
+        raise PublicationReadError('non-conforming geographical key')
+    _prefix_ok(value['prefix'], len(value['prefix']))
     if (
         value['prefix'] != prefix
         or not isinstance(value['children'], dict)
@@ -148,11 +147,13 @@ def shard(raw, prefix):
         or not isinstance(value['packs'], list)
     ):
         raise ValueError('shard shape')
-    if prefix != UNANCHORED:
-        _prefix_ok(prefix, len(prefix))
-        if not INDEX_DEPTH <= len(prefix) <= LEAF_DEPTH:
-            raise ValueError('depth')
-    leaf = prefix == UNANCHORED or len(prefix) == LEAF_DEPTH
+    if not isinstance(value['prefix'], str):
+        raise PublicationReadError('non-conforming geographical key')
+    _prefix_ok(value['prefix'], len(value['prefix']))
+    _prefix_ok(prefix, len(prefix))
+    if not INDEX_DEPTH <= len(prefix) <= LEAF_DEPTH:
+        raise PublicationReadError('non-conforming geographical key')
+    leaf = len(prefix) == LEAF_DEPTH
     if leaf:
         if value['children'] or not value['records']:
             raise ValueError('leaf shape')
@@ -307,11 +308,6 @@ class Publisher:
             raise InterruptedError('objects durable')
 
         index = {}
-        if UNANCHORED in leaves:
-            raw = canonical(leaves.pop(UNANCHORED))
-            sha = digest(raw)
-            self._put(shard_path(UNANCHORED, sha), raw)
-            index[UNANCHORED] = sha
 
         level = leaves
         for depth in range(LEAF_DEPTH, INDEX_DEPTH - 1, -1):

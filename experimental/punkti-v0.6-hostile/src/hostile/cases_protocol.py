@@ -83,7 +83,7 @@ def envelope_cases():
         add('t-'+n,raw.replace(b'"t":0',b'"t":'+v), S)
     signed('t-max',t=2**53-1); signed('t-zero'); add('json-whitespace',b' \n'+raw+b'\t ',V)
     for n,h in [('11','g'*11),('13','g'*13),('uppercase','G'*12)]+[(c,c*12) for c in 'ailo']: mutate('h-'+n,'h',h)
-    signed('h-empty',h=''); signed('h-valid',h='g'*12+'_0')
+    signed('h-empty',S,h=''); signed('h-valid',h='g'*12+'_0')
     for index,z in enumerate(['+23','2.3e1','023','23.','23.0','23.50','-0','0.0','٢٣','.5','23\n']):
         mutate('xy-z-spelling-'+str(index),'h','u3bu_'+z)
     for index,h in enumerate(['u3b_0','u'*13+'_0','u3bu__0','u3bu_','u3bu_'+'1'*28]):

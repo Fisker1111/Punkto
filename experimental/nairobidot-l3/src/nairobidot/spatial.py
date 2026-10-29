@@ -103,9 +103,8 @@ def format_z(height):
 
 
 def parse_h(address):
-    if type(address) is not str or len(address) > 32:
+    if type(address) is not str or not 6 <= len(address) <= 32:
         fail('address-type-length')
-    if address == '': return None
     fields = address.split('_')
     if len(fields) != 2:
         fail('address-separator')
@@ -122,7 +121,6 @@ def encode_h(lat, lon, height, precision=10):
 
 def altitude(address):
     pair = parse_h(address)
-    if pair is None: fail('unanchored-height')
     return parse_z(pair[1])
 
 
@@ -148,8 +146,6 @@ def matches(h, scope):
     if h is None:
         return all(v is None for v in selection.values())
     pair = parse_h(h)
-    if pair is None:
-        return all(v is None for v in selection.values())
     xy, z = pair
     for member, bound in selection.items():
         if bound is None: continue

@@ -1,0 +1,68 @@
+{
+  "base": "c835eb417190cf22d1e55a22eb9fd8d7c2efa340",
+  "profile": "XY_Z",
+  "suites": {
+    "reference": {
+      "tests": 37,
+      "seconds": 9.569,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "result": "PASS"
+    },
+    "clean_room": {
+      "tests": 34,
+      "seconds": 8.713,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "result": "PASS"
+    },
+    "interop": {
+      "tests": 14,
+      "seconds": 30.971,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "result": "PASS"
+    },
+    "hostile": {
+      "tests": 144,
+      "seconds": 196.186,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "result": "PASS"
+    },
+    "freeze": {
+      "tests": 14,
+      "seconds": 25.987,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "result": "PASS"
+    }
+  },
+  "pwa": {
+    "xy_z_assertions": 219,
+    "individual_syntax_checks": 10,
+    "module_syntax_checks": 4,
+    "slice5_helper_suite": "PASS"
+  },
+  "deterministic_generation": {
+    "consecutive_identical_runs": 2,
+    "sha256": {
+      "experimental/punkti-v0.6-freeze/vectors.json": "53635411841bf2e2bb599f23658ac2c368b4495376b263604ba52c0cea9a8b6c",
+      "experimental/punkti-v0.6-freeze/docs/NORMATIVE_VECTORS.md": "eec7895d4b71df2e7eda9a8df5503e39fa2007f15b33d526604f9af38566e361"
+    }
+  },
+  "protected_paths_diff_stat": "",
+  "manual_browser": "not performed; standalone codec, shipped flow unchanged",
+  "not_run": [
+    "full scale matrix",
+    "constrained container",
+    "WAN",
+    "relay"
+  ],
+  "historical_verification": "verification.json retains the original historical runs; this file records the XY_Z acceptance run"
+}

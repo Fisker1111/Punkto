@@ -12,11 +12,11 @@ Success verifies referenced objects at read time; no global completeness or fres
   "cases": [
     {
       "expected": {
-        "admitted": 6,
+        "admitted": 5,
         "candidate_count": 0,
         "candidates": {},
         "error_class": null,
-        "head": "ee82528d8a9929549d3fe4ef1853b7d75daf82050c014c9e67a128bddaa2568b",
+        "head": "55abfde8510889f4dad27a69d4b8d9d15a44168a23f5fc44dfae042efc305728",
         "reason": null,
         "rejected": 0,
         "seq": 1,
@@ -25,10 +25,9 @@ Success verifies referenced objects at read time; no global completeness or fres
           "punkti/0.6:2db7fa7aa91963a454c14b5bf33b6b68691e1addc3f9726c10b7398035add7e9": "109139f14294cdd1133348ce1002bb8f6883f9636756a636e21cc2bd44f9d584",
           "punkti/0.6:9b944678c2cb3a22263caf4140da8091e3c723ee9cf4475c62f5d52e32d662f6": "0be5211906518d907f5a9bbfd5f36e05a84a6a5ec31891d27de18017c1ee61c6",
           "punkti/0.6:c6a6afc75f76a5cd6cebd8830742ec856d421ae3f2b0f03ce622c8af0b85cca6": "25ce5db732f99db12584af17cdefedf2798a28174685cb094f0c95f2db531916",
-          "punkti/0.6:ccd9220ade890ff8f68f4f90f9ea0b49dc566c5d0f9252fef8bb4145c8550098": "f473c6bc447d71bd40bab3cb07fa5a6e972a121b1dd4cdb037ef92449d81c691",
           "punkti/0.6:fe600612fe892a9fa7952213528e637cb96f2e15c4a401d63fa58892826ec0f7": "c79451cba4bf2995d8df8958957d53b95cbf17276f44f3e71326a0cdf6c0a4b0"
         },
-        "valid_count": 6
+        "valid_count": 5
       },
       "name": "root-manifest",
       "packs": false,
@@ -36,11 +35,11 @@ Success verifies referenced objects at read time; no global completeness or fres
     },
     {
       "expected": {
-        "admitted": 6,
+        "admitted": 5,
         "candidate_count": 0,
         "candidates": {},
         "error_class": null,
-        "head": "6810ce0f0828781176a5e0ae741f303730fdda6c4d21ba0c75fde3733d218db4",
+        "head": "5c91c2f2a2fd98ff83f4bef18106b378c9c7cabaa9a7ae65b7ef3cca60031fd9",
         "reason": null,
         "rejected": 0,
         "seq": 1,
@@ -49,10 +48,9 @@ Success verifies referenced objects at read time; no global completeness or fres
           "punkti/0.6:2db7fa7aa91963a454c14b5bf33b6b68691e1addc3f9726c10b7398035add7e9": "109139f14294cdd1133348ce1002bb8f6883f9636756a636e21cc2bd44f9d584",
           "punkti/0.6:9b944678c2cb3a22263caf4140da8091e3c723ee9cf4475c62f5d52e32d662f6": "0be5211906518d907f5a9bbfd5f36e05a84a6a5ec31891d27de18017c1ee61c6",
           "punkti/0.6:c6a6afc75f76a5cd6cebd8830742ec856d421ae3f2b0f03ce622c8af0b85cca6": "25ce5db732f99db12584af17cdefedf2798a28174685cb094f0c95f2db531916",
-          "punkti/0.6:ccd9220ade890ff8f68f4f90f9ea0b49dc566c5d0f9252fef8bb4145c8550098": "f473c6bc447d71bd40bab3cb07fa5a6e972a121b1dd4cdb037ef92449d81c691",
           "punkti/0.6:fe600612fe892a9fa7952213528e637cb96f2e15c4a401d63fa58892826ec0f7": "c79451cba4bf2995d8df8958957d53b95cbf17276f44f3e71326a0cdf6c0a4b0"
         },
-        "valid_count": 6
+        "valid_count": 5
       },
       "name": "pack-discovery",
       "packs": true,
@@ -242,11 +240,11 @@ Success verifies referenced objects at read time; no global completeness or fres
   "cases": [
     {
       "expected": {
-        "admitted": 6,
+        "admitted": 5,
         "candidate_count": 0,
         "candidates": {},
         "error_class": null,
-        "head": "ee82528d8a9929549d3fe4ef1853b7d75daf82050c014c9e67a128bddaa2568b",
+        "head": "55abfde8510889f4dad27a69d4b8d9d15a44168a23f5fc44dfae042efc305728",
         "reason": null,
         "rejected": 0,
         "seq": 1,
@@ -255,10 +253,9 @@ Success verifies referenced objects at read time; no global completeness or fres
           "punkti/0.6:2db7fa7aa91963a454c14b5bf33b6b68691e1addc3f9726c10b7398035add7e9": "109139f14294cdd1133348ce1002bb8f6883f9636756a636e21cc2bd44f9d584",
           "punkti/0.6:9b944678c2cb3a22263caf4140da8091e3c723ee9cf4475c62f5d52e32d662f6": "0be5211906518d907f5a9bbfd5f36e05a84a6a5ec31891d27de18017c1ee61c6",
           "punkti/0.6:c6a6afc75f76a5cd6cebd8830742ec856d421ae3f2b0f03ce622c8af0b85cca6": "25ce5db732f99db12584af17cdefedf2798a28174685cb094f0c95f2db531916",
-          "punkti/0.6:ccd9220ade890ff8f68f4f90f9ea0b49dc566c5d0f9252fef8bb4145c8550098": "f473c6bc447d71bd40bab3cb07fa5a6e972a121b1dd4cdb037ef92449d81c691",
           "punkti/0.6:fe600612fe892a9fa7952213528e637cb96f2e15c4a401d63fa58892826ec0f7": "c79451cba4bf2995d8df8958957d53b95cbf17276f44f3e71326a0cdf6c0a4b0"
         },
-        "valid_count": 6
+        "valid_count": 5
       },
       "name": "exact-R-MID",
       "source": "index"
@@ -280,11 +277,6 @@ Success verifies referenced objects at read time; no global completeness or fres
       "hex": "000000620000000a70756e6b74692f302e36000000013300000007657a7334325f3000000009666978747572652d33000000076564323535313900000020ef3dfc2a574748f04377ff1abb00c43c897e4d64058de1ba690b3895fbb340070000000000000000000000402572295d7e7eb49d5641531966c79666df008ded2bdf2dcae77ac3fb839cc5afcd365edcf68d75f1ae3e1326aeddae27a138a6f1d170edb8736d2ea290f6eb06",
       "mid": "punkti/0.6:2db7fa7aa91963a454c14b5bf33b6b68691e1addc3f9726c10b7398035add7e9",
       "sha256": "109139f14294cdd1133348ce1002bb8f6883f9636756a636e21cc2bd44f9d584"
-    },
-    {
-      "hex": "0000005b0000000a70756e6b74692f302e3600000001340000000000000009666978747572652d34000000076564323535313900000020ef3dfc2a574748f04377ff1abb00c43c897e4d64058de1ba690b3895fbb3400700000000000000000000004070a540df8c8ec551a9c20ea65575e44b8fbed42558e5f7594db7bc3880a27de7adcf1794bb56ca168685823c022216643096ce8862c05155badfb2b0994b1206",
-      "mid": "punkti/0.6:ccd9220ade890ff8f68f4f90f9ea0b49dc566c5d0f9252fef8bb4145c8550098",
-      "sha256": "f473c6bc447d71bd40bab3cb07fa5a6e972a121b1dd4cdb037ef92449d81c691"
     },
     {
       "hex": "000000610000000a70756e6b74692f302e36000000013500000006303030305f3000000009666978747572652d35000000076564323535313900000020ef3dfc2a574748f04377ff1abb00c43c897e4d64058de1ba690b3895fbb34007000000000000000000000040d99c08654fa7bfc0c6cc983320a64d6cfe5652f64eeab4567ac0a7fc2efb43c9cebd9dcae52cbbca4d6e7a20e2be1d5e003a87f203d9daf4aae59006fee25306",
@@ -368,7 +360,7 @@ Success verifies referenced objects at read time; no global completeness or fres
         "candidate_count": 0,
         "candidates": {},
         "error_class": null,
-        "head": "ee82528d8a9929549d3fe4ef1853b7d75daf82050c014c9e67a128bddaa2568b",
+        "head": "55abfde8510889f4dad27a69d4b8d9d15a44168a23f5fc44dfae042efc305728",
         "reason": null,
         "rejected": 0,
         "seq": 1,
@@ -381,7 +373,6 @@ Success verifies referenced objects at read time; no global completeness or fres
       },
       "forbidden_records": [
         "109139f14294cdd1133348ce1002bb8f6883f9636756a636e21cc2bd44f9d584",
-        "f473c6bc447d71bd40bab3cb07fa5a6e972a121b1dd4cdb037ef92449d81c691",
         "0be5211906518d907f5a9bbfd5f36e05a84a6a5ec31891d27de18017c1ee61c6"
       ],
       "name": "XY",
@@ -397,7 +388,7 @@ Success verifies referenced objects at read time; no global completeness or fres
         "candidate_count": 0,
         "candidates": {},
         "error_class": null,
-        "head": "ee82528d8a9929549d3fe4ef1853b7d75daf82050c014c9e67a128bddaa2568b",
+        "head": "55abfde8510889f4dad27a69d4b8d9d15a44168a23f5fc44dfae042efc305728",
         "reason": null,
         "rejected": 0,
         "seq": 1,
@@ -406,10 +397,8 @@ Success verifies referenced objects at read time; no global completeness or fres
         },
         "valid_count": 1
       },
-      "forbidden_records": [
-        "f473c6bc447d71bd40bab3cb07fa5a6e972a121b1dd4cdb037ef92449d81c691"
-      ],
-      "name": "zero-cell-not-unanchored",
+      "forbidden_records": [],
+      "name": "zero-cell-is-geographical",
       "scope": {
         "xy_hi": "1",
         "xy_lo": "0"
@@ -418,11 +407,11 @@ Success verifies referenced objects at read time; no global completeness or fres
     },
     {
       "expected": {
-        "admitted": 6,
+        "admitted": 5,
         "candidate_count": 0,
         "candidates": {},
         "error_class": null,
-        "head": "ee82528d8a9929549d3fe4ef1853b7d75daf82050c014c9e67a128bddaa2568b",
+        "head": "55abfde8510889f4dad27a69d4b8d9d15a44168a23f5fc44dfae042efc305728",
         "reason": null,
         "rejected": 0,
         "seq": 1,
@@ -431,12 +420,17 @@ Success verifies referenced objects at read time; no global completeness or fres
           "punkti/0.6:2db7fa7aa91963a454c14b5bf33b6b68691e1addc3f9726c10b7398035add7e9": "109139f14294cdd1133348ce1002bb8f6883f9636756a636e21cc2bd44f9d584",
           "punkti/0.6:9b944678c2cb3a22263caf4140da8091e3c723ee9cf4475c62f5d52e32d662f6": "0be5211906518d907f5a9bbfd5f36e05a84a6a5ec31891d27de18017c1ee61c6",
           "punkti/0.6:c6a6afc75f76a5cd6cebd8830742ec856d421ae3f2b0f03ce622c8af0b85cca6": "25ce5db732f99db12584af17cdefedf2798a28174685cb094f0c95f2db531916",
-          "punkti/0.6:ccd9220ade890ff8f68f4f90f9ea0b49dc566c5d0f9252fef8bb4145c8550098": "f473c6bc447d71bd40bab3cb07fa5a6e972a121b1dd4cdb037ef92449d81c691",
           "punkti/0.6:fe600612fe892a9fa7952213528e637cb96f2e15c4a401d63fa58892826ec0f7": "c79451cba4bf2995d8df8958957d53b95cbf17276f44f3e71326a0cdf6c0a4b0"
         },
-        "valid_count": 6
+        "valid_count": 5
       },
-      "name": "unrestricted-includes-unanchored",
+      "name": "unrestricted-all-anchored",
+      "scope": {
+        "xy_hi": null,
+        "xy_lo": null,
+        "z_max": null,
+        "z_min": null
+      },
       "source": "index"
     }
   ],
@@ -455,7 +449,7 @@ Success verifies referenced objects at read time; no global completeness or fres
         "candidate_count": 0,
         "candidates": {},
         "error_class": null,
-        "head": "ee82528d8a9929549d3fe4ef1853b7d75daf82050c014c9e67a128bddaa2568b",
+        "head": "55abfde8510889f4dad27a69d4b8d9d15a44168a23f5fc44dfae042efc305728",
         "reason": null,
         "rejected": 0,
         "seq": 1,
@@ -481,7 +475,7 @@ Success verifies referenced objects at read time; no global completeness or fres
         "candidate_count": 0,
         "candidates": {},
         "error_class": null,
-        "head": "ee82528d8a9929549d3fe4ef1853b7d75daf82050c014c9e67a128bddaa2568b",
+        "head": "55abfde8510889f4dad27a69d4b8d9d15a44168a23f5fc44dfae042efc305728",
         "reason": null,
         "rejected": 0,
         "seq": 1,
@@ -550,10 +544,9 @@ Success verifies referenced objects at read time; no global completeness or fres
           "punkti/0.6:2db7fa7aa91963a454c14b5bf33b6b68691e1addc3f9726c10b7398035add7e9": "109139f14294cdd1133348ce1002bb8f6883f9636756a636e21cc2bd44f9d584",
           "punkti/0.6:9b944678c2cb3a22263caf4140da8091e3c723ee9cf4475c62f5d52e32d662f6": "0be5211906518d907f5a9bbfd5f36e05a84a6a5ec31891d27de18017c1ee61c6",
           "punkti/0.6:c6a6afc75f76a5cd6cebd8830742ec856d421ae3f2b0f03ce622c8af0b85cca6": "25ce5db732f99db12584af17cdefedf2798a28174685cb094f0c95f2db531916",
-          "punkti/0.6:ccd9220ade890ff8f68f4f90f9ea0b49dc566c5d0f9252fef8bb4145c8550098": "f473c6bc447d71bd40bab3cb07fa5a6e972a121b1dd4cdb037ef92449d81c691",
           "punkti/0.6:fe600612fe892a9fa7952213528e637cb96f2e15c4a401d63fa58892826ec0f7": "c79451cba4bf2995d8df8958957d53b95cbf17276f44f3e71326a0cdf6c0a4b0"
         },
-        "valid_count": 6
+        "valid_count": 5
       },
       "name": "stale",
       "prime": "newer",
@@ -561,11 +554,11 @@ Success verifies referenced objects at read time; no global completeness or fres
     },
     {
       "expected": {
-        "admitted": 6,
+        "admitted": 5,
         "candidate_count": 0,
         "candidates": {},
         "error_class": null,
-        "head": "ee82528d8a9929549d3fe4ef1853b7d75daf82050c014c9e67a128bddaa2568b",
+        "head": "55abfde8510889f4dad27a69d4b8d9d15a44168a23f5fc44dfae042efc305728",
         "reason": null,
         "rejected": 0,
         "seq": 1,
@@ -574,10 +567,9 @@ Success verifies referenced objects at read time; no global completeness or fres
           "punkti/0.6:2db7fa7aa91963a454c14b5bf33b6b68691e1addc3f9726c10b7398035add7e9": "109139f14294cdd1133348ce1002bb8f6883f9636756a636e21cc2bd44f9d584",
           "punkti/0.6:9b944678c2cb3a22263caf4140da8091e3c723ee9cf4475c62f5d52e32d662f6": "0be5211906518d907f5a9bbfd5f36e05a84a6a5ec31891d27de18017c1ee61c6",
           "punkti/0.6:c6a6afc75f76a5cd6cebd8830742ec856d421ae3f2b0f03ce622c8af0b85cca6": "25ce5db732f99db12584af17cdefedf2798a28174685cb094f0c95f2db531916",
-          "punkti/0.6:ccd9220ade890ff8f68f4f90f9ea0b49dc566c5d0f9252fef8bb4145c8550098": "f473c6bc447d71bd40bab3cb07fa5a6e972a121b1dd4cdb037ef92449d81c691",
           "punkti/0.6:fe600612fe892a9fa7952213528e637cb96f2e15c4a401d63fa58892826ec0f7": "c79451cba4bf2995d8df8958957d53b95cbf17276f44f3e71326a0cdf6c0a4b0"
         },
-        "valid_count": 6
+        "valid_count": 5
       },
       "name": "retry-idempotent",
       "retry": true,
@@ -595,11 +587,11 @@ Success verifies referenced objects at read time; no global completeness or fres
   "cases": [
     {
       "expected": {
-        "admitted": 6,
+        "admitted": 5,
         "candidate_count": 0,
         "candidates": {},
         "error_class": null,
-        "head": "ee82528d8a9929549d3fe4ef1853b7d75daf82050c014c9e67a128bddaa2568b",
+        "head": "55abfde8510889f4dad27a69d4b8d9d15a44168a23f5fc44dfae042efc305728",
         "reason": null,
         "rejected": 0,
         "seq": 1,
@@ -608,21 +600,20 @@ Success verifies referenced objects at read time; no global completeness or fres
           "punkti/0.6:2db7fa7aa91963a454c14b5bf33b6b68691e1addc3f9726c10b7398035add7e9": "109139f14294cdd1133348ce1002bb8f6883f9636756a636e21cc2bd44f9d584",
           "punkti/0.6:9b944678c2cb3a22263caf4140da8091e3c723ee9cf4475c62f5d52e32d662f6": "0be5211906518d907f5a9bbfd5f36e05a84a6a5ec31891d27de18017c1ee61c6",
           "punkti/0.6:c6a6afc75f76a5cd6cebd8830742ec856d421ae3f2b0f03ce622c8af0b85cca6": "25ce5db732f99db12584af17cdefedf2798a28174685cb094f0c95f2db531916",
-          "punkti/0.6:ccd9220ade890ff8f68f4f90f9ea0b49dc566c5d0f9252fef8bb4145c8550098": "f473c6bc447d71bd40bab3cb07fa5a6e972a121b1dd4cdb037ef92449d81c691",
           "punkti/0.6:fe600612fe892a9fa7952213528e637cb96f2e15c4a401d63fa58892826ec0f7": "c79451cba4bf2995d8df8958957d53b95cbf17276f44f3e71326a0cdf6c0a4b0"
         },
-        "valid_count": 6
+        "valid_count": 5
       },
       "name": "static-index",
       "source": "index"
     },
     {
       "expected": {
-        "admitted": 6,
+        "admitted": 5,
         "candidate_count": 0,
         "candidates": {},
         "error_class": null,
-        "head": "6810ce0f0828781176a5e0ae741f303730fdda6c4d21ba0c75fde3733d218db4",
+        "head": "5c91c2f2a2fd98ff83f4bef18106b378c9c7cabaa9a7ae65b7ef3cca60031fd9",
         "reason": null,
         "rejected": 0,
         "seq": 1,
@@ -631,10 +622,9 @@ Success verifies referenced objects at read time; no global completeness or fres
           "punkti/0.6:2db7fa7aa91963a454c14b5bf33b6b68691e1addc3f9726c10b7398035add7e9": "109139f14294cdd1133348ce1002bb8f6883f9636756a636e21cc2bd44f9d584",
           "punkti/0.6:9b944678c2cb3a22263caf4140da8091e3c723ee9cf4475c62f5d52e32d662f6": "0be5211906518d907f5a9bbfd5f36e05a84a6a5ec31891d27de18017c1ee61c6",
           "punkti/0.6:c6a6afc75f76a5cd6cebd8830742ec856d421ae3f2b0f03ce622c8af0b85cca6": "25ce5db732f99db12584af17cdefedf2798a28174685cb094f0c95f2db531916",
-          "punkti/0.6:ccd9220ade890ff8f68f4f90f9ea0b49dc566c5d0f9252fef8bb4145c8550098": "f473c6bc447d71bd40bab3cb07fa5a6e972a121b1dd4cdb037ef92449d81c691",
           "punkti/0.6:fe600612fe892a9fa7952213528e637cb96f2e15c4a401d63fa58892826ec0f7": "c79451cba4bf2995d8df8958957d53b95cbf17276f44f3e71326a0cdf6c0a4b0"
         },
-        "valid_count": 6
+        "valid_count": 5
       },
       "name": "static-packs",
       "packs": true,
@@ -642,5 +632,779 @@ Success verifies referenced objects at read time; no global completeness or fres
     }
   ],
   "id": "V9"
+}
+```
+
+## V10
+
+```json
+{
+  "cases": [
+    {
+      "expected": "INVALID-structural",
+      "input": {
+        "alg": "ed25519",
+        "ext": "",
+        "h": "",
+        "pk": "7z38KldHSPBDd/8auwDEPIl+TWQFjeG6aQs4lfuzQAc=",
+        "refs": [],
+        "sig": "xwkvEUekFGdcYYpktgQOqUHvy35yt2lkFPIaEkLt5z+kCi/6OTBwHP+WxG3qFNCVzCkbRid4jEMnXmOBvyhmDw==",
+        "t": 1,
+        "v": "punkti/0.6",
+        "x": "fixture-1"
+      },
+      "kind": "envelope",
+      "name": "empty-ed25519"
+    },
+    {
+      "expected": "INVALID-structural",
+      "input": {
+        "alg": "future-alg",
+        "ext": "",
+        "h": "",
+        "pk": "7z38KldHSPBDd/8auwDEPIl+TWQFjeG6aQs4lfuzQAc=",
+        "refs": [],
+        "sig": "FJYnB+ToeIxb16iyQWVloUhbLpD+9s7Yh5gDsQtgfTspNeUcpXvEM/65JA0j7ukxZaqomByfNrEUCBYs5qrnCQ==",
+        "t": 1,
+        "v": "punkti/0.6",
+        "x": "fixture-1"
+      },
+      "kind": "envelope",
+      "name": "empty-future-alg"
+    },
+    {
+      "expected": "INVALID-structural",
+      "input": {
+        "alg": "ed25519",
+        "ext": "",
+        "pk": "7z38KldHSPBDd/8auwDEPIl+TWQFjeG6aQs4lfuzQAc=",
+        "refs": [],
+        "sig": "xwkvEUekFGdcYYpktgQOqUHvy35yt2lkFPIaEkLt5z+kCi/6OTBwHP+WxG3qFNCVzCkbRid4jEMnXmOBvyhmDw==",
+        "t": 1,
+        "v": "punkti/0.6",
+        "x": "fixture-1"
+      },
+      "kind": "envelope",
+      "name": "missing-ed25519"
+    },
+    {
+      "expected": "INVALID-structural",
+      "input": {
+        "alg": "future-alg",
+        "ext": "",
+        "pk": "7z38KldHSPBDd/8auwDEPIl+TWQFjeG6aQs4lfuzQAc=",
+        "refs": [],
+        "sig": "FJYnB+ToeIxb16iyQWVloUhbLpD+9s7Yh5gDsQtgfTspNeUcpXvEM/65JA0j7ukxZaqomByfNrEUCBYs5qrnCQ==",
+        "t": 1,
+        "v": "punkti/0.6",
+        "x": "fixture-1"
+      },
+      "kind": "envelope",
+      "name": "missing-future-alg"
+    },
+    {
+      "expected": "INVALID-structural",
+      "input": {
+        "alg": "ed25519",
+        "ext": "",
+        "h": null,
+        "pk": "7z38KldHSPBDd/8auwDEPIl+TWQFjeG6aQs4lfuzQAc=",
+        "refs": [],
+        "sig": "xwkvEUekFGdcYYpktgQOqUHvy35yt2lkFPIaEkLt5z+kCi/6OTBwHP+WxG3qFNCVzCkbRid4jEMnXmOBvyhmDw==",
+        "t": 1,
+        "v": "punkti/0.6",
+        "x": "fixture-1"
+      },
+      "kind": "envelope",
+      "name": "null-ed25519"
+    },
+    {
+      "expected": "INVALID-structural",
+      "input": {
+        "alg": "future-alg",
+        "ext": "",
+        "h": null,
+        "pk": "7z38KldHSPBDd/8auwDEPIl+TWQFjeG6aQs4lfuzQAc=",
+        "refs": [],
+        "sig": "FJYnB+ToeIxb16iyQWVloUhbLpD+9s7Yh5gDsQtgfTspNeUcpXvEM/65JA0j7ukxZaqomByfNrEUCBYs5qrnCQ==",
+        "t": 1,
+        "v": "punkti/0.6",
+        "x": "fixture-1"
+      },
+      "kind": "envelope",
+      "name": "null-future-alg"
+    },
+    {
+      "expected": "INVALID-structural",
+      "input": {
+        "alg": "ed25519",
+        "ext": "",
+        "h": "u3b_0",
+        "pk": "7z38KldHSPBDd/8auwDEPIl+TWQFjeG6aQs4lfuzQAc=",
+        "refs": [],
+        "sig": "xwkvEUekFGdcYYpktgQOqUHvy35yt2lkFPIaEkLt5z+kCi/6OTBwHP+WxG3qFNCVzCkbRid4jEMnXmOBvyhmDw==",
+        "t": 1,
+        "v": "punkti/0.6",
+        "x": "fixture-1"
+      },
+      "kind": "envelope",
+      "name": "xy-too-short-ed25519"
+    },
+    {
+      "expected": "INVALID-structural",
+      "input": {
+        "alg": "future-alg",
+        "ext": "",
+        "h": "u3b_0",
+        "pk": "7z38KldHSPBDd/8auwDEPIl+TWQFjeG6aQs4lfuzQAc=",
+        "refs": [],
+        "sig": "FJYnB+ToeIxb16iyQWVloUhbLpD+9s7Yh5gDsQtgfTspNeUcpXvEM/65JA0j7ukxZaqomByfNrEUCBYs5qrnCQ==",
+        "t": 1,
+        "v": "punkti/0.6",
+        "x": "fixture-1"
+      },
+      "kind": "envelope",
+      "name": "xy-too-short-future-alg"
+    },
+    {
+      "expected": "INVALID-structural",
+      "input": {
+        "alg": "ed25519",
+        "ext": "",
+        "h": "u3butz7k9q7v0_0",
+        "pk": "7z38KldHSPBDd/8auwDEPIl+TWQFjeG6aQs4lfuzQAc=",
+        "refs": [],
+        "sig": "xwkvEUekFGdcYYpktgQOqUHvy35yt2lkFPIaEkLt5z+kCi/6OTBwHP+WxG3qFNCVzCkbRid4jEMnXmOBvyhmDw==",
+        "t": 1,
+        "v": "punkti/0.6",
+        "x": "fixture-1"
+      },
+      "kind": "envelope",
+      "name": "xy-too-long-ed25519"
+    },
+    {
+      "expected": "INVALID-structural",
+      "input": {
+        "alg": "future-alg",
+        "ext": "",
+        "h": "u3butz7k9q7v0_0",
+        "pk": "7z38KldHSPBDd/8auwDEPIl+TWQFjeG6aQs4lfuzQAc=",
+        "refs": [],
+        "sig": "FJYnB+ToeIxb16iyQWVloUhbLpD+9s7Yh5gDsQtgfTspNeUcpXvEM/65JA0j7ukxZaqomByfNrEUCBYs5qrnCQ==",
+        "t": 1,
+        "v": "punkti/0.6",
+        "x": "fixture-1"
+      },
+      "kind": "envelope",
+      "name": "xy-too-long-future-alg"
+    },
+    {
+      "expected": "INVALID-structural",
+      "input": {
+        "alg": "ed25519",
+        "ext": "",
+        "h": "u3ba_0",
+        "pk": "7z38KldHSPBDd/8auwDEPIl+TWQFjeG6aQs4lfuzQAc=",
+        "refs": [],
+        "sig": "xwkvEUekFGdcYYpktgQOqUHvy35yt2lkFPIaEkLt5z+kCi/6OTBwHP+WxG3qFNCVzCkbRid4jEMnXmOBvyhmDw==",
+        "t": 1,
+        "v": "punkti/0.6",
+        "x": "fixture-1"
+      },
+      "kind": "envelope",
+      "name": "xy-bad-alphabet-ed25519"
+    },
+    {
+      "expected": "INVALID-structural",
+      "input": {
+        "alg": "future-alg",
+        "ext": "",
+        "h": "u3ba_0",
+        "pk": "7z38KldHSPBDd/8auwDEPIl+TWQFjeG6aQs4lfuzQAc=",
+        "refs": [],
+        "sig": "FJYnB+ToeIxb16iyQWVloUhbLpD+9s7Yh5gDsQtgfTspNeUcpXvEM/65JA0j7ukxZaqomByfNrEUCBYs5qrnCQ==",
+        "t": 1,
+        "v": "punkti/0.6",
+        "x": "fixture-1"
+      },
+      "kind": "envelope",
+      "name": "xy-bad-alphabet-future-alg"
+    },
+    {
+      "expected": "INVALID-structural",
+      "input": {
+        "alg": "ed25519",
+        "ext": "",
+        "h": "U3BU_0",
+        "pk": "7z38KldHSPBDd/8auwDEPIl+TWQFjeG6aQs4lfuzQAc=",
+        "refs": [],
+        "sig": "xwkvEUekFGdcYYpktgQOqUHvy35yt2lkFPIaEkLt5z+kCi/6OTBwHP+WxG3qFNCVzCkbRid4jEMnXmOBvyhmDw==",
+        "t": 1,
+        "v": "punkti/0.6",
+        "x": "fixture-1"
+      },
+      "kind": "envelope",
+      "name": "xy-uppercase-ed25519"
+    },
+    {
+      "expected": "INVALID-structural",
+      "input": {
+        "alg": "future-alg",
+        "ext": "",
+        "h": "U3BU_0",
+        "pk": "7z38KldHSPBDd/8auwDEPIl+TWQFjeG6aQs4lfuzQAc=",
+        "refs": [],
+        "sig": "FJYnB+ToeIxb16iyQWVloUhbLpD+9s7Yh5gDsQtgfTspNeUcpXvEM/65JA0j7ukxZaqomByfNrEUCBYs5qrnCQ==",
+        "t": 1,
+        "v": "punkti/0.6",
+        "x": "fixture-1"
+      },
+      "kind": "envelope",
+      "name": "xy-uppercase-future-alg"
+    },
+    {
+      "expected": "INVALID-structural",
+      "input": {
+        "alg": "ed25519",
+        "ext": "",
+        "h": "u3bu_+1",
+        "pk": "7z38KldHSPBDd/8auwDEPIl+TWQFjeG6aQs4lfuzQAc=",
+        "refs": [],
+        "sig": "xwkvEUekFGdcYYpktgQOqUHvy35yt2lkFPIaEkLt5z+kCi/6OTBwHP+WxG3qFNCVzCkbRid4jEMnXmOBvyhmDw==",
+        "t": 1,
+        "v": "punkti/0.6",
+        "x": "fixture-1"
+      },
+      "kind": "envelope",
+      "name": "z-plus-ed25519"
+    },
+    {
+      "expected": "INVALID-structural",
+      "input": {
+        "alg": "future-alg",
+        "ext": "",
+        "h": "u3bu_+1",
+        "pk": "7z38KldHSPBDd/8auwDEPIl+TWQFjeG6aQs4lfuzQAc=",
+        "refs": [],
+        "sig": "FJYnB+ToeIxb16iyQWVloUhbLpD+9s7Yh5gDsQtgfTspNeUcpXvEM/65JA0j7ukxZaqomByfNrEUCBYs5qrnCQ==",
+        "t": 1,
+        "v": "punkti/0.6",
+        "x": "fixture-1"
+      },
+      "kind": "envelope",
+      "name": "z-plus-future-alg"
+    },
+    {
+      "expected": "INVALID-structural",
+      "input": {
+        "alg": "ed25519",
+        "ext": "",
+        "h": "u3bu_-0",
+        "pk": "7z38KldHSPBDd/8auwDEPIl+TWQFjeG6aQs4lfuzQAc=",
+        "refs": [],
+        "sig": "xwkvEUekFGdcYYpktgQOqUHvy35yt2lkFPIaEkLt5z+kCi/6OTBwHP+WxG3qFNCVzCkbRid4jEMnXmOBvyhmDw==",
+        "t": 1,
+        "v": "punkti/0.6",
+        "x": "fixture-1"
+      },
+      "kind": "envelope",
+      "name": "z-negative-zero-ed25519"
+    },
+    {
+      "expected": "INVALID-structural",
+      "input": {
+        "alg": "future-alg",
+        "ext": "",
+        "h": "u3bu_-0",
+        "pk": "7z38KldHSPBDd/8auwDEPIl+TWQFjeG6aQs4lfuzQAc=",
+        "refs": [],
+        "sig": "FJYnB+ToeIxb16iyQWVloUhbLpD+9s7Yh5gDsQtgfTspNeUcpXvEM/65JA0j7ukxZaqomByfNrEUCBYs5qrnCQ==",
+        "t": 1,
+        "v": "punkti/0.6",
+        "x": "fixture-1"
+      },
+      "kind": "envelope",
+      "name": "z-negative-zero-future-alg"
+    },
+    {
+      "expected": "INVALID-structural",
+      "input": {
+        "alg": "ed25519",
+        "ext": "",
+        "h": "u3bu_0.0",
+        "pk": "7z38KldHSPBDd/8auwDEPIl+TWQFjeG6aQs4lfuzQAc=",
+        "refs": [],
+        "sig": "xwkvEUekFGdcYYpktgQOqUHvy35yt2lkFPIaEkLt5z+kCi/6OTBwHP+WxG3qFNCVzCkbRid4jEMnXmOBvyhmDw==",
+        "t": 1,
+        "v": "punkti/0.6",
+        "x": "fixture-1"
+      },
+      "kind": "envelope",
+      "name": "z-decimal-zero-ed25519"
+    },
+    {
+      "expected": "INVALID-structural",
+      "input": {
+        "alg": "future-alg",
+        "ext": "",
+        "h": "u3bu_0.0",
+        "pk": "7z38KldHSPBDd/8auwDEPIl+TWQFjeG6aQs4lfuzQAc=",
+        "refs": [],
+        "sig": "FJYnB+ToeIxb16iyQWVloUhbLpD+9s7Yh5gDsQtgfTspNeUcpXvEM/65JA0j7ukxZaqomByfNrEUCBYs5qrnCQ==",
+        "t": 1,
+        "v": "punkti/0.6",
+        "x": "fixture-1"
+      },
+      "kind": "envelope",
+      "name": "z-decimal-zero-future-alg"
+    },
+    {
+      "expected": "INVALID-structural",
+      "input": {
+        "alg": "ed25519",
+        "ext": "",
+        "h": "u3bu_23.",
+        "pk": "7z38KldHSPBDd/8auwDEPIl+TWQFjeG6aQs4lfuzQAc=",
+        "refs": [],
+        "sig": "xwkvEUekFGdcYYpktgQOqUHvy35yt2lkFPIaEkLt5z+kCi/6OTBwHP+WxG3qFNCVzCkbRid4jEMnXmOBvyhmDw==",
+        "t": 1,
+        "v": "punkti/0.6",
+        "x": "fixture-1"
+      },
+      "kind": "envelope",
+      "name": "z-empty-fraction-ed25519"
+    },
+    {
+      "expected": "INVALID-structural",
+      "input": {
+        "alg": "future-alg",
+        "ext": "",
+        "h": "u3bu_23.",
+        "pk": "7z38KldHSPBDd/8auwDEPIl+TWQFjeG6aQs4lfuzQAc=",
+        "refs": [],
+        "sig": "FJYnB+ToeIxb16iyQWVloUhbLpD+9s7Yh5gDsQtgfTspNeUcpXvEM/65JA0j7ukxZaqomByfNrEUCBYs5qrnCQ==",
+        "t": 1,
+        "v": "punkti/0.6",
+        "x": "fixture-1"
+      },
+      "kind": "envelope",
+      "name": "z-empty-fraction-future-alg"
+    },
+    {
+      "expected": "INVALID-structural",
+      "input": {
+        "alg": "ed25519",
+        "ext": "",
+        "h": "u3bu_2.3e1",
+        "pk": "7z38KldHSPBDd/8auwDEPIl+TWQFjeG6aQs4lfuzQAc=",
+        "refs": [],
+        "sig": "xwkvEUekFGdcYYpktgQOqUHvy35yt2lkFPIaEkLt5z+kCi/6OTBwHP+WxG3qFNCVzCkbRid4jEMnXmOBvyhmDw==",
+        "t": 1,
+        "v": "punkti/0.6",
+        "x": "fixture-1"
+      },
+      "kind": "envelope",
+      "name": "z-exponent-ed25519"
+    },
+    {
+      "expected": "INVALID-structural",
+      "input": {
+        "alg": "future-alg",
+        "ext": "",
+        "h": "u3bu_2.3e1",
+        "pk": "7z38KldHSPBDd/8auwDEPIl+TWQFjeG6aQs4lfuzQAc=",
+        "refs": [],
+        "sig": "FJYnB+ToeIxb16iyQWVloUhbLpD+9s7Yh5gDsQtgfTspNeUcpXvEM/65JA0j7ukxZaqomByfNrEUCBYs5qrnCQ==",
+        "t": 1,
+        "v": "punkti/0.6",
+        "x": "fixture-1"
+      },
+      "kind": "envelope",
+      "name": "z-exponent-future-alg"
+    },
+    {
+      "expected": "INVALID-structural",
+      "input": {
+        "alg": "ed25519",
+        "ext": "",
+        "h": "u3bu_\u0662\u0663",
+        "pk": "7z38KldHSPBDd/8auwDEPIl+TWQFjeG6aQs4lfuzQAc=",
+        "refs": [],
+        "sig": "xwkvEUekFGdcYYpktgQOqUHvy35yt2lkFPIaEkLt5z+kCi/6OTBwHP+WxG3qFNCVzCkbRid4jEMnXmOBvyhmDw==",
+        "t": 1,
+        "v": "punkti/0.6",
+        "x": "fixture-1"
+      },
+      "kind": "envelope",
+      "name": "z-non-ascii-ed25519"
+    },
+    {
+      "expected": "INVALID-structural",
+      "input": {
+        "alg": "future-alg",
+        "ext": "",
+        "h": "u3bu_\u0662\u0663",
+        "pk": "7z38KldHSPBDd/8auwDEPIl+TWQFjeG6aQs4lfuzQAc=",
+        "refs": [],
+        "sig": "FJYnB+ToeIxb16iyQWVloUhbLpD+9s7Yh5gDsQtgfTspNeUcpXvEM/65JA0j7ukxZaqomByfNrEUCBYs5qrnCQ==",
+        "t": 1,
+        "v": "punkti/0.6",
+        "x": "fixture-1"
+      },
+      "kind": "envelope",
+      "name": "z-non-ascii-future-alg"
+    },
+    {
+      "expected": "INVALID-structural",
+      "input": {
+        "alg": "ed25519",
+        "ext": "",
+        "h": "location",
+        "pk": "7z38KldHSPBDd/8auwDEPIl+TWQFjeG6aQs4lfuzQAc=",
+        "refs": [],
+        "sig": "xwkvEUekFGdcYYpktgQOqUHvy35yt2lkFPIaEkLt5z+kCi/6OTBwHP+WxG3qFNCVzCkbRid4jEMnXmOBvyhmDw==",
+        "t": 1,
+        "v": "punkti/0.6",
+        "x": "fixture-1"
+      },
+      "kind": "envelope",
+      "name": "arbitrary-ed25519"
+    },
+    {
+      "expected": "INVALID-structural",
+      "input": {
+        "alg": "future-alg",
+        "ext": "",
+        "h": "location",
+        "pk": "7z38KldHSPBDd/8auwDEPIl+TWQFjeG6aQs4lfuzQAc=",
+        "refs": [],
+        "sig": "FJYnB+ToeIxb16iyQWVloUhbLpD+9s7Yh5gDsQtgfTspNeUcpXvEM/65JA0j7ukxZaqomByfNrEUCBYs5qrnCQ==",
+        "t": 1,
+        "v": "punkti/0.6",
+        "x": "fixture-1"
+      },
+      "kind": "envelope",
+      "name": "arbitrary-future-alg"
+    },
+    {
+      "expected": "INVALID-structural",
+      "input": {
+        "alg": "ed25519",
+        "ext": "",
+        "h": "u3bu0",
+        "pk": "7z38KldHSPBDd/8auwDEPIl+TWQFjeG6aQs4lfuzQAc=",
+        "refs": [],
+        "sig": "xwkvEUekFGdcYYpktgQOqUHvy35yt2lkFPIaEkLt5z+kCi/6OTBwHP+WxG3qFNCVzCkbRid4jEMnXmOBvyhmDw==",
+        "t": 1,
+        "v": "punkti/0.6",
+        "x": "fixture-1"
+      },
+      "kind": "envelope",
+      "name": "missing-separator-ed25519"
+    },
+    {
+      "expected": "INVALID-structural",
+      "input": {
+        "alg": "future-alg",
+        "ext": "",
+        "h": "u3bu0",
+        "pk": "7z38KldHSPBDd/8auwDEPIl+TWQFjeG6aQs4lfuzQAc=",
+        "refs": [],
+        "sig": "FJYnB+ToeIxb16iyQWVloUhbLpD+9s7Yh5gDsQtgfTspNeUcpXvEM/65JA0j7ukxZaqomByfNrEUCBYs5qrnCQ==",
+        "t": 1,
+        "v": "punkti/0.6",
+        "x": "fixture-1"
+      },
+      "kind": "envelope",
+      "name": "missing-separator-future-alg"
+    },
+    {
+      "expected": "INVALID-structural",
+      "input": {
+        "alg": "ed25519",
+        "ext": "",
+        "h": "u3bu__0",
+        "pk": "7z38KldHSPBDd/8auwDEPIl+TWQFjeG6aQs4lfuzQAc=",
+        "refs": [],
+        "sig": "xwkvEUekFGdcYYpktgQOqUHvy35yt2lkFPIaEkLt5z+kCi/6OTBwHP+WxG3qFNCVzCkbRid4jEMnXmOBvyhmDw==",
+        "t": 1,
+        "v": "punkti/0.6",
+        "x": "fixture-1"
+      },
+      "kind": "envelope",
+      "name": "double-separator-ed25519"
+    },
+    {
+      "expected": "INVALID-structural",
+      "input": {
+        "alg": "future-alg",
+        "ext": "",
+        "h": "u3bu__0",
+        "pk": "7z38KldHSPBDd/8auwDEPIl+TWQFjeG6aQs4lfuzQAc=",
+        "refs": [],
+        "sig": "FJYnB+ToeIxb16iyQWVloUhbLpD+9s7Yh5gDsQtgfTspNeUcpXvEM/65JA0j7ukxZaqomByfNrEUCBYs5qrnCQ==",
+        "t": 1,
+        "v": "punkti/0.6",
+        "x": "fixture-1"
+      },
+      "kind": "envelope",
+      "name": "double-separator-future-alg"
+    },
+    {
+      "expected": "INVALID-structural",
+      "input": {
+        "alg": "ed25519",
+        "ext": "",
+        "h": "u3bu_",
+        "pk": "7z38KldHSPBDd/8auwDEPIl+TWQFjeG6aQs4lfuzQAc=",
+        "refs": [],
+        "sig": "xwkvEUekFGdcYYpktgQOqUHvy35yt2lkFPIaEkLt5z+kCi/6OTBwHP+WxG3qFNCVzCkbRid4jEMnXmOBvyhmDw==",
+        "t": 1,
+        "v": "punkti/0.6",
+        "x": "fixture-1"
+      },
+      "kind": "envelope",
+      "name": "empty-z-ed25519"
+    },
+    {
+      "expected": "INVALID-structural",
+      "input": {
+        "alg": "future-alg",
+        "ext": "",
+        "h": "u3bu_",
+        "pk": "7z38KldHSPBDd/8auwDEPIl+TWQFjeG6aQs4lfuzQAc=",
+        "refs": [],
+        "sig": "FJYnB+ToeIxb16iyQWVloUhbLpD+9s7Yh5gDsQtgfTspNeUcpXvEM/65JA0j7ukxZaqomByfNrEUCBYs5qrnCQ==",
+        "t": 1,
+        "v": "punkti/0.6",
+        "x": "fixture-1"
+      },
+      "kind": "envelope",
+      "name": "empty-z-future-alg"
+    },
+    {
+      "expected": "INVALID-structural",
+      "input": {
+        "alg": "ed25519",
+        "ext": "",
+        "h": "u3bu_1111111111111111111111111111",
+        "pk": "7z38KldHSPBDd/8auwDEPIl+TWQFjeG6aQs4lfuzQAc=",
+        "refs": [],
+        "sig": "xwkvEUekFGdcYYpktgQOqUHvy35yt2lkFPIaEkLt5z+kCi/6OTBwHP+WxG3qFNCVzCkbRid4jEMnXmOBvyhmDw==",
+        "t": 1,
+        "v": "punkti/0.6",
+        "x": "fixture-1"
+      },
+      "kind": "envelope",
+      "name": "overlength-ed25519"
+    },
+    {
+      "expected": "INVALID-structural",
+      "input": {
+        "alg": "future-alg",
+        "ext": "",
+        "h": "u3bu_1111111111111111111111111111",
+        "pk": "7z38KldHSPBDd/8auwDEPIl+TWQFjeG6aQs4lfuzQAc=",
+        "refs": [],
+        "sig": "FJYnB+ToeIxb16iyQWVloUhbLpD+9s7Yh5gDsQtgfTspNeUcpXvEM/65JA0j7ukxZaqomByfNrEUCBYs5qrnCQ==",
+        "t": 1,
+        "v": "punkti/0.6",
+        "x": "fixture-1"
+      },
+      "kind": "envelope",
+      "name": "overlength-future-alg"
+    },
+    {
+      "expected": "INVALID-structural",
+      "input": {
+        "alg": "ed25519",
+        "ext": "",
+        "h": "u3bu_023",
+        "pk": "7z38KldHSPBDd/8auwDEPIl+TWQFjeG6aQs4lfuzQAc=",
+        "refs": [],
+        "sig": "xwkvEUekFGdcYYpktgQOqUHvy35yt2lkFPIaEkLt5z+kCi/6OTBwHP+WxG3qFNCVzCkbRid4jEMnXmOBvyhmDw==",
+        "t": 1,
+        "v": "punkti/0.6",
+        "x": "fixture-1"
+      },
+      "kind": "envelope",
+      "name": "z-leading-zero-ed25519"
+    },
+    {
+      "expected": "INVALID-structural",
+      "input": {
+        "alg": "future-alg",
+        "ext": "",
+        "h": "u3bu_023",
+        "pk": "7z38KldHSPBDd/8auwDEPIl+TWQFjeG6aQs4lfuzQAc=",
+        "refs": [],
+        "sig": "FJYnB+ToeIxb16iyQWVloUhbLpD+9s7Yh5gDsQtgfTspNeUcpXvEM/65JA0j7ukxZaqomByfNrEUCBYs5qrnCQ==",
+        "t": 1,
+        "v": "punkti/0.6",
+        "x": "fixture-1"
+      },
+      "kind": "envelope",
+      "name": "z-leading-zero-future-alg"
+    },
+    {
+      "expected": "INVALID-structural",
+      "input": {
+        "alg": "ed25519",
+        "ext": "",
+        "h": "u3bu_23.50",
+        "pk": "7z38KldHSPBDd/8auwDEPIl+TWQFjeG6aQs4lfuzQAc=",
+        "refs": [],
+        "sig": "xwkvEUekFGdcYYpktgQOqUHvy35yt2lkFPIaEkLt5z+kCi/6OTBwHP+WxG3qFNCVzCkbRid4jEMnXmOBvyhmDw==",
+        "t": 1,
+        "v": "punkti/0.6",
+        "x": "fixture-1"
+      },
+      "kind": "envelope",
+      "name": "z-trailing-zero-ed25519"
+    },
+    {
+      "expected": "INVALID-structural",
+      "input": {
+        "alg": "future-alg",
+        "ext": "",
+        "h": "u3bu_23.50",
+        "pk": "7z38KldHSPBDd/8auwDEPIl+TWQFjeG6aQs4lfuzQAc=",
+        "refs": [],
+        "sig": "FJYnB+ToeIxb16iyQWVloUhbLpD+9s7Yh5gDsQtgfTspNeUcpXvEM/65JA0j7ukxZaqomByfNrEUCBYs5qrnCQ==",
+        "t": 1,
+        "v": "punkti/0.6",
+        "x": "fixture-1"
+      },
+      "kind": "envelope",
+      "name": "z-trailing-zero-future-alg"
+    },
+    {
+      "expected": "INVALID-structural",
+      "hex": "0000005b0000000a70756e6b74692f302e3600000001340000000000000009666978747572652d34000000076564323535313900000020ef3dfc2a574748f04377ff1abb00c43c897e4d64058de1ba690b3895fbb3400700000000000000000000004070a540df8c8ec551a9c20ea65575e44b8fbed42558e5f7594db7bc3880a27de7adcf1794bb56ca168685823c022216643096ce8862c05155badfb2b0994b1206",
+      "kind": "record",
+      "mid": "punkti/0.6:ccd9220ade890ff8f68f4f90f9ea0b49dc566c5d0f9252fef8bb4145c8550098",
+      "name": "former-empty-record",
+      "sha256": "f473c6bc447d71bd40bab3cb07fa5a6e972a121b1dd4cdb037ef92449d81c691"
+    },
+    {
+      "expected": "INVALID-structural",
+      "hex": "0000005e0000000a70756e6b74692f302e3600000001340000000000000009666978747572652d340000000a6675747572652d616c6700000020ef3dfc2a574748f04377ff1abb00c43c897e4d64058de1ba690b3895fbb340070000000000000000000000404f07604456d51f3a908efe15e6dfb8960b4a0473d51dcb74cb420baef63cd35cb6c4c928c2bd06bc591e0781d3339bc5baf54bb11341488745d70cddda568b0b",
+      "kind": "record",
+      "mid": "punkti/0.6:9e8260ebc8e4273936820e88d83bfe1a36b8266d2b4ee9698ad698daef911811",
+      "name": "empty-record-unsupported-alg",
+      "sha256": "0a3f1915298903311b61f84e41bf7faa38316c57bcdd323414b8fa9f571a976c"
+    }
+  ],
+  "id": "V10"
+}
+```
+
+## V11
+
+```json
+{
+  "cases": [
+    {
+      "expected": {
+        "admitted": 0,
+        "candidate_count": 0,
+        "error_class": "retryable",
+        "reason": "non-conforming geographical key",
+        "state": "NON-CONFORMING-publication"
+      },
+      "mutation": "index-key",
+      "name": "tilde-index-unrestricted",
+      "scope": {},
+      "source": "tilde-index-unrestricted"
+    },
+    {
+      "expected": {
+        "admitted": 0,
+        "candidate_count": 0,
+        "error_class": "retryable",
+        "reason": "non-conforming geographical key",
+        "state": "NON-CONFORMING-publication"
+      },
+      "mutation": "index-key",
+      "name": "tilde-index-scoped",
+      "scope": {
+        "xy_hi": "u5",
+        "xy_lo": "u4"
+      },
+      "source": "tilde-index-scoped"
+    },
+    {
+      "expected": {
+        "admitted": 0,
+        "candidate_count": 0,
+        "error_class": "retryable",
+        "reason": "non-conforming geographical key",
+        "state": "NON-CONFORMING-publication"
+      },
+      "mutation": "shard-prefix",
+      "name": "tilde-shard",
+      "scope": {},
+      "source": "tilde-shard"
+    },
+    {
+      "expected": {
+        "admitted": 0,
+        "candidate_count": 0,
+        "error_class": "retryable",
+        "reason": "non-conforming geographical key",
+        "state": "NON-CONFORMING-publication"
+      },
+      "mutation": "child-key",
+      "name": "tilde-child-before-pruning",
+      "scope": {
+        "xy_hi": "u5",
+        "xy_lo": "u4"
+      },
+      "source": "tilde-child-before-pruning"
+    }
+  ],
+  "id": "V11"
+}
+```
+
+## V12
+
+```json
+{
+  "cases": [
+    {
+      "expected": "VALID",
+      "hex": "000000610000000a70756e6b74692f302e36000000013100000006303030305f3000000009666978747572652d31000000076564323535313900000020ef3dfc2a574748f04377ff1abb00c43c897e4d64058de1ba690b3895fbb34007000000000000000000000040f59a5d58a4b8738528b7527d4242d8817665291f3a3e83fcaa78c41d7ccae2fb62d6e3350038449e32d3a835d1d64f9229be2cab84e0ccd01bb5a710ae5f2e00",
+      "kind": "record",
+      "mid": "punkti/0.6:f67b1838cf3c3314b097f04a26c0476293c194a236349a74ca17779c2a57819f",
+      "name": "minimum-length",
+      "sha256": "660a3fc03d6310ec6a74cc9d14e98c6fb59f2944a48312a38811e90893df5948"
+    },
+    {
+      "expected": "VALID",
+      "hex": "0000007b0000000a70756e6b74692f302e36000000013100000020753362755f31313131313131313131313131313131313131313131313131313100000009666978747572652d31000000076564323535313900000020ef3dfc2a574748f04377ff1abb00c43c897e4d64058de1ba690b3895fbb34007000000000000000000000040d22355d47b8c178db073e70785873c797bf52bf9f7c4869236a1a9cb17811c4d8b1ef252ef0ee1a68cece3ba365d3ac7f2903c6496f462c4a279785e342f270f",
+      "kind": "record",
+      "mid": "punkti/0.6:4fa43ad64929e96a3cf81038b5dd911b6fa15e843a4b8dc1d61043f083acda3f",
+      "name": "maximum-length",
+      "sha256": "4b58cb0c8121d560d197ba0f513f42b829c0e634b3ebb25260c005b7314fb7a4"
+    },
+    {
+      "expected": "VALID",
+      "hex": "000000690000000a70756e6b74692f302e3600000001310000000e75336275747a376b397137765f3000000009666978747572652d31000000076564323535313900000020ef3dfc2a574748f04377ff1abb00c43c897e4d64058de1ba690b3895fbb34007000000000000000000000040c38f67699b5dace75cab32fa2acca9d5bb8e22ec1080c314463303649e71bcb60939d3445115097b062def81ade701578056e56c0fe0122ca91e17ae5f6c0e05",
+      "kind": "record",
+      "mid": "punkti/0.6:42f3d6d7ee0fd2e6563cbec1d171940fa6f506db48019627f1033252858f0a66",
+      "name": "maximum-xy",
+      "sha256": "94ea837c6e097aa81704d26f62bfb6fa860c03012078bb7e08a03a671797c6c6"
+    },
+    {
+      "expected": "UNVERIFIABLE-alg",
+      "hex": "0000006b0000000a70756e6b74692f302e3600000001310000000d75336275747a376b39715f323300000009666978747572652d310000000a6675747572652d616c6700000020ef3dfc2a574748f04377ff1abb00c43c897e4d64058de1ba690b3895fbb340070000000000000000000000401fb627075da4f41b8d7cd2f31b8e3a52622c7dda7091ab18a337aee86d0be3d99d6aa7cb89c2490bcfcbdb39732cee8110f085ed7eb96f9474e8c06b7bc40a0c",
+      "kind": "record",
+      "mid": "punkti/0.6:2c1eaad50738b7d0a6a1326f4cd32c0aba9c6df9c843ea4d07339c1fd5188ce7",
+      "name": "anchored-unsupported-alg",
+      "sha256": "c4d2b5a8d9fd40185417dfdd525b9504dd58bc5a268a14cf617fea65d0393ddd"
+    }
+  ],
+  "id": "V12"
 }
 ```

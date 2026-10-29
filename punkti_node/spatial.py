@@ -82,10 +82,8 @@ def compare_z(a, b):
 
 
 def parse_h(h):
-    if not isinstance(h, str) or len(h) > 32:
+    if not isinstance(h, str) or not 6 <= len(h) <= 32:
         raise ValueError('spatial address')
-    if h == '':
-        return None
     if h.count('_') != 1:
         raise ValueError('separator')
     xy, z = h.split('_')
@@ -102,8 +100,6 @@ def encode_h(lat, lon, height, precision=10):
 
 def altitude(h):
     parts = parse_h(h)
-    if parts is None:
-        raise ValueError('unanchored')
     return parse_z(parts[1])
 
 
@@ -128,8 +124,6 @@ class Subscription:
 
     def matches(self, h):
         parts = parse_h(h)
-        if parts is None:
-            return all(v is None for v in asdict(self).values())
         xy, z = parts
         return ((self.xy_lo is None or xy_key(xy) >= xy_key(self.xy_lo)) and
                 (self.xy_hi is None or xy_key(xy) < xy_key(self.xy_hi)) and

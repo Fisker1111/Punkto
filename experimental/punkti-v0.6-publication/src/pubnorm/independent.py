@@ -88,12 +88,10 @@ def prefix(p, size):
 
 def placement(h):
     xy_z = parse_h(h)
-    return (xy_z[0] + '000000000000')[:10] if xy_z else '~'
+    return (xy_z[0] + '000000000000')[:10]
 
 
 def selected(p, scope):
-    if p == '~':
-        return all(x is None for x in scope.wire().values())
     bottom = p + '0' * (12 - len(p))
     top = p + 'z' * (12 - len(p))
     return ((scope.xy_lo is None or top >= scope.xy_lo.ljust(12, '0')) and
@@ -187,14 +185,13 @@ class Reader:
             digest_string(m['prev'])
         if (m['seq'] == 1) != (m['prev'] is None):
             raise ValueError('previous manifest')
-        if type(m['index']) is not dict or len(m['index']) > 1025:
+        if type(m['index']) is not dict or len(m['index']) > 1024:
             raise ValueError('index')
         if current[0] != m['seq']:
             raise ReadError('publication race')
         queue = []
         for p, s in m['index'].items():
-            if p != '~':
-                prefix(p, 2)
+            prefix(p, 2)
             digest_string(s)
             queue.append((p, s))
         valid, candidates, rejected, totals = {}, {}, 0, [0, 0]
@@ -205,7 +202,7 @@ class Reader:
             fields(node, 'children packs prefix records v')
             if node['prefix'] != p or type(node['children']) is not dict or type(node['records']) is not list or type(node['packs']) is not list:
                 raise ValueError('shard')
-            leaf = p == '~' or len(p) == 10
+            leaf = len(p) == 10
             if leaf:
                 if node['children'] or not node['records']:
                     raise ValueError('leaf')
@@ -303,8 +300,6 @@ def publication(records, packs=False, previous=None):
             node['packs'].sort()
     # Construct all ancestor nodes before serializing them deepest-first.
     for p in list(nodes):
-        if p == '~':
-            continue
         for depth in range(2, 10):
             ancestor = p[:depth]
             nodes.setdefault(ancestor, dict(children={}, packs=[], prefix=ancestor, records=[], v='punkti/pub/0.6'))
@@ -313,7 +308,7 @@ def publication(records, packs=False, previous=None):
         data = encode(nodes[p])
         address = hash_bytes(data)
         writes.append(('h/' + '/'.join(p) + '/' + address + '.json', data))
-        if p == '~' or len(p) == 2:
+        if len(p) == 2:
             index[p] = address
         else:
             nodes[p[:-1]]['children'][p] = address

@@ -103,8 +103,7 @@ export function format_z(value) {
 }
 
 export function parse_h(h) {
-  if (typeof h !== 'string' || h.length > 32) fail('spatial address');
-  if (h === '') return null;
+  if (typeof h !== 'string' || h.length < 6 || h.length > 32) fail('spatial address');
   const parts = h.split('_');
   if (parts.length !== 2) fail('separator');
   xy_key(parts[0], 4);
@@ -141,9 +140,6 @@ export function normalize_scope(scope = {}) {
 export function matches(h, scope = {}) {
   const normalized = normalize_scope(scope);
   const parsed = parse_h(h);
-  if (!parsed) {
-    return Object.values(normalized).every(value => value === null);
-  }
   return (normalized.xy_lo === null || xy_key(parsed.xy) >= xy_key(normalized.xy_lo)) &&
     (normalized.xy_hi === null || xy_key(parsed.xy) < xy_key(normalized.xy_hi)) &&
     (normalized.z_min === null || compare_z(parsed.z, normalized.z_min) >= 0) &&

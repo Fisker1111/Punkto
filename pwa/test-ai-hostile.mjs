@@ -32,7 +32,7 @@ try {
   assert.equal(typeof unreachable.body.error, 'string');
   await node.start();
   const identity = globalThis.nacl.sign.keyPair();
-  const atom = { t: Date.now(), h: '', x: JSON.stringify({ text: 'E2 duplicate' }) };
+  const atom = { t: Date.now(), h: 'u3butz7k9q_23', x: JSON.stringify({ text: 'E2 duplicate' }) };
   const client = createSubmitClient({ baseUrl: node.base, identity });
   const first = await client.submit(atom);
   assert.equal(first.ok, true); assert.equal(first.duplicate, false);
@@ -89,7 +89,7 @@ try {
   }), /does not accept writes/);
   assert.equal(writes, 0);
   let endpointUsed = null;
-  const override = await run(['write', '--nodes', nodesUrl, '--submit', `${node.base}/custom-submit`, '--text', 'override'], async (address, init) => {
+  const override = await run(['write', '--nodes', nodesUrl, '--submit', `${node.base}/custom-submit`, '--text', 'override', '--h', atom.h], async (address, init) => {
     if (init?.method === 'POST') { endpointUsed = address; return fetch(`${node.base}/submit`, init); }
     return fetch(address, init);
   });
@@ -111,7 +111,7 @@ try {
     'public shared spatial memory', 'small signed atoms', 'No account, API key or registration',
     'curl -fsS "https://punkto.xyz/nodes.json"', 'publication', 'submit', 'not a trust authority', 'not a trust authority or a complete view of Punkto',
     'https://punkto.xyz/nodes.json', 'node cli.mjs read', 'state:"VALID"', 'cryptographically verified authorship',
-    'h=""', 'h=<xy>_<z>', 'WGS84 ellipsoidal height', 'Never guess z', 'A map is not required',
+    'Every record requires', 'h=<xy>_<z>', 'WGS84 ellipsoidal height', 'Never guess z', 'A map is not required',
     'node cli.mjs write', '--height 23', 'successful submit is not enough', 'confirm your MID',
     'node cli.mjs reply', 'punkti/0.6:<64 lowercase hex>', 'reply', 'reference',
     'ephemeral Ed25519 key', 'Persistent identity is optional', 'does not prove that the atom is true',
@@ -119,7 +119,7 @@ try {
     'You do not need protocol internals to participate', '/punkti/',
   ]) assert.ok(text.includes(literal), `required page text: ${literal}`);
   for (const forbidden of [
-    'PUNKTI-L3-SIGN', 'PUNKTI-L3-MID', 'manifests/<sha>.json', 'records/<sha2>/<sha>',
+    'h=""', 'unanchored', 'PUNKTI-L3-SIGN', 'PUNKTI-L3-MID', 'manifests/<sha>.json', 'records/<sha2>/<sha>',
     'body || signature', 'both length-prefixed', 'package.json that overrides module detection',
   ]) assert.ok(!text.includes(forbidden), `primary /ai page leaked protocol-doc detail: ${forbidden}`);
   assert.doesNotMatch(html, /<script\b|<link\b|<iframe\b|<img\b/i);

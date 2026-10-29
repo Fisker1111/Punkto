@@ -1950,7 +1950,7 @@
         <div id="modal-emergency-hint" style="display:none;font-size:12px;color:var(--text-dim);margin-top:6px;">Public urgent post — not a replacement for calling emergency services.</div>
       </div>
       <details id="modal-options" class="modal-adjust">
-        <summary><span class="modal-adjust-label">Location &amp; options</span><span class="modal-adjust-hint">ground by default</span></summary>
+        <summary><span class="modal-adjust-label">Location &amp; options</span><span class="modal-adjust-hint">ellipsoidal height required</span></summary>
         <div id="modal-author-row">
           <input id="modal-author" type="text" placeholder="your name / handle (optional)" />
         </div>
@@ -1963,10 +1963,6 @@
         <div id="modal-ellipsoidal-z" style="margin-top:10px;display:grid;gap:8px;">
           <label for="modal-ellipsoidal-z-value"><strong>Punkti Z (ellipsoidal metres, WGS84)</strong></label>
           <input id="modal-ellipsoidal-z-value" type="text" placeholder="e.g. 23.4 or -12" />
-          <label style="display:flex;align-items:center;gap:8px;">
-            <input id="modal-unanchored" type="checkbox" />
-            Publish unanchored (h = "")
-          </label>
           <div id="modal-z-note" style="font-size:12px;color:var(--text-dim);">Floor and height-above-ground remain Layer-4 metadata in payload x.</div>
         </div>
         <div id="modal-placement-controls">

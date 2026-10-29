@@ -151,8 +151,8 @@ import json, hashlib, sys
 from pathlib import Path
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 root = Path(sys.argv[1])
-sys.path.insert(0, str(root / 'experimental' / 'punkti-v0.6-mesh' / 'src'))
-import carrier
+sys.path.insert(0, str(root))
+from punkti_node import carrier
 payload = json.load(sys.stdin)
 seed = bytes.fromhex(payload['seed_hex'])
 key = Ed25519PrivateKey.from_private_bytes(seed)
@@ -264,9 +264,9 @@ for (const scope of spatialVectors.invalid_scopes) {
   spatialAssertions++;
 }
 
-assert.equal(matches('', {}), true);
+assert.throws(() => matches('', {}));
 spatialAssertions++;
-assert.equal(matches('', { z_min: '0' }), false);
+assert.throws(() => matches('', { z_min: '0' }));
 spatialAssertions++;
 assert.equal(subscribed('u3bu_0', []), false);
 spatialAssertions++;
@@ -277,7 +277,7 @@ const publicationVectors = readJson('./punkti/test-vectors/publication-vectors.j
 assert.equal(publicationVectors.profile, 'punkti/pub/0.6');
 assert.equal(typeof publicationVectors.fixtures, 'object');
 assert(Array.isArray(publicationVectors.vectors));
-assert.equal(publicationVectors.vectors.length, 9);
+assert.equal(publicationVectors.vectors.length, 12);
 
 console.log(`XY_Z: ${spatialAssertions} assertions passed; carrier: ${fixtureEntries.length} fixtures byte-identical; JS==Python: OK`);
 console.log(`carrier assertions: ${carrierAssertions}`);

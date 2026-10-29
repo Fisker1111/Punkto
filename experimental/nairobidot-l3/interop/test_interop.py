@@ -30,7 +30,7 @@ def spec(i=0, **kw):
 def vectors():
     refs = [dict(target='unknown/a:00ff', rel='unrecognized/关系'),
             dict(target='future:abcd', rel=''), dict(target='unknown/a:00ff', rel='unrecognized/关系')]
-    return [spec(0, h=''), spec(1, h='s00000000000_23'), spec(2, h='s00000000001_23.025'),
+    return [spec(0, h='u3bu_23'), spec(1, h='s00000000000_23'), spec(2, h='s00000000001_23.025'),
             spec(3, refs=refs), spec(4, x='Nairobi 🌍\u0000 e\u0301 漢字', ext=b64(bytes(range(256)))),
             spec(5, alg='future-signature')]
 
@@ -160,7 +160,7 @@ class Interop(unittest.TestCase):
         """Six deterministic vectors compare all canonical and framed bytes."""
         a, b = self.adapter('ref', serve=False), self.adapter('nb', serve=False)
         VECTORS.clear()
-        for name, s in zip(('unanchored', 'XY', 'XYZ', 'refs-order-duplicates', 'unicode-ext', 'unknown-alg'), vectors()):
+        for name, s in zip(('anchored', 'XY', 'XYZ', 'refs-order-duplicates', 'unicode-ext', 'unknown-alg'), vectors()):
             left, right = self.call(a, 'mint', spec=s), self.call(b, 'mint', spec=s)
             for key in ('C', 'S', 'MID', 'address', 'R', 'sig'):
                 self.eq(name + ':' + key, left[key], right[key])
