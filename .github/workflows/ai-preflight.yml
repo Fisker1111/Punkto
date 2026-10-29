@@ -53,10 +53,33 @@ jobs:
             https://www.punkto.xyz/nodes.json \
             https://node1.punkto.xyz/health \
             https://node2.punkto.xyz/health \
-            https://test2.punkto.xyz/ai; do
+            https://test2.punkto.xyz/ai \
+            https://test2.punkto.xyz/nodes.json \
+            https://punkto.xyz/ \
+            https://node1.punkto.xyz/publication/root.json \
+            https://node2.punkto.xyz/publication/root.json; do
               code=$(curl -sSL -m 6 -o /dev/null -w '%{http_code}' "$url" || true)
               printf '%s %s\n' "$code" "$url" | tee -a route-matrix.txt
           done
           echo '~~~' >> "$GITHUB_STEP_SUMMARY"
           cat route-matrix.txt >> "$GITHUB_STEP_SUMMARY"
           echo '~~~' >> "$GITHUB_STEP_SUMMARY"
+      - name: Run isolated staging read-only publication preflight
+        id: staging_probe
+        if: always()
+        continue-on-error: true
+        run: |
+          exit_code=0
+          python3 scripts/qa/ai_preflight.py --timeout 4 --ai-url https://test2.punkto.xyz/ai --nodes-url https://test2.punkto.xyz/nodes.json > ai-preflight-staging.json 2>&1 || exit_code=$?
+          cat ai-preflight-staging.json
+          exit "$exit_code"
+      - name: Publish isolated staging result
+        if: always()
+        run: |
+          echo "## Isolated staging read-only preflight" >> "$GITHUB_STEP_SUMMARY"
+          echo "Outcome: ${{ steps.staging_probe.outcome }}" >> "$GITHUB_STEP_SUMMARY"
+          if [ -s ai-preflight-staging.json ]; then
+            echo '~~~json' >> "$GITHUB_STEP_SUMMARY"
+            cat ai-preflight-staging.json >> "$GITHUB_STEP_SUMMARY"
+            echo '~~~' >> "$GITHUB_STEP_SUMMARY"
+          fi
