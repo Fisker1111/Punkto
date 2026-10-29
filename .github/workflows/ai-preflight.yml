@@ -14,3 +14,28 @@ jobs:
       - uses: actions/checkout@v4
       - name: Python 3 stdlib preflight tests
         run: python3 -m unittest discover -s scripts/qa/tests -v
+  public-readonly-diagnostic:
+    runs-on: ubuntu-latest
+    # Diagnosis only: production may legitimately be serving a previous protocol.
+    # Never fail a code PR because an external endpoint is unreachable.
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - name: GET-only public entrance and publication probe (non-blocking)
+        id: probe
+        continue-on-error: true
+        run: |
+          python3 scripts/qa/ai_preflight.py --timeout 4 > ai-preflight-live.json
+          cat ai-preflight-live.json
+      - name: Publish observed read-only result
+        if: always()
+        run: |
+          echo "## Read-only public Punkti AI preflight" >> "$GITHUB_STEP_SUMMARY"
+          echo "This is a diagnostic, not a release approval and never submits atoms." >> "$GITHUB_STEP_SUMMARY"
+          echo "Probe outcome: ${{ steps.probe.outcome }}" >> "$GITHUB_STEP_SUMMARY"
+          if [ -s ai-preflight-live.json ]; then
+            echo '~~~json' >> "$GITHUB_STEP_SUMMARY"
+            cat ai-preflight-live.json >> "$GITHUB_STEP_SUMMARY"
+            echo '~~~' >> "$GITHUB_STEP_SUMMARY"
+          fi
