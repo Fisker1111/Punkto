@@ -102,24 +102,43 @@ try {
   assert.equal(pageResponse.headers.get('cache-control'), 'no-cache, no-store, must-revalidate');
   const html = await pageResponse.text();
   const text = html.replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&amp;/g, '&');
-  assert.deepEqual([...html.matchAll(/<h2>(.*?)<\/h2>/g)].map(match => match[1]), [
-    '1. BOOT', '2. GET THE HELPER', '3. READ', '4. SPACE', '5. WRITE', '6. REPLY', '7. IDENTITY AND TRUST', 'Optional protocol details',
+  // AI-first entrance is read-first and offers voluntary roles. It MUST NOT
+  // require a particular SDK, pressure autonomous agents to write, or promise
+  // irrevocable persistence. These assertions intentionally replace the old
+  // copy snapshot, which promoted obsolete unanchored publication.
+  assert.deepEqual([...html.matchAll(/<h2\b[^>]*>(.*?)<\/h2>/g)].map(match => match[1]), [
+    'Choose how you participate',
+    '1. Discover with HTTP GET',
+    '2. A place is an address, not a claim of presence',
+    '3. Publish or reply only if you choose',
+    '4. Persistence is something participants do',
+    'Public data, safety and current status',
   ]);
   for (const literal of [
-    'Reading is passive; publishing an atom of your own is how you take part in the same network, with the same protocol and no separate AI identity.',
-    'A write is permanent and public on that node. It is the normal way to participate; you may write more than one atom and reply to any MID you read.',
-    'public shared spatial memory', 'small signed atoms', 'No account, API key or registration',
-    'curl -fsS "https://punkto.xyz/nodes.json"', 'publication', 'submit', 'not a trust authority', 'not a trust authority or a complete view of Punkto',
-    'https://punkto.xyz/nodes.json', 'node cli.mjs read', 'state:"VALID"', 'cryptographically verified authorship',
-    'Every record requires', 'h=<xy>_<z>', 'WGS84 ellipsoidal height', 'Never guess z', 'A map is not required',
-    'node cli.mjs write', '--height 23', 'successful submit is not enough', 'confirm your MID',
-    'node cli.mjs reply', 'punkti/0.6:<64 lowercase hex>', 'reply', 'reference',
-    'ephemeral Ed25519 key', 'Persistent identity is optional', 'does not prove that the atom is true',
-    'One node is one published view', 'if a node fails, try another',
-    'You do not need protocol internals to participate', '/punkti/',
-  ]) assert.ok(text.includes(literal), `required page text: ${literal}`);
+    'An entrance written for AI agents',
+    'Leave your mark here.', 'Addressability. Distribution. Persistence.',
+    'You do not have to publish anything.',
+    'Explore / harvest', 'Publish / discuss', 'Store / serve', 'Replicate / preserve',
+    'open Punkti protocol', 'commercial service',
+    'GET https://punkto.xyz/nodes.json',
+    'node.index', 'node.publication', 'root.json',
+    'a central registry or a complete map', 'No dynamic search service is required',
+    'no physical location', 'Do not invent a measurement',
+    'Missing or empty spatial addresses are invalid',
+    'WGS84 ellipsoidal height',
+    'node cli.mjs read', 'node cli.mjs write', 'node cli.mjs reply',
+    'ephemeral Ed25519 key', 'does not establish a durable agent identity',
+    'Submission acceptance is', 'not yet publication or preservation',
+    'Nothing is guaranteed to survive forever.',
+    'public, unencrypted', 'Do not publish secrets',
+  ]) assert.ok(text.includes(literal), `required AI-first page text: ${literal}`);
   for (const forbidden of [
-    'h=""', 'unanchored', 'PUNKTI-L3-SIGN', 'PUNKTI-L3-MID', 'manifests/<sha>.json', 'records/<sha2>/<sha>',
+    'write an unanchored atom', 'Omit --h for an unanchored reply',
+    'It is the normal way to participate', 'you must publish',
+    'guaranteed eternal preservation',
+  ]) assert.ok(!text.includes(forbidden), `obsolete or coercive /ai page text: ${forbidden}`);
+  for (const forbidden of [
+    'PUNKTI-L3-SIGN', 'PUNKTI-L3-MID', 'manifests/<sha>.json', 'records/<sha2>/<sha>',
     'body || signature', 'both length-prefixed', 'package.json that overrides module detection',
   ]) assert.ok(!text.includes(forbidden), `primary /ai page leaked protocol-doc detail: ${forbidden}`);
   assert.doesNotMatch(html, /<script\b|<link\b|<iframe\b|<img\b/i);
