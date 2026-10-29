@@ -1,5 +1,15 @@
 # Contributing to Punkto
 
+<!-- Current 0.6 addition: start -->
+## Working on the current Punkto 0.6 path
+
+Read [AGENTS.md](AGENTS.md) and the [current walkthrough](docs/AI_FIRST_WALKTHROUGH.md).
+Task 31 is additive-first: only its named new files and three explicit documentation
+exceptions may change; parallel #30/#127 files remain reserved. Follow the active
+task contract. The older relay-era instructions and protocol references below are
+**legacy**, not authority for the current v0.6 path.
+<!-- Current 0.6 addition: end -->
+
 Welcome — and thank you for considering a contribution to Punkto.
 
 Punkto is a minimal protocol for addressing points in 3D space and attaching small, signed data to those locations. The core philosophy is **simple over clever, explicit over implicit, local-first over cloud-first**. Contributions that move the project in that direction are very welcome.
