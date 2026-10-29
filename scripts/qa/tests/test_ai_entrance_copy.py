@@ -35,7 +35,7 @@ class AiFirstCopyTest(unittest.TestCase):
         cls.raw = AI.read_text(encoding="utf-8")
         cls.parser = Parser()
         cls.parser.feed(cls.raw)
-        cls.text = " ".join(cls.parser.text)
+        cls.text = " ".join(" ".join(cls.parser.text).split())
 
     def test_html_parseable_and_no_client_script(self):
         self.assertEqual(self.parser.headers.count("h1"), 1)
