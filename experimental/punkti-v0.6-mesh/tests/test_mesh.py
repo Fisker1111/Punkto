@@ -113,10 +113,15 @@ class AcceptanceTests(NetworkCase):
         self.assert_sets(validate(fixture(i)).address for i in range(3))
 
     def test_06_wire_spec_exists(self):
-        spec = Path(__file__).resolve().parents[3] / 'docs/proposals/PUNKTI_0_6_MESH.md'
+        proposals = Path(__file__).resolve().parents[3] / 'docs/proposals'
+        spec = proposals / 'PUNKTI_0_6_LAYER3_RESET.md'
         text = spec.read_text()
         for term in ['PUSH', 'Range PULL', 'cursor', 'UNVERIFIABLE-alg']:
             self.assertIn(term, text)
+        stub = (proposals / 'PUNKTI_0_6_MESH.md').read_text()
+        for source in ['PUNKTI_0_6_LAYER3_RESET.md', 'PUNKTI_0_6_SPATIAL_XY_Z.md',
+                       'PUNKTI_0_6_PUBLICATION.md', 'PUNKTI_0_6_VECTORS.md']:
+            self.assertIn(f']({source})', stub)
 
     def test_07_single_range(self):
         s = Subscription('gggh', 'gggj')
