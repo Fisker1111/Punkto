@@ -138,6 +138,7 @@ class PersistentNode(Node):
         self.publication = None
         self.publication_reader = None
         self.publication_state = None
+        self._publication_dirty = False
         self.replaying = True
         try:
             # Replay historical admissions independently of today's subscriptions.
@@ -155,6 +156,13 @@ class PersistentNode(Node):
         except Exception:
             self.durable.close()
             raise
+
+    def admit(self, item):
+        with self.lock:
+            result = super().admit(item)
+            if result.get('admitted') and self.publication is not None:
+                self._publication_dirty = True
+            return result
 
     def persisted(self, entry):
         if not self.replaying:
@@ -199,6 +207,7 @@ class PersistentNode(Node):
                 'cursors': [[list(k), v] for k, v in self.cursors.copy().items()],
                 'push_cursors': [[list(k), v] for k, v in self.push_cursors.copy().items()],
             })
+            self.flush_publication()
 
     def counts(self):
         return dict(valid=len(self.store), candidates=len(self.candidates),
@@ -224,10 +233,17 @@ class PersistentNode(Node):
         return publishable
 
     def republish_publication(self):
-        if not self.publication:
-            return None
-        self.publication_state = self.publication.publish(self.publication_records())
-        return self.publication_state
+        with self.lock:
+            if not self.publication:
+                return None
+            self.publication_state = self.publication.publish(self.publication_records())
+            self._publication_dirty = False
+            return self.publication_state
+
+    def flush_publication(self):
+        with self.lock:
+            if self._publication_dirty and self.publication is not None:
+                self.republish_publication()
 
     def replicate_publication(self, peer_base):
         if not self.publication_reader:
