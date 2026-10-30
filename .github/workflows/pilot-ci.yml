@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - pilot-1
+      - main
   pull_request:
     branches:
       - main
@@ -88,6 +89,29 @@ jobs:
           echo "" >> "$GITHUB_STEP_SUMMARY"
           echo "✅ PWA validation passed for exact SHA \`$GITHUB_SHA\`." >> "$GITHUB_STEP_SUMMARY"
           echo "This is the hard pre-deploy gate for Pilot_1." >> "$GITHUB_STEP_SUMMARY"
+
+  ai-agent-roundtrip:
+    name: Two-node signed AI round-trip (local HTTP, not public proof)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install Punkti node test runtime
+        run: python -m pip install -r node/requirements.txt cryptography PyYAML
+      - name: Run end-to-end reference client on two loopback nodes
+        run: node pwa/test-ai-first-agent.mjs
+      - name: State evidence limits
+        if: always()
+        run: |
+          echo '## Two-node AI-first integration' >> "$GITHUB_STEP_SUMMARY"
+          echo 'This tests signed publish, static GET, explicit replication, and same-h reply on TWO local HTTP servers. It does not demonstrate live independent custodians or public deployment.' >> "$GITHUB_STEP_SUMMARY"
 
   relay-tests:
     name: Relay regression report
