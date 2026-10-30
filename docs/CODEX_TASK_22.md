@@ -1,3 +1,10 @@
+> Historical pre-correction material. Spatial rules below are superseded by the
+> [2026-10-29 v0.6 correction](https://github.com/punkti-org/punkti/blob/47537960166e33ed806a4349b81b6a54c5ab3e00/Punkti-v0.6.md):
+> every record requires canonical XY_Z; empty/missing/null/malformed h is
+> INVALID-structural, and the removed publication key `~` is invalid.
+> Earlier permissions for empty addresses and reserved-key routing below are
+> historical only, not the current contract. Original evidence is retained.
+
 # CODEX_TASK_22 — Punktto PWA: static-first Punkti 0.6-native client + redesign + Docker conformance
 
 **Status**: ACTIVE
