@@ -309,13 +309,13 @@ class Node:
                     data = json.loads(self.rfile.read(length))
                     if not isinstance(data, dict):
                         raise ValueError('request object required')
-                    special = node.special_route(self.command, parsed.path, parsed.query, data)
-                    if special is not None:
-                        return special
                     if parsed.path == '/submit' and getattr(node, 'write_guard', None):
                         records = data.get('records')
                         if not isinstance(records, list) or not 1 <= len(records) <= node.write_guard.max_batch:
                             raise ValueError('submit batch size')
+                    special = node.special_route(self.command, parsed.path, parsed.query, data)
+                    if special is not None:
+                        return special
                     if parsed.path == '/push':
                         records = data['records']
                         if not isinstance(records, list) or not 1 <= len(records) <= MAX_PAGE:
