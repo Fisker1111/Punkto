@@ -48,7 +48,6 @@ const elModalManualAltitude = document.getElementById('modal-manual-altitude-val
 const elModalCategory = document.getElementById('modal-category');
 const elModalEmergencyHint = document.getElementById('modal-emergency-hint');
 const elModalEllipsoidalZ = document.getElementById('modal-ellipsoidal-z-value');
-const elModalUnanchored = document.getElementById('modal-unanchored');
 const elModalZNote = document.getElementById('modal-z-note');
 
 let callbacks = null;
@@ -162,7 +161,6 @@ function emitPreview() {
   draft.altitude_m = altitudeMeters();
   draft.category = elModalCategory?.value || 'TEXT';
   draft.ellipsoidal_z = String(elModalEllipsoidalZ?.value || '').trim();
-  draft.unanchored = Boolean(elModalUnanchored?.checked);
   draft.floor_hint = modalAltitudeState.mode === 'floor'
     ? Math.round(Number(elModalAltitudeSlider.value) || 0)
     : Math.round(draft.altitude_m / FLOOR_HEIGHT_M);
@@ -172,13 +170,9 @@ function emitPreview() {
 
 function updateAnchoringHint() {
   if (!elModalZNote) return;
-  if (elModalUnanchored?.checked) {
-    elModalZNote.textContent = 'Unanchored publish selected: h = "". No ellipsoidal Z is written to h.';
-    return;
-  }
   const z = String(elModalEllipsoidalZ?.value || '').trim();
   if (!z) {
-    elModalZNote.textContent = 'Enter ellipsoidal Z (WGS84 metres) or choose unanchored.';
+    elModalZNote.textContent = 'A known WGS84 ellipsoidal height is required to publish.';
     return;
   }
   elModalZNote.textContent = `Anchored publish: Z=${z} m (WGS84 ellipsoidal). Floor/height stay in Layer-4 payload.`;
@@ -393,11 +387,6 @@ export function initCreateModal(opts) {
   elModalManualAltitude?.addEventListener('input', () => setAltitudeMeters(Number(elModalManualAltitude.value) || 0, 'manual'));
   elModalDeviceAltBtn?.addEventListener('click', requestDeviceAltitude);
   elModalEllipsoidalZ?.addEventListener('input', () => {
-    if (elModalUnanchored && elModalEllipsoidalZ.value.trim()) elModalUnanchored.checked = false;
-    updateAnchoringHint();
-    emitPreview();
-  });
-  elModalUnanchored?.addEventListener('change', () => {
     updateAnchoringHint();
     emitPreview();
   });
@@ -432,17 +421,15 @@ export function openCreateModal() {
     elModalDeviceAltBtn.textContent = navigator.geolocation ? 'Use device ellipsoidal Z' : 'Ellipsoidal Z unavailable';
   }
   if (elModalEllipsoidalZ) elModalEllipsoidalZ.value = '';
-  if (elModalUnanchored) elModalUnanchored.checked = false;
   if (elModalCategory) elModalCategory.value = 'TEXT';
   if (elModalEmergencyHint) elModalEmergencyHint.style.display = 'none';
   draft = {
-    lat: context.center?.lat ?? 0,
-    lon: context.center?.lng ?? 0,
+    lat: context.center?.lat,
+    lon: context.center?.lng,
     altitude_m: 0,
     floor_hint: 0,
     placement_mode: 'ground',
     ellipsoidal_z: '',
-    unanchored: false,
   };
   updateAnchoringHint();
   updateAltitudeLabels();

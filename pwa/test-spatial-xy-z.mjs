@@ -62,8 +62,8 @@ assert.throws(()=>codec.formatZ('23.50')); count++;
 for (const scope of [{xy_lo:'u3b',xy_hi:'u3b0'},{z_min:23},{z_min:'23.0'},{z_min:'1',z_max:'1'},{h_lo:'u'}]) {
   assert.throws(()=>codec.normalizeScope(scope)); count++;
 }
-check(codec.matches('',{}),true);
-check(codec.matches('',{z_min:'0'}),false);
+assert.throws(() => codec.matches('',{})); count++;
+assert.throws(() => codec.matches('',{z_min:'0'})); count++;
 check(codec.subscribed('u3bu_0',[]),false);
 check(codec.subscribed('u3bu_0',[{xy_hi:'g'},{xy_lo:'u'}]),true);
 console.log(`XY_Z: ${count} assertions passed; reference and clean-room Python agreement verified.`);

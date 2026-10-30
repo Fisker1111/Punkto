@@ -18,7 +18,7 @@ from nairobidot.carrier import ResourceError, StructuralError, b64, dumps, from_
 from nairobidot.node import MAX_HTTP, Node, PeerError, request
 
 
-def item(index=0, h='', **kwargs):
+def item(index=0, h='u3bu_23', **kwargs):
     return from_atom(atom(index, h, **kwargs)).item()
 
 
@@ -139,7 +139,7 @@ class NodeTests(unittest.TestCase):
 
     def test_spatial_cursor_gaps_resume_and_binding(self):
         n = self.node()
-        for i, h in enumerate(('000000000000_-18', '', 's00000000000_23', '', 's00000000001_23.025')):
+        for i, h in enumerate(('000000000000_-18', 'ezs42_99', 's00000000000_23', 'ezs42_99', 's00000000001_23.025')):
             n.add(item(i, h))
         scope = {'xy_lo': 's'}
         first = n.page({'scope': scope, 'limit': 1})
@@ -251,7 +251,7 @@ class NodeTests(unittest.TestCase):
         a.peers.add(b.url)
         b.peers.update([a.url, c.url])
         c.peers.add(b.url)
-        records = [item(i, h='000000000000_-18' if i % 2 else '') for i in range(12)]
+        records = [item(i, h='000000000000_-18' if i % 2 else 'ezs42_99') for i in range(12)]
         for n, indices in ((a, range(6)), (b, range(8, 2, -1)), (c, range(11, 6, -1))):
             for i in indices:
                 n.add(records[i])

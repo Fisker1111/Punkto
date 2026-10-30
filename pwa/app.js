@@ -11,7 +11,7 @@ import {
   isSettingsOpen as shellIsSettingsOpen,
   setCounts as shellSetCounts,
 } from './ui-shell.js';
-import { initTextView, renderTextFeed, openBoardById, getAtomStableId, resolveBoardAtom } from './ui-text.js';
+import { initTextView, renderTextFeed, openBoardById, getAtomStableId, resolveBoardAtom, replyAddress } from './ui-text.js';
 import {
   initMapView,
   ensureMapInitialized,
@@ -583,7 +583,7 @@ function selectedBoardStableId(atom) {
 }
 
 function copyRootLocationFields(root, reply) {
-  if (root?.h != null) reply.h = String(root.h);
+  reply.h = replyAddress(root);
   if (root?.punkto) reply.punkto = root.punkto;
   const explicitFields = Array.isArray(root?.location_fields) ? new Set(root.location_fields) : new Set();
   for (const field of ['lat', 'lon', 'altitude_m', 'alt', 'z', 'floor', 'level']) {
@@ -635,7 +635,6 @@ async function submitBoardReply({ boardAtom, text }) {
   copyRootLocationFields(root, reply);
   if (author) reply.f = author;
   if (!reply.x) throw new Error('Write a public reply first.');
-  if (!reply.h && !reply.punkto) throw new Error('Cannot reply: board location is missing.');
 
   try {
     const signedReply = await signAtomForSubmit(reply);
@@ -725,21 +724,25 @@ async function submitAtomFromModal({ text, author, category, draft }) {
   const map = getMapInstance();
   const center = draft ? { lat: draft.lat, lng: draft.lon } : map.getCenter();
   const aglMeters = Number(draft?.altitude_m || 0);
-  const publishUnanchored = Boolean(draft?.unanchored);
-  const zInput = String(draft?.ellipsoidal_z || '').trim();
-  if (!publishUnanchored && !zInput) {
-    setCreateError('Enter ellipsoidal Z or choose unanchored publish.');
+  const zInput = String(draft?.ellipsoidal_z ?? '').trim();
+  if (!zInput) {
+    setCreateError('Enter a known WGS84 ellipsoidal height before publishing.');
     setCreateSubmitting(false);
     return;
   }
-  const h = publishUnanchored ? '' : encode_h(center.lat, center.lng, zInput, XY_PRECISION);
+  let h;
+  try {
+    h = encode_h(center.lat, center.lng, zInput, XY_PRECISION);
+  } catch (error) {
+    setCreateError(`Invalid location or ellipsoidal height: ${error.message}`);
+    setCreateSubmitting(false);
+    return;
+  }
   let punkto = '';
-  if (!publishUnanchored) {
-    try {
-      punkto = encodeLocation(center.lat, center.lng, Number(zInput));
-    } catch {
-      punkto = '';
-    }
+  try {
+    punkto = encodeLocation(center.lat, center.lng, Number(zInput));
+  } catch {
+    punkto = '';
   }
   const t = Date.now();
   const payload = {
@@ -750,8 +753,8 @@ async function submitAtomFromModal({ text, author, category, draft }) {
       floor: draft?.floor_hint ?? null,
       height_above_ground_m: aglMeters,
       placement_mode: String(draft?.placement_mode || 'manual'),
-      ellipsoidal_z_m: publishUnanchored ? null : zInput,
-      anchored: !publishUnanchored,
+      ellipsoidal_z_m: zInput,
+      anchored: true,
     },
   };
   const atom = {
@@ -761,8 +764,8 @@ async function submitAtomFromModal({ text, author, category, draft }) {
     lat: center.lat,
     lon: center.lng,
     altitude_m: aglMeters,
-    alt: publishUnanchored ? 0 : Number(zInput),
-    ellipsoidal_z: publishUnanchored ? null : zInput,
+    alt: Number(zInput),
+    ellipsoidal_z: zInput,
   };
   if (draft?.floor_hint != null) atom.floor = draft.floor_hint;
   atom.x_payload = stableJson(payload);
@@ -786,7 +789,7 @@ async function submitAtomFromModal({ text, author, category, draft }) {
     await refreshUI();
     requestAnimationFrame(() => { if (map) map.resize(); });
     setSyncStatus('ok');
-    if (!publishUnanchored && map) map.flyTo({ center: [center.lng, center.lat], zoom: Math.max(map.getZoom(), 14) });
+    if (map) map.flyTo({ center: [center.lng, center.lat], zoom: Math.max(map.getZoom(), 14) });
   } catch (err) {
     console.error('[addAtom]', err);
     setSyncStatus('error');
@@ -824,13 +827,9 @@ async function printPunktiForAtom(atom, button = null) {
 
 function updateCreateLocationDisplay(draft) {
   if (!elModalLocation || !draft) return;
-  if (draft.unanchored) {
-    elModalLocation.textContent = 'h = "" (unanchored) · no ellipsoidal height in address';
-    return;
-  }
-  const zInput = String(draft.ellipsoidal_z || '').trim();
+  const zInput = String(draft.ellipsoidal_z ?? '').trim();
   if (!zInput) {
-    elModalLocation.textContent = 'Enter ellipsoidal Z (metres, WGS84) or choose unanchored';
+    elModalLocation.textContent = 'Enter a known ellipsoidal height (metres, WGS84)';
     return;
   }
   try {

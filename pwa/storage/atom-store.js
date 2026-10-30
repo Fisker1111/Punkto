@@ -78,7 +78,7 @@ export async function upsertAtom(atom) {
     lon: normalized.lon ?? (loc ? loc.lon : 0),
     alt: normalized.alt ?? normalized.altitude_m ?? (loc ? loc.alt : 0),
     location_fields: explicitLocationFields,
-    h: normalized.h ?? '',
+    h: normalized.h,
     mid: normalized.mid ?? '',
     sha256: normalized.sha256 ?? '',
     verification_state: normalized.verification_state ?? '',

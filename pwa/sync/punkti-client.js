@@ -46,9 +46,6 @@ function toUiPayload(x) {
 
 function hToCoordinates(h) {
   const parsed = parse_h(h);
-  if (!parsed) {
-    return { lat: null, lon: null, alt: null, xy: '', z: '' };
-  }
   const xy = decode_xy(parsed.xy);
   const altitude = Number(parsed.z);
   return {
@@ -124,7 +121,8 @@ function toCarrierAtom(atom) {
   const payload = atom?.x_payload && typeof atom.x_payload === 'string'
     ? atom.x_payload
     : (typeof atom?.x === 'string' ? atom.x : JSON.stringify({ text: String(atom?.x ?? '') }));
-  const h = typeof atom?.h === 'string' ? atom.h : '';
+  const h = atom?.h;
+  parse_h(h);
   return {
     v: VERSION,
     t: timestamp,

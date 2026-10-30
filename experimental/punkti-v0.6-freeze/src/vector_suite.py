@@ -66,7 +66,7 @@ def fixtures():
     for name, h in [('height23','u3butz7k9q_23'),('negative','u3butz7k9q_-18'),('decimal','u3butz7k9q_23.025')]:
         specs[name] = spec(h=h)
     for i, h in enumerate(('u3bu_23','u3butz7k9q_23','u3c0_23','u3bu_23.02',
-                           'u3bu_23.025','u3bu_22.999','u3bu_-18','')):
+                           'u3bu_23.025','u3bu_22.999','u3bu_-18','ezs42_99')):
         specs['selection'+str(i)] = spec(h=h)
     result = {}
     with adapter('ref', False) as a, adapter('nb', False) as b:
@@ -219,7 +219,7 @@ def definitions(f):
         {'xy_lo':'u3c','xy_hi':'u3b'}, {'z_min':'23','z_max':'23'},
         {'z_min':'23.025','z_max':'23'}, {'z_min':23}, {'z_min':'٢٣'}, {'z_min':'23.0'},
         {'xy_lo':''}, {'xy_hi':'u'*13}, {'xy_lo':'U'}, {'h_lo':'u3b'}]
-    add('V13','exact-XY_Z-wire-scopes','Seed coarse/fine XY, Z endpoints and unanchored fixtures; issue exact PULL queries.',
+    add('V13','exact-XY_Z-wire-scopes','Seed coarse/fine XY, Z endpoints and outside-XY fixtures; issue exact PULL queries.',
         dict(fixtures=['selection'+str(i) for i in range(8)],
              requests=[request(dict(mode='spatial',scope=scope)) for scope,_ in selections],
              invalid_requests=[request(dict(mode='spatial',scope=scope)) for scope in invalid_scopes]),

@@ -158,12 +158,8 @@ export function canonical(atom) {
   if (!/^(0|[1-9][0-9]*)$/.test(tDecimal)) {
     throw new ValueError('timestamp');
   }
-  if (typeof atom.h !== 'string' || atom.h.length > 32) {
-    throw new ValueError('spatial address');
-  }
-  if (atom.h !== '') {
-    parse_h(atom.h);
-  }
+  // Spatial structure is mandatory before any algorithm-specific checks.
+  parse_h(atom.h);
   const x = utf8(atom.x);
   const alg = utf8(atom.alg);
   if (!alg.length || alg.length > 128 || !atom.alg.split('').every(char => char.charCodeAt(0) <= 0x7f)) {
@@ -279,7 +275,7 @@ export async function encodeRecord(atom, secretKey) {
   const envelope = {
     v: atom.v ?? VERSION,
     t: atom.t,
-    h: atom.h ?? '',
+    h: atom.h,
     x: atom.x,
     alg: atom.alg ?? 'ed25519',
     pk: b64(publicKey),

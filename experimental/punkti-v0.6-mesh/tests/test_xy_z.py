@@ -32,7 +32,7 @@ class XY_ZTests(unittest.TestCase):
         self.assertEqual(len({validate(record(a)).address for a in atoms}),3)
         for h in ['u3b_0','u'*13+'_0','u3bu0','u3bu__0','u3bu_','u3bu_'+'1'*28,'u3bu_٢٣']:
             with self.assertRaises(ValueError): canonical(dict(atoms[0],h=h))
-        self.assertIsNone(parse_h(''))
+        with self.assertRaises(ValueError): parse_h('')
 
     def test_key_containment(self):
         self.assertTrue(Subscription('u3bu','u3bu000001').matches('u3bu_23'))

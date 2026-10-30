@@ -45,7 +45,7 @@ try {
     return fetch(address.replace('/custom-publication', '/publication').replace('/custom-submit', '/submit'), init);
   };
   await run(['read', `--nodes=${nodes}`, `--publication=${node.base}/custom-publication`], fetchOverride);
-  await run(['write', `--nodes=${nodes}`, `--submit=${node.base}/custom-submit`, '--text=--literal'], fetchOverride);
+  await run(['write', `--nodes=${nodes}`, `--submit=${node.base}/custom-submit`, '--text=--literal', `--h=${exactH}`], fetchOverride);
   assert.ok(seen.includes(`${node.base}/custom-publication/root.json`));
   assert.ok(seen.includes(`${node.base}/custom-submit`));
 
@@ -66,5 +66,29 @@ try {
     assert.deepEqual(Object.keys(result.body), ['error']);
     assert.match(result.body.error, message);
   }
+  // Only valid commands/options can reach the required-spatial-address gate.
+  // 'post' is not a CLI command; 'write --ref' is an unknown option.
+  for (const [command, extra] of [
+    ['write', []],
+    ['reply', [`--ref=${anchored.body.mid}`]],
+  ]) {
+    const result = await cli([command, `--nodes=${nodes}`, '--text=missing h', ...extra]);
+    assert.equal(result.code, 1);
+    assert.match(result.body.error, /spatial address required: pass --h <xy>_<z> or --lat\/--lon\/--height/);
+  }
+  const badCommand = await cli(['post', `--nodes=${nodes}`, '--text=missing h']);
+  assert.equal(badCommand.code, 1);
+  assert.match(badCommand.body.error, /expected read, write or reply/);
+  const badWriteOption = await cli(['write', `--nodes=${nodes}`, '--text=missing h', `--ref=${anchored.body.mid}`]);
+  assert.equal(badWriteOption.code, 1);
+  assert.match(badWriteOption.body.error, /unknown option --ref/);
+  for (const h of ['', 'broken', 'u3bu_-0', 'U3bu_0']) {
+    const result = await cli(['write', `--nodes=${nodes}`, '--text=invalid h', `--h=${h}`]);
+    assert.equal(result.code, 1);
+    assert.match(result.body.error, /invalid spatial address/);
+  }
+  // L3 carries opaque refs: equality is enforced by Punkto L4, not this helper.
+  const elsewhere = await cli(['reply', `--nodes=${nodes}`, `--ref=${anchored.body.mid}`, '--text=opaque reference', '--h=ezs42_99']);
+  assert.equal(elsewhere.code, 0, elsewhere.body.error);
   console.log('CLI: PASS — both option forms, all documented flags, negative coordinates/height, overrides, JSON failures and repeated-flag rejection');
 } finally { await node.close(); }

@@ -97,7 +97,7 @@ async function main() {
     assert.equal(record.state, 'VALID');
     assert.equal(record.text, 'E1 coordinates');
     assert.equal(record.h, encode_h(55.675398, 12.561895, 0));
-    const reply = await cli(['reply', '--nodes', nodesUrl, '--ref', written.body.mid, '--text', 'E1 reply']);
+    const reply = await cli(['reply', '--nodes', nodesUrl, '--ref', written.body.mid, '--text', 'E1 reply', '--h', record.h]);
     assert.equal(reply.code, 0, reply.body.error);
     const replied = await reader.readPublication(selected.publication);
     assert.deepEqual(replied.records.find(record => record.mid === reply.body.mid).atom.refs, [{ target: written.body.mid, rel: 'reply' }]);
@@ -108,7 +108,7 @@ async function main() {
     const flatRead = await cli(['read', '--nodes', nodesUrl, '--xy', 'u3butz', '--z-min', '0', '--z-max', '1', '--limit', '1'], flat);
     assert.equal(flatRead.code, 0, flatRead.body.error);
     assert.equal(flatRead.body.records.length, 1);
-    const flatWrite = await cli(['write', '--nodes', nodesUrl, '--text', 'E1 flat write'], flat);
+    const flatWrite = await cli(['write', '--nodes', nodesUrl, '--text', 'E1 flat write', '--h', atom.h], flat);
     assert.equal(flatWrite.code, 0, flatWrite.body.error);
     await node.stop(); await node.start();
     const persisted = await createReader().readPublication(selected.publication);
