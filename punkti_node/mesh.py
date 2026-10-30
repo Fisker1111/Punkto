@@ -322,7 +322,11 @@ class Node:
                             raise ValueError('push batch size')
                         node.metrics['push_requests'] += 1
                         node.metrics['push_records'] += len(records)
-                        return {'results': [node.admit(item) for item in records]}
+                        results = [node.admit(item) for item in records]
+                        flush = getattr(node, 'flush_publication', None)
+                        if flush:
+                            flush()
+                        return {'results': results}
                     if parsed.path == '/sync':
                         peer = peer_url(data['peer'])
                         if peer not in node.peers:

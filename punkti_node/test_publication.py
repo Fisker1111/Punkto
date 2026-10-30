@@ -7,6 +7,7 @@ import sys
 import tempfile
 import threading
 import unittest
+from unittest.mock import patch
 from urllib.error import HTTPError
 from urllib.request import Request, urlopen
 
@@ -217,6 +218,55 @@ class PublicationTests(unittest.TestCase):
         a.republish_publication()
         b.replicate_publication(a.url + '/publication')
         self.assertEqual({digest(entry.raw) for entry in a.store.values()}, {digest(entry.raw) for entry in b.store.values()})
+
+    def test_mesh_replication_refreshes_publication_without_restart(self):
+        for transport in ('pull', 'push'):
+            with self.subTest(transport=transport):
+                a = self.node(f'{transport}-a')
+                b = self.node(f'{transport}-b')
+                raw = fixture(11)
+                status, submitted = self.post_submit(a, {'records': [wire(raw)]})
+                self.assertEqual(status, 200)
+                self.assertTrue(submitted['results'][0]['admitted'])
+                before = b.publication_state.copy()
+
+                def replicate():
+                    if transport == 'pull':
+                        b.pull(a.url)
+                    else:
+                        a.push_to(b.url)
+
+                with patch.object(b.publication, 'publish', wraps=b.publication.publish) as publish:
+                    replicate()
+                    self.assertEqual(publish.call_count, 1)
+                    with urlopen(b.url + '/publication/' + object_path('records', digest(raw))) as response:
+                        self.assertEqual(response.read(), raw)
+                    reader = Reader()
+                    result = reader.read_publication(b.url + '/publication')
+                    self.assertEqual(result['valid'], 1)
+                    self.assertEqual(list(reader.store.valid.values()), [raw])
+                    directory = Path(b.config['publication']['path'])
+                    current = root((directory / 'root.json').read_bytes())
+                    manifest_raw = (directory / f"manifests/{current['head']}.json").read_bytes()
+                    published = manifest(manifest_raw)
+                    self.assertEqual(digest(manifest_raw), current['head'])
+                    self.assertEqual(published['record_count'], 1)
+                    self.assertEqual(published['seq'], current['seq'])
+                    self.assertEqual(current['seq'], before['seq'] + 1)
+                    self.assertEqual(published['prev'], before['head'])
+                    self.assertEqual(b.publication_state, current)
+
+                    # Re-reading the same record and an idle sync must not publish again.
+                    if transport == 'pull':
+                        b.pull(a.url, resume=False)
+                    else:
+                        a.push_cursors.clear()
+                        a.push_to(b.url)
+                    replicate()
+                    self.assertEqual(publish.call_count, 1)
+                    self.assertEqual(root((directory / 'root.json').read_bytes()), current)
+                    self.assertEqual(len(b.store), 1)
+                    self.assertEqual(b.durable.log_lines, 1)
 
     def test_restart_persists_store_and_publication(self):
         node = self.node('a')
