@@ -1,0 +1,59 @@
+{
+  "fixture": {
+    "atoms": 7,
+    "addresses": 5,
+    "discovery": {
+      "files": 13,
+      "bytes": 6479
+    }
+  },
+  "http": {
+    "unknown_discovery": {
+      "requests": 22,
+      "bytes": 8038,
+      "records": 7
+    },
+    "unknown_frozen": {
+      "requests": 46,
+      "bytes": 8410,
+      "records": 7
+    },
+    "known_discovery": {
+      "requests": 9,
+      "bytes": 3773,
+      "records": 3
+    },
+    "known_frozen": {
+      "requests": 15,
+      "bytes": 3275,
+      "records": 3
+    }
+  },
+  "synthetic": [
+    {
+      "atoms": 10,
+      "distinct_cells": 10,
+      "files": 31,
+      "bytes": 14012
+    },
+    {
+      "atoms": 100,
+      "distinct_cells": 100,
+      "files": 301,
+      "bytes": 138574
+    },
+    {
+      "atoms": 1000,
+      "distinct_cells": 1000,
+      "files": 2381,
+      "bytes": 1160976
+    },
+    {
+      "atoms": 10000,
+      "distinct_cells": 10000,
+      "files": 20956,
+      "bytes": 10587214
+    }
+  ],
+  "method": "HTTP GET response-body bytes, no headers/compression/cache; fresh client per run; bootstrap included, raw hashes checked, optional Reader cross-check excluded; unknown fetches all occupied regions and records, known fetches one exact h. Synthetic totals count only discovery files, not Layer-3 publication."
+}
