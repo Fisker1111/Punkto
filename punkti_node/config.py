@@ -3,10 +3,11 @@ from copy import deepcopy
 import json
 import math
 import os
+import ipaddress
 from pathlib import Path
 import yaml
 from urllib.parse import urlsplit
-from .mesh import peer_url
+from .mesh import MAX_HTTP, peer_url
 from .spatial import Subscription
 
 DEFAULTS = {
@@ -18,6 +19,21 @@ DEFAULTS = {
                 'peers': [], 'sync_interval_seconds': 30},
     'subscriptions': [{}], 'storage': {'data_path': '/data'},
     'logging': {'level': 'info'}, 'branding': {'display_name': 'Punkti Node'},
+    # Provider admission controls, not changes to normative carrier/replication.
+    # Production's edge /submit stays closed until tested explicitly.
+    'write_safety': {
+        'enabled': True,
+        'per_ip_rate': 2.0,
+        'per_ip_burst': 12,
+        'global_rate': 10.0,
+        'global_burst': 40,
+        'max_in_flight': 4,
+        'max_batch': 1,
+        'max_http_bytes': 4 * 1024 * 1024,
+        'max_data_bytes': 20 * 1024 * 1024 * 1024,
+        'min_free_bytes': 256 * 1024 * 1024,
+        'trusted_proxy_cidrs': [],
+    },
 }
 ENV = {
     'PUNKTO_BOOTSTRAP_NODES': ('bootstrap', 'nodes', json.loads),
@@ -135,6 +151,35 @@ def load_config(path=None, environ=None):
         raise ValueError('network.sync_interval_seconds must be positive and finite')
     if not config['storage']['data_path']:
         raise ValueError('storage.data_path must not be empty')
+    safety = config['write_safety']
+    if type(safety['enabled']) is not bool:
+        raise ValueError('write_safety.enabled must be a boolean')
+    for field in ('per_ip_rate', 'global_rate'):
+        value = safety[field]
+        if type(value) not in (int, float) or not math.isfinite(value) or value <= 0 or value > 10000:
+            raise ValueError('write_safety.' + field + ' must be positive and finite')
+    for field in ('per_ip_burst', 'global_burst', 'max_in_flight', 'max_batch',
+                  'max_http_bytes', 'max_data_bytes', 'min_free_bytes'):
+        value = safety[field]
+        if type(value) is not int or value < 0:
+            raise ValueError('write_safety.' + field + ' must be a nonnegative integer')
+    for field in ('per_ip_burst', 'global_burst', 'max_in_flight', 'max_batch', 'max_http_bytes'):
+        if safety[field] == 0:
+            raise ValueError('write_safety.' + field + ' must be positive')
+    if safety['max_batch'] > 32 or safety['max_http_bytes'] > MAX_HTTP:
+        raise ValueError('write_safety exceeds node protocol resource bounds')
+    if safety['max_data_bytes'] and safety['max_data_bytes'] < safety['min_free_bytes']:
+        raise ValueError('write_safety data budget smaller than reserve')
+    cidrs = safety['trusted_proxy_cidrs']
+    if not isinstance(cidrs, list) or len(cidrs) > 64 or any(not isinstance(x, str) for x in cidrs):
+        raise ValueError('write_safety.trusted_proxy_cidrs must be a list of CIDRs')
+    for cidr in cidrs:
+        try:
+            net_cidr = ipaddress.ip_network(cidr, strict=False)
+        except ValueError as exc:
+            raise ValueError('invalid write_safety trusted proxy CIDR') from exc
+        if net_cidr.prefixlen == 0:
+            raise ValueError('write_safety cannot trust all networks as proxies')
     if config['logging']['level'] not in ('debug', 'info', 'warning', 'error'):
         raise ValueError('logging.level must be debug, info, warning or error')
     if not isinstance(net['peers'], list) or any(not isinstance(p, str) for p in net['peers']):
