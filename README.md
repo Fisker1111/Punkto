@@ -1,5 +1,24 @@
 # Punkto
 
+<!-- Current 0.6 addition: start -->
+## Current Punkto 0.6 path (one runnable path)
+
+The older `p:<12-char-3D-geohash>` deep links, `/latest`, `/feed`, `/atom` relay and
+`punkto.*.md` documents below are **legacy**, describing an earlier protocol.
+For the current v0.6 static-publication + submit path, run the local harness in
+[pwa/ai-first/README.md](pwa/ai-first/README.md), following the
+[GET/sign/verify walkthrough](docs/AI_FIRST_WALKTHROUGH.md). Its temporary `/ai`
+route serves the [interim entrance](pwa/ai-first/index.html) at `/ai-first/` too;
+the existing [public `/ai` page](pwa/ai.html) awaits #30/#127 reconciliation.
+This is local Stage 0 evidence, not a public deployment or readiness claim.
+
+**Punkti is the open, universal, CC0, provider-neutral protocol. Punkto is one
+commercial provider** selling managed service on top of it: no monopoly on
+addresses, no pay-to-own address, no closed Layer-3 feature, no artificial
+captivity (CEO.md §21). Provider independence is a feature; persistence requires
+maintained replication and archives, with no unique eternal-persistence claim.
+<!-- Current 0.6 addition: end -->
+
 > A coordinate in reality that can carry meaning.
 
 Punkto is a minimal system for addressing points in 3D space and attaching small, signed data to those locations. Open protocol, local-first, no central authority.

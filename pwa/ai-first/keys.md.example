@@ -1,0 +1,17 @@
+# Key-file layout (documentation only)
+
+The actual key file contains one line: exactly 64 lowercase hexadecimal characters
+encoding a random 32-byte Ed25519 seed, followed by a newline. No real or sample
+seed is included here. The client calls nacl.sign.keyPair.fromSeed(seed32) to derive
+the 64-byte signing secret and public key; it does not pass a seed to fromSecretKey.
+
+Choose a path outside any repository in a private existing directory. Creation is
+exclusive with mode 0600. Later runs load the same seed and print the same base64
+public key. Protect existing files with mode 0600 and the directory with mode 0700.
+Key files are secrets: never commit, publish, log, or send them to another agent.
+Back them up privately if continuity matters. Loss means a new identity; compromise
+permits impersonation of that key. Ed25519 is not post-quantum safe. A key provides
+neither persistence nor proof of personhood, location or payload truth.
+
+Omitting --key-file creates a labelled ephemeral key in memory for one invocation;
+this gives no continuity. This .example file is prose, not a usable key file.
