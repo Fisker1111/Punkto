@@ -15,9 +15,8 @@ def require(condition, message):
 
 
 def spatial(h):
-    if h == '':
-        return '~'
-    require(len(h) <= 32 and h.count('_') == 1, 'spatial address')
+    require(isinstance(h, str) and 6 <= len(h) <= 32 and h.count('_') == 1,
+            'required canonical spatial address XY_Z')
     xy, z = h.split('_')
     require(4 <= len(xy) <= 12 and all(c in ALPHABET for c in xy), 'XY')
     unsigned = z.removeprefix('-')
@@ -118,7 +117,7 @@ def parse(raw):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--base', required=True)
-    parser.add_argument('--h', required=True, help='exact address; use an empty string for unanchored')
+    parser.add_argument('--h', required=True, help='required exact canonical XY_Z address; no default location or altitude')
     parser.add_argument('--verify-with-frozen-carrier', action='store_true')
     args = parser.parse_args()
     base = args.base.rstrip('/')
@@ -147,7 +146,11 @@ def main():
     print(f'HEAD={head}')
     manifest = parse(get(f'manifests/{head}.json', head, 'root.json.head'))
     require(manifest['seq'] == root['seq'], 'publication race')
-    prefix = '~' if leaf == '~' else leaf[:2]
+    require(isinstance(manifest['index'], dict) and len(manifest['index']) <= 1024, 'index')
+    for key, index_sha in manifest['index'].items():
+        require(len(key) == 2 and all(c in ALPHABET for c in key), 'geographical index key')
+        sha_ok(index_sha)
+    prefix = leaf[:2]
     sha = sha_ok(manifest['index'][prefix])
     source = f'manifests/{head}.json index[{prefix!r}]'
     while True:
