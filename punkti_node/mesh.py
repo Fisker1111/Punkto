@@ -11,6 +11,7 @@ from urllib.request import Request, urlopen
 from carrier import (BODY_LIMIT, RECORD_LIMIT, ResourceLimit, State, VERSION,
                      address_ok, b64, unb64, validate)
 from spatial import Subscription
+from .write_safety import AdmissionRejected
 
 MAX_PAGE = 32
 MAX_HTTP = 4 * RECORD_LIMIT
@@ -279,11 +280,13 @@ class Node:
             def log_message(self, *_):
                 pass
 
-            def reply(self, status, payload):
+            def reply(self, status, payload, headers=None):
                 raw = packed(payload)
                 self.send_response(getattr(payload, 'http_status', status))
                 self.send_header('Content-Type', 'application/json')
                 self.send_header('Content-Length', str(len(raw)))
+                for name, value in (headers or {}).items():
+                    self.send_header(name, str(value))
                 self.end_headers()
                 self.wfile.write(raw)
 
@@ -309,6 +312,10 @@ class Node:
                     special = node.special_route(self.command, parsed.path, parsed.query, data)
                     if special is not None:
                         return special
+                    if parsed.path == '/submit' and getattr(node, 'write_guard', None):
+                        records = data.get('records')
+                        if not isinstance(records, list) or not 1 <= len(records) <= node.write_guard.max_batch:
+                            raise ValueError('submit batch size')
                     if parsed.path == '/push':
                         records = data['records']
                         if not isinstance(records, list) or not 1 <= len(records) <= MAX_PAGE:
@@ -334,9 +341,18 @@ class Node:
 
             def handle_request(self):
                 try:
-                    result = self.dispatch()
+                    route = node.api_path(urlparse(self.path).path)
+                    guard = getattr(node, 'write_guard', None)
+                    if self.command == 'POST' and route == '/submit' and guard:
+                        with guard.admit(self.client_address[0], self.headers, node.config['storage']['data_path']):
+                            result = self.dispatch()
+                    else:
+                        result = self.dispatch()
                     if result is not None:
                         self.reply(200, result)
+                except AdmissionRejected as exc:
+                    headers = {'Retry-After': exc.retry_after} if exc.retry_after else None
+                    self.reply(exc.http_status, {'error': str(exc), 'kind': 'admission'}, headers)
                 except ResourceLimit as exc:
                     self.reply(413, {'error': str(exc), 'kind': 'resource'})
                 except (ValueError, KeyError, TypeError, IndexError) as exc:
