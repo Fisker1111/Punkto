@@ -12,6 +12,7 @@ from .carrier import RECORD_LIMIT, State, unb64, validate
 from .mesh import Node, digest, wire
 from .publication import Publisher, Reader
 from .spatial import Subscription
+from .write_safety import WriteSafety
 
 LOG = logging.getLogger(__name__)
 
@@ -130,6 +131,7 @@ class DurableStore:
 class PersistentNode(Node):
     def __init__(self, config):
         self.config = config
+        self.write_guard = WriteSafety(config['write_safety'])
         self.durable = DurableStore(config['storage']['data_path'])
         super().__init__([Subscription(**s) for s in config['subscriptions']],
                          config['network']['peers'], self.durable.meta['epoch'])

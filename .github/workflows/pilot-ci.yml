@@ -105,6 +105,8 @@ jobs:
           node-version: '22'
       - name: Install Punkti node test runtime
         run: python -m pip install -r node/requirements.txt cryptography PyYAML
+      - name: Run HTTP public-write safety and hostile tests
+        run: python3 -m unittest punkti_node.test_write_safety -v
       - name: Run end-to-end reference client on two loopback nodes
         run: node pwa/test-ai-first-agent.mjs
       - name: State evidence limits
