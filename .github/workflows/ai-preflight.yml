@@ -1,5 +1,7 @@
 name: AI static preflight unit tests
 on:
+  push:
+    branches: [main]
   pull_request:
     paths:
       - 'scripts/qa/**'
