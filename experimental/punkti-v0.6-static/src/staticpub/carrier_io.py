@@ -70,7 +70,7 @@ def leaf_key(h, depth=MAX_LEAF_DEPTH):
     if type(depth) is not int or not (MIN_LEAF_DEPTH <= depth <= MAX_LEAF_DEPTH):
         raise ValueError('leaf depth')
     parts = parse_h(h)
-    return (parts[0] if parts else '').ljust(MAX_LEAF_DEPTH, '0')[:depth]
+    return parts[0].ljust(MAX_LEAF_DEPTH, '0')[:depth]
 
 
 def intersects(prefix, scope):

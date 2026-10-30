@@ -28,10 +28,13 @@ class SpatialTests(unittest.TestCase):
         self.assertTrue(matches(h,{'xy_lo':'gggh','xy_hi':'gggj'}))
         self.assertFalse(matches('gggj00000000_23',{'xy_hi':'gggj'}))
         self.assertFalse(matches('ggggzzzzzzzz_23',{'xy_lo':'gggh'}))
-        for empty in ('',None):
-            self.assertTrue(matches(empty,{}))
-            for scope in ({'xy_lo':'0'},{'xy_hi':'z'},{'z_min':'-1000'},{'z_max':'9000'}):
-                self.assertFalse(matches(empty,scope))
+        for scope in ({},{'xy_lo':'0'},{'xy_hi':'z'},{'z_min':'-1000'},{'z_max':'9000'}):
+            with self.assertRaises(StructuralError): matches('',scope)
+        # None here is internal opaque-future-version metadata, not a v0.6 h.
+        # v0.6 parse_h(None) must still fail before algorithm dispatch.
+        with self.assertRaises(StructuralError): parse_h(None)
+        self.assertTrue(matches(None,{}))
+        self.assertFalse(matches(None,{'z_min':'-1000'}))
         self.assertFalse(subscribed(h,[]))
         self.assertTrue(subscribed(h,[{'xy_hi':'0'},{'xy_lo':'g'}]))
 

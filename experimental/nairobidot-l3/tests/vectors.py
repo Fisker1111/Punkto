@@ -11,7 +11,7 @@ SEED = hashlib.sha256(b'nairobidot-clean-room-vectors').digest()
 KEY = Ed25519PrivateKey.from_private_bytes(SEED)
 
 
-def atom(index: int = 0, h: str = '', **changes) -> dict:
+def atom(index: int = 0, h: str = 'u3bu_23', **changes) -> dict:
     value = dict(v='punkti/0.6', t=index, h=h, x=f'opaque {index}', alg='ed25519',
                  pk=b64(KEY.public_key().public_bytes_raw()), refs=[], ext='', sig=b64(bytes(64)))
     value.update(changes)
@@ -21,10 +21,10 @@ def atom(index: int = 0, h: str = '', **changes) -> dict:
 
 def vectors() -> list[dict]:
     result = []
-    for index, h in enumerate(('', 's00000000000_23', 's00000000001_23.025')):
+    for index, h in enumerate(('u3bu_23', 's00000000000_23', 's00000000001_23.025')):
         a = atom(index, h, refs=[{'target': 'future:00', 'rel': ''}], ext=b64(b'\x00\xff'))
         r = from_atom(a)
-        result.append({'name': ('unanchored', 'xy-scope', 'xyz-scope')[index],
+        result.append({'name': ('anchored', 'xy-scope', 'xyz-scope')[index],
                        'atom': a, 'C': r.C.hex(), 'S': r.S.hex(), 'MID': r.mid,
                        'address': r.address, 'R': b64(r.R), 'signature': a['sig']})
     return result

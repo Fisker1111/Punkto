@@ -2,7 +2,7 @@
  * ui-board.js - selected Map board/bottom-sheet UI
  */
 
-import { resolveBoardAtom, renderBoardSheetHtml } from './ui-text.js';
+import { resolveBoardAtom, renderBoardSheetHtml, replyAddress } from './ui-text.js';
 
 let _sheet = null;
 let _getAtoms = () => [];
@@ -208,6 +208,7 @@ async function handleBoardSubmit(e) {
   if (!text) return;
   if (button) button.disabled = true;
   try {
+    replyAddress(_selectedBoardAtom);
     await _onSubmitReply({ boardAtom: _selectedBoardAtom, text });
     _replyDraft = '';
     _replyStatus = { type: 'success', message: 'Public reply posted.' };

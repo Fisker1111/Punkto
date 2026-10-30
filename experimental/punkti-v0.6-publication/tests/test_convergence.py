@@ -13,7 +13,7 @@ class Convergence(unittest.TestCase):
             with self.subTest(packs=packs), tempfile.TemporaryDirectory() as tmp:
                 tmp = Path(tmp)
                 worker = ROOT / 'scripts/worker.py'
-                seed_a = [fixture(200, ''), fixture(201, 'u4pruydqqv_-18')]
+                seed_a = [fixture(200, 'u3bu_23'), fixture(201, 'u4pruydqqv_-18')]
                 seed_b = [fixture(202, 'ezs42_23.025'), fixture(203, '0000_0')]
                 def run(operation, implementation, location, records=None):
                     args = [sys.executable, str(worker), operation, implementation, str(location)]

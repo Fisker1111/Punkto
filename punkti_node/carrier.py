@@ -71,6 +71,7 @@ def canonical(atom):
     if type(atom['t']) is not int or not 0 <= atom['t'] <= 9007199254740991:
         raise ValueError('timestamp')
     h = atom['h']
+    # Spatial structure is mandatory even when the algorithm is unsupported.
     parse_h(h)
     alg = utf8(atom['alg'])
     if not 1 <= len(alg) <= 128 or not alg.isascii():

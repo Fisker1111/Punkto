@@ -1,3 +1,5 @@
+> Historical pre-correction draft, superseded by the 2026-10-29 spatial-only correction: every v0.6 record requires canonical XY_Z; empty h and publication key `~` are invalid. Signed historical evidence remains frozen in `legacy-unanchored/`.
+
 # Revision 3 implementation evidence
 
 Implemented on `draft/punkti-0.6-static-first`, starting from

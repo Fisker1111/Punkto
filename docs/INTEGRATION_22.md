@@ -41,9 +41,9 @@ Status: implementation complete in working tree (no commit/push/deploy).
 
 ## 3) Placement / Z UX correction
 
-- Punkti `h` now uses `h=<xy>_<z>` (or empty `h` for unanchored) in the submit path.
-- Create modal now has explicit **ellipsoidal Z (WGS84)** input and **unanchored** toggle.
-- Publish blocks if neither ellipsoidal Z nor unanchored is provided (no invented Z).
+- Punkti `h` now uses `h=<xy>_<z>` (required for every record) in the submit path.
+- Create modal now has explicit **ellipsoidal Z (WGS84)** input; the historical unanchored toggle is removed.
+- Publish blocks if a real ellipsoidal Z is missing (no invented Z).
 - Floor/height-above-ground remain Layer-4 metadata inside payload `x` (`meta.floor`, `meta.height_above_ground_m`) and are not used as Layer-3 truth.
 - Map altitude rendering now consumes decoded `h`-derived altitude from cached atom records (negative values accepted; no forced non-negative clamp).
 

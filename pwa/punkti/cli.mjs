@@ -35,7 +35,7 @@ function url(value) {
 }
 export async function run(args, fetchImpl = globalThis.fetch) {
   const [command, ...flags] = args;
-  if (!['read', 'write', 'reply'].includes(command)) throw new Error('expected read, write or reply');
+  if (!['read', 'write', 'post', 'reply'].includes(command)) throw new Error('expected read, write, post or reply');
   const allowed = new Set(['nodes', ...(command === 'read' ? ['publication', 'xy', 'z-min', 'z-max', 'limit'] : ['submit', 'text', 'lat', 'lon', 'height', 'h', ...(command === 'reply' ? ['ref'] : [])])]);
   const parsed = [];
   for (let i = 0; i < flags.length; i++) {
@@ -83,11 +83,13 @@ export async function run(args, fetchImpl = globalThis.fetch) {
   if (!node.submit) throw new Error('selected node does not accept writes (no submit entry)');
   const submitUrl = url(options.submit ?? node.submit);
   if (options.text === undefined) throw new Error('--text required');
-  if (command === 'reply' && !/^punkti\/0\.6:[0-9a-f]{64}$/.test(options.ref ?? '')) throw new Error('invalid MID reference');
-  let h = '';
+  let h;
   const hasCoords = options.lat !== undefined || options.lon !== undefined || options.height !== undefined;
   if (options.h !== undefined && hasCoords) throw new Error('choose --h or coordinates');
-  if (options.h !== undefined) { parse_h(options.h); h = options.h; }
+  if (options.h !== undefined) {
+    try { parse_h(options.h); } catch { throw new Error('invalid spatial address: --h must be canonical <xy>_<z>'); }
+    h = options.h;
+  }
   else if (hasCoords) {
     if (options.lat === undefined || options.lon === undefined || options.height === undefined ||
         options.lat.trim() === '' || options.lon.trim() === '' || options.height.trim() === '') {
@@ -95,6 +97,8 @@ export async function run(args, fetchImpl = globalThis.fetch) {
     }
     h = encode_h(Number(options.lat), Number(options.lon), Number(options.height));
   }
+  if (h === undefined) throw new Error('spatial address required: pass --h <xy>_<z> or --lat/--lon/--height');
+  if (command === 'reply' && !/^punkti\/0\.6:[0-9a-f]{64}$/.test(options.ref ?? '')) throw new Error('invalid MID reference');
   const identity = globalThis.nacl.sign.keyPair();
   const client = createSubmitClient({
     baseUrl: node.base,

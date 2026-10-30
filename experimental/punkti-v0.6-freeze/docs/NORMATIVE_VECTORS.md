@@ -848,7 +848,7 @@ The zero fixture is the canonical zero-timestamp fixture for V7.
     "spec": {
       "seed": "punkti-0.6-freeze-vectors",
       "t": 1700000000000,
-      "h": "",
+      "h": "ezs42_99",
       "x": "opaque freeze payload \u0000 \u4e16\u754c \ud83c\udf0d",
       "refs": [
         {
@@ -866,7 +866,7 @@ The zero fixture is the canonical zero-timestamp fixture for V7.
     "atom": {
       "v": "punkti/0.6",
       "t": 1700000000000,
-      "h": "",
+      "h": "ezs42_99",
       "x": "opaque freeze payload \u0000 \u4e16\u754c \ud83c\udf0d",
       "refs": [
         {
@@ -881,16 +881,16 @@ The zero fixture is the canonical zero-timestamp fixture for V7.
       "ext": "AP8A",
       "alg": "ed25519",
       "pk": "n9wUpwhUac6RE1EaIDOs9Vk9bpzasYzydwtYiARPGmY=",
-      "sig": "sB+MSRVCjh6mmS1c8X60v/oUful21mrmPto62V1LmJkr1d3D13ZQQ8nxzR79b0/83NX32diKRUxtuzNGeCPGAA=="
+      "sig": "JKShFxHZXyrMeoIt0BigpIrk/NZAdzX3hefU9dYQd8F9JTMEse3x7LQgttAp/MjEIOwjJqPCBDy5LPvcz2UACA=="
     },
-    "C": "0000000a70756e6b74692f302e360000000d3137303030303030303030303000000000000000236f706171756520667265657a65207061796c6f6164200020e4b896e7958c20f09f8c8d0000000765643235353139000000209fdc14a7085469ce9113511a2033acf5593d6e9cdab18cf2770b5888044f1a66000000020000000e756e6b6e6f776e2f613a3030666600000013756e7265636f676e697a65642fe585b3e7b3bb0000000e6675747572652f76393a61626364000000000000000300ff00",
-    "S": "50554e4b54492d4c332d5349474e000000000a70756e6b74692f302e360000000d3137303030303030303030303000000000000000236f706171756520667265657a65207061796c6f6164200020e4b896e7958c20f09f8c8d0000000765643235353139000000209fdc14a7085469ce9113511a2033acf5593d6e9cdab18cf2770b5888044f1a66000000020000000e756e6b6e6f776e2f613a3030666600000013756e7265636f676e697a65642fe585b3e7b3bb0000000e6675747572652f76393a61626364000000000000000300ff00",
-    "MID": "8b43c5af563c190e9aa74ead22a5a5e32761aa5cc793deede4ad381f87cd17a6",
-    "address": "punkti/0.6:8b43c5af563c190e9aa74ead22a5a5e32761aa5cc793deede4ad381f87cd17a6",
-    "R": "AAAAwwAAAApwdW5rdGkvMC42AAAADTE3MDAwMDAwMDAwMDAAAAAAAAAAI29wYXF1ZSBmcmVlemUgcGF5bG9hZCAAIOS4lueVjCDwn4yNAAAAB2VkMjU1MTkAAAAgn9wUpwhUac6RE1EaIDOs9Vk9bpzasYzydwtYiARPGmYAAAACAAAADnVua25vd24vYTowMGZmAAAAE3VucmVjb2duaXplZC/lhbPns7sAAAAOZnV0dXJlL3Y5OmFiY2QAAAAAAAAAAwD/AAAAAECwH4xJFUKOHqaZLVzxfrS/+hR+6XbWauY+2jrZXUuYmSvV3cPXdlBDyfHNHv1vT/zc1ffZ2IpFTG27M0Z4I8YA",
-    "sig": "sB+MSRVCjh6mmS1c8X60v/oUful21mrmPto62V1LmJkr1d3D13ZQQ8nxzR79b0/83NX32diKRUxtuzNGeCPGAA==",
+    "C": "0000000a70756e6b74692f302e360000000d3137303030303030303030303000000008657a7334325f3939000000236f706171756520667265657a65207061796c6f6164200020e4b896e7958c20f09f8c8d0000000765643235353139000000209fdc14a7085469ce9113511a2033acf5593d6e9cdab18cf2770b5888044f1a66000000020000000e756e6b6e6f776e2f613a3030666600000013756e7265636f676e697a65642fe585b3e7b3bb0000000e6675747572652f76393a61626364000000000000000300ff00",
+    "S": "50554e4b54492d4c332d5349474e000000000a70756e6b74692f302e360000000d3137303030303030303030303000000008657a7334325f3939000000236f706171756520667265657a65207061796c6f6164200020e4b896e7958c20f09f8c8d0000000765643235353139000000209fdc14a7085469ce9113511a2033acf5593d6e9cdab18cf2770b5888044f1a66000000020000000e756e6b6e6f776e2f613a3030666600000013756e7265636f676e697a65642fe585b3e7b3bb0000000e6675747572652f76393a61626364000000000000000300ff00",
+    "MID": "c8604c25378f656a802b76694716c2abe8407824a5f514b74a9ee1730765881d",
+    "address": "punkti/0.6:c8604c25378f656a802b76694716c2abe8407824a5f514b74a9ee1730765881d",
+    "R": "AAAAywAAAApwdW5rdGkvMC42AAAADTE3MDAwMDAwMDAwMDAAAAAIZXpzNDJfOTkAAAAjb3BhcXVlIGZyZWV6ZSBwYXlsb2FkIAAg5LiW55WMIPCfjI0AAAAHZWQyNTUxOQAAACCf3BSnCFRpzpETURogM6z1WT1unNqxjPJ3C1iIBE8aZgAAAAIAAAAOdW5rbm93bi9hOjAwZmYAAAATdW5yZWNvZ25pemVkL+WFs+ezuwAAAA5mdXR1cmUvdjk6YWJjZAAAAAAAAAADAP8AAAAAQCSkoRcR2V8qzHqCLdAYoKSK5PzWQHc194Xn1PXWEHfBfSUzBLHt8ey0ILbQKfzIxCDsIyajwgQ8uSz73M9lAAg=",
+    "sig": "JKShFxHZXyrMeoIt0BigpIrk/NZAdzX3hefU9dYQd8F9JTMEse3x7LQgttAp/MjEIOwjJqPCBDy5LPvcz2UACA==",
     "state": "VALID",
-    "sha256_R": "fdacbde6020b844be314ab71f3635af3c6a6e66aed75a96b0da03598f4f33dfa"
+    "sha256_R": "b034344bd6f6686be6c13547787745c74c22b4ec5d581e017d9aced47633f34c"
   }
 }
 ```
@@ -2071,7 +2071,7 @@ Exact inputs and machine-checkable expectations:
 
 ## V13 — exact-XY_Z-wire-scopes
 
-Seed coarse/fine XY, Z endpoints and unanchored fixtures; issue exact PULL queries.
+Seed coarse/fine XY, Z endpoints and outside-XY fixtures; issue exact PULL queries.
 
 Lower-edge containment regardless of region size; exact half-open Z; equal padded keys and malformed bounds HTTP 400.
 
@@ -2084,7 +2084,7 @@ Exact inputs and machine-checkable expectations:
   "id": "V13",
   "title": "exact-XY_Z-wire-scopes",
   "input": {
-    "description": "Seed coarse/fine XY, Z endpoints and unanchored fixtures; issue exact PULL queries.",
+    "description": "Seed coarse/fine XY, Z endpoints and outside-XY fixtures; issue exact PULL queries.",
     "fixtures": [
       "selection0",
       "selection1",
@@ -2299,9 +2299,9 @@ Exact inputs and machine-checkable expectations:
         "punkti/0.6:6ac5260a26fddfe152d41f4b7206d8b51e72a56763db63988625a3526527500b",
         "punkti/0.6:6cee0c46877405489f05523c12c857af7785aa1d43bbd92f59825b1bf338c46e",
         "punkti/0.6:808ad2a53eb49f538225800f36da445e828a00000a9a7513f5d3e816c627e949",
-        "punkti/0.6:8b43c5af563c190e9aa74ead22a5a5e32761aa5cc793deede4ad381f87cd17a6",
         "punkti/0.6:8dfc43a121603aa47fe7c6ed47c011548252ca6fc7ca11e96a400c656eba2a61",
-        "punkti/0.6:98f2628a42b6c0fe197c9a60025526185c6b74f668137cbd36d4526db5b839ea"
+        "punkti/0.6:98f2628a42b6c0fe197c9a60025526185c6b74f668137cbd36d4526db5b839ea",
+        "punkti/0.6:c8604c25378f656a802b76694716c2abe8407824a5f514b74a9ee1730765881d"
       ],
       [
         "punkti/0.6:575e51cb059c11e8b595cf9ffb20deed2a970d2b8fae7d4242e7eeeb57db1202",

@@ -1,5 +1,11 @@
 # Punkto ROOT/REPLY Board Model
 
+Current v0.6 rule (2026-10-29): every record requires canonical `h=<xy>_<z>`.
+A Punkto L4 reply copies its parent's exact valid `h`; if the parent has no
+valid anchored address, reply creation fails. Punkti L3 carries opaque refs
+and does not interpret reply semantics. The historical model below does not
+change the frozen v0.5.1 adapter.
+
 ## Purpose
 
 This document defines the Punkto public conversation model before any protocol,

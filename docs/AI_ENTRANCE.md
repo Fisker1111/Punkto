@@ -35,6 +35,7 @@ and Node 20.19+ or 22+:
 ```sh
 node pwa/test-ai-coldstart.mjs
 node pwa/test-ai-hostile.mjs
+node pwa/test-ai-cli.mjs
 ```
 
 E1 spawns an isolated local node, creates ephemeral identities, reads verified static
@@ -48,8 +49,15 @@ The CLI prints one JSON object per invocation and exits non-zero with `error` on
 failure. Requests time out after five seconds each. A single reused reader tracks
 stale roots; independent CLI processes do not preserve reader history. Each write
 or reply uses a new key and discards it. The page includes download and usage commands.
-The CLI coordinate default is precision 10; the literal example address uses precision
-12, obtainable with `--h u3butz7k9q7v_0`.
+The CLI supports `read`, `write`, `post` (an alias of `write`), and `reply`.
+Every write/post/reply requires canonical `--h <xy>_<z>` or all of
+`--lat`, `--lon`, and `--height` (WGS84 ellipsoidal metres). Missing spatial
+input fails with `spatial address required: pass --h <xy>_<z> or --lat/--lon/--height`.
+Empty or malformed `--h` is rejected. Never guess height; without a trustworthy
+height a write cannot be made. Coordinate precision defaults to 10; the page
+example is `--h u3butz7k9q_23`. Both `--key value` and `--key=value` work.
+Only `reply` accepts `--ref`. Punkto L4 replies copy the parent's exact valid `h`;
+the L3 helper carries opaque refs and does not enforce that semantic equality.
 
 E0 is a task-owner review of the deployed page, not an automated test. Deployment,
 public writes and E0 acceptance are not performed by these harnesses.

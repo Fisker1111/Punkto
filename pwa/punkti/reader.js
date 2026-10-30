@@ -24,7 +24,6 @@ const KEY_LEN = 12;
 const INDEX_DEPTH = 2;
 const LEAF_DEPTH = 10;
 const ALPHABET = '0123456789bcdefghjkmnpqrstuvwxyz';
-const UNANCHORED = '~';
 const HEX_64 = /^[0-9a-f]{64}$/;
 const MID_RE = /^punkti\/0\.6:[0-9a-f]{64}$/;
 
@@ -118,7 +117,7 @@ function ensureMembers(value, members) {
 
 function ensurePrefix(prefix, depth) {
   if (typeof prefix !== 'string' || prefix.length !== depth || [...prefix].some(char => !ALPHABET.includes(char))) {
-    throw invalidObject('invalid object');
+    throw invalidObject('non-conforming geographical key');
   }
 }
 
@@ -173,7 +172,7 @@ function unpackPack(raw) {
 
 function leafKey(h) {
   const parts = parse_h(h);
-  return parts ? xy_key(parts.xy).slice(0, LEAF_DEPTH) : UNANCHORED;
+  return xy_key(parts.xy).slice(0, LEAF_DEPTH);
 }
 
 function scopeIsUnbounded(scope) {
@@ -181,9 +180,6 @@ function scopeIsUnbounded(scope) {
 }
 
 function intersectsPrefix(prefix, scope) {
-  if (prefix === UNANCHORED) {
-    return scopeIsUnbounded(scope);
-  }
   const low = prefix.padEnd(KEY_LEN, '0');
   const high = prefix.padEnd(KEY_LEN, 'z');
   return (scope.xy_hi === null || low < xy_key(scope.xy_hi)) &&
@@ -317,13 +313,11 @@ export function createReader({
     if ((manifest.seq === 1) !== (manifest.prev === null)) {
       throw invalidObject('invalid object');
     }
-    if (!isPlainObject(manifest.index)) {
+    if (!isPlainObject(manifest.index) || Object.keys(manifest.index).length > 1024) {
       throw invalidObject('invalid object');
     }
     for (const [prefix, shard] of Object.entries(manifest.index)) {
-      if (prefix !== UNANCHORED) {
-        ensurePrefix(prefix, INDEX_DEPTH);
-      }
+      ensurePrefix(prefix, INDEX_DEPTH);
       ensureHex(shard);
     }
     return manifest;
@@ -333,16 +327,15 @@ export function createReader({
     const shard = parseCanonicalJson(raw);
     ensureMembers(shard, SHARD_MEMBERS);
     if (shard.v !== PROFILE) throw invalidObject('invalid object');
+    ensurePrefix(shard.prefix, typeof shard.prefix === 'string' ? shard.prefix.length : 0);
     if (shard.prefix !== expectedPrefix || !isPlainObject(shard.children) || !Array.isArray(shard.records) || !Array.isArray(shard.packs)) {
       throw invalidObject('invalid object');
     }
-    if (expectedPrefix !== UNANCHORED) {
-      ensurePrefix(expectedPrefix, expectedPrefix.length);
-      if (expectedPrefix.length < INDEX_DEPTH || expectedPrefix.length > LEAF_DEPTH) {
-        throw invalidObject('invalid object');
-      }
+    ensurePrefix(expectedPrefix, expectedPrefix.length);
+    if (expectedPrefix.length < INDEX_DEPTH || expectedPrefix.length > LEAF_DEPTH) {
+      throw invalidObject('non-conforming geographical key');
     }
-    const leaf = expectedPrefix === UNANCHORED || expectedPrefix.length === LEAF_DEPTH;
+    const leaf = expectedPrefix.length === LEAF_DEPTH;
     if (leaf) {
       if (Object.keys(shard.children).length !== 0 || shard.records.length === 0) {
         throw invalidObject('invalid object');

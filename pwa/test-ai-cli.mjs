@@ -31,6 +31,7 @@ try {
     assert.equal(JSON.parse(record.atom.x).text, '-CLI=value=preserved');
   }
   assert.equal(records.find(record => record.mid === anchored.body.mid).h, exactH);
+  assert.equal(records.find(record => record.mid === reply.body.mid).h, exactH);
   assert.deepEqual(records.find(record => record.mid === reply.body.mid).atom.refs, [{ target: anchored.body.mid, rel: 'reply' }]);
   const read = await cli(['read', `--nodes=${nodes}`, `--publication=${publication}`, `--xy=${expectedH.split('_')[0]}`, '--z-min=-46', '--z-max=-44', '--limit=1']);
   assert.equal(read.code, 0, read.body.error);
@@ -45,7 +46,7 @@ try {
     return fetch(address.replace('/custom-publication', '/publication').replace('/custom-submit', '/submit'), init);
   };
   await run(['read', `--nodes=${nodes}`, `--publication=${node.base}/custom-publication`], fetchOverride);
-  await run(['write', `--nodes=${nodes}`, `--submit=${node.base}/custom-submit`, '--text=--literal'], fetchOverride);
+  await run(['write', `--nodes=${nodes}`, `--submit=${node.base}/custom-submit`, '--text=--literal', `--h=${exactH}`], fetchOverride);
   assert.ok(seen.includes(`${node.base}/custom-publication/root.json`));
   assert.ok(seen.includes(`${node.base}/custom-submit`));
 
@@ -66,5 +67,22 @@ try {
     assert.deepEqual(Object.keys(result.body), ['error']);
     assert.match(result.body.error, message);
   }
+  for (const command of ['write', 'post', 'reply']) {
+    const ref = command === 'reply' ? [`--ref=${anchored.body.mid}`] : [];
+    const result = await cli([command, `--nodes=${nodes}`, '--text=missing h', ...ref]);
+    assert.equal(result.code, 1);
+    assert.match(result.body.error, /spatial address required: pass --h <xy>_<z> or --lat\/--lon\/--height/);
+    for (const h of ['', 'broken', 'u3bu_-0', 'U3bu_0']) {
+      const invalid = await cli([command, `--nodes=${nodes}`, '--text=invalid h', ...ref, `--h=${h}`]);
+      assert.equal(invalid.code, 1);
+      assert.match(invalid.body.error, /invalid spatial address/);
+    }
+  }
+  const post = await cli(['post', `--nodes=${nodes}`, '--text=post alias', `--h=${exactH}`]);
+  assert.equal(post.code, 0, post.body.error);
+  assert.equal((await createReader().readPublication(publication)).records.find(record => record.mid === post.body.mid).h, exactH);
+  // L3 carries opaque refs: equality is enforced by Punkto L4, not this helper.
+  const elsewhere = await cli(['reply', `--nodes=${nodes}`, `--ref=${anchored.body.mid}`, '--text=opaque reference', '--h=ezs42_99']);
+  assert.equal(elsewhere.code, 0, elsewhere.body.error);
   console.log('CLI: PASS — both option forms, all documented flags, negative coordinates/height, overrides, JSON failures and repeated-flag rejection');
 } finally { await node.close(); }

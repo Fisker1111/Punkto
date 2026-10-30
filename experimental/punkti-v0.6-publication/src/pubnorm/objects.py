@@ -15,7 +15,6 @@ PROFILE = 'punkti/pub/0.6'
 KEY_LEN, INDEX_DEPTH, LEAF_DEPTH = 12, 2, 10
 ALPHABET = '0123456789bcdefghjkmnpqrstuvwxyz'
 MAX_INDEX_ENTRIES = 1024
-UNANCHORED = '~'
 MAGIC = b'PUNKTIPACK1'
 PACK_MAX = 256
 DIGEST_LEN = 64
@@ -94,23 +93,20 @@ def manifest(raw):
         sha_ok(v['prev'])
     if (v['seq'] == 1) != (v['prev'] is None):
         raise ValueError('previous manifest')
-    if not isinstance(v['index'], dict) or len(v['index']) > MAX_INDEX_ENTRIES + 1:
+    if not isinstance(v['index'], dict) or len(v['index']) > MAX_INDEX_ENTRIES:
         raise ValueError('index')
     for p, s in v['index'].items():
-        if p != UNANCHORED:
-            prefix_ok(p, INDEX_DEPTH)
+        prefix_ok(p, INDEX_DEPTH)
         sha_ok(s)
     return v
 
 
 def leaf_key(h):
     parts = parse_h(h)
-    return xy_key(parts[0])[:LEAF_DEPTH] if parts else UNANCHORED
+    return xy_key(parts[0])[:LEAF_DEPTH]
 
 
 def intersects(p, scope):
-    if p == UNANCHORED:
-        return scope == Subscription()
     return ((scope.xy_hi is None or p.ljust(KEY_LEN, '0') < xy_key(scope.xy_hi)) and
             (scope.xy_lo is None or p.ljust(KEY_LEN, 'z') >= xy_key(scope.xy_lo)))
 
@@ -121,11 +117,10 @@ def shard(raw, prefix):
     if (v['prefix'] != prefix or not isinstance(v['children'], dict) or
             not isinstance(v['records'], list) or not isinstance(v['packs'], list)):
         raise ValueError('shard shape')
-    if prefix != UNANCHORED:
-        prefix_ok(prefix, len(prefix))
-        if not INDEX_DEPTH <= len(prefix) <= LEAF_DEPTH:
-            raise ValueError('depth')
-    leaf = prefix == UNANCHORED or len(prefix) == LEAF_DEPTH
+    prefix_ok(prefix, len(prefix))
+    if not INDEX_DEPTH <= len(prefix) <= LEAF_DEPTH:
+        raise ValueError('depth')
+    leaf = len(prefix) == LEAF_DEPTH
     if leaf:
         if v['children'] or not v['records']:
             raise ValueError('leaf shape')

@@ -1,6 +1,7 @@
 """Deterministic logical-object fixtures and executable V1–V9 cases."""
 import copy
 import json
+import re
 from pathlib import Path
 import tempfile
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
@@ -101,86 +102,66 @@ def expected(records, rejected=0, error=None):
 
 
 def generate():
-    records = [fixture(1, 'u4pruydqqv_-18'), fixture(2, 'u4pruydqqv_23.025'),
-               fixture(3, 'ezs42_0'), fixture(4, ''), fixture(5, '0000_0'),
-               fixture(6, 'u4pruydqqv_-0.000000000000000001')]
+    """Build logical objects from the pinned Stage A records and expectations."""
+    normative = Path(__file__).resolve().parents[4] / 'docs/proposals/PUNKTI_0_6_VECTORS.md'
+    vectors = [json.loads(block) for block in re.findall(r'```json\n(.*?)\n```', normative.read_text(), re.S)]
+    by_id = {v['id']: v for v in vectors}
+    records = [bytes.fromhex(r['hex']) for r in by_id['V4']['records']]
     normal, packed = snapshot(records), snapshot(records, True)
-    catalog = {'index': normal, 'packs': packed}
-    vectors = []
-    def case(name, source='index', want=None, **kw):
-        outcome = copy.deepcopy(want or expected(records))
-        if outcome['error_class'] is None:
-            root = o.parse(bytes.fromhex(catalog[source]['root']))
-            outcome.update(head=root['head'], seq=root['seq'])
-        return dict(name=name, source=source, expected=outcome, **kw)
-    vectors.append(dict(id='V1', cases=[case('root-manifest', packs=False), case('pack-discovery', 'packs', packs=True)]))
-    cases = []
+    catalog = dict(index=normal, packs=packed, **{'small-pack': snapshot(records[:2], True)})
     for kind in ('manifest', 'shard', 'record'):
         bad = copy.deepcopy(normal)
-        sha = next(s for s, obj in bad['objects'].items() if obj['kind'] == kind)
+        sha = min(s for s, obj in bad['objects'].items() if obj['kind'] == kind)
         obj = bad['objects'][sha]
-        if kind == 'shard':
-            obj['prefix'] = o.parse(bytes.fromhex(obj['hex']))['prefix']
-        obj['hex'] += '00'
+        raw = bytes.fromhex(obj['hex'])
+        if kind == 'shard': obj['prefix'] = o.parse(raw)['prefix']
+        obj['hex'] = (bytes([raw[0] ^ 1]) + raw[1:]).hex()
         catalog['tamper-' + kind] = bad
-        cases.append(case(kind, 'tamper-' + kind, expected([], error='corrupt object')))
-    vectors.append(dict(id='V2', cases=cases))
-    small = snapshot(records[:2], True)
-    catalog['small-pack'] = small
-    cases = [case('valid', 'small-pack', expected(records[:2]), packs=True)]
     changes = {
         'count': lambda b: b[:11] + (3).to_bytes(4, 'big') + b[15:],
         'truncation': lambda b: b[:-1],
-        'trailing': lambda b: b + b'!',
-        'foreign': lambda b: o.pack([fixture(99)]),
-        'duplicate': lambda b: o.pack([records[0], records[0]]),
+        'trailing': lambda b: b + b'\0',
+        'foreign': lambda b: o.pack(sorted(o.unpack(b) + [records[2]], key=o.digest)),
+        'duplicate': lambda b: o.pack([o.unpack(b)[0]] * 2),
         'reversed': lambda b: o.pack(list(reversed(o.unpack(b)))),
     }
     for name, mutate in changes.items():
         def edit(node, snap, mutate=mutate):
             blob = bytes.fromhex(snap['objects'][node['packs'][0]]['hex'])
             node['packs'] = [add(snap, 'pack', mutate(blob))]
-        catalog['pack-' + name] = rewrite(small, edit)
-        reason = 'pack membership' if name in ('foreign', 'duplicate', 'reversed') else 'invalid object'
-        cases.append(case(name, 'pack-' + name, expected([], error=reason), packs=True))
-    vectors.append(dict(id='V3', cases=cases))
-    vectors.append(dict(id='V4', cases=[case('exact-R-MID', 'index')],
-                        records=[dict(hex=r.hex(), sha256=o.digest(r), mid=o.carrier.validate(r).address) for r in records]))
-    good = records[0]
-    forged = good[:-1] + bytes([good[-1] ^ 1])
-    candidate = fixture(7, 'u4pruydqqv_0', 'future-alg')
-    candidate2 = candidate[:-1] + bytes([candidate[-1] ^ 1])
-    poison = snapshot([good, candidate, candidate2])
+        catalog['pack-' + name] = rewrite(catalog['small-pack'], edit)
+    variants = [bytes.fromhex(r['hex']) for r in by_id['V5']['variants']]
+    good = [r for r in variants if o.carrier.validate(r).state != o.carrier.State.PROVENANCE]
+    forged = next(r for r in variants if o.carrier.validate(r).state == o.carrier.State.PROVENANCE)
     def poison_leaf(node, snap):
-        sha = add(snap, 'record', forged)
-        node['records'].append(dict(h=o.carrier.validate(good).h, mid=o.carrier.validate(good).address, sha256=sha))
-        node['records'].sort(key=lambda e: e['sha256'])
-    poison = rewrite(poison, poison_leaf, lambda m: m.update(record_count=4))
-    catalog['poison'] = poison
-    vectors.append(dict(id='V5', cases=[case('variants', 'poison', expected([good, candidate, candidate2], rejected=1))],
-                        variants=[dict(hex=r.hex(), sha256=o.digest(r), mid=o.carrier.validate(r).address,
-                                       state=o.carrier.validate(r).state.value) for r in (good, forged, candidate, candidate2)]))
-    vectors.append(dict(id='V6', cases=[
-        case('XY', want=expected([records[0], records[1], records[5]]), scope=dict(xy_lo='u4', xy_hi='u5'),
-             forbidden_records=[o.digest(r) for r in records[2:5]]),
-        case('zero-cell-not-unanchored', want=expected([records[4]]), scope=dict(xy_lo='0', xy_hi='1'),
-             forbidden_records=[o.digest(records[3])]),
-        case('unrestricted-includes-unanchored')]))
-    vectors.append(dict(id='V7', cases=[
-        case('negative-exact-Z', want=expected([records[0], records[5]]), scope=dict(z_min='-18', z_max='0'),
-             required_records=[o.digest(records[1])]),
-        case('decimal-upper-exclusive', want=expected([records[5]]), scope=dict(xy_lo='u4', xy_hi='u5', z_min='-1', z_max='23.025'))]))
+        obs = o.carrier.validate(forged)
+        if node['prefix'] == o.leaf_key(obs.h):
+            sha = add(snap, 'record', forged)
+            node['records'].append(dict(h=obs.h, mid=obs.address, sha256=sha))
+            node['records'].sort(key=lambda e: e['sha256'])
+    catalog['poison'] = rewrite(snapshot(good), poison_leaf, lambda m: m.update(record_count=4))
     missing = copy.deepcopy(normal)
-    del missing['objects'][o.digest(records[0])]
+    del missing['objects'][min(o.digest(r) for r in records)]
     catalog['missing'] = missing
-    newer = rewrite(normal, manifest_edit=lambda m: m.update(seq=2, prev=o.parse(bytes.fromhex(normal['root']))['head']))
-    catalog['newer'] = newer
-    vectors.append(dict(id='V8', cases=[
-        case('missing', 'missing', expected([], error='missing object')),
-        case('corrupt', 'tamper-record', expected([], error='corrupt object')),
-        case('stale', want=expected(records, error='stale root'), prime='newer'),
-        case('retry-idempotent', retry=True)]))
-    vectors.append(dict(id='V9', cases=[case('static-index'), case('static-packs', 'packs', packs=True)]))
+    catalog['newer'] = rewrite(packed, manifest_edit=lambda m: m.update(seq=2, prev=o.parse(bytes.fromhex(normal['root']))['head']))
+    # Hash-valid geographical mutations: no digest error can mask the bad key.
+    for case in by_id['V11']['cases']:
+        snap = copy.deepcopy(normal)
+        rt = o.parse(bytes.fromhex(snap['root']))
+        m = o.parse(bytes.fromhex(snap['objects'][rt['head']]['hex']))
+        if case['mutation'] == 'index-key':
+            m['index']['~'] = m['index']['u4']
+        else:
+            node = o.parse(bytes.fromhex(snap['objects'][m['index']['u4']]['hex']))
+            if case['mutation'] == 'shard-prefix': node['prefix'] = '~'
+            else: node['children']['~'] = node['children'][sorted(node['children'])[0]]
+            sha = add(snap, 'shard', o.canonical(node))
+            snap['objects'][sha]['prefix'] = 'u4'
+            m['index']['u4'] = sha
+        rt['head'] = add(snap, 'manifest', o.canonical(m))
+        snap['root'] = o.canonical(rt).hex()
+        catalog[case['name']] = snap
+        case['source'] = case['name']
     return dict(profile=o.PROFILE, fixtures=catalog, vectors=vectors)
 
 

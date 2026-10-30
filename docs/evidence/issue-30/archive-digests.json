@@ -1,0 +1,102 @@
+[
+  {
+    "path": "experimental/punkti-v0.6-publication/legacy-unanchored/vectors.json",
+    "original": "experimental/punkti-v0.6-publication/vectors.json",
+    "sha256": "473a314f6a59627f429165aaf12184a40e4c19268a2abbd27085b1e0a5921c84"
+  },
+  {
+    "path": "experimental/punkti-v0.6-freeze/legacy-unanchored/vectors.json",
+    "original": "experimental/punkti-v0.6-freeze/vectors.json",
+    "sha256": "53635411841bf2e2bb599f23658ac2c368b4495376b263604ba52c0cea9a8b6c"
+  },
+  {
+    "path": "experimental/punkti-v0.6-freeze/legacy-unanchored/docs/NORMATIVE_VECTORS.md",
+    "original": "experimental/punkti-v0.6-freeze/docs/NORMATIVE_VECTORS.md",
+    "sha256": "eec7895d4b71df2e7eda9a8df5503e39fa2007f15b33d526604f9af38566e361"
+  },
+  {
+    "path": "experimental/punkti-v0.6-static/legacy-unanchored/evidence/bench_static.json",
+    "original": "experimental/punkti-v0.6-static/evidence/bench_static.json",
+    "sha256": "86fd9eb0c16b36d7abeff0a73c26943136eb3e8cea8a9e292ce21c301c75011e"
+  },
+  {
+    "path": "experimental/punkti-v0.6-static/legacy-unanchored/evidence/bench_mesh.json",
+    "original": "experimental/punkti-v0.6-static/evidence/bench_mesh.json",
+    "sha256": "9f111b47258633fa9f0576fc2bc879661102aed1bd16985c0fbfd98fe8d016db"
+  },
+  {
+    "path": "experimental/punkti-v0.6-static/legacy-unanchored/evidence/test_results.json",
+    "original": "experimental/punkti-v0.6-static/evidence/test_results.json",
+    "sha256": "3824a9d83e3ae0c3cfdd5b7b53c90a559107f767928ccfd50ddc865992be16dd"
+  },
+  {
+    "path": "experimental/punkti-v0.6-static/legacy-unanchored/evidence/publication_example.json",
+    "original": "experimental/punkti-v0.6-static/evidence/publication_example.json",
+    "sha256": "e871bfebffbb6a15e3d0896f863dffb500ccc3b69f4eedf03a9f0ddc9a174ee5"
+  },
+  {
+    "path": "experimental/punkti-v0.6-hostile/legacy-unanchored/evidence/network.json",
+    "original": "experimental/punkti-v0.6-hostile/evidence/network.json",
+    "sha256": "d0349e41803d788e2fc97d1f48b83c47520542708f5d3a146c40f2b29109bf71"
+  },
+  {
+    "path": "experimental/punkti-v0.6-hostile/legacy-unanchored/evidence/verification.json",
+    "original": "experimental/punkti-v0.6-hostile/evidence/verification.json",
+    "sha256": "f9dbaf73897ee21da6179913f56eb32856a42ce480f2790aa91b38546e22e1f7"
+  },
+  {
+    "path": "experimental/punkti-v0.6-hostile/legacy-unanchored/evidence/protocol.json",
+    "original": "experimental/punkti-v0.6-hostile/evidence/protocol.json",
+    "sha256": "6e327e13eea02ae02392807663878872ecf32eb3e19cee2548fcb326016608cf"
+  },
+  {
+    "path": "experimental/punkti-v0.6-hostile/legacy-unanchored/evidence/xy_z_verification.json",
+    "original": "experimental/punkti-v0.6-hostile/evidence/xy_z_verification.json",
+    "sha256": "59177637c7eae7952d45854cd214b40b8dc8716640a3c4d59e2fe3b953126738"
+  },
+  {
+    "path": "experimental/punkti-v0.6-hostile/legacy-unanchored/evidence/cross_impl_network.json",
+    "original": "experimental/punkti-v0.6-hostile/evidence/cross_impl_network.json",
+    "sha256": "072edc40b4402a0bbbe82f576f83756884237611b9f285f160b10d7987aafb9a"
+  },
+  {
+    "path": "experimental/punkti-v0.6-hostile/legacy-unanchored/evidence/scale.json",
+    "original": "experimental/punkti-v0.6-hostile/evidence/scale.json",
+    "sha256": "b88769f5336dc912e7d0374323a83696640816fda259d6811645c51609cef7ef"
+  },
+  {
+    "path": "experimental/punkti-v0.6-publication/legacy-unanchored/docs/NORMATIVE_VECTORS.md",
+    "original": "experimental/punkti-v0.6-publication/docs/NORMATIVE_VECTORS.md",
+    "sha256": "815aa4c72695bb9d4714303fec49666afde6f953349336ac4857416e136fb5e4"
+  },
+  {
+    "path": "experimental/nairobidot-l3/legacy-unanchored/tests/vectors.json",
+    "original": "experimental/nairobidot-l3/tests/vectors.json",
+    "sha256": "d903ad939ead4813f95bd46f4e8eb64a17bfaca4d8048654983b1b55c8dfab14"
+  },
+  {
+    "path": "experimental/nairobidot-l3/legacy-unanchored/interop/interop_report.json",
+    "original": "experimental/nairobidot-l3/interop/interop_report.json",
+    "sha256": "20fd101451b3cc69420d90e4a452bd9e93cf9d920c9f268cb66649fdd93608aa"
+  },
+  {
+    "path": "pwa/punkti/legacy-unanchored/test-vectors/carrier-vectors.json",
+    "original": "pwa/punkti/test-vectors/carrier-vectors.json",
+    "sha256": "59dca392422eadd92b1d7c551b1c0c25df57e6472ef71c8c4c9370fa8cf8a745"
+  },
+  {
+    "path": "pwa/punkti/legacy-unanchored/test-vectors/spatial-vectors.json",
+    "original": "pwa/punkti/test-vectors/spatial-vectors.json",
+    "sha256": "a3e8a49086c73137b4e2fe322a3a84aaecf1288cd752321f3f881f5a37903537"
+  },
+  {
+    "path": "pwa/punkti/legacy-unanchored/test-vectors/publication-vectors.json",
+    "original": "pwa/punkti/test-vectors/publication-vectors.json",
+    "sha256": "473a314f6a59627f429165aaf12184a40e4c19268a2abbd27085b1e0a5921c84"
+  },
+  {
+    "path": "experimental/punkti-v0.6-mesh/legacy-unanchored/support.py.txt",
+    "original": "experimental/punkti-v0.6-mesh/tests/support.py",
+    "sha256": "18964f831294b6e6c40c540c79d35ec5f094265a6235b4154f1e376d7bd743a6"
+  }
+]

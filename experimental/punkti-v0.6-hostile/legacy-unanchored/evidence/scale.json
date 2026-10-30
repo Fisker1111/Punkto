@@ -1,0 +1,601 @@
+{
+  "schema": "punkti-0.6-hostile-scale/1",
+  "generated_by": "experimental/punkti-v0.6-hostile/src/hostile/measure_scale.py",
+  "implementation": "experimental/punkti-v0.6-mesh (reference)",
+  "byte_accounting": "application JSON body bytes at the HTTP client boundary; headers excluded",
+  "cells": [
+    {
+      "size": 100,
+      "overlap": 1.0,
+      "a_final": 100,
+      "b_final": 100,
+      "converged": true,
+      "rounds": 1,
+      "converged_sets": true,
+      "records_needed": 0,
+      "useful_bytes": 0,
+      "overhead_ratio": null,
+      "bytes_per_needed_record": null,
+      "http_requests": 212,
+      "wire_bytes": 295184,
+      "request_bytes": 140600,
+      "response_bytes": 154584,
+      "wall_ms": 405.3,
+      "steady_state": {
+        "requests": 6,
+        "wire_bytes": 1712,
+        "wall_ms": 8.9,
+        "note": "retained resume cursors; no new records"
+      },
+      "fresh_subscriber": {
+        "requests": 5,
+        "wire_bytes": 70054,
+        "wall_ms": 40.6,
+        "records": 100
+      },
+      "candidate_sizes": [
+        0,
+        0
+      ],
+      "log_sizes": [
+        100,
+        100
+      ]
+    },
+    {
+      "size": 100,
+      "overlap": 0.9,
+      "a_final": 100,
+      "b_final": 100,
+      "converged": true,
+      "rounds": 1,
+      "converged_sets": true,
+      "records_needed": 10,
+      "useful_bytes": 3840,
+      "overhead_ratio": 76.81,
+      "bytes_per_needed_record": 29496.4,
+      "http_requests": 212,
+      "wire_bytes": 294964,
+      "request_bytes": 140600,
+      "response_bytes": 154364,
+      "wall_ms": 396.2,
+      "steady_state": {
+        "requests": 6,
+        "wire_bytes": 1712,
+        "wall_ms": 7.3,
+        "note": "retained resume cursors; no new records"
+      },
+      "fresh_subscriber": {
+        "requests": 5,
+        "wire_bytes": 70054,
+        "wall_ms": 37.1,
+        "records": 100
+      },
+      "candidate_sizes": [
+        0,
+        0
+      ],
+      "log_sizes": [
+        100,
+        100
+      ]
+    },
+    {
+      "size": 100,
+      "overlap": 0.5,
+      "a_final": 100,
+      "b_final": 100,
+      "converged": true,
+      "rounds": 1,
+      "converged_sets": true,
+      "records_needed": 50,
+      "useful_bytes": 19200,
+      "overhead_ratio": 15.32,
+      "bytes_per_needed_record": 5881.7,
+      "http_requests": 212,
+      "wire_bytes": 294084,
+      "request_bytes": 140600,
+      "response_bytes": 153484,
+      "wall_ms": 438.4,
+      "steady_state": {
+        "requests": 6,
+        "wire_bytes": 1712,
+        "wall_ms": 9.2,
+        "note": "retained resume cursors; no new records"
+      },
+      "fresh_subscriber": {
+        "requests": 5,
+        "wire_bytes": 70054,
+        "wall_ms": 52.1,
+        "records": 100
+      },
+      "candidate_sizes": [
+        0,
+        0
+      ],
+      "log_sizes": [
+        100,
+        100
+      ]
+    },
+    {
+      "size": 100,
+      "overlap": 0.1,
+      "a_final": 100,
+      "b_final": 100,
+      "converged": true,
+      "rounds": 1,
+      "converged_sets": true,
+      "records_needed": 90,
+      "useful_bytes": 34560,
+      "overhead_ratio": 8.48,
+      "bytes_per_needed_record": 3257.8,
+      "http_requests": 212,
+      "wire_bytes": 293204,
+      "request_bytes": 140600,
+      "response_bytes": 152604,
+      "wall_ms": 711.5,
+      "steady_state": {
+        "requests": 6,
+        "wire_bytes": 1712,
+        "wall_ms": 17.1,
+        "note": "retained resume cursors; no new records"
+      },
+      "fresh_subscriber": {
+        "requests": 5,
+        "wire_bytes": 70054,
+        "wall_ms": 109.2,
+        "records": 100
+      },
+      "candidate_sizes": [
+        0,
+        0
+      ],
+      "log_sizes": [
+        100,
+        100
+      ]
+    },
+    {
+      "size": 100,
+      "overlap": 0.0,
+      "a_final": 100,
+      "b_final": 100,
+      "converged": true,
+      "rounds": 1,
+      "converged_sets": true,
+      "records_needed": 100,
+      "useful_bytes": 38400,
+      "overhead_ratio": 7.63,
+      "bytes_per_needed_record": 2929.8,
+      "http_requests": 212,
+      "wire_bytes": 292984,
+      "request_bytes": 140600,
+      "response_bytes": 152384,
+      "wall_ms": 610.3,
+      "steady_state": {
+        "requests": 6,
+        "wire_bytes": 1712,
+        "wall_ms": 9.7,
+        "note": "retained resume cursors; no new records"
+      },
+      "fresh_subscriber": {
+        "requests": 5,
+        "wire_bytes": 70054,
+        "wall_ms": 45.0,
+        "records": 100
+      },
+      "candidate_sizes": [
+        0,
+        0
+      ],
+      "log_sizes": [
+        100,
+        100
+      ]
+    },
+    {
+      "size": 1000,
+      "overlap": 1.0,
+      "a_final": 1000,
+      "b_final": 1000,
+      "converged": true,
+      "rounds": 1,
+      "converged_sets": true,
+      "records_needed": 0,
+      "useful_bytes": 0,
+      "overhead_ratio": null,
+      "bytes_per_needed_record": null,
+      "http_requests": 2068,
+      "wire_bytes": 2936930,
+      "request_bytes": 1406000,
+      "response_bytes": 1530930,
+      "wall_ms": 4210.2,
+      "steady_state": {
+        "requests": 6,
+        "wire_bytes": 1716,
+        "wall_ms": 8.5,
+        "note": "retained resume cursors; no new records"
+      },
+      "fresh_subscriber": {
+        "requests": 33,
+        "wire_bytes": 696127,
+        "wall_ms": 461.1,
+        "records": 1000
+      },
+      "candidate_sizes": [
+        0,
+        0
+      ],
+      "log_sizes": [
+        1000,
+        1000
+      ]
+    },
+    {
+      "size": 1000,
+      "overlap": 0.9,
+      "a_final": 1000,
+      "b_final": 1000,
+      "converged": true,
+      "rounds": 1,
+      "converged_sets": true,
+      "records_needed": 100,
+      "useful_bytes": 38400,
+      "overhead_ratio": 76.43,
+      "bytes_per_needed_record": 29347.3,
+      "http_requests": 2068,
+      "wire_bytes": 2934730,
+      "request_bytes": 1406000,
+      "response_bytes": 1528730,
+      "wall_ms": 4976.9,
+      "steady_state": {
+        "requests": 6,
+        "wire_bytes": 1716,
+        "wall_ms": 7.5,
+        "note": "retained resume cursors; no new records"
+      },
+      "fresh_subscriber": {
+        "requests": 33,
+        "wire_bytes": 696127,
+        "wall_ms": 427.6,
+        "records": 1000
+      },
+      "candidate_sizes": [
+        0,
+        0
+      ],
+      "log_sizes": [
+        1000,
+        1000
+      ]
+    },
+    {
+      "size": 1000,
+      "overlap": 0.5,
+      "a_final": 1000,
+      "b_final": 1000,
+      "converged": true,
+      "rounds": 1,
+      "converged_sets": true,
+      "records_needed": 500,
+      "useful_bytes": 192000,
+      "overhead_ratio": 15.24,
+      "bytes_per_needed_record": 5851.9,
+      "http_requests": 2068,
+      "wire_bytes": 2925930,
+      "request_bytes": 1406000,
+      "response_bytes": 1519930,
+      "wall_ms": 4247.6,
+      "steady_state": {
+        "requests": 6,
+        "wire_bytes": 1716,
+        "wall_ms": 8.5,
+        "note": "retained resume cursors; no new records"
+      },
+      "fresh_subscriber": {
+        "requests": 33,
+        "wire_bytes": 696127,
+        "wall_ms": 489.9,
+        "records": 1000
+      },
+      "candidate_sizes": [
+        0,
+        0
+      ],
+      "log_sizes": [
+        1000,
+        1000
+      ]
+    },
+    {
+      "size": 1000,
+      "overlap": 0.1,
+      "a_final": 1000,
+      "b_final": 1000,
+      "converged": true,
+      "rounds": 1,
+      "converged_sets": true,
+      "records_needed": 900,
+      "useful_bytes": 345600,
+      "overhead_ratio": 8.44,
+      "bytes_per_needed_record": 3241.3,
+      "http_requests": 2068,
+      "wire_bytes": 2917130,
+      "request_bytes": 1406000,
+      "response_bytes": 1511130,
+      "wall_ms": 4248.6,
+      "steady_state": {
+        "requests": 6,
+        "wire_bytes": 1716,
+        "wall_ms": 9.6,
+        "note": "retained resume cursors; no new records"
+      },
+      "fresh_subscriber": {
+        "requests": 33,
+        "wire_bytes": 696127,
+        "wall_ms": 447.7,
+        "records": 1000
+      },
+      "candidate_sizes": [
+        0,
+        0
+      ],
+      "log_sizes": [
+        1000,
+        1000
+      ]
+    },
+    {
+      "size": 1000,
+      "overlap": 0.0,
+      "a_final": 1000,
+      "b_final": 1000,
+      "converged": true,
+      "rounds": 1,
+      "converged_sets": true,
+      "records_needed": 1000,
+      "useful_bytes": 384000,
+      "overhead_ratio": 7.59,
+      "bytes_per_needed_record": 2914.9,
+      "http_requests": 2068,
+      "wire_bytes": 2914930,
+      "request_bytes": 1406000,
+      "response_bytes": 1508930,
+      "wall_ms": 4107.3,
+      "steady_state": {
+        "requests": 6,
+        "wire_bytes": 1716,
+        "wall_ms": 8.6,
+        "note": "retained resume cursors; no new records"
+      },
+      "fresh_subscriber": {
+        "requests": 33,
+        "wire_bytes": 696127,
+        "wall_ms": 479.2,
+        "records": 1000
+      },
+      "candidate_sizes": [
+        0,
+        0
+      ],
+      "log_sizes": [
+        1000,
+        1000
+      ]
+    },
+    {
+      "size": 2000,
+      "overlap": 1.0,
+      "a_final": 2000,
+      "b_final": 2000,
+      "converged": true,
+      "rounds": 1,
+      "converged_sets": true,
+      "records_needed": 0,
+      "useful_bytes": 0,
+      "overhead_ratio": null,
+      "bytes_per_needed_record": null,
+      "http_requests": 4130,
+      "wire_bytes": 5872214,
+      "request_bytes": 2812000,
+      "response_bytes": 3060214,
+      "wall_ms": 10937.8,
+      "steady_state": {
+        "requests": 6,
+        "wire_bytes": 1716,
+        "wall_ms": 7.3,
+        "note": "retained resume cursors; no new records"
+      },
+      "fresh_subscriber": {
+        "requests": 64,
+        "wire_bytes": 1391769,
+        "wall_ms": 1009.8,
+        "records": 2000
+      },
+      "candidate_sizes": [
+        0,
+        0
+      ],
+      "log_sizes": [
+        2000,
+        2000
+      ]
+    },
+    {
+      "size": 2000,
+      "overlap": 0.0,
+      "a_final": 2000,
+      "b_final": 2000,
+      "converged": true,
+      "rounds": 1,
+      "converged_sets": true,
+      "records_needed": 2000,
+      "useful_bytes": 768000,
+      "overhead_ratio": 7.59,
+      "bytes_per_needed_record": 2914.1,
+      "http_requests": 4130,
+      "wire_bytes": 5828214,
+      "request_bytes": 2812000,
+      "response_bytes": 3016214,
+      "wall_ms": 8579.1,
+      "steady_state": {
+        "requests": 6,
+        "wire_bytes": 1716,
+        "wall_ms": 9.5,
+        "note": "retained resume cursors; no new records"
+      },
+      "fresh_subscriber": {
+        "requests": 64,
+        "wire_bytes": 1391769,
+        "wall_ms": 1093.4,
+        "records": 2000
+      },
+      "candidate_sizes": [
+        0,
+        0
+      ],
+      "log_sizes": [
+        2000,
+        2000
+      ]
+    },
+    {
+      "size": 5000,
+      "overlap": 1.0,
+      "a_final": 5000,
+      "b_final": 5000,
+      "converged": true,
+      "rounds": 1,
+      "converged_sets": true,
+      "records_needed": 0,
+      "useful_bytes": 0,
+      "overhead_ratio": null,
+      "bytes_per_needed_record": null,
+      "http_requests": 10318,
+      "wire_bytes": 14678430,
+      "request_bytes": 7030000,
+      "response_bytes": 7648430,
+      "wall_ms": 23990.4,
+      "steady_state": {
+        "requests": 6,
+        "wire_bytes": 1716,
+        "wall_ms": 8.0,
+        "note": "retained resume cursors; no new records"
+      },
+      "fresh_subscriber": {
+        "requests": 158,
+        "wire_bytes": 3478877,
+        "wall_ms": 3190.1,
+        "records": 5000
+      },
+      "candidate_sizes": [
+        0,
+        0
+      ],
+      "log_sizes": [
+        5000,
+        5000
+      ]
+    },
+    {
+      "size": 5000,
+      "overlap": 0.0,
+      "a_final": 5000,
+      "b_final": 5000,
+      "converged": true,
+      "rounds": 1,
+      "converged_sets": true,
+      "records_needed": 5000,
+      "useful_bytes": 1920000,
+      "overhead_ratio": 7.59,
+      "bytes_per_needed_record": 2913.7,
+      "http_requests": 10318,
+      "wire_bytes": 14568430,
+      "request_bytes": 7030000,
+      "response_bytes": 7538430,
+      "wall_ms": 27819.9,
+      "steady_state": {
+        "requests": 6,
+        "wire_bytes": 1716,
+        "wall_ms": 23.5,
+        "note": "retained resume cursors; no new records"
+      },
+      "fresh_subscriber": {
+        "requests": 158,
+        "wire_bytes": 3478877,
+        "wall_ms": 3781.5,
+        "records": 5000
+      },
+      "candidate_sizes": [
+        0,
+        0
+      ],
+      "log_sizes": [
+        5000,
+        5000
+      ]
+    }
+  ],
+  "direction_attribution": [
+    {
+      "size": 1000,
+      "mode": "push",
+      "b_final": 1000,
+      "a_final": 1000,
+      "http_requests": 1001,
+      "wire_bytes": 750360,
+      "wall_ms": 1597.8
+    },
+    {
+      "size": 1000,
+      "mode": "pull",
+      "b_final": 1000,
+      "a_final": 1000,
+      "http_requests": 33,
+      "wire_bytes": 696127,
+      "wall_ms": 545.9
+    }
+  ],
+  "sparse_three_node": {
+    "n": 2000,
+    "converged": true,
+    "store_sizes": [
+      4000,
+      4000,
+      4000
+    ],
+    "rounds": 1,
+    "http_requests": 22762,
+    "wire_bytes": 33508496,
+    "wall_ms": 56641.5
+  },
+  "large_record": {
+    "record_bytes": 1044658,
+    "push_ms": 57.4,
+    "pull_ms": 84.3,
+    "push_wire": 1393456,
+    "pull_wire": 1393547,
+    "admitted": [
+      1
+    ]
+  },
+  "connect_callback": {
+    "n": 5000,
+    "outcome": {
+      "ok": false,
+      "error": "TimeoutError: timed out"
+    },
+    "wall_ms": 14372.0,
+    "a_final": 5000,
+    "b_final": 5000,
+    "requests": 7563,
+    "wire_bytes": 5727768,
+    "client_deadline_ms": 5000
+  },
+  "interpretation_limits": [
+    "loopback HTTP, single host, one process",
+    "PUSH sends one record per request; PULL page size is 32",
+    "no negentropy or digest reconciliation is implemented"
+  ]
+}
