@@ -1,4 +1,6 @@
 import assert from 'node:assert/strict';
+import { execFileSync } from 'node:child_process';
+import { runInNewContext } from 'node:vm';
 import { mkdtempSync, readFileSync, rmSync, writeFileSync, mkdirSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
@@ -165,6 +167,51 @@ function fetchFromMap(pathMap) {
 const vectors = JSON.parse(readFileSync(new URL('./punkti/test-vectors/publication-vectors.json', import.meta.url), 'utf8'));
 const fixtures = vectors.fixtures;
 let assertions = 0;
+
+// Exercise the private byte guard without adding a public reader API.
+const readerSource = readFileSync(new URL('./punkti/reader.js', import.meta.url), 'utf8');
+const parseCanonicalJson = runInNewContext(
+  readerSource.slice(readerSource.indexOf('const utf8Decoder ='), readerSource.indexOf('function ensureMembers('))
+    .replace('export class PublicationError', 'class PublicationError') + '\nparseCanonicalJson;',
+  { TextDecoder, TextEncoder },
+);
+const serverCanonical = value => execFileSync('python3', ['-c',
+  'import json, sys; from punkti_node.publication import canonical; sys.stdout.buffer.write(canonical(json.load(sys.stdin)))',
+], { cwd: new URL('../', import.meta.url), input: JSON.stringify(value) });
+
+const numericIndexManifest = {
+  index: { '0n': 'a'.repeat(64), '94': 'b'.repeat(64), dq: 'c'.repeat(64) },
+  pack_count: 0, prev: null, record_count: 0, seq: 1, v: 'punkti/pub/0.6',
+};
+const manifestBytes = serverCanonical(numericIndexManifest);
+assert.match(manifestBytes.toString('utf8'), /^\{"index":\{"0n":/);
+assert.equal(JSON.stringify(parseCanonicalJson(manifestBytes)), JSON.stringify(numericIndexManifest));
+assertions += 2;
+
+// Python's ensure_ascii=False must match raw UTF-8, including nested arrays,
+// objects, strings with escapes, integer-like keys, and the permitted scalars.
+const nested = { children: { '0n': { '94': [null, true, false, -7, 'café 雪 😀', '\"\\\n'] } }, packs: [], records: [{ h: 'é' }] };
+const nestedBytes = serverCanonical(nested);
+assert(nestedBytes.includes(Buffer.from('café 雪 😀', 'utf8')));
+assert.equal(JSON.stringify(parseCanonicalJson(nestedBytes)), JSON.stringify(nested));
+assertions += 2;
+
+for (const raw of [
+  JSON.stringify(numericIndexManifest), // Integer-like key hoisted before 0n.
+  manifestBytes.toString('utf8').replace(':', ': '),
+  manifestBytes.toString('utf8') + '\n',
+  '{"b":1,"a":2}',
+  '{"a":[{"b":1,"a":2}]}',
+  '{"a":1,"a":1}',
+  '{"a":1.5}', '{"a":1.0}', '{"a":1e0}',
+  '{"a":NaN}', '{"a":Infinity}',
+  '{"a":"\\u00e9"}',
+]) {
+  assert.throws(() => parseCanonicalJson(Buffer.from(raw)), error =>
+    error.name === 'PublicationError' && error.reason === 'invalid object' && error.error_class === 'retryable');
+  assertions++;
+}
+console.log('canonical JSON regression: server bytes accepted; non-canonical bytes rejected');
 
 const tempRoot = mkdtempSync(path.join(tmpdir(), 'punkti-pub-'));
 try {
