@@ -61,23 +61,19 @@ function isPlainObject(value) {
 
 function canonicalValue(value) {
   if (Array.isArray(value)) {
-    return value.map(canonicalValue);
+    return '[' + value.map(canonicalValue).join(',') + ']';
   }
   if (isPlainObject(value)) {
-    const out = {};
-    for (const key of Object.keys(value).sort()) {
-      if (typeof key !== 'string') {
-        throw invalidObject('invalid object');
-      }
-      out[key] = canonicalValue(value[key]);
-    }
-    return out;
+    // Emit sorted pairs directly: ordinary objects hoist integer-like keys.
+    return '{' + Object.keys(value).sort().map(key =>
+      JSON.stringify(key) + ':' + canonicalValue(value[key])
+    ).join(',') + '}';
   }
   if (value === null || typeof value === 'string' || typeof value === 'boolean') {
-    return value;
+    return JSON.stringify(value);
   }
   if (typeof value === 'number' && Number.isFinite(value) && Number.isInteger(value)) {
-    return value;
+    return JSON.stringify(value);
   }
   throw invalidObject('invalid object');
 }
@@ -97,7 +93,7 @@ function parseCanonicalJson(raw) {
   }
   let canonical;
   try {
-    canonical = utf8Encoder.encode(JSON.stringify(canonicalValue(parsed)));
+    canonical = utf8Encoder.encode(canonicalValue(parsed));
   } catch {
     throw invalidObject('invalid object');
   }
