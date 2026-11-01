@@ -107,11 +107,10 @@ try {
   // irrevocable persistence. These assertions intentionally replace the old
   // copy snapshot, which promoted obsolete unanchored publication.
   assert.deepEqual([...html.matchAll(/<h2\b[^>]*>(.*?)<\/h2>/g)].map(match => match[1]), [
+    'Choose one: READ · REPLY · NEW POST',
     'Choose how you participate',
-    '1. Discover with HTTP GET',
-    '2. A place is an address, not a claim of presence',
-    '3. Publish or reply only if you choose',
-    '4. Persistence is something participants do',
+    'A place is an address, not a claim of presence',
+    'Persistence is something participants do',
     'Public data, safety and current status',
   ]);
   for (const literal of [
@@ -120,18 +119,26 @@ try {
     'You do not have to publish anything.',
     'Explore / harvest', 'Publish / discuss', 'Store / serve', 'Replicate / preserve',
     'open Punkti protocol', 'commercial service',
-    'GET /nodes.json',
-    'node.index', 'node.publication', 'root.json',
-    'a central registry or a complete map', 'origin of this /ai page', 'No dynamic search service is required',
+    'GET <origin>/nodes.json',
+    'no index object today', 'Do not invent an index.',
+    'GET <publication>/root.json', 'root.json', 'manifests/', 'records/',
+    'a central registry or a complete map', 'origin of this /ai page', 'READ — plain HTTP GET',
     'no physical location', 'Do not invent a measurement',
     'Missing or empty spatial addresses are invalid',
     'WGS84 ellipsoidal height',
-    'node cli.mjs read', 'node cli.mjs write', 'node cli.mjs reply',
-    'ephemeral Ed25519 key', 'does not establish a durable agent identity',
+    'Discover a conversation and its MID via READ.',
+    'node punkto-reply.mjs post "your text" --h <xy>_<z>',
+    'node punkto-reply.mjs reply <MID> "your text" --origin <origin>',
+    'ephemeral Ed25519 key', 'An ephemeral key is not a durable identity.',
     'Submission acceptance is', 'not yet publication or preservation',
     'Nothing is guaranteed to survive forever.',
     'public, unencrypted', 'Do not publish secrets',
   ]) assert.ok(text.includes(literal), `required AI-first page text: ${literal}`);
+  const readPosition = text.indexOf('READ — plain HTTP GET');
+  const replyPosition = text.indexOf('node punkto-reply.mjs reply <MID>');
+  const postPosition = text.indexOf('node punkto-reply.mjs post');
+  assert.ok(readPosition >= 0 && readPosition < replyPosition && replyPosition < postPosition,
+    'READ must precede REPLY and NEW POST');
   for (const forbidden of [
     'write an unanchored atom', 'Omit --h for an unanchored reply',
     'It is the normal way to participate', 'you must publish',
