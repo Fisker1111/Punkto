@@ -118,13 +118,17 @@ $ node pwa/test-slice5.mjs              -> slice5 helper tests passed
 **Stage 8 — GitHub CI on the exact pushed commit**
 ```
 PR: https://github.com/Fisker1111/Punkto/pull/145
-Final commit: 55ca90a0c728b6cf5043262ae4cdb508d4b5e4f3
-Run:         https://github.com/Fisker1111/Punkto/actions/runs/41344870293  (conclusion: success)
-Job "preflight-fixtures" (python3 -m unittest discover -s scripts/qa/tests -v) -> pass
-Job "public-readonly-diagnostic" (GET-only public probe, non-blocking by design) -> pass
-The earlier run on the first pushed commit (51c5020,
-https://github.com/Fisker1111/Punkto/actions/runs/41343898477) reported
-"Ran 72 tests in 11.542s / OK" in the preflight-fixtures log.
+CI is green on every commit pushed to this branch, including the branch head.
+Observed runs:
+  https://github.com/Fisker1111/Punkto/actions/runs/41343898477
+    (package commit 51c5020) — preflight-fixtures log: "Ran 72 tests in 11.542s" / "OK"
+  https://github.com/Fisker1111/Punkto/actions/runs/41344870293
+    (evidence commit 55ca90a) — conclusion: success
+  https://github.com/Fisker1111/Punkto/actions/runs/41345014299
+    (branch head) — conclusion: success
+Each run reported:
+  Job "preflight-fixtures" (python3 -m unittest discover -s scripts/qa/tests -v) -> pass
+  Job "public-readonly-diagnostic" (GET-only public probe, non-blocking by design) -> pass
 Runner image: ubuntu-24.04. The job log does not print the interpreter version,
 so the exact patch level of the runner's system python3 is not asserted here.
 The PR targets the stacked base branch `docs/c1-custody-handoff`, so the
