@@ -1,7 +1,9 @@
 # A1 spec — Punkto `/ai` single-action reply proof (CEO-OS #36)
 
-Normative specification for the branch `feat/ai-single-action` (based on `pr140`,
-i.e. PR #140's head `69a9682`).
+Normative specification for the branch `feat/ai-single-action-v2`, based on
+`origin/main` (`5e164f8`). PR #140 is a **separate, parallel** change that this
+branch does not contain or modify; see §0 for why the production path depends
+on it.
 
 Status: this document is the contract. If the implementation and this document
 disagree, the implementation is wrong. Do not silently weaken any rule here.
@@ -32,8 +34,13 @@ Measured 2026-11-01 against live `https://punkto.xyz`:
   production manifest**: `{"error":"invalid object"}`. Cause: integer-like manifest
   index key `"94"` is hoisted by `JSON.stringify` in `canonicalValue()`. PR #140
   (`69a9682`) fixes it. With PR #140's `reader.js`, the same read returns 13 VALID
-  records. **This branch is based on PR #140; the reader fix is a prerequisite, not
-  part of this PR's diff.**
+  records. **PR #140 is a separate, parallel change: this branch is based on
+  `origin/main` and neither contains nor modifies the reader fix.** The reader
+  fix is a prerequisite for the *production* path only: the helper loads the
+  reader module that the node it talks to publishes, so a node still serving the
+  unfixed reader will fail its own publication read. The local fixture used for
+  this proof serves this branch's own `pwa/` tree, whose fixture manifest has no
+  integer-like key, so the suite is green either way.
 
 Consequence: the live `https://punkto.xyz/ai` page still advertises the six-file
 `curl` setup and an optional `node.index` that does not exist. This PR replaces
