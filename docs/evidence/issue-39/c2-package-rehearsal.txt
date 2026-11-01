@@ -107,6 +107,28 @@ $ python3 -m unittest discover -s scripts/qa/tests
 Ran 72 tests ... OK        (37 custody handoff + 20 import CLI + 7 seed + 8 origin-block proxy)
 $ python3 -m unittest punkti_node.test_spatial_only
 Ran 69 tests ... OK
+$ python3 -m unittest punkti_node.test_spatial_only punkti_node.test_publication punkti_node.test_write_safety
+Ran 92 tests ... OK
+$ node pwa/test-punkti-vectors.mjs      -> XY_Z: 211 assertions passed; carrier: 18 fixtures byte-identical; JS==Python: OK
+$ node pwa/test-punkti-publication.mjs  -> carrier assertions: 288; canonical JSON regression: server bytes accepted; non-canonical bytes rejected
+$ node pwa/test-spatial-xy-z.mjs        -> publication vectors: 135 assertions passed
+$ node pwa/test-slice5.mjs              -> slice5 helper tests passed
+```
+
+**Stage 8 — GitHub CI on the exact pushed commit**
+```
+PR: https://github.com/Fisker1111/Punkto/pull/145
+Commit: 51c5020f83c76fb43bda9c9a3a082678b70c0411
+Run:   https://github.com/Fisker1111/Punkto/actions/runs/41343898477
+Job "preflight-fixtures" (python3 -m unittest discover -s scripts/qa/tests -v)
+  -> Ran 72 tests in 11.542s
+  -> OK
+Job "public-readonly-diagnostic" (GET-only public probe, non-blocking by design) -> pass
+Runner image: ubuntu-24.04. The job log does not print the interpreter version,
+so the exact patch level of the runner's system python3 is not asserted here.
+The PR targets the stacked base branch `docs/c1-custody-handoff`, so the
+`Pilot CI / PWA validation` workflow (which only runs for PRs against `main`)
+does not trigger for it; PR #144 carries that workflow for its own head.
 ```
 
 
