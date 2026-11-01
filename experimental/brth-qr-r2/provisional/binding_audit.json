@@ -1,0 +1,134 @@
+{
+  "provisional": true,
+  "status": "PROVISIONAL — not the committed R2 slice (Codex quota blocked)",
+  "questions": {
+    "q1_can_birth_be_reconstructed_from_descriptor_alone": {
+      "claim": "A verifier CAN reconstruct the canonical Birth, its digest and its IdentityID from the BRQ1D descriptor bytes alone.",
+      "status": "PROVEN (executed)",
+      "evidence": {
+        "descriptor_bytes": 2693,
+        "rebuilt_birth_bytes_identical": true,
+        "carried_digest_equals_recomputed": true,
+        "identity_id": "b1:n4xq6w26e76t5acvynw7dsf6c53pm6nc2detgqihszkcjqkvweja",
+        "note": "buildBirth() is a pure function of the two public keys plus fixed constants (type, v, suite, threshold 2, algorithm order), so nothing else is needed."
+      }
+    },
+    "q2_what_does_the_digest_bind": {
+      "claim": "The carried digest is RECOMPUTABLE from the carried keys. It is a self-consistency / corruption check, NOT an external trust anchor.",
+      "status": "PROVEN (executed)",
+      "evidence": {
+        "substitution_test": "a wholly different TEST identity descriptor (keys + its own matching digest) verifies internally",
+        "substituted_descriptor_digest_consistent": true,
+        "substituted_identity_id": "b1:yvoch3oos4h5hm4gcui5jqo2w4afusydklyrzlkwwomsf4hxnw6q",
+        "substituted_identity_differs": true,
+        "consequence": "A verifier with no external anchor cannot tell the intended actor from a substituted one. Binding to a SPECIFIC intended actor requires an external anchor (e.g. the IdentityID/digest published in the authenticated authority log, or a signature over the descriptor digest)."
+      }
+    },
+    "q3_possession_authority_freshness": {
+      "claim": "The descriptor contains NO signature. It proves no proof of possession, no current authority and no freshness.",
+      "status": "PROVEN (executed)",
+      "evidence": {
+        "descriptor_layout": "5 ASCII bytes \"BRQ1D\" + 32-byte SHA3-256 canonical-Birth digest + 2592-byte ML-DSA-87 public key + 64-byte SLH-DSA-SHAKE-256s public key",
+        "signature_bytes_present": 0,
+        "carries_authenticated_log_head": false,
+        "carries_revocation_or_succession_evidence": false
+      }
+    },
+    "q4_single_family_brq1m": {
+      "claim": "The single-family BRQ1M descriptor (2629 bytes: header + digest + ML public key only) CANNOT reconstruct the canonical Birth, so its advertised digest cannot be checked from its own contents.",
+      "status": "PROVEN (executed) — binding UNPROVEN for BRQ1M",
+      "evidence": {
+        "brq1m_bytes": 2629,
+        "reconstruction_error": "root quorum",
+        "verdict": "The Layer-4 canonical Birth requires BOTH root public keys (2-of-2 dual family). A single-family descriptor therefore advertises a digest it cannot substantiate. BRQ1M is a diagnostic comparison only, not a construction."
+      }
+    },
+    "q5_self_containment_vs_current_authority": {
+      "offline_self_containment": {
+        "status": "PROVEN (executed)",
+        "supports": "The descriptor alone rebuilds the canonical Birth, the IdentityID and both public keys offline, and can verify signatures made by those roots over a separately supplied message.",
+        "caveat": "Verifying a separately supplied signed assertion is outside the one-QR-alone claim."
+      },
+      "unknown_actor_current_authority": {
+        "status": "UNPROVEN / NOT CLAIMED",
+        "supports": "NOT supported by any single descriptor. Determining current authority requires the authenticated append-only authority log (succession, revocation, root rotation), which a descriptor does not carry. R1 already recorded this limitation."
+      }
+    },
+    "q6_smallest_safe_fix_or_external_proof_requirement": {
+      "status": "MEASURED (R1) + PROPOSED (this audit)",
+      "options": [
+        "External trust anchor: publish the descriptor digest / IdentityID in the authenticated authority log so substitution is detectable against an independently obtained expected ID. No new algorithm, no new certificate.",
+        "Out-of-band signed public assertion: carry the descriptor digest + identity metadata plus an ML-DSA-87 signature over it, with the signature delivered out of band (log atom / link) rather than inside the same QR."
+      ],
+      "byte_budget_reality": {
+        "descriptor_bytes": 2693,
+        "ml_dsa_87_signature_bytes": 4627,
+        "slh_dsa_shake_256s_signature_bytes": 29792,
+        "single_family_pk_plus_signature_fits_one_qr": false,
+        "dual_family_pk_plus_signature_fits_one_qr": false,
+        "textual_encodings_of_descriptor_fit": false,
+        "note": "R1 measured these on a real encoder: even the smallest standard NIST pk+signature package does not fit v40-L, and base64/base32 encodings of the descriptor do not fit at any EC level. Do not drop the dual-family requirement and do not invent a compression or packing scheme."
+      }
+    }
+  },
+  "mutations": [
+    {
+      "name": "flip one byte of the carried digest",
+      "expectation": "ACCEPTED_INCONSISTENT",
+      "actual": "ACCEPTED_INCONSISTENT",
+      "expectation_met": true,
+      "detail": {
+        "digest_consistent": false,
+        "identity_id": "b1:n4xq6w26e76t5acvynw7dsf6c53pm6nc2detgqihszkcjqkvweja",
+        "identity_differs_from_expected": false
+      }
+    },
+    {
+      "name": "flip one byte of the ML public key",
+      "expectation": "ACCEPTED_INCONSISTENT",
+      "actual": "ACCEPTED_INCONSISTENT",
+      "expectation_met": true,
+      "detail": {
+        "digest_consistent": false,
+        "identity_id": "b1:wgwkf57wnzn62mqc2jsw5vs3nbzfopzg4uijr5mszwozxnlaspmq",
+        "identity_differs_from_expected": true
+      }
+    },
+    {
+      "name": "truncate the descriptor",
+      "expectation": "ACCEPTED_INCONSISTENT",
+      "actual": "ACCEPTED_INCONSISTENT",
+      "expectation_met": true,
+      "detail": {
+        "digest_consistent": false,
+        "identity_id": "b1:4lnoxvkyua3kpnpo47kc3yfz4lwfopczsbojqbsftfwrhmm6se3a",
+        "identity_differs_from_expected": true
+      }
+    },
+    {
+      "name": "wholesale substitution with the other TEST identity descriptor",
+      "expectation": "ACCEPTED_CONSISTENT",
+      "actual": "ACCEPTED_CONSISTENT",
+      "expectation_met": true,
+      "detail": {
+        "digest_consistent": true,
+        "identity_id": "b1:yvoch3oos4h5hm4gcui5jqo2w4afusydklyrzlkwwomsf4hxnw6q",
+        "identity_differs_from_expected": true
+      }
+    },
+    {
+      "name": "flip one byte of the private capsule entropy",
+      "expectation": "ACCEPTED_DIFFERENT_IDENTITY",
+      "actual": "ACCEPTED_DIFFERENT_IDENTITY",
+      "expectation_met": true,
+      "detail": {
+        "note": "The capsule has no self-authenticating checksum, so a corrupted entropy silently yields a DIFFERENT (valid-looking) identity rather than an error. Detection must come from comparing the recovered IdentityID against an independently known expected ID."
+      }
+    }
+  ],
+  "verdicts": {
+    "all_mutation_expectations_met": true,
+    "physical_scanning": "UNTESTED — no printer, scanner or camera on the build host",
+    "crypto_invention": "none — Layer-4 cryptography used unchanged"
+  }
+}

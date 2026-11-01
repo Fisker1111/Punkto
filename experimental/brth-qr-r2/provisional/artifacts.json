@@ -1,0 +1,78 @@
+{
+  "provisional": true,
+  "status": "PROVISIONAL \u2014 not the committed R2 slice (Codex quota blocked)",
+  "test_vector": "public deterministic 32-byte zero seed; non-secret; never a wallet",
+  "physical_scanning": "UNTESTED \u2014 no printer, scanner or camera on the build host",
+  "artifacts": [
+    {
+      "name": "BRQ1S_PRIVATE_BACKUP",
+      "payload_bytes": 37,
+      "payload_sha256": "857e9e2bddf6bed2afbb7f598f6c0df6dacd361226505d07f846942eefad266e",
+      "qr_version": 3,
+      "error_correction": "L",
+      "modules_per_side": 29,
+      "border_modules": 4,
+      "sizes": [
+        {
+          "module_mm": 0.4,
+          "print_width_mm": 14.8,
+          "print_height_mm": 14.8,
+          "png": "brth_r2_TEST_ONLY_BRQ1S_PRIVATE_BACKUP.png",
+          "svg": "brth_r2_TEST_ONLY_BRQ1S_PRIVATE_BACKUP_m0_4mm.svg",
+          "png_sha256": "9c0b2f923b5be81b3738cb79b31122893fed729730597a2abab323eed834332e",
+          "svg_sha256": "7b69596bbe24a93756a80a31a7529586f726e123d09e4f4e7dc430efecadc3a2",
+          "decode_zxingcpp_byte_identical": true,
+          "decode_cv2_byte_identical": true,
+          "decode_ok": true
+        },
+        {
+          "module_mm": 0.5,
+          "print_width_mm": 18.5,
+          "print_height_mm": 18.5,
+          "png": "brth_r2_TEST_ONLY_BRQ1S_PRIVATE_BACKUP.png",
+          "svg": "brth_r2_TEST_ONLY_BRQ1S_PRIVATE_BACKUP_m0_5mm.svg",
+          "png_sha256": "9c0b2f923b5be81b3738cb79b31122893fed729730597a2abab323eed834332e",
+          "svg_sha256": "7b69596bbe24a93756a80a31a7529586f726e123d09e4f4e7dc430efecadc3a2",
+          "decode_zxingcpp_byte_identical": true,
+          "decode_cv2_byte_identical": true,
+          "decode_ok": true
+        }
+      ]
+    },
+    {
+      "name": "BRQ1D_PUBLIC_DESCRIPTOR",
+      "payload_bytes": 2693,
+      "payload_sha256": "5b52c6a6be822f047e82cf62764966016c8d5c22c9fa3c54825d1173ed27b91c",
+      "qr_version": 38,
+      "error_correction": "L",
+      "modules_per_side": 169,
+      "border_modules": 4,
+      "sizes": [
+        {
+          "module_mm": 0.4,
+          "print_width_mm": 70.8,
+          "print_height_mm": 70.8,
+          "png": "brth_r2_TEST_ONLY_BRQ1D_PUBLIC_DESCRIPTOR.png",
+          "svg": "brth_r2_TEST_ONLY_BRQ1D_PUBLIC_DESCRIPTOR_m0_4mm.svg",
+          "png_sha256": "6564d53df2aa8d24597f27b38257d5f3b1f022327a64f5d660d59c11169ed21d",
+          "svg_sha256": "a40e994ab64007dc7a3eddf58653d2ba4c62672e0a45f2cd0fa67fd6945e1fb4",
+          "decode_zxingcpp_byte_identical": true,
+          "decode_cv2_byte_identical": false,
+          "decode_ok": true
+        },
+        {
+          "module_mm": 0.5,
+          "print_width_mm": 88.5,
+          "print_height_mm": 88.5,
+          "png": "brth_r2_TEST_ONLY_BRQ1D_PUBLIC_DESCRIPTOR.png",
+          "svg": "brth_r2_TEST_ONLY_BRQ1D_PUBLIC_DESCRIPTOR_m0_5mm.svg",
+          "png_sha256": "6564d53df2aa8d24597f27b38257d5f3b1f022327a64f5d660d59c11169ed21d",
+          "svg_sha256": "a40e994ab64007dc7a3eddf58653d2ba4c62672e0a45f2cd0fa67fd6945e1fb4",
+          "decode_zxingcpp_byte_identical": true,
+          "decode_cv2_byte_identical": false,
+          "decode_ok": true
+        }
+      ]
+    }
+  ]
+}
