@@ -1,0 +1,153 @@
+C2 package rehearsal — tooling rehearsal on a FOUNDER-CONTROLLED host
+This is NOT the C2 independence proof and NOT independent custody.
+The host used here is founder-controlled, so it cannot satisfy Issue #39's
+independent-operator requirement. What this file demonstrates is only that the
+onboarding package's commands work end to end: import, serve from the node's own
+origin, survive a node restart, survive a tar backup -> restore into a fresh data
+directory, and are reachable while founder origins are blocked at the client.
+
+Environment
+- Host class: founder-controlled (Hermes worker host). Not an independent operator.
+- Node: generic Punkti node started from the repository source (`python3 -m punkti_node`),
+  equivalent to the container's `/app/punkti_node` package. Docker was unavailable on the
+  rehearsal host, so the container entrypoint path was not executed.
+- Python: 3.14.9 (repository targets 3.12; 3.12 was unavailable).
+- Origin blackout: client-side only, via `scripts/qa/independent_origin_block_proxy.py` and,
+  separately, `curl --resolve`/`--connect-to` blackholing.
+
+OBSERVED RESULTS
+The outputs below are transcribed from the Hermes worker rehearsal, captured on
+the founder-controlled host against the generic Punkti node. Abbreviated hashes
+and output ellipses are preserved as captured. Every command sequence shown here
+was re-run after the final package revision and still produced the same results
+(test suites: 72 QA tests OK, 69 spatial-only tests OK).
+
+**Stage 1 — config check**
+```
+$ python3 -m punkti_node --check-config --config rehearsal/node-config.yml
+Configuration valid
+```
+
+**Stage 2 — import (Route A, write-free seed into the node's own durable log)**
+```
+$ python3 scripts/qa/independent_node_import.py fetch --url https://punkto.xyz/publication/records/24/2446a3b353e451b99c8868fbed544e9d7b3378e63dc0837a54171f88244e2f2d --out rehearsal/records/root.record --sha256 2446a3b353e451b99c8868fbed544e9d7b3378e63dc0837a54171f88244e2f2d
+{"file": "rehearsal/records/root.record", "bytes": 447, "sha256": "2446a3b353e451b99c8868fbed544e9d7b3378e63dc0837a54171f88244e2f2d"}
+$ python3 scripts/qa/independent_node_import.py fetch --url https://punkto.xyz/publication/records/0c/0c7259dac68a6f3bab62f0f57691d586aec4955d173cb7103bd37f85a8e0169b --out rehearsal/records/reply.record --sha256 0c7259dac68a6f3bab62f0f57691d586aec4955d173cb7103bd37f85a8e0169b
+{"file": "rehearsal/records/reply.record", "bytes": 298, "sha256": "0c7259dac68a6f3bab62f0f57691d586aec4955d173cb7103bd37f85a8e0169b"}
+$ python3 scripts/qa/custody_verify.py --file rehearsal/records/root.record --expect-sha256 2446a3b3... --expect-mid punkti/0.6:fc1887028aedd99fc39fbb07848e375f2be6289966a2f19468db56313689b2ed --expect-h s00000000000_0
+OK: rehearsal/records/root.record
+  state=VALID ed25519=VALID canonical_body=true mid=punkti/0.6:fc1887028aedd99fc39fbb07848e375f2be6289966a2f19468db56313689b2ed h=s00000000000_0 refs=[] ok=true
+$ python3 scripts/qa/custody_verify.py --file rehearsal/records/reply.record --expect-sha256 0c7259da... --expect-mid punkti/0.6:70e0da2fc002e38374947be6ec9af4c7fd4914fbb4cc41bb58513538551d6854 --expect-h s00000000000_0 --expect-reply-of punkti/0.6:fc1887028aedd99fc39fbb07848e375f2be6289966a2f19468db56313689b2ed
+OK: rehearsal/records/reply.record
+  state=VALID ed25519=VALID canonical_body=true mid=punkti/0.6:70e0da2fc002e38374947be6ec9af4c7fd4914fbb4cc41bb58513538551d6854 h=s00000000000_0
+  refs=[{"target":"punkti/0.6:fc1887028aedd99fc39fbb07848e375f2be6289966a2f19468db56313689b2ed","rel":"reply"}] ok=true
+```
+
+**Stage 3 — seeded into the node's own durable store, served from the node's own origin**
+```
+$ python3 scripts/qa/independent_node_import.py seed --data-dir rehearsal/dataB --file rehearsal/records/root.record --sha256 2446a3b3... --address punkti/0.6:fc1887028aedd99fc39fbb07848e375f2be6289966a2f19468db56313689b2ed --append
+{"file": "rehearsal/dataB/atoms.jsonl", "appended": true, "bytes": 447, "sha256": "2446a3b353e451b99c8868fbed544e9d7b3378e63dc0837a54171f88244e2f2d"}
+$ python3 scripts/qa/independent_node_import.py seed --data-dir rehearsal/dataB --file rehearsal/records/reply.record --sha256 0c7259da... --address punkti/0.6:70e0da2fc002e38374947be6ec9af4c7fd4914fbb4cc41bb58513538551d6854 --append
+{"file": "rehearsal/dataB/atoms.jsonl", "appended": true, "bytes": 298, "sha256": "0c7259dac68a6f3bab62f0f57691d586aec4955d173cb7103bd37f85a8e0169b"}
+$ curl -s http://127.0.0.1:8123/ready
+{"reasons":[],"status":"ready","store":{"candidates":0,"corrupt_lines":0,"duplicate_lines":0,"log_lines":2,"valid":2}}
+$ python3 scripts/qa/independent_node_import.py check --base http://127.0.0.1:8123 --sha256 2446a3b3... --expect-bytes 447
+{"ok": true, "url": "http://127.0.0.1:8123/publication/records/24/2446a3b353e451b99c8868fbed544e9d7b3378e63dc0837a54171f88244e2f2d", "status": 200, "bytes": 447, "sha256": "2446a3b353e451b99c8868fbed544e9d7b3378e63dc0837a54171f88244e2f2d"}
+$ python3 scripts/qa/independent_node_import.py check --base http://127.0.0.1:8123 --sha256 0c7259da... --expect-bytes 298
+{"ok": true, "url": "http://127.0.0.1:8123/publication/records/0c/0c7259dac68a6f3bab62f0f57691d586aec4955d173cb7103bd37f85a8e0169b", "status": 200, "bytes": 298, "sha256": "0c7259dac68a6f3bab62f0f57691d586aec4955d173cb7103bd37f85a8e0169b"}
+```
+Note: the node's replay re-verified both records (`store.valid` = 2, `corrupt_lines` = 0).
+
+**Stage 4 — founder-origin blackout at the client, node origin unaffected**
+```
+$ curl -s -x http://127.0.0.1:8765 --max-time 10 -o /dev/null -w "punkto.xyz code=%{http_code}\n" https://punkto.xyz/publication/records/24/2446a3b3...
+punkto.xyz code=000            (curl exit 56, connection reset by the blocking proxy)
+$ curl -s -x http://127.0.0.1:8765 --max-time 10 -o /dev/null -w "test2 code=%{http_code}\n" https://test2.punkto.xyz/
+test2 code=000                 (curl exit 56)
+$ curl -s -x http://127.0.0.1:8765 --max-time 25 -o via-proxy.html -w "example.com code=%{http_code} bytes=%{size_download}\n" https://example.com/
+example.com code=200 bytes=577   (proxy forwards allowed hosts; CONNECT tunnel + TLS verification intact)
+$ curl -s --resolve "punkto.xyz:443:127.0.0.1" --max-time 8 -o /dev/null -w "punkto.xyz code=%{http_code}\n" https://punkto.xyz/publication/records/24/2446a3b3...
+punkto.xyz code=000            (curl exit 7, client-side resolve blackhole)
+$ curl -s --resolve "test2.punkto.xyz:443:127.0.0.1" --max-time 8 -o /dev/null -w "test2 code=%{http_code}\n" https://test2.punkto.xyz/publication/records/0c/0c7259da...
+test2 code=000                 (curl exit 7)
+```
+While that blackout was active, both records were fetched from the node's own origin
+(`http://127.0.0.1:8123`) and re-verified byte-exact.
+
+**Stage 5 — node restart against the same data directory**
+```
+$ curl -s http://127.0.0.1:8123/ready
+{"reasons":[],"status":"ready","store":{"candidates":0,"corrupt_lines":0,"duplicate_lines":0,"log_lines":2,"valid":2}}
+$ python3 scripts/qa/independent_node_import.py check --base http://127.0.0.1:8123 --sha256 2446a3b3... --expect-bytes 447
+{"ok": true, ..., "status": 200, "bytes": 447, "sha256": "2446a3b353e451b99c8868fbed544e9d7b3378e63dc0837a54171f88244e2f2d"}
+$ python3 scripts/qa/independent_node_import.py check --base http://127.0.0.1:8123 --sha256 0c7259da... --expect-bytes 298
+{"ok": true, ..., "status": 200, "bytes": 298, "sha256": "0c7259dac68a6f3bab62f0f57691d586aec4955d173cb7103bd37f85a8e0169b"}
+```
+Both records re-fetched from the restarted node and re-verified `state=VALID`,
+`ed25519=VALID`, `canonical_body=true`, MID/`h`/reply relationship all correct.
+
+**Stage 6 — tar backup, restore into a fresh data directory, node started from the restore**
+```
+$ tarfile.open('backups/c2-data-test.tar', 'x').add('rehearsal/dataB', arcname='.')
+$ sha256sum backups/c2-data-test.tar
+2efbfb45ed50864efeceff9cffe7f9c3a43b27078624de27abfa099c2b38fa7d
+$ tarfile.open('backups/c2-data-test.tar').extractall('rehearsal/restored-data', filter='data')
+restored: ['atoms.jsonl', 'cursors.json', 'meta.json', 'publication']   (atoms.jsonl: 2 lines)
+$ curl -s http://127.0.0.1:8123/ready
+{"reasons":[],"status":"ready","store":{"candidates":0,"corrupt_lines":0,"duplicate_lines":0,"log_lines":2,"valid":2}}
+$ python3 scripts/qa/independent_node_import.py check --base http://127.0.0.1:8123 --sha256 2446a3b3... --expect-bytes 447
+{"ok": true, ..., "status": 200, "bytes": 447, "sha256": "2446a3b353e451b99c8868fbed544e9d7b3378e63dc0837a54171f88244e2f2d"}
+$ python3 scripts/qa/independent_node_import.py check --base http://127.0.0.1:8123 --sha256 0c7259da... --expect-bytes 298
+{"ok": true, ..., "status": 200, "bytes": 298, "sha256": "0c7259dac68a6f3bab62f0f57691d586aec4955d173cb7103bd37f85a8e0169b"}
+```
+
+**Stage 7 — test suites**
+```
+$ python3 -m unittest discover -s scripts/qa/tests
+Ran 72 tests ... OK        (37 custody handoff + 20 import CLI + 7 seed + 8 origin-block proxy)
+$ python3 -m unittest punkti_node.test_spatial_only
+Ran 69 tests ... OK
+$ python3 -m unittest punkti_node.test_spatial_only punkti_node.test_publication punkti_node.test_write_safety
+Ran 92 tests ... OK
+$ node pwa/test-punkti-vectors.mjs      -> XY_Z: 211 assertions passed; carrier: 18 fixtures byte-identical; JS==Python: OK
+$ node pwa/test-punkti-publication.mjs  -> carrier assertions: 288; canonical JSON regression: server bytes accepted; non-canonical bytes rejected
+$ node pwa/test-spatial-xy-z.mjs        -> publication vectors: 135 assertions passed
+$ node pwa/test-slice5.mjs              -> slice5 helper tests passed
+```
+
+**Stage 8 — GitHub CI on the exact pushed commit**
+```
+PR: https://github.com/Fisker1111/Punkto/pull/145
+CI is green on every commit pushed to this branch, including the branch head.
+Observed runs:
+  https://github.com/Fisker1111/Punkto/actions/runs/41343898477
+    (package commit 51c5020) — preflight-fixtures log: "Ran 72 tests in 11.542s" / "OK"
+  https://github.com/Fisker1111/Punkto/actions/runs/41344870293
+    (evidence commit 55ca90a) — conclusion: success
+  https://github.com/Fisker1111/Punkto/actions/runs/41345014299
+    (branch head) — conclusion: success
+Each run reported:
+  Job "preflight-fixtures" (python3 -m unittest discover -s scripts/qa/tests -v) -> pass
+  Job "public-readonly-diagnostic" (GET-only public probe, non-blocking by design) -> pass
+Runner image: ubuntu-24.04. The job log does not print the interpreter version,
+so the exact patch level of the runner's system python3 is not asserted here.
+The PR targets the stacked base branch `docs/c1-custody-handoff`, so the
+`Pilot CI / PWA validation` workflow (which only runs for PRs against `main`)
+does not trigger for it; PR #144 carries that workflow for its own head.
+```
+
+
+NOT OBSERVED / OUT OF SCOPE
+- Independent operator consent: not obtained. No external person or organization has
+  consented to run this experiment on its own host and storage.
+- Therefore: no independent custody, no independent origin, no independent restore was
+  demonstrated. Issue #39's Phase 1 remains gated on operator consent.
+- Docker/Compose execution of the compose file and image pull: not exercised.
+- Python 3.12 runtime: not exercised.
+- Production: untouched. No writes to punkto.xyz/test2.punkto.xyz, no DNS change, no
+  Cloudflare change, no origin-guard change, no deployment.
+
+CONCLUSION
+The package's mechanics are verified end to end on a founder-controlled host.
+The only thing missing for CEO-OS #39 Phase 1 is a consenting independent
+operator with their own host and storage.
