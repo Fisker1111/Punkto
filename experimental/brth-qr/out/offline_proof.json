@@ -1,0 +1,42 @@
+{
+  "identity_id": "b1:n4xq6w26e76t5acvynw7dsf6c53pm6nc2detgqihszkcjqkvweja",
+  "birth_bytes": 3683,
+  "birth_sha256": "0b1f3ba2529fd7695ef872941a9d6e421ab167ba9f2a3cfd89b84b8c9e9b8e7e",
+  "ml_public_sha256": "5b562a1de433ffa495a1a5d08b8fbabdca62484780ad5424b6c40a6ea5c7c4fa",
+  "slh_public_sha256": "53bae6c817b0cdff658fc045ad3e39d90b4ddc05bb60be4fd709eaaa94fdd7d8",
+  "entropy_sha256": "66687aadf862bd776c8fc18b8e9f8e20089714856ee233b3902a591d0d5f2925",
+  "capsule_sha256": "857e9e2bddf6bed2afbb7f598f6c0df6dacd361226505d07f846942eefad266e",
+  "capsule_bytes": 37,
+  "signature_bytes": [
+    {
+      "algorithm": "ML-DSA-87",
+      "bytes": 4627
+    },
+    {
+      "algorithm": "SLH-DSA-SHAKE-256s",
+      "bytes": 29792
+    }
+  ],
+  "verdicts": {
+    "words_entropy_capsule_equal": true,
+    "birth_byte_identical": true,
+    "identity_id_identical": true,
+    "public_key_hashes_identical": true,
+    "before_signatures_verify_both_families": true,
+    "after_signatures_verify_openssl_both_families": true,
+    "tampering_rejected_both_families": true,
+    "recovery_api_same_identity": true,
+    "recovery_event_authority_valid": true,
+    "generator_exited_before_reconstruction": true,
+    "fresh_process_and_directory": true
+  },
+  "openssl": "OpenSSL 3.5.5 27 Jan 2026 (Library: OpenSSL 3.5.5 27 Jan 2026)",
+  "isolation": {
+    "attempted_command": "unshare -n true",
+    "exit_code": 1,
+    "stderr": "unshare: unshare failed: Operation not permitted",
+    "kernel_network_namespace": false,
+    "actual": "fresh generator exits; fresh reconstruction process; temporary cwd; minimal environment; no DNS or network calls attempted",
+    "limitation": "network access was not blocked by the kernel; absence of attempted calls is code inspection, not a packet trace"
+  }
+}

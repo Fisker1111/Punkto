@@ -1,0 +1,1077 @@
+# Actual validation output — R1
+
+Repository baseline:
+$ git rev-parse HEAD
+3e4b20e73f789c74282c0f589e552bca01237553
+$ git branch --show-current
+research/brth-qr-r1
+
+$ node --version
+v26.9.0
+$ openssl version
+OpenSSL 3.5.5 27 Jan 2026 (Library: OpenSSL 3.5.5 27 Jan 2026)
+$ /home/hermes/.hermes/tools/python-3.14.9+20261021-linux-x64/bin/python3 -c 'import segno,cv2; print("segno",segno.__version__); print("opencv",cv2.__version__)'
+segno 1.6.6
+opencv 5.0.0
+
+From experimental/brth-layer4/:
+$ npm install && npm test
+
+up to date, audited 5 packages in 2s
+
+4 packages are looking for funding
+  run `npm fund` for details
+
+found 0 vulnerabilities
+npm notice run brth-layer4-reference@0.0.1 test
+npm notice run node --test test/
+✔ attestations verify issuer authority and keep subject identity/state separate (19392.291377ms)
+✔ paper recovery in fresh process reproduces Birth and roots and appends fresh authority (38361.753401ms)
+✔ human actor from clean words authorizes operational key and sets human claim (23714.45317ms)
+✔ AI continuity, signed assertion, metadata changes, revocation, succession and historical evidence (60783.390296ms)
+✔ scoped authorization, expiry, claim deletion and no self-widening (30245.765864ms)
+✔ root rotation uses prior dual policy, preserves ID and rejects old roots (72394.086417ms)
+✔ adversarial chain detects tampering, replay, forks, quorum and unknown fields (16329.115218ms)
+✔ strict operation schemas reject unknown nested fields and wrong types (29.82765ms)
+✔ operational SLH is a co-signature and cannot replace required ML-DSA (55337.229728ms)
+✔ CJSON code point order, NFC, required escapes and round trip (10.483463ms)
+✔ CJSON rejects floats, duplicates, invalid Unicode, types and noncanonical bytes (31.113592ms)
+✔ BIP39 published zero/one vectors, checksum and 23/25 words (6.969527ms)
+✔ Punkti Layer-3 opaque BRTH bytes survive real carrier and mesh store/transport (2754.889086ms)
+✔ AI signed assertion is published as an opaque carrier atom (11118.294795ms)
+✔ independent OpenSSL ML-DSA and SLH-DSA interoperability both directions and exact sizes (150733.533157ms)
+✔ noble fallback signs when OpenSSL is absent (108066.906936ms)
+✔ root public keys and Birth bytes match committed published-seed vectors (18925.372191ms)
+✔ Birth rejects unknown fields, wrong types, downgrade and root order (8211.480345ms)
+ℹ tests 18
+ℹ suites 0
+ℹ pass 18
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 656841.937022
+
+Exit 0.
+
+
+From experimental/brth-qr/:
+$ /home/hermes/.hermes/tools/python-3.14.9+20261021-linux-x64/bin/python3 tools/measure_qr.py > .work/measure.log 2>&1
+CAPACITIES {"byte": {"L": 2953, "M": 2331, "Q": 1663, "H": 1273}, "alphanumeric": {"L": 4296, "M": 3391, "Q": 2420, "H": 1852}, "numeric": {"L": 7089, "M": 5596, "Q": 3993, "H": 3057}}
+recovery-24-words L: FITS shortfall=0 bytes decode=byte-identical PNG decode
+recovery-24-words M: FITS shortfall=0 bytes decode=byte-identical PNG decode
+recovery-24-words Q: FITS shortfall=0 bytes decode=byte-identical PNG decode
+recovery-24-words H: FITS shortfall=0 bytes decode=byte-identical PNG decode
+private-capsule-raw L: FITS shortfall=0 bytes decode=byte-identical PNG decode
+private-capsule-raw M: FITS shortfall=0 bytes decode=byte-identical PNG decode
+private-capsule-raw Q: FITS shortfall=0 bytes decode=byte-identical PNG decode
+private-capsule-raw H: FITS shortfall=0 bytes decode=FAILED real PNG decode
+private-capsule-base64 L: FITS shortfall=0 bytes decode=byte-identical PNG decode
+private-capsule-base64 M: FITS shortfall=0 bytes decode=byte-identical PNG decode
+private-capsule-base64 Q: FITS shortfall=0 bytes decode=byte-identical PNG decode
+private-capsule-base64 H: FITS shortfall=0 bytes decode=byte-identical PNG decode
+private-capsule-base32 L: FITS shortfall=0 bytes decode=byte-identical PNG decode
+private-capsule-base32 M: FITS shortfall=0 bytes decode=byte-identical PNG decode
+private-capsule-base32 Q: FITS shortfall=0 bytes decode=byte-identical PNG decode
+private-capsule-base32 H: FITS shortfall=0 bytes decode=byte-identical PNG decode
+public-single-descriptor-raw L: FITS shortfall=0 bytes decode=FAILED real PNG decode
+public-single-descriptor-raw M: INFASIBLE shortfall=298 bytes decode=not encodable
+public-single-descriptor-raw Q: INFASIBLE shortfall=966 bytes decode=not encodable
+public-single-descriptor-raw H: INFASIBLE shortfall=1356 bytes decode=not encodable
+public-single-descriptor-base64 L: INFASIBLE shortfall=555 bytes decode=not encodable
+public-single-descriptor-base64 M: INFASIBLE shortfall=1177 bytes decode=not encodable
+public-single-descriptor-base64 Q: INFASIBLE shortfall=1845 bytes decode=not encodable
+public-single-descriptor-base64 H: INFASIBLE shortfall=2235 bytes decode=not encodable
+public-single-descriptor-base32 L: FITS shortfall=0 bytes decode=FAILED real PNG decode
+public-single-descriptor-base32 M: INFASIBLE shortfall=816 bytes decode=not encodable
+public-single-descriptor-base32 Q: INFASIBLE shortfall=1787 bytes decode=not encodable
+public-single-descriptor-base32 H: INFASIBLE shortfall=2355 bytes decode=not encodable
+public-dual-descriptor-raw L: FITS shortfall=0 bytes decode=FAILED real PNG decode
+public-dual-descriptor-raw M: INFASIBLE shortfall=362 bytes decode=not encodable
+public-dual-descriptor-raw Q: INFASIBLE shortfall=1030 bytes decode=not encodable
+public-dual-descriptor-raw H: INFASIBLE shortfall=1420 bytes decode=not encodable
+public-dual-descriptor-base64 L: INFASIBLE shortfall=639 bytes decode=not encodable
+public-dual-descriptor-base64 M: INFASIBLE shortfall=1261 bytes decode=not encodable
+public-dual-descriptor-base64 Q: INFASIBLE shortfall=1929 bytes decode=not encodable
+public-dual-descriptor-base64 H: INFASIBLE shortfall=2319 bytes decode=not encodable
+public-dual-descriptor-base32 L: INFASIBLE shortfall=13 bytes decode=not encodable
+public-dual-descriptor-base32 M: INFASIBLE shortfall=918 bytes decode=not encodable
+public-dual-descriptor-base32 Q: INFASIBLE shortfall=1889 bytes decode=not encodable
+public-dual-descriptor-base32 H: INFASIBLE shortfall=2457 bytes decode=not encodable
+root-dual-public-keys-raw L: FITS shortfall=0 bytes decode=FAILED real PNG decode
+root-dual-public-keys-raw M: INFASIBLE shortfall=325 bytes decode=not encodable
+root-dual-public-keys-raw Q: INFASIBLE shortfall=993 bytes decode=not encodable
+root-dual-public-keys-raw H: INFASIBLE shortfall=1383 bytes decode=not encodable
+root-dual-public-keys-base64 L: INFASIBLE shortfall=591 bytes decode=not encodable
+root-dual-public-keys-base64 M: INFASIBLE shortfall=1213 bytes decode=not encodable
+root-dual-public-keys-base64 Q: INFASIBLE shortfall=1881 bytes decode=not encodable
+root-dual-public-keys-base64 H: INFASIBLE shortfall=2271 bytes decode=not encodable
+root-dual-public-keys-base32 L: FITS shortfall=0 bytes decode=byte-identical PNG decode
+root-dual-public-keys-base32 M: INFASIBLE shortfall=859 bytes decode=not encodable
+root-dual-public-keys-base32 Q: INFASIBLE shortfall=1830 bytes decode=not encodable
+root-dual-public-keys-base32 H: INFASIBLE shortfall=2398 bytes decode=not encodable
+canonical-birth-raw L: INFASIBLE shortfall=730 bytes decode=not encodable
+canonical-birth-raw M: INFASIBLE shortfall=1352 bytes decode=not encodable
+canonical-birth-raw Q: INFASIBLE shortfall=2020 bytes decode=not encodable
+canonical-birth-raw H: INFASIBLE shortfall=2410 bytes decode=not encodable
+canonical-birth-base64 L: INFASIBLE shortfall=1959 bytes decode=not encodable
+canonical-birth-base64 M: INFASIBLE shortfall=2581 bytes decode=not encodable
+canonical-birth-base64 Q: INFASIBLE shortfall=3249 bytes decode=not encodable
+canonical-birth-base64 H: INFASIBLE shortfall=3639 bytes decode=not encodable
+canonical-birth-base32 L: INFASIBLE shortfall=1597 bytes decode=not encodable
+canonical-birth-base32 M: INFASIBLE shortfall=2502 bytes decode=not encodable
+canonical-birth-base32 Q: INFASIBLE shortfall=3473 bytes decode=not encodable
+canonical-birth-base32 H: INFASIBLE shortfall=4041 bytes decode=not encodable
+ML-DSA-44-pk-raw L: FITS shortfall=0 bytes decode=FAILED real PNG decode
+ML-DSA-44-pk-raw M: FITS shortfall=0 bytes decode=FAILED real PNG decode
+ML-DSA-44-pk-raw Q: FITS shortfall=0 bytes decode=FAILED real PNG decode
+ML-DSA-44-pk-raw H: INFASIBLE shortfall=39 bytes decode=not encodable
+ML-DSA-44-pk-base64 L: FITS shortfall=0 bytes decode=FAILED real PNG decode
+ML-DSA-44-pk-base64 M: FITS shortfall=0 bytes decode=FAILED real PNG decode
+ML-DSA-44-pk-base64 Q: INFASIBLE shortfall=89 bytes decode=not encodable
+ML-DSA-44-pk-base64 H: INFASIBLE shortfall=479 bytes decode=not encodable
+ML-DSA-44-pk-base32 L: FITS shortfall=0 bytes decode=FAILED real PNG decode
+ML-DSA-44-pk-base32 M: FITS shortfall=0 bytes decode=byte-identical PNG decode
+ML-DSA-44-pk-base32 Q: FITS shortfall=0 bytes decode=FAILED real PNG decode
+ML-DSA-44-pk-base32 H: INFASIBLE shortfall=248 bytes decode=not encodable
+ML-DSA-44-signature-raw L: FITS shortfall=0 bytes decode=FAILED real PNG decode
+ML-DSA-44-signature-raw M: INFASIBLE shortfall=89 bytes decode=not encodable
+ML-DSA-44-signature-raw Q: INFASIBLE shortfall=757 bytes decode=not encodable
+ML-DSA-44-signature-raw H: INFASIBLE shortfall=1147 bytes decode=not encodable
+ML-DSA-44-signature-base64 L: INFASIBLE shortfall=275 bytes decode=not encodable
+ML-DSA-44-signature-base64 M: INFASIBLE shortfall=897 bytes decode=not encodable
+ML-DSA-44-signature-base64 Q: INFASIBLE shortfall=1565 bytes decode=not encodable
+ML-DSA-44-signature-base64 H: INFASIBLE shortfall=1955 bytes decode=not encodable
+ML-DSA-44-signature-base32 L: FITS shortfall=0 bytes decode=FAILED real PNG decode
+ML-DSA-44-signature-base32 M: INFASIBLE shortfall=481 bytes decode=not encodable
+ML-DSA-44-signature-base32 Q: INFASIBLE shortfall=1452 bytes decode=not encodable
+ML-DSA-44-signature-base32 H: INFASIBLE shortfall=2020 bytes decode=not encodable
+ML-DSA-44-pk-signature L: INFASIBLE shortfall=779 bytes decode=not encodable
+ML-DSA-44-pk-signature M: INFASIBLE shortfall=1401 bytes decode=not encodable
+ML-DSA-44-pk-signature Q: INFASIBLE shortfall=2069 bytes decode=not encodable
+ML-DSA-44-pk-signature H: INFASIBLE shortfall=2459 bytes decode=not encodable
+ML-DSA-65-pk-raw L: FITS shortfall=0 bytes decode=FAILED real PNG decode
+ML-DSA-65-pk-raw M: FITS shortfall=0 bytes decode=FAILED real PNG decode
+ML-DSA-65-pk-raw Q: INFASIBLE shortfall=289 bytes decode=not encodable
+ML-DSA-65-pk-raw H: INFASIBLE shortfall=679 bytes decode=not encodable
+ML-DSA-65-pk-base64 L: FITS shortfall=0 bytes decode=FAILED real PNG decode
+ML-DSA-65-pk-base64 M: INFASIBLE shortfall=273 bytes decode=not encodable
+ML-DSA-65-pk-base64 Q: INFASIBLE shortfall=941 bytes decode=not encodable
+ML-DSA-65-pk-base64 H: INFASIBLE shortfall=1331 bytes decode=not encodable
+ML-DSA-65-pk-base32 L: FITS shortfall=0 bytes decode=FAILED real PNG decode
+ML-DSA-65-pk-base32 M: FITS shortfall=0 bytes decode=FAILED real PNG decode
+ML-DSA-65-pk-base32 Q: INFASIBLE shortfall=704 bytes decode=not encodable
+ML-DSA-65-pk-base32 H: INFASIBLE shortfall=1272 bytes decode=not encodable
+ML-DSA-65-signature-raw L: INFASIBLE shortfall=356 bytes decode=not encodable
+ML-DSA-65-signature-raw M: INFASIBLE shortfall=978 bytes decode=not encodable
+ML-DSA-65-signature-raw Q: INFASIBLE shortfall=1646 bytes decode=not encodable
+ML-DSA-65-signature-raw H: INFASIBLE shortfall=2036 bytes decode=not encodable
+ML-DSA-65-signature-base64 L: INFASIBLE shortfall=1459 bytes decode=not encodable
+ML-DSA-65-signature-base64 M: INFASIBLE shortfall=2081 bytes decode=not encodable
+ML-DSA-65-signature-base64 Q: INFASIBLE shortfall=2749 bytes decode=not encodable
+ML-DSA-65-signature-base64 H: INFASIBLE shortfall=3139 bytes decode=not encodable
+ML-DSA-65-signature-base32 L: INFASIBLE shortfall=999 bytes decode=not encodable
+ML-DSA-65-signature-base32 M: INFASIBLE shortfall=1904 bytes decode=not encodable
+ML-DSA-65-signature-base32 Q: INFASIBLE shortfall=2875 bytes decode=not encodable
+ML-DSA-65-signature-base32 H: INFASIBLE shortfall=3443 bytes decode=not encodable
+ML-DSA-65-pk-signature L: INFASIBLE shortfall=2308 bytes decode=not encodable
+ML-DSA-65-pk-signature M: INFASIBLE shortfall=2930 bytes decode=not encodable
+ML-DSA-65-pk-signature Q: INFASIBLE shortfall=3598 bytes decode=not encodable
+ML-DSA-65-pk-signature H: INFASIBLE shortfall=3988 bytes decode=not encodable
+ML-DSA-87-pk-raw L: FITS shortfall=0 bytes decode=FAILED real PNG decode
+ML-DSA-87-pk-raw M: INFASIBLE shortfall=261 bytes decode=not encodable
+ML-DSA-87-pk-raw Q: INFASIBLE shortfall=929 bytes decode=not encodable
+ML-DSA-87-pk-raw H: INFASIBLE shortfall=1319 bytes decode=not encodable
+ML-DSA-87-pk-base64 L: INFASIBLE shortfall=503 bytes decode=not encodable
+ML-DSA-87-pk-base64 M: INFASIBLE shortfall=1125 bytes decode=not encodable
+ML-DSA-87-pk-base64 Q: INFASIBLE shortfall=1793 bytes decode=not encodable
+ML-DSA-87-pk-base64 H: INFASIBLE shortfall=2183 bytes decode=not encodable
+ML-DSA-87-pk-base32 L: FITS shortfall=0 bytes decode=FAILED real PNG decode
+ML-DSA-87-pk-base32 M: INFASIBLE shortfall=757 bytes decode=not encodable
+ML-DSA-87-pk-base32 Q: INFASIBLE shortfall=1728 bytes decode=not encodable
+ML-DSA-87-pk-base32 H: INFASIBLE shortfall=2296 bytes decode=not encodable
+ML-DSA-87-signature-raw L: INFASIBLE shortfall=1674 bytes decode=not encodable
+ML-DSA-87-signature-raw M: INFASIBLE shortfall=2296 bytes decode=not encodable
+ML-DSA-87-signature-raw Q: INFASIBLE shortfall=2964 bytes decode=not encodable
+ML-DSA-87-signature-raw H: INFASIBLE shortfall=3354 bytes decode=not encodable
+ML-DSA-87-signature-base64 L: INFASIBLE shortfall=3219 bytes decode=not encodable
+ML-DSA-87-signature-base64 M: INFASIBLE shortfall=3841 bytes decode=not encodable
+ML-DSA-87-signature-base64 Q: INFASIBLE shortfall=4509 bytes decode=not encodable
+ML-DSA-87-signature-base64 H: INFASIBLE shortfall=4899 bytes decode=not encodable
+ML-DSA-87-signature-base32 L: INFASIBLE shortfall=3108 bytes decode=not encodable
+ML-DSA-87-signature-base32 M: INFASIBLE shortfall=4013 bytes decode=not encodable
+ML-DSA-87-signature-base32 Q: INFASIBLE shortfall=4984 bytes decode=not encodable
+ML-DSA-87-signature-base32 H: INFASIBLE shortfall=5552 bytes decode=not encodable
+ML-DSA-87-pk-signature L: INFASIBLE shortfall=4266 bytes decode=not encodable
+ML-DSA-87-pk-signature M: INFASIBLE shortfall=4888 bytes decode=not encodable
+ML-DSA-87-pk-signature Q: INFASIBLE shortfall=5556 bytes decode=not encodable
+ML-DSA-87-pk-signature H: INFASIBLE shortfall=5946 bytes decode=not encodable
+SLH-DSA-SHAKE-128s-pk-raw L: FITS shortfall=0 bytes decode=FAILED real PNG decode
+SLH-DSA-SHAKE-128s-pk-raw M: FITS shortfall=0 bytes decode=FAILED real PNG decode
+SLH-DSA-SHAKE-128s-pk-raw Q: FITS shortfall=0 bytes decode=FAILED real PNG decode
+SLH-DSA-SHAKE-128s-pk-raw H: FITS shortfall=0 bytes decode=FAILED real PNG decode
+SLH-DSA-SHAKE-128s-pk-base64 L: FITS shortfall=0 bytes decode=byte-identical PNG decode
+SLH-DSA-SHAKE-128s-pk-base64 M: FITS shortfall=0 bytes decode=byte-identical PNG decode
+SLH-DSA-SHAKE-128s-pk-base64 Q: FITS shortfall=0 bytes decode=byte-identical PNG decode
+SLH-DSA-SHAKE-128s-pk-base64 H: FITS shortfall=0 bytes decode=byte-identical PNG decode
+SLH-DSA-SHAKE-128s-pk-base32 L: FITS shortfall=0 bytes decode=byte-identical PNG decode
+SLH-DSA-SHAKE-128s-pk-base32 M: FITS shortfall=0 bytes decode=byte-identical PNG decode
+SLH-DSA-SHAKE-128s-pk-base32 Q: FITS shortfall=0 bytes decode=byte-identical PNG decode
+SLH-DSA-SHAKE-128s-pk-base32 H: FITS shortfall=0 bytes decode=byte-identical PNG decode
+SLH-DSA-SHAKE-128s-signature-raw L: INFASIBLE shortfall=4903 bytes decode=not encodable
+SLH-DSA-SHAKE-128s-signature-raw M: INFASIBLE shortfall=5525 bytes decode=not encodable
+SLH-DSA-SHAKE-128s-signature-raw Q: INFASIBLE shortfall=6193 bytes decode=not encodable
+SLH-DSA-SHAKE-128s-signature-raw H: INFASIBLE shortfall=6583 bytes decode=not encodable
+SLH-DSA-SHAKE-128s-signature-base64 L: INFASIBLE shortfall=7523 bytes decode=not encodable
+SLH-DSA-SHAKE-128s-signature-base64 M: INFASIBLE shortfall=8145 bytes decode=not encodable
+SLH-DSA-SHAKE-128s-signature-base64 Q: INFASIBLE shortfall=8813 bytes decode=not encodable
+SLH-DSA-SHAKE-128s-signature-base64 H: INFASIBLE shortfall=9203 bytes decode=not encodable
+SLH-DSA-SHAKE-128s-signature-base32 L: INFASIBLE shortfall=8274 bytes decode=not encodable
+SLH-DSA-SHAKE-128s-signature-base32 M: INFASIBLE shortfall=9179 bytes decode=not encodable
+SLH-DSA-SHAKE-128s-signature-base32 Q: INFASIBLE shortfall=10150 bytes decode=not encodable
+SLH-DSA-SHAKE-128s-signature-base32 H: INFASIBLE shortfall=10718 bytes decode=not encodable
+SLH-DSA-SHAKE-128s-pk-signature L: INFASIBLE shortfall=4935 bytes decode=not encodable
+SLH-DSA-SHAKE-128s-pk-signature M: INFASIBLE shortfall=5557 bytes decode=not encodable
+SLH-DSA-SHAKE-128s-pk-signature Q: INFASIBLE shortfall=6225 bytes decode=not encodable
+SLH-DSA-SHAKE-128s-pk-signature H: INFASIBLE shortfall=6615 bytes decode=not encodable
+SLH-DSA-SHAKE-192s-pk-raw L: FITS shortfall=0 bytes decode=FAILED real PNG decode
+SLH-DSA-SHAKE-192s-pk-raw M: FITS shortfall=0 bytes decode=FAILED real PNG decode
+SLH-DSA-SHAKE-192s-pk-raw Q: FITS shortfall=0 bytes decode=FAILED real PNG decode
+SLH-DSA-SHAKE-192s-pk-raw H: FITS shortfall=0 bytes decode=FAILED real PNG decode
+SLH-DSA-SHAKE-192s-pk-base64 L: FITS shortfall=0 bytes decode=byte-identical PNG decode
+SLH-DSA-SHAKE-192s-pk-base64 M: FITS shortfall=0 bytes decode=byte-identical PNG decode
+SLH-DSA-SHAKE-192s-pk-base64 Q: FITS shortfall=0 bytes decode=byte-identical PNG decode
+SLH-DSA-SHAKE-192s-pk-base64 H: FITS shortfall=0 bytes decode=byte-identical PNG decode
+SLH-DSA-SHAKE-192s-pk-base32 L: FITS shortfall=0 bytes decode=byte-identical PNG decode
+SLH-DSA-SHAKE-192s-pk-base32 M: FITS shortfall=0 bytes decode=byte-identical PNG decode
+SLH-DSA-SHAKE-192s-pk-base32 Q: FITS shortfall=0 bytes decode=byte-identical PNG decode
+SLH-DSA-SHAKE-192s-pk-base32 H: FITS shortfall=0 bytes decode=FAILED real PNG decode
+SLH-DSA-SHAKE-192s-signature-raw L: INFASIBLE shortfall=13271 bytes decode=not encodable
+SLH-DSA-SHAKE-192s-signature-raw M: INFASIBLE shortfall=13893 bytes decode=not encodable
+SLH-DSA-SHAKE-192s-signature-raw Q: INFASIBLE shortfall=14561 bytes decode=not encodable
+SLH-DSA-SHAKE-192s-signature-raw H: INFASIBLE shortfall=14951 bytes decode=not encodable
+SLH-DSA-SHAKE-192s-signature-base64 L: INFASIBLE shortfall=18679 bytes decode=not encodable
+SLH-DSA-SHAKE-192s-signature-base64 M: INFASIBLE shortfall=19301 bytes decode=not encodable
+SLH-DSA-SHAKE-192s-signature-base64 Q: INFASIBLE shortfall=19969 bytes decode=not encodable
+SLH-DSA-SHAKE-192s-signature-base64 H: INFASIBLE shortfall=20359 bytes decode=not encodable
+SLH-DSA-SHAKE-192s-signature-base32 L: INFASIBLE shortfall=21663 bytes decode=not encodable
+SLH-DSA-SHAKE-192s-signature-base32 M: INFASIBLE shortfall=22568 bytes decode=not encodable
+SLH-DSA-SHAKE-192s-signature-base32 Q: INFASIBLE shortfall=23539 bytes decode=not encodable
+SLH-DSA-SHAKE-192s-signature-base32 H: INFASIBLE shortfall=24107 bytes decode=not encodable
+SLH-DSA-SHAKE-192s-pk-signature L: INFASIBLE shortfall=13319 bytes decode=not encodable
+SLH-DSA-SHAKE-192s-pk-signature M: INFASIBLE shortfall=13941 bytes decode=not encodable
+SLH-DSA-SHAKE-192s-pk-signature Q: INFASIBLE shortfall=14609 bytes decode=not encodable
+SLH-DSA-SHAKE-192s-pk-signature H: INFASIBLE shortfall=14999 bytes decode=not encodable
+SLH-DSA-SHAKE-256s-pk-raw L: FITS shortfall=0 bytes decode=FAILED real PNG decode
+SLH-DSA-SHAKE-256s-pk-raw M: FITS shortfall=0 bytes decode=FAILED real PNG decode
+SLH-DSA-SHAKE-256s-pk-raw Q: FITS shortfall=0 bytes decode=FAILED real PNG decode
+SLH-DSA-SHAKE-256s-pk-raw H: FITS shortfall=0 bytes decode=FAILED real PNG decode
+SLH-DSA-SHAKE-256s-pk-base64 L: FITS shortfall=0 bytes decode=byte-identical PNG decode
+SLH-DSA-SHAKE-256s-pk-base64 M: FITS shortfall=0 bytes decode=byte-identical PNG decode
+SLH-DSA-SHAKE-256s-pk-base64 Q: FITS shortfall=0 bytes decode=byte-identical PNG decode
+SLH-DSA-SHAKE-256s-pk-base64 H: FITS shortfall=0 bytes decode=byte-identical PNG decode
+SLH-DSA-SHAKE-256s-pk-base32 L: FITS shortfall=0 bytes decode=byte-identical PNG decode
+SLH-DSA-SHAKE-256s-pk-base32 M: FITS shortfall=0 bytes decode=byte-identical PNG decode
+SLH-DSA-SHAKE-256s-pk-base32 Q: FITS shortfall=0 bytes decode=byte-identical PNG decode
+SLH-DSA-SHAKE-256s-pk-base32 H: FITS shortfall=0 bytes decode=byte-identical PNG decode
+SLH-DSA-SHAKE-256s-signature-raw L: INFASIBLE shortfall=26839 bytes decode=not encodable
+SLH-DSA-SHAKE-256s-signature-raw M: INFASIBLE shortfall=27461 bytes decode=not encodable
+SLH-DSA-SHAKE-256s-signature-raw Q: INFASIBLE shortfall=28129 bytes decode=not encodable
+SLH-DSA-SHAKE-256s-signature-raw H: INFASIBLE shortfall=28519 bytes decode=not encodable
+SLH-DSA-SHAKE-256s-signature-base64 L: INFASIBLE shortfall=36771 bytes decode=not encodable
+SLH-DSA-SHAKE-256s-signature-base64 M: INFASIBLE shortfall=37393 bytes decode=not encodable
+SLH-DSA-SHAKE-256s-signature-base64 Q: INFASIBLE shortfall=38061 bytes decode=not encodable
+SLH-DSA-SHAKE-256s-signature-base64 H: INFASIBLE shortfall=38451 bytes decode=not encodable
+SLH-DSA-SHAKE-256s-signature-base32 L: INFASIBLE shortfall=43372 bytes decode=not encodable
+SLH-DSA-SHAKE-256s-signature-base32 M: INFASIBLE shortfall=44277 bytes decode=not encodable
+SLH-DSA-SHAKE-256s-signature-base32 Q: INFASIBLE shortfall=45248 bytes decode=not encodable
+SLH-DSA-SHAKE-256s-signature-base32 H: INFASIBLE shortfall=45816 bytes decode=not encodable
+SLH-DSA-SHAKE-256s-pk-signature L: INFASIBLE shortfall=26903 bytes decode=not encodable
+SLH-DSA-SHAKE-256s-pk-signature M: INFASIBLE shortfall=27525 bytes decode=not encodable
+SLH-DSA-SHAKE-256s-pk-signature Q: INFASIBLE shortfall=28193 bytes decode=not encodable
+SLH-DSA-SHAKE-256s-pk-signature H: INFASIBLE shortfall=28583 bytes decode=not encodable
+SLH-DSA-SHAKE-128f-pk-raw L: FITS shortfall=0 bytes decode=FAILED real PNG decode
+SLH-DSA-SHAKE-128f-pk-raw M: FITS shortfall=0 bytes decode=FAILED real PNG decode
+SLH-DSA-SHAKE-128f-pk-raw Q: FITS shortfall=0 bytes decode=FAILED real PNG decode
+SLH-DSA-SHAKE-128f-pk-raw H: FITS shortfall=0 bytes decode=FAILED real PNG decode
+SLH-DSA-SHAKE-128f-pk-base64 L: FITS shortfall=0 bytes decode=byte-identical PNG decode
+SLH-DSA-SHAKE-128f-pk-base64 M: FITS shortfall=0 bytes decode=byte-identical PNG decode
+SLH-DSA-SHAKE-128f-pk-base64 Q: FITS shortfall=0 bytes decode=byte-identical PNG decode
+SLH-DSA-SHAKE-128f-pk-base64 H: FITS shortfall=0 bytes decode=byte-identical PNG decode
+SLH-DSA-SHAKE-128f-pk-base32 L: FITS shortfall=0 bytes decode=byte-identical PNG decode
+SLH-DSA-SHAKE-128f-pk-base32 M: FITS shortfall=0 bytes decode=byte-identical PNG decode
+SLH-DSA-SHAKE-128f-pk-base32 Q: FITS shortfall=0 bytes decode=byte-identical PNG decode
+SLH-DSA-SHAKE-128f-pk-base32 H: FITS shortfall=0 bytes decode=byte-identical PNG decode
+SLH-DSA-SHAKE-128f-signature-raw L: INFASIBLE shortfall=14135 bytes decode=not encodable
+SLH-DSA-SHAKE-128f-signature-raw M: INFASIBLE shortfall=14757 bytes decode=not encodable
+SLH-DSA-SHAKE-128f-signature-raw Q: INFASIBLE shortfall=15425 bytes decode=not encodable
+SLH-DSA-SHAKE-128f-signature-raw H: INFASIBLE shortfall=15815 bytes decode=not encodable
+SLH-DSA-SHAKE-128f-signature-base64 L: INFASIBLE shortfall=19831 bytes decode=not encodable
+SLH-DSA-SHAKE-128f-signature-base64 M: INFASIBLE shortfall=20453 bytes decode=not encodable
+SLH-DSA-SHAKE-128f-signature-base64 Q: INFASIBLE shortfall=21121 bytes decode=not encodable
+SLH-DSA-SHAKE-128f-signature-base64 H: INFASIBLE shortfall=21511 bytes decode=not encodable
+SLH-DSA-SHAKE-128f-signature-base32 L: INFASIBLE shortfall=23045 bytes decode=not encodable
+SLH-DSA-SHAKE-128f-signature-base32 M: INFASIBLE shortfall=23950 bytes decode=not encodable
+SLH-DSA-SHAKE-128f-signature-base32 Q: INFASIBLE shortfall=24921 bytes decode=not encodable
+SLH-DSA-SHAKE-128f-signature-base32 H: INFASIBLE shortfall=25489 bytes decode=not encodable
+SLH-DSA-SHAKE-128f-pk-signature L: INFASIBLE shortfall=14167 bytes decode=not encodable
+SLH-DSA-SHAKE-128f-pk-signature M: INFASIBLE shortfall=14789 bytes decode=not encodable
+SLH-DSA-SHAKE-128f-pk-signature Q: INFASIBLE shortfall=15457 bytes decode=not encodable
+SLH-DSA-SHAKE-128f-pk-signature H: INFASIBLE shortfall=15847 bytes decode=not encodable
+SLH-DSA-SHAKE-256f-pk-raw L: FITS shortfall=0 bytes decode=FAILED real PNG decode
+SLH-DSA-SHAKE-256f-pk-raw M: FITS shortfall=0 bytes decode=FAILED real PNG decode
+SLH-DSA-SHAKE-256f-pk-raw Q: FITS shortfall=0 bytes decode=FAILED real PNG decode
+SLH-DSA-SHAKE-256f-pk-raw H: FITS shortfall=0 bytes decode=FAILED real PNG decode
+SLH-DSA-SHAKE-256f-pk-base64 L: FITS shortfall=0 bytes decode=byte-identical PNG decode
+SLH-DSA-SHAKE-256f-pk-base64 M: FITS shortfall=0 bytes decode=byte-identical PNG decode
+SLH-DSA-SHAKE-256f-pk-base64 Q: FITS shortfall=0 bytes decode=byte-identical PNG decode
+SLH-DSA-SHAKE-256f-pk-base64 H: FITS shortfall=0 bytes decode=byte-identical PNG decode
+SLH-DSA-SHAKE-256f-pk-base32 L: FITS shortfall=0 bytes decode=FAILED real PNG decode
+SLH-DSA-SHAKE-256f-pk-base32 M: FITS shortfall=0 bytes decode=byte-identical PNG decode
+SLH-DSA-SHAKE-256f-pk-base32 Q: FITS shortfall=0 bytes decode=byte-identical PNG decode
+SLH-DSA-SHAKE-256f-pk-base32 H: FITS shortfall=0 bytes decode=byte-identical PNG decode
+SLH-DSA-SHAKE-256f-signature-raw L: INFASIBLE shortfall=46903 bytes decode=not encodable
+SLH-DSA-SHAKE-256f-signature-raw M: INFASIBLE shortfall=47525 bytes decode=not encodable
+SLH-DSA-SHAKE-256f-signature-raw Q: INFASIBLE shortfall=48193 bytes decode=not encodable
+SLH-DSA-SHAKE-256f-signature-raw H: INFASIBLE shortfall=48583 bytes decode=not encodable
+SLH-DSA-SHAKE-256f-signature-base64 L: INFASIBLE shortfall=63523 bytes decode=not encodable
+SLH-DSA-SHAKE-256f-signature-base64 M: INFASIBLE shortfall=64145 bytes decode=not encodable
+SLH-DSA-SHAKE-256f-signature-base64 Q: INFASIBLE shortfall=64813 bytes decode=not encodable
+SLH-DSA-SHAKE-256f-signature-base64 H: INFASIBLE shortfall=65203 bytes decode=not encodable
+SLH-DSA-SHAKE-256f-signature-base32 L: INFASIBLE shortfall=75474 bytes decode=not encodable
+SLH-DSA-SHAKE-256f-signature-base32 M: INFASIBLE shortfall=76379 bytes decode=not encodable
+SLH-DSA-SHAKE-256f-signature-base32 Q: INFASIBLE shortfall=77350 bytes decode=not encodable
+SLH-DSA-SHAKE-256f-signature-base32 H: INFASIBLE shortfall=77918 bytes decode=not encodable
+SLH-DSA-SHAKE-256f-pk-signature L: INFASIBLE shortfall=46967 bytes decode=not encodable
+SLH-DSA-SHAKE-256f-pk-signature M: INFASIBLE shortfall=47589 bytes decode=not encodable
+SLH-DSA-SHAKE-256f-pk-signature Q: INFASIBLE shortfall=48257 bytes decode=not encodable
+SLH-DSA-SHAKE-256f-pk-signature H: INFASIBLE shortfall=48647 bytes decode=not encodable
+{"cases": 288, "fits": 98, "decode_pass": 55, "decode_fail": 43, "infeasible": 190}
+Exit 0.
+
+From repository root:
+$ node experimental/brth-qr/tools/offline_reconstruct_proof.mjs > experimental/brth-qr/.work/offline.log 2>&1
+{
+  "identity_id": "b1:mftbt6gzbqsyu6ic2jlqbd4z7a65fpwh7ptg5fcpb5mtmnlukfpq",
+  "birth_bytes": 3683,
+  "birth_sha256": "285f4d6b9457c291e8578bcef880e27b73b6b5190665ad1c66ed132aa8564274",
+  "ml_public_sha256": "81c032c8ac1e144fb62a1c1e190b0e20642d344dc7a1f8600b97dd97fdc3d6b1",
+  "slh_public_sha256": "95a373dce1bb77343a1e3b978267bd32d267e987ddd31284e40701f0b11363de",
+  "entropy_sha256": "d7507745816547076d0a83bc315e0bc45ed94755e619c6f874ce8a840fa295ee",
+  "capsule_sha256": "c3ee95f57738a538f48c81d7b3adef4472b7a1f7f46373063799a2d06fefde16",
+  "capsule_bytes": 37,
+  "signature_bytes": [
+    {
+      "algorithm": "ML-DSA-87",
+      "bytes": 4627
+    },
+    {
+      "algorithm": "SLH-DSA-SHAKE-256s",
+      "bytes": 29792
+    }
+  ],
+  "verdicts": {
+    "words_entropy_capsule_equal": true,
+    "birth_byte_identical": true,
+    "identity_id_identical": true,
+    "public_key_hashes_identical": true,
+    "before_signatures_verify_both_families": true,
+    "after_signatures_verify_openssl_both_families": true,
+    "tampering_rejected_both_families": true,
+    "recovery_api_same_identity": true,
+    "recovery_event_authority_valid": true,
+    "generator_exited_before_reconstruction": true,
+    "fresh_process_and_directory": true
+  },
+  "openssl": "OpenSSL 3.5.5 27 Jan 2026 (Library: OpenSSL 3.5.5 27 Jan 2026)",
+  "isolation": {
+    "attempted_command": "unshare -n true",
+    "exit_code": 1,
+    "stderr": "unshare: unshare failed: Operation not permitted",
+    "kernel_network_namespace": false,
+    "actual": "fresh generator exits; fresh reconstruction process; temporary cwd; minimal environment; no DNS or network calls attempted",
+    "limitation": "network access was not blocked by the kernel; absence of attempted calls is code inspection, not a packet trace"
+  }
+}
+Exit 0.
+
+From experimental/brth-qr/:
+$ python3 tools/build_report.py
+Wrote docs/BRTH_QR_R1_REPORT.md from measured JSON/Markdown and offline proof
+Exit 0.
+
+$ node --test test/ > .work/tests.log 2>&1
+✔ 24 words, entropy and capsule reproduce identical canonical Birth and IdentityID (18957.659988ms)
+✔ capsule parser rejects truncation, extension and wrong type/version (3.029416ms)
+✔ all public descriptor encodings exclude phrase, entropy, seeds and private keys (12148.044324ms)
+✔ compact dual descriptor reconstructs canonical Birth and checks its digest (3438.038404ms)
+✔ required measured feasibility facts and exact arithmetic (2.179616ms)
+✔ live QR encoder accepts measured boundary and rejects boundary plus one at every EC (7362.996573ms)
+✔ report embeds exact generated measurement tables and public offline evidence (4.955331ms)
+✔ fresh offline proof contains only successful cryptographic verdicts (0.826179ms)
+ℹ tests 8
+ℹ suites 0
+ℹ pass 8
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 42507.577504
+Exit 0.
+
+Development notes: an initial measurement run was terminated while changing private payload transfer to a dedicated anonymous pipe (no outputs from that run are used). Two report/transcript edit helpers initially used repository-relative paths from the research directory and raised FileNotFoundError; the paths were corrected and their writes completed. These were not successful validation runs.
+
+After final report prose edits:
+$ node --test --test-name-pattern 'report embeds' test/
+✔ report embeds exact generated measurement tables and public offline evidence (14.98781ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 1
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 342.452373
+Exit 0.
+
+Final source checks from experimental/brth-qr/:
+$ node --check tools/capsule.mjs
+$ node --check tools/payloads.mjs
+$ node --check tools/offline_reconstruct_proof.mjs
+$ node --check test/brth_qr.test.mjs
+All exit 0, empty output.
+
+Private-material inspection: in-memory scan using the existing published Layer 4 fixture; checked entropy, mnemonic, derived ML seed and SLH private key in raw/hex/base64/base64url/base32 forms across all non-ignored research files.
+Research-file private fixture scan: 14 files, 0 matches
+This is a fixture scan plus source/output-schema inspection, not a claim of arbitrary-secret detection or physical memory erasure.
+
+Final checks from repository root:
+$ git diff --check
+Exit 0, empty output.
+$ git diff --name-only
+Exit 0, empty output (all research additions remain untracked).
+$ git diff --exit-code -- experimental/brth-layer4
+Exit 0, empty output; existing Layer 4 tracked files unchanged.
+$ git status --short --ignored
+?? experimental/brth-qr/
+!! experimental/brth-layer4/node_modules/
+!! experimental/brth-qr/.work/
+Exit 0.
+Additional direct whitespace inspection includes untracked research files:
+Research-file trailing-whitespace issues: 0
+
+New files (all under experimental/brth-qr/):
+.gitignore
+README.md
+docs/BRTH_QR_R1_REPORT.md
+tools/capsule.mjs
+tools/payloads.mjs
+tools/measure_qr.py
+tools/offline_reconstruct_proof.mjs
+tools/build_report.py
+test/brth_qr.test.mjs
+out/measurements.json
+out/measurements.md
+out/offline_proof.json
+out/validation.txt
+SPEC_R1.md existed before this run and was not edited.
+No commit, push, publication, deployment or external message was made.
+
+
+=== Two-decoder amendment rerun (2026-11-01) ===
+Prior evidence above is retained. This rerun preserves report sections 1–3 and 7–10 byte-for-byte, including the original offline-proof JSON. The independently rerun proof output follows below.
+
+$ cd experimental/brth-layer4 && npm install && npm test
+up to date, audited 5 packages in 3s
+4 packages are looking for funding
+  run `npm fund` for details
+found 0 vulnerabilities
+npm notice run brth-layer4-reference@0.0.1 test
+npm notice run node --test test/
+✔ attestations verify issuer authority and keep subject identity/state separate (60634.768574ms)
+✔ paper recovery in fresh process reproduces Birth and roots and appends fresh authority (98842.521506ms)
+✔ human actor from clean words authorizes operational key and sets human claim (20732.679878ms)
+✔ AI continuity, signed assertion, metadata changes, revocation, succession and historical evidence (37889.237716ms)
+✔ scoped authorization, expiry, claim deletion and no self-widening (15644.095017ms)
+✔ root rotation uses prior dual policy, preserves ID and rejects old roots (37485.06149ms)
+✔ adversarial chain detects tampering, replay, forks, quorum and unknown fields (12174.698858ms)
+✔ strict operation schemas reject unknown nested fields and wrong types (42.760757ms)
+✔ operational SLH is a co-signature and cannot replace required ML-DSA (53418.149397ms)
+✔ CJSON code point order, NFC, required escapes and round trip (27.845051ms)
+✔ CJSON rejects floats, duplicates, invalid Unicode, types and noncanonical bytes (8.4167ms)
+✔ BIP39 published zero/one vectors, checksum and 23/25 words (8.273323ms)
+✔ Punkti Layer-3 opaque BRTH bytes survive real carrier and mesh store/transport (979.901245ms)
+✔ AI signed assertion is published as an opaque carrier atom (15003.833923ms)
+✔ independent OpenSSL ML-DSA and SLH-DSA interoperability both directions and exact sizes (139002.068649ms)
+✔ noble fallback signs when OpenSSL is absent (95386.980713ms)
+✔ root public keys and Birth bytes match committed published-seed vectors (20425.638291ms)
+✔ Birth rejects unknown fields, wrong types, downgrade and root order (8636.576039ms)
+ℹ tests 18
+ℹ suites 0
+ℹ pass 18
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 660952.999476
+Exit 0
+
+$ /home/hermes/.hermes/tools/python-3.14.9+20261021-linux-x64/bin/python3 experimental/brth-qr/tools/measure_qr.py
+CAPACITIES {"byte": {"L": 2953, "M": 2331, "Q": 1663, "H": 1273}, "alphanumeric": {"L": 4296, "M": 3391, "Q": 2420, "H": 1852}, "numeric": {"L": 7089, "M": 5596, "Q": 3993, "H": 3057}}
+recovery-24-words L: FITS shortfall=0 bytes decode=cv2: byte-identical PNG decode; zxing-cpp: byte-identical PNG decode
+recovery-24-words M: FITS shortfall=0 bytes decode=cv2: byte-identical PNG decode; zxing-cpp: byte-identical PNG decode
+recovery-24-words Q: FITS shortfall=0 bytes decode=cv2: byte-identical PNG decode; zxing-cpp: byte-identical PNG decode
+recovery-24-words H: FITS shortfall=0 bytes decode=cv2: byte-identical PNG decode; zxing-cpp: byte-identical PNG decode
+private-capsule-raw L: FITS shortfall=0 bytes decode=cv2: byte-identical PNG decode; zxing-cpp: byte-identical PNG decode
+private-capsule-raw M: FITS shortfall=0 bytes decode=cv2: byte-identical PNG decode; zxing-cpp: byte-identical PNG decode
+private-capsule-raw Q: FITS shortfall=0 bytes decode=cv2: byte-identical PNG decode; zxing-cpp: byte-identical PNG decode
+private-capsule-raw H: FITS shortfall=0 bytes decode=cv2: no byte-identical decode; zxing-cpp: byte-identical PNG decode
+private-capsule-base64 L: FITS shortfall=0 bytes decode=cv2: byte-identical PNG decode; zxing-cpp: byte-identical PNG decode
+private-capsule-base64 M: FITS shortfall=0 bytes decode=cv2: byte-identical PNG decode; zxing-cpp: byte-identical PNG decode
+private-capsule-base64 Q: FITS shortfall=0 bytes decode=cv2: byte-identical PNG decode; zxing-cpp: byte-identical PNG decode
+private-capsule-base64 H: FITS shortfall=0 bytes decode=cv2: byte-identical PNG decode; zxing-cpp: byte-identical PNG decode
+private-capsule-base32 L: FITS shortfall=0 bytes decode=cv2: byte-identical PNG decode; zxing-cpp: byte-identical PNG decode
+private-capsule-base32 M: FITS shortfall=0 bytes decode=cv2: byte-identical PNG decode; zxing-cpp: byte-identical PNG decode
+private-capsule-base32 Q: FITS shortfall=0 bytes decode=cv2: byte-identical PNG decode; zxing-cpp: byte-identical PNG decode
+private-capsule-base32 H: FITS shortfall=0 bytes decode=cv2: byte-identical PNG decode; zxing-cpp: byte-identical PNG decode
+public-single-descriptor-raw L: FITS shortfall=0 bytes decode=cv2: no byte-identical decode; zxing-cpp: byte-identical PNG decode
+public-single-descriptor-raw M: INFASIBLE shortfall=298 bytes decode=not encodable
+public-single-descriptor-raw Q: INFASIBLE shortfall=966 bytes decode=not encodable
+public-single-descriptor-raw H: INFASIBLE shortfall=1356 bytes decode=not encodable
+public-single-descriptor-base64 L: INFASIBLE shortfall=555 bytes decode=not encodable
+public-single-descriptor-base64 M: INFASIBLE shortfall=1177 bytes decode=not encodable
+public-single-descriptor-base64 Q: INFASIBLE shortfall=1845 bytes decode=not encodable
+public-single-descriptor-base64 H: INFASIBLE shortfall=2235 bytes decode=not encodable
+public-single-descriptor-base32 L: FITS shortfall=0 bytes decode=cv2: no byte-identical decode; zxing-cpp: byte-identical PNG decode
+public-single-descriptor-base32 M: INFASIBLE shortfall=816 bytes decode=not encodable
+public-single-descriptor-base32 Q: INFASIBLE shortfall=1787 bytes decode=not encodable
+public-single-descriptor-base32 H: INFASIBLE shortfall=2355 bytes decode=not encodable
+public-dual-descriptor-raw L: FITS shortfall=0 bytes decode=cv2: no byte-identical decode; zxing-cpp: byte-identical PNG decode
+public-dual-descriptor-raw M: INFASIBLE shortfall=362 bytes decode=not encodable
+public-dual-descriptor-raw Q: INFASIBLE shortfall=1030 bytes decode=not encodable
+public-dual-descriptor-raw H: INFASIBLE shortfall=1420 bytes decode=not encodable
+public-dual-descriptor-base64 L: INFASIBLE shortfall=639 bytes decode=not encodable
+public-dual-descriptor-base64 M: INFASIBLE shortfall=1261 bytes decode=not encodable
+public-dual-descriptor-base64 Q: INFASIBLE shortfall=1929 bytes decode=not encodable
+public-dual-descriptor-base64 H: INFASIBLE shortfall=2319 bytes decode=not encodable
+public-dual-descriptor-base32 L: INFASIBLE shortfall=13 bytes decode=not encodable
+public-dual-descriptor-base32 M: INFASIBLE shortfall=918 bytes decode=not encodable
+public-dual-descriptor-base32 Q: INFASIBLE shortfall=1889 bytes decode=not encodable
+public-dual-descriptor-base32 H: INFASIBLE shortfall=2457 bytes decode=not encodable
+root-dual-public-keys-raw L: FITS shortfall=0 bytes decode=cv2: no byte-identical decode; zxing-cpp: byte-identical PNG decode
+root-dual-public-keys-raw M: INFASIBLE shortfall=325 bytes decode=not encodable
+root-dual-public-keys-raw Q: INFASIBLE shortfall=993 bytes decode=not encodable
+root-dual-public-keys-raw H: INFASIBLE shortfall=1383 bytes decode=not encodable
+root-dual-public-keys-base64 L: INFASIBLE shortfall=591 bytes decode=not encodable
+root-dual-public-keys-base64 M: INFASIBLE shortfall=1213 bytes decode=not encodable
+root-dual-public-keys-base64 Q: INFASIBLE shortfall=1881 bytes decode=not encodable
+root-dual-public-keys-base64 H: INFASIBLE shortfall=2271 bytes decode=not encodable
+root-dual-public-keys-base32 L: FITS shortfall=0 bytes decode=cv2: byte-identical PNG decode; zxing-cpp: byte-identical PNG decode
+root-dual-public-keys-base32 M: INFASIBLE shortfall=859 bytes decode=not encodable
+root-dual-public-keys-base32 Q: INFASIBLE shortfall=1830 bytes decode=not encodable
+root-dual-public-keys-base32 H: INFASIBLE shortfall=2398 bytes decode=not encodable
+canonical-birth-raw L: INFASIBLE shortfall=730 bytes decode=not encodable
+canonical-birth-raw M: INFASIBLE shortfall=1352 bytes decode=not encodable
+canonical-birth-raw Q: INFASIBLE shortfall=2020 bytes decode=not encodable
+canonical-birth-raw H: INFASIBLE shortfall=2410 bytes decode=not encodable
+canonical-birth-base64 L: INFASIBLE shortfall=1959 bytes decode=not encodable
+canonical-birth-base64 M: INFASIBLE shortfall=2581 bytes decode=not encodable
+canonical-birth-base64 Q: INFASIBLE shortfall=3249 bytes decode=not encodable
+canonical-birth-base64 H: INFASIBLE shortfall=3639 bytes decode=not encodable
+canonical-birth-base32 L: INFASIBLE shortfall=1597 bytes decode=not encodable
+canonical-birth-base32 M: INFASIBLE shortfall=2502 bytes decode=not encodable
+canonical-birth-base32 Q: INFASIBLE shortfall=3473 bytes decode=not encodable
+canonical-birth-base32 H: INFASIBLE shortfall=4041 bytes decode=not encodable
+ML-DSA-44-pk-raw L: FITS shortfall=0 bytes decode=cv2: no byte-identical decode; zxing-cpp: byte-identical PNG decode
+ML-DSA-44-pk-raw M: FITS shortfall=0 bytes decode=cv2: no byte-identical decode; zxing-cpp: byte-identical PNG decode
+ML-DSA-44-pk-raw Q: FITS shortfall=0 bytes decode=cv2: no byte-identical decode; zxing-cpp: byte-identical PNG decode
+ML-DSA-44-pk-raw H: INFASIBLE shortfall=39 bytes decode=not encodable
+ML-DSA-44-pk-base64 L: FITS shortfall=0 bytes decode=cv2: no byte-identical decode; zxing-cpp: byte-identical PNG decode
+ML-DSA-44-pk-base64 M: FITS shortfall=0 bytes decode=cv2: no byte-identical decode; zxing-cpp: byte-identical PNG decode
+ML-DSA-44-pk-base64 Q: INFASIBLE shortfall=89 bytes decode=not encodable
+ML-DSA-44-pk-base64 H: INFASIBLE shortfall=479 bytes decode=not encodable
+ML-DSA-44-pk-base32 L: FITS shortfall=0 bytes decode=cv2: no byte-identical decode; zxing-cpp: byte-identical PNG decode
+ML-DSA-44-pk-base32 M: FITS shortfall=0 bytes decode=cv2: byte-identical PNG decode; zxing-cpp: byte-identical PNG decode
+ML-DSA-44-pk-base32 Q: FITS shortfall=0 bytes decode=cv2: no byte-identical decode; zxing-cpp: byte-identical PNG decode
+ML-DSA-44-pk-base32 H: INFASIBLE shortfall=248 bytes decode=not encodable
+ML-DSA-44-signature-raw L: FITS shortfall=0 bytes decode=cv2: no byte-identical decode; zxing-cpp: byte-identical PNG decode
+ML-DSA-44-signature-raw M: INFASIBLE shortfall=89 bytes decode=not encodable
+ML-DSA-44-signature-raw Q: INFASIBLE shortfall=757 bytes decode=not encodable
+ML-DSA-44-signature-raw H: INFASIBLE shortfall=1147 bytes decode=not encodable
+ML-DSA-44-signature-base64 L: INFASIBLE shortfall=275 bytes decode=not encodable
+ML-DSA-44-signature-base64 M: INFASIBLE shortfall=897 bytes decode=not encodable
+ML-DSA-44-signature-base64 Q: INFASIBLE shortfall=1565 bytes decode=not encodable
+ML-DSA-44-signature-base64 H: INFASIBLE shortfall=1955 bytes decode=not encodable
+ML-DSA-44-signature-base32 L: FITS shortfall=0 bytes decode=cv2: no byte-identical decode; zxing-cpp: byte-identical PNG decode
+ML-DSA-44-signature-base32 M: INFASIBLE shortfall=481 bytes decode=not encodable
+ML-DSA-44-signature-base32 Q: INFASIBLE shortfall=1452 bytes decode=not encodable
+ML-DSA-44-signature-base32 H: INFASIBLE shortfall=2020 bytes decode=not encodable
+ML-DSA-44-pk-signature L: INFASIBLE shortfall=779 bytes decode=not encodable
+ML-DSA-44-pk-signature M: INFASIBLE shortfall=1401 bytes decode=not encodable
+ML-DSA-44-pk-signature Q: INFASIBLE shortfall=2069 bytes decode=not encodable
+ML-DSA-44-pk-signature H: INFASIBLE shortfall=2459 bytes decode=not encodable
+ML-DSA-65-pk-raw L: FITS shortfall=0 bytes decode=cv2: no byte-identical decode; zxing-cpp: byte-identical PNG decode
+ML-DSA-65-pk-raw M: FITS shortfall=0 bytes decode=cv2: no byte-identical decode; zxing-cpp: byte-identical PNG decode
+ML-DSA-65-pk-raw Q: INFASIBLE shortfall=289 bytes decode=not encodable
+ML-DSA-65-pk-raw H: INFASIBLE shortfall=679 bytes decode=not encodable
+ML-DSA-65-pk-base64 L: FITS shortfall=0 bytes decode=cv2: no byte-identical decode; zxing-cpp: byte-identical PNG decode
+ML-DSA-65-pk-base64 M: INFASIBLE shortfall=273 bytes decode=not encodable
+ML-DSA-65-pk-base64 Q: INFASIBLE shortfall=941 bytes decode=not encodable
+ML-DSA-65-pk-base64 H: INFASIBLE shortfall=1331 bytes decode=not encodable
+ML-DSA-65-pk-base32 L: FITS shortfall=0 bytes decode=cv2: no byte-identical decode; zxing-cpp: byte-identical PNG decode
+ML-DSA-65-pk-base32 M: FITS shortfall=0 bytes decode=cv2: no byte-identical decode; zxing-cpp: byte-identical PNG decode
+ML-DSA-65-pk-base32 Q: INFASIBLE shortfall=704 bytes decode=not encodable
+ML-DSA-65-pk-base32 H: INFASIBLE shortfall=1272 bytes decode=not encodable
+ML-DSA-65-signature-raw L: INFASIBLE shortfall=356 bytes decode=not encodable
+ML-DSA-65-signature-raw M: INFASIBLE shortfall=978 bytes decode=not encodable
+ML-DSA-65-signature-raw Q: INFASIBLE shortfall=1646 bytes decode=not encodable
+ML-DSA-65-signature-raw H: INFASIBLE shortfall=2036 bytes decode=not encodable
+ML-DSA-65-signature-base64 L: INFASIBLE shortfall=1459 bytes decode=not encodable
+ML-DSA-65-signature-base64 M: INFASIBLE shortfall=2081 bytes decode=not encodable
+ML-DSA-65-signature-base64 Q: INFASIBLE shortfall=2749 bytes decode=not encodable
+ML-DSA-65-signature-base64 H: INFASIBLE shortfall=3139 bytes decode=not encodable
+ML-DSA-65-signature-base32 L: INFASIBLE shortfall=999 bytes decode=not encodable
+ML-DSA-65-signature-base32 M: INFASIBLE shortfall=1904 bytes decode=not encodable
+ML-DSA-65-signature-base32 Q: INFASIBLE shortfall=2875 bytes decode=not encodable
+ML-DSA-65-signature-base32 H: INFASIBLE shortfall=3443 bytes decode=not encodable
+ML-DSA-65-pk-signature L: INFASIBLE shortfall=2308 bytes decode=not encodable
+ML-DSA-65-pk-signature M: INFASIBLE shortfall=2930 bytes decode=not encodable
+ML-DSA-65-pk-signature Q: INFASIBLE shortfall=3598 bytes decode=not encodable
+ML-DSA-65-pk-signature H: INFASIBLE shortfall=3988 bytes decode=not encodable
+ML-DSA-87-pk-raw L: FITS shortfall=0 bytes decode=cv2: no byte-identical decode; zxing-cpp: byte-identical PNG decode
+ML-DSA-87-pk-raw M: INFASIBLE shortfall=261 bytes decode=not encodable
+ML-DSA-87-pk-raw Q: INFASIBLE shortfall=929 bytes decode=not encodable
+ML-DSA-87-pk-raw H: INFASIBLE shortfall=1319 bytes decode=not encodable
+ML-DSA-87-pk-base64 L: INFASIBLE shortfall=503 bytes decode=not encodable
+ML-DSA-87-pk-base64 M: INFASIBLE shortfall=1125 bytes decode=not encodable
+ML-DSA-87-pk-base64 Q: INFASIBLE shortfall=1793 bytes decode=not encodable
+ML-DSA-87-pk-base64 H: INFASIBLE shortfall=2183 bytes decode=not encodable
+ML-DSA-87-pk-base32 L: FITS shortfall=0 bytes decode=cv2: no byte-identical decode; zxing-cpp: byte-identical PNG decode
+ML-DSA-87-pk-base32 M: INFASIBLE shortfall=757 bytes decode=not encodable
+ML-DSA-87-pk-base32 Q: INFASIBLE shortfall=1728 bytes decode=not encodable
+ML-DSA-87-pk-base32 H: INFASIBLE shortfall=2296 bytes decode=not encodable
+ML-DSA-87-signature-raw L: INFASIBLE shortfall=1674 bytes decode=not encodable
+ML-DSA-87-signature-raw M: INFASIBLE shortfall=2296 bytes decode=not encodable
+ML-DSA-87-signature-raw Q: INFASIBLE shortfall=2964 bytes decode=not encodable
+ML-DSA-87-signature-raw H: INFASIBLE shortfall=3354 bytes decode=not encodable
+ML-DSA-87-signature-base64 L: INFASIBLE shortfall=3219 bytes decode=not encodable
+ML-DSA-87-signature-base64 M: INFASIBLE shortfall=3841 bytes decode=not encodable
+ML-DSA-87-signature-base64 Q: INFASIBLE shortfall=4509 bytes decode=not encodable
+ML-DSA-87-signature-base64 H: INFASIBLE shortfall=4899 bytes decode=not encodable
+ML-DSA-87-signature-base32 L: INFASIBLE shortfall=3108 bytes decode=not encodable
+ML-DSA-87-signature-base32 M: INFASIBLE shortfall=4013 bytes decode=not encodable
+ML-DSA-87-signature-base32 Q: INFASIBLE shortfall=4984 bytes decode=not encodable
+ML-DSA-87-signature-base32 H: INFASIBLE shortfall=5552 bytes decode=not encodable
+ML-DSA-87-pk-signature L: INFASIBLE shortfall=4266 bytes decode=not encodable
+ML-DSA-87-pk-signature M: INFASIBLE shortfall=4888 bytes decode=not encodable
+ML-DSA-87-pk-signature Q: INFASIBLE shortfall=5556 bytes decode=not encodable
+ML-DSA-87-pk-signature H: INFASIBLE shortfall=5946 bytes decode=not encodable
+SLH-DSA-SHAKE-128s-pk-raw L: FITS shortfall=0 bytes decode=cv2: no byte-identical decode; zxing-cpp: byte-identical PNG decode
+SLH-DSA-SHAKE-128s-pk-raw M: FITS shortfall=0 bytes decode=cv2: no byte-identical decode; zxing-cpp: byte-identical PNG decode
+SLH-DSA-SHAKE-128s-pk-raw Q: FITS shortfall=0 bytes decode=cv2: no byte-identical decode; zxing-cpp: byte-identical PNG decode
+SLH-DSA-SHAKE-128s-pk-raw H: FITS shortfall=0 bytes decode=cv2: no byte-identical decode; zxing-cpp: byte-identical PNG decode
+SLH-DSA-SHAKE-128s-pk-base64 L: FITS shortfall=0 bytes decode=cv2: byte-identical PNG decode; zxing-cpp: byte-identical PNG decode
+SLH-DSA-SHAKE-128s-pk-base64 M: FITS shortfall=0 bytes decode=cv2: byte-identical PNG decode; zxing-cpp: byte-identical PNG decode
+SLH-DSA-SHAKE-128s-pk-base64 Q: FITS shortfall=0 bytes decode=cv2: byte-identical PNG decode; zxing-cpp: byte-identical PNG decode
+SLH-DSA-SHAKE-128s-pk-base64 H: FITS shortfall=0 bytes decode=cv2: byte-identical PNG decode; zxing-cpp: byte-identical PNG decode
+SLH-DSA-SHAKE-128s-pk-base32 L: FITS shortfall=0 bytes decode=cv2: byte-identical PNG decode; zxing-cpp: byte-identical PNG decode
+SLH-DSA-SHAKE-128s-pk-base32 M: FITS shortfall=0 bytes decode=cv2: byte-identical PNG decode; zxing-cpp: byte-identical PNG decode
+SLH-DSA-SHAKE-128s-pk-base32 Q: FITS shortfall=0 bytes decode=cv2: byte-identical PNG decode; zxing-cpp: byte-identical PNG decode
+SLH-DSA-SHAKE-128s-pk-base32 H: FITS shortfall=0 bytes decode=cv2: byte-identical PNG decode; zxing-cpp: byte-identical PNG decode
+SLH-DSA-SHAKE-128s-signature-raw L: INFASIBLE shortfall=4903 bytes decode=not encodable
+SLH-DSA-SHAKE-128s-signature-raw M: INFASIBLE shortfall=5525 bytes decode=not encodable
+SLH-DSA-SHAKE-128s-signature-raw Q: INFASIBLE shortfall=6193 bytes decode=not encodable
+SLH-DSA-SHAKE-128s-signature-raw H: INFASIBLE shortfall=6583 bytes decode=not encodable
+SLH-DSA-SHAKE-128s-signature-base64 L: INFASIBLE shortfall=7523 bytes decode=not encodable
+SLH-DSA-SHAKE-128s-signature-base64 M: INFASIBLE shortfall=8145 bytes decode=not encodable
+SLH-DSA-SHAKE-128s-signature-base64 Q: INFASIBLE shortfall=8813 bytes decode=not encodable
+SLH-DSA-SHAKE-128s-signature-base64 H: INFASIBLE shortfall=9203 bytes decode=not encodable
+SLH-DSA-SHAKE-128s-signature-base32 L: INFASIBLE shortfall=8274 bytes decode=not encodable
+SLH-DSA-SHAKE-128s-signature-base32 M: INFASIBLE shortfall=9179 bytes decode=not encodable
+SLH-DSA-SHAKE-128s-signature-base32 Q: INFASIBLE shortfall=10150 bytes decode=not encodable
+SLH-DSA-SHAKE-128s-signature-base32 H: INFASIBLE shortfall=10718 bytes decode=not encodable
+SLH-DSA-SHAKE-128s-pk-signature L: INFASIBLE shortfall=4935 bytes decode=not encodable
+SLH-DSA-SHAKE-128s-pk-signature M: INFASIBLE shortfall=5557 bytes decode=not encodable
+SLH-DSA-SHAKE-128s-pk-signature Q: INFASIBLE shortfall=6225 bytes decode=not encodable
+SLH-DSA-SHAKE-128s-pk-signature H: INFASIBLE shortfall=6615 bytes decode=not encodable
+SLH-DSA-SHAKE-192s-pk-raw L: FITS shortfall=0 bytes decode=cv2: no byte-identical decode; zxing-cpp: byte-identical PNG decode
+SLH-DSA-SHAKE-192s-pk-raw M: FITS shortfall=0 bytes decode=cv2: no byte-identical decode; zxing-cpp: byte-identical PNG decode
+SLH-DSA-SHAKE-192s-pk-raw Q: FITS shortfall=0 bytes decode=cv2: no byte-identical decode; zxing-cpp: byte-identical PNG decode
+SLH-DSA-SHAKE-192s-pk-raw H: FITS shortfall=0 bytes decode=cv2: no byte-identical decode; zxing-cpp: byte-identical PNG decode
+SLH-DSA-SHAKE-192s-pk-base64 L: FITS shortfall=0 bytes decode=cv2: byte-identical PNG decode; zxing-cpp: byte-identical PNG decode
+SLH-DSA-SHAKE-192s-pk-base64 M: FITS shortfall=0 bytes decode=cv2: byte-identical PNG decode; zxing-cpp: byte-identical PNG decode
+SLH-DSA-SHAKE-192s-pk-base64 Q: FITS shortfall=0 bytes decode=cv2: byte-identical PNG decode; zxing-cpp: byte-identical PNG decode
+SLH-DSA-SHAKE-192s-pk-base64 H: FITS shortfall=0 bytes decode=cv2: byte-identical PNG decode; zxing-cpp: byte-identical PNG decode
+SLH-DSA-SHAKE-192s-pk-base32 L: FITS shortfall=0 bytes decode=cv2: byte-identical PNG decode; zxing-cpp: byte-identical PNG decode
+SLH-DSA-SHAKE-192s-pk-base32 M: FITS shortfall=0 bytes decode=cv2: byte-identical PNG decode; zxing-cpp: byte-identical PNG decode
+SLH-DSA-SHAKE-192s-pk-base32 Q: FITS shortfall=0 bytes decode=cv2: byte-identical PNG decode; zxing-cpp: byte-identical PNG decode
+SLH-DSA-SHAKE-192s-pk-base32 H: FITS shortfall=0 bytes decode=cv2: no byte-identical decode; zxing-cpp: byte-identical PNG decode
+SLH-DSA-SHAKE-192s-signature-raw L: INFASIBLE shortfall=13271 bytes decode=not encodable
+SLH-DSA-SHAKE-192s-signature-raw M: INFASIBLE shortfall=13893 bytes decode=not encodable
+SLH-DSA-SHAKE-192s-signature-raw Q: INFASIBLE shortfall=14561 bytes decode=not encodable
+SLH-DSA-SHAKE-192s-signature-raw H: INFASIBLE shortfall=14951 bytes decode=not encodable
+SLH-DSA-SHAKE-192s-signature-base64 L: INFASIBLE shortfall=18679 bytes decode=not encodable
+SLH-DSA-SHAKE-192s-signature-base64 M: INFASIBLE shortfall=19301 bytes decode=not encodable
+SLH-DSA-SHAKE-192s-signature-base64 Q: INFASIBLE shortfall=19969 bytes decode=not encodable
+SLH-DSA-SHAKE-192s-signature-base64 H: INFASIBLE shortfall=20359 bytes decode=not encodable
+SLH-DSA-SHAKE-192s-signature-base32 L: INFASIBLE shortfall=21663 bytes decode=not encodable
+SLH-DSA-SHAKE-192s-signature-base32 M: INFASIBLE shortfall=22568 bytes decode=not encodable
+SLH-DSA-SHAKE-192s-signature-base32 Q: INFASIBLE shortfall=23539 bytes decode=not encodable
+SLH-DSA-SHAKE-192s-signature-base32 H: INFASIBLE shortfall=24107 bytes decode=not encodable
+SLH-DSA-SHAKE-192s-pk-signature L: INFASIBLE shortfall=13319 bytes decode=not encodable
+SLH-DSA-SHAKE-192s-pk-signature M: INFASIBLE shortfall=13941 bytes decode=not encodable
+SLH-DSA-SHAKE-192s-pk-signature Q: INFASIBLE shortfall=14609 bytes decode=not encodable
+SLH-DSA-SHAKE-192s-pk-signature H: INFASIBLE shortfall=14999 bytes decode=not encodable
+SLH-DSA-SHAKE-256s-pk-raw L: FITS shortfall=0 bytes decode=cv2: no byte-identical decode; zxing-cpp: byte-identical PNG decode
+SLH-DSA-SHAKE-256s-pk-raw M: FITS shortfall=0 bytes decode=cv2: no byte-identical decode; zxing-cpp: byte-identical PNG decode
+SLH-DSA-SHAKE-256s-pk-raw Q: FITS shortfall=0 bytes decode=cv2: no byte-identical decode; zxing-cpp: byte-identical PNG decode
+SLH-DSA-SHAKE-256s-pk-raw H: FITS shortfall=0 bytes decode=cv2: no byte-identical decode; zxing-cpp: byte-identical PNG decode
+SLH-DSA-SHAKE-256s-pk-base64 L: FITS shortfall=0 bytes decode=cv2: byte-identical PNG decode; zxing-cpp: byte-identical PNG decode
+SLH-DSA-SHAKE-256s-pk-base64 M: FITS shortfall=0 bytes decode=cv2: byte-identical PNG decode; zxing-cpp: byte-identical PNG decode
+SLH-DSA-SHAKE-256s-pk-base64 Q: FITS shortfall=0 bytes decode=cv2: byte-identical PNG decode; zxing-cpp: byte-identical PNG decode
+SLH-DSA-SHAKE-256s-pk-base64 H: FITS shortfall=0 bytes decode=cv2: byte-identical PNG decode; zxing-cpp: byte-identical PNG decode
+SLH-DSA-SHAKE-256s-pk-base32 L: FITS shortfall=0 bytes decode=cv2: byte-identical PNG decode; zxing-cpp: byte-identical PNG decode
+SLH-DSA-SHAKE-256s-pk-base32 M: FITS shortfall=0 bytes decode=cv2: byte-identical PNG decode; zxing-cpp: byte-identical PNG decode
+SLH-DSA-SHAKE-256s-pk-base32 Q: FITS shortfall=0 bytes decode=cv2: byte-identical PNG decode; zxing-cpp: byte-identical PNG decode
+SLH-DSA-SHAKE-256s-pk-base32 H: FITS shortfall=0 bytes decode=cv2: byte-identical PNG decode; zxing-cpp: byte-identical PNG decode
+SLH-DSA-SHAKE-256s-signature-raw L: INFASIBLE shortfall=26839 bytes decode=not encodable
+SLH-DSA-SHAKE-256s-signature-raw M: INFASIBLE shortfall=27461 bytes decode=not encodable
+SLH-DSA-SHAKE-256s-signature-raw Q: INFASIBLE shortfall=28129 bytes decode=not encodable
+SLH-DSA-SHAKE-256s-signature-raw H: INFASIBLE shortfall=28519 bytes decode=not encodable
+SLH-DSA-SHAKE-256s-signature-base64 L: INFASIBLE shortfall=36771 bytes decode=not encodable
+SLH-DSA-SHAKE-256s-signature-base64 M: INFASIBLE shortfall=37393 bytes decode=not encodable
+SLH-DSA-SHAKE-256s-signature-base64 Q: INFASIBLE shortfall=38061 bytes decode=not encodable
+SLH-DSA-SHAKE-256s-signature-base64 H: INFASIBLE shortfall=38451 bytes decode=not encodable
+SLH-DSA-SHAKE-256s-signature-base32 L: INFASIBLE shortfall=43372 bytes decode=not encodable
+SLH-DSA-SHAKE-256s-signature-base32 M: INFASIBLE shortfall=44277 bytes decode=not encodable
+SLH-DSA-SHAKE-256s-signature-base32 Q: INFASIBLE shortfall=45248 bytes decode=not encodable
+SLH-DSA-SHAKE-256s-signature-base32 H: INFASIBLE shortfall=45816 bytes decode=not encodable
+SLH-DSA-SHAKE-256s-pk-signature L: INFASIBLE shortfall=26903 bytes decode=not encodable
+SLH-DSA-SHAKE-256s-pk-signature M: INFASIBLE shortfall=27525 bytes decode=not encodable
+SLH-DSA-SHAKE-256s-pk-signature Q: INFASIBLE shortfall=28193 bytes decode=not encodable
+SLH-DSA-SHAKE-256s-pk-signature H: INFASIBLE shortfall=28583 bytes decode=not encodable
+SLH-DSA-SHAKE-128f-pk-raw L: FITS shortfall=0 bytes decode=cv2: no byte-identical decode; zxing-cpp: byte-identical PNG decode
+SLH-DSA-SHAKE-128f-pk-raw M: FITS shortfall=0 bytes decode=cv2: no byte-identical decode; zxing-cpp: byte-identical PNG decode
+SLH-DSA-SHAKE-128f-pk-raw Q: FITS shortfall=0 bytes decode=cv2: no byte-identical decode; zxing-cpp: byte-identical PNG decode
+SLH-DSA-SHAKE-128f-pk-raw H: FITS shortfall=0 bytes decode=cv2: no byte-identical decode; zxing-cpp: byte-identical PNG decode
+SLH-DSA-SHAKE-128f-pk-base64 L: FITS shortfall=0 bytes decode=cv2: byte-identical PNG decode; zxing-cpp: byte-identical PNG decode
+SLH-DSA-SHAKE-128f-pk-base64 M: FITS shortfall=0 bytes decode=cv2: byte-identical PNG decode; zxing-cpp: byte-identical PNG decode
+SLH-DSA-SHAKE-128f-pk-base64 Q: FITS shortfall=0 bytes decode=cv2: byte-identical PNG decode; zxing-cpp: byte-identical PNG decode
+SLH-DSA-SHAKE-128f-pk-base64 H: FITS shortfall=0 bytes decode=cv2: byte-identical PNG decode; zxing-cpp: byte-identical PNG decode
+SLH-DSA-SHAKE-128f-pk-base32 L: FITS shortfall=0 bytes decode=cv2: byte-identical PNG decode; zxing-cpp: byte-identical PNG decode
+SLH-DSA-SHAKE-128f-pk-base32 M: FITS shortfall=0 bytes decode=cv2: byte-identical PNG decode; zxing-cpp: byte-identical PNG decode
+SLH-DSA-SHAKE-128f-pk-base32 Q: FITS shortfall=0 bytes decode=cv2: byte-identical PNG decode; zxing-cpp: byte-identical PNG decode
+SLH-DSA-SHAKE-128f-pk-base32 H: FITS shortfall=0 bytes decode=cv2: byte-identical PNG decode; zxing-cpp: byte-identical PNG decode
+SLH-DSA-SHAKE-128f-signature-raw L: INFASIBLE shortfall=14135 bytes decode=not encodable
+SLH-DSA-SHAKE-128f-signature-raw M: INFASIBLE shortfall=14757 bytes decode=not encodable
+SLH-DSA-SHAKE-128f-signature-raw Q: INFASIBLE shortfall=15425 bytes decode=not encodable
+SLH-DSA-SHAKE-128f-signature-raw H: INFASIBLE shortfall=15815 bytes decode=not encodable
+SLH-DSA-SHAKE-128f-signature-base64 L: INFASIBLE shortfall=19831 bytes decode=not encodable
+SLH-DSA-SHAKE-128f-signature-base64 M: INFASIBLE shortfall=20453 bytes decode=not encodable
+SLH-DSA-SHAKE-128f-signature-base64 Q: INFASIBLE shortfall=21121 bytes decode=not encodable
+SLH-DSA-SHAKE-128f-signature-base64 H: INFASIBLE shortfall=21511 bytes decode=not encodable
+SLH-DSA-SHAKE-128f-signature-base32 L: INFASIBLE shortfall=23045 bytes decode=not encodable
+SLH-DSA-SHAKE-128f-signature-base32 M: INFASIBLE shortfall=23950 bytes decode=not encodable
+SLH-DSA-SHAKE-128f-signature-base32 Q: INFASIBLE shortfall=24921 bytes decode=not encodable
+SLH-DSA-SHAKE-128f-signature-base32 H: INFASIBLE shortfall=25489 bytes decode=not encodable
+SLH-DSA-SHAKE-128f-pk-signature L: INFASIBLE shortfall=14167 bytes decode=not encodable
+SLH-DSA-SHAKE-128f-pk-signature M: INFASIBLE shortfall=14789 bytes decode=not encodable
+SLH-DSA-SHAKE-128f-pk-signature Q: INFASIBLE shortfall=15457 bytes decode=not encodable
+SLH-DSA-SHAKE-128f-pk-signature H: INFASIBLE shortfall=15847 bytes decode=not encodable
+SLH-DSA-SHAKE-256f-pk-raw L: FITS shortfall=0 bytes decode=cv2: no byte-identical decode; zxing-cpp: byte-identical PNG decode
+SLH-DSA-SHAKE-256f-pk-raw M: FITS shortfall=0 bytes decode=cv2: no byte-identical decode; zxing-cpp: byte-identical PNG decode
+SLH-DSA-SHAKE-256f-pk-raw Q: FITS shortfall=0 bytes decode=cv2: no byte-identical decode; zxing-cpp: byte-identical PNG decode
+SLH-DSA-SHAKE-256f-pk-raw H: FITS shortfall=0 bytes decode=cv2: no byte-identical decode; zxing-cpp: byte-identical PNG decode
+SLH-DSA-SHAKE-256f-pk-base64 L: FITS shortfall=0 bytes decode=cv2: byte-identical PNG decode; zxing-cpp: byte-identical PNG decode
+SLH-DSA-SHAKE-256f-pk-base64 M: FITS shortfall=0 bytes decode=cv2: byte-identical PNG decode; zxing-cpp: byte-identical PNG decode
+SLH-DSA-SHAKE-256f-pk-base64 Q: FITS shortfall=0 bytes decode=cv2: byte-identical PNG decode; zxing-cpp: byte-identical PNG decode
+SLH-DSA-SHAKE-256f-pk-base64 H: FITS shortfall=0 bytes decode=cv2: byte-identical PNG decode; zxing-cpp: byte-identical PNG decode
+SLH-DSA-SHAKE-256f-pk-base32 L: FITS shortfall=0 bytes decode=cv2: no byte-identical decode; zxing-cpp: byte-identical PNG decode
+SLH-DSA-SHAKE-256f-pk-base32 M: FITS shortfall=0 bytes decode=cv2: byte-identical PNG decode; zxing-cpp: byte-identical PNG decode
+SLH-DSA-SHAKE-256f-pk-base32 Q: FITS shortfall=0 bytes decode=cv2: byte-identical PNG decode; zxing-cpp: byte-identical PNG decode
+SLH-DSA-SHAKE-256f-pk-base32 H: FITS shortfall=0 bytes decode=cv2: byte-identical PNG decode; zxing-cpp: byte-identical PNG decode
+SLH-DSA-SHAKE-256f-signature-raw L: INFASIBLE shortfall=46903 bytes decode=not encodable
+SLH-DSA-SHAKE-256f-signature-raw M: INFASIBLE shortfall=47525 bytes decode=not encodable
+SLH-DSA-SHAKE-256f-signature-raw Q: INFASIBLE shortfall=48193 bytes decode=not encodable
+SLH-DSA-SHAKE-256f-signature-raw H: INFASIBLE shortfall=48583 bytes decode=not encodable
+SLH-DSA-SHAKE-256f-signature-base64 L: INFASIBLE shortfall=63523 bytes decode=not encodable
+SLH-DSA-SHAKE-256f-signature-base64 M: INFASIBLE shortfall=64145 bytes decode=not encodable
+SLH-DSA-SHAKE-256f-signature-base64 Q: INFASIBLE shortfall=64813 bytes decode=not encodable
+SLH-DSA-SHAKE-256f-signature-base64 H: INFASIBLE shortfall=65203 bytes decode=not encodable
+SLH-DSA-SHAKE-256f-signature-base32 L: INFASIBLE shortfall=75474 bytes decode=not encodable
+SLH-DSA-SHAKE-256f-signature-base32 M: INFASIBLE shortfall=76379 bytes decode=not encodable
+SLH-DSA-SHAKE-256f-signature-base32 Q: INFASIBLE shortfall=77350 bytes decode=not encodable
+SLH-DSA-SHAKE-256f-signature-base32 H: INFASIBLE shortfall=77918 bytes decode=not encodable
+SLH-DSA-SHAKE-256f-pk-signature L: INFASIBLE shortfall=46967 bytes decode=not encodable
+SLH-DSA-SHAKE-256f-pk-signature M: INFASIBLE shortfall=47589 bytes decode=not encodable
+SLH-DSA-SHAKE-256f-pk-signature Q: INFASIBLE shortfall=48257 bytes decode=not encodable
+SLH-DSA-SHAKE-256f-pk-signature H: INFASIBLE shortfall=48647 bytes decode=not encodable
+{"cases": 288, "fits": 98, "decode_cvp2_pass": 55, "decode_zxingcpp_pass": 98, "decode_pass": 98, "decode_fail": 0, "infeasible": 190}
+Exit 0
+
+$ node experimental/brth-qr/tools/offline_reconstruct_proof.mjs
+{
+  "identity_id": "b1:axxidrdsarrqvkbefblxro566czmiudbpl7fhuoa7m4rcx245zeq",
+  "birth_bytes": 3683,
+  "birth_sha256": "ef4fa67e753e9abda1b6f35d1c4157bc874f2b923e2ef969426b2d15205bf143",
+  "ml_public_sha256": "7f8e9257128880cac272e70837f5203ad67ffa8c9d50558d97b88062fcd36e4a",
+  "slh_public_sha256": "7267d553ce82ce9409a19aaefd08d9a4d93a51dff434a08c3aa1deb75917a4dd",
+  "entropy_sha256": "d1ce0c295076481ba77a438af43f213a5bbc1ee416340e337b57a6431a711574",
+  "capsule_sha256": "9f529fd4df29514cf717258a6d5668fbe3569c534911bb4970691e3be779ef60",
+  "capsule_bytes": 37,
+  "signature_bytes": [
+    {
+      "algorithm": "ML-DSA-87",
+      "bytes": 4627
+    },
+    {
+      "algorithm": "SLH-DSA-SHAKE-256s",
+      "bytes": 29792
+    }
+  ],
+  "verdicts": {
+    "words_entropy_capsule_equal": true,
+    "birth_byte_identical": true,
+    "identity_id_identical": true,
+    "public_key_hashes_identical": true,
+    "before_signatures_verify_both_families": true,
+    "after_signatures_verify_openssl_both_families": true,
+    "tampering_rejected_both_families": true,
+    "recovery_api_same_identity": true,
+    "recovery_event_authority_valid": true,
+    "generator_exited_before_reconstruction": true,
+    "fresh_process_and_directory": true
+  },
+  "openssl": "OpenSSL 3.5.5 27 Jan 2026 (Library: OpenSSL 3.5.5 27 Jan 2026)",
+  "isolation": {
+    "attempted_command": "unshare -n true",
+    "exit_code": 1,
+    "stderr": "unshare: unshare failed: Operation not permitted",
+    "kernel_network_namespace": false,
+    "actual": "fresh generator exits; fresh reconstruction process; temporary cwd; minimal environment; no DNS or network calls attempted",
+    "limitation": "network access was not blocked by the kernel; absence of attempted calls is code inspection, not a packet trace"
+  }
+}
+Exit 0
+
+$ cd experimental/brth-qr && node --test test/
+1500 bytes v40-L: cv2=False zxing-cpp=True
+2693 bytes v40-L: cv2=False zxing-cpp=True
+2900 bytes v40-L: cv2=False zxing-cpp=True
+2953 bytes v40-L: cv2=False zxing-cpp=True
+✔ 24 words, entropy and capsule reproduce identical canonical Birth and IdentityID (30853.351367ms)
+✔ capsule parser rejects truncation, extension and wrong type/version (0.963202ms)
+✔ all public descriptor encodings exclude phrase, entropy, seeds and private keys (12480.437819ms)
+✔ compact dual descriptor reconstructs canonical Birth and checks its digest (4224.742966ms)
+✔ required measured feasibility facts and exact arithmetic (4.048769ms)
+✔ live QR encoder accepts measured boundary and rejects boundary plus one at every EC (5634.595301ms)
+✔ report embeds exact generated measurement tables and public offline evidence (18.285539ms)
+✔ fresh offline proof contains only successful cryptographic verdicts (4.30523ms)
+✔ dense public descriptor succeeds with zxing-cpp despite cv2 limitation (6.682255ms)
+✔ independent live decoders check dense v40-L byte payloads (4832.08718ms)
+ℹ tests 10
+ℹ suites 0
+ℹ pass 10
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 59084.644756
+Exit 0
+
+$ /home/hermes/.hermes/tools/python-3.14.9+20261021-linux-x64/bin/python3 experimental/brth-qr/tools/build_report.py
+Wrote docs/BRTH_QR_R1_REPORT.md from measured JSON/Markdown and offline proof
+Exit 0
+
+$ git diff --check
+(no output)
+Exit 0
+$ git diff --name-only
+(no output)
+Exit 0
+$ git status --short --ignored
+?? experimental/brth-qr/
+!! experimental/brth-layer4/node_modules/
+!! experimental/brth-qr/.work/
+Exit 0
+
+Manual inspection: independent decoder attempts, byte comparisons, payload redaction, generated arithmetic, custody claims and scope reviewed. No physical scanner test. No commit, push or posting.
+
+
+# Reproducibility defect fix — actual rerun outputs
+
+Earlier entries above retain the original measurement-run record.
+Commands below run from experimental/brth-qr unless noted.
+
+$ node tools/offline_reconstruct_proof.mjs (default run 1)
+{
+  "identity_id": "b1:n4xq6w26e76t5acvynw7dsf6c53pm6nc2detgqihszkcjqkvweja",
+  "birth_bytes": 3683,
+  "birth_sha256": "0b1f3ba2529fd7695ef872941a9d6e421ab167ba9f2a3cfd89b84b8c9e9b8e7e",
+  "ml_public_sha256": "5b562a1de433ffa495a1a5d08b8fbabdca62484780ad5424b6c40a6ea5c7c4fa",
+  "slh_public_sha256": "53bae6c817b0cdff658fc045ad3e39d90b4ddc05bb60be4fd709eaaa94fdd7d8",
+  "entropy_sha256": "66687aadf862bd776c8fc18b8e9f8e20089714856ee233b3902a591d0d5f2925",
+  "capsule_sha256": "857e9e2bddf6bed2afbb7f598f6c0df6dacd361226505d07f846942eefad266e",
+  "capsule_bytes": 37,
+  "signature_bytes": [
+    {
+      "algorithm": "ML-DSA-87",
+      "bytes": 4627
+    },
+    {
+      "algorithm": "SLH-DSA-SHAKE-256s",
+      "bytes": 29792
+    }
+  ],
+  "verdicts": {
+    "words_entropy_capsule_equal": true,
+    "birth_byte_identical": true,
+    "identity_id_identical": true,
+    "public_key_hashes_identical": true,
+    "before_signatures_verify_both_families": true,
+    "after_signatures_verify_openssl_both_families": true,
+    "tampering_rejected_both_families": true,
+    "recovery_api_same_identity": true,
+    "recovery_event_authority_valid": true,
+    "generator_exited_before_reconstruction": true,
+    "fresh_process_and_directory": true
+  },
+  "openssl": "OpenSSL 3.5.5 27 Jan 2026 (Library: OpenSSL 3.5.5 27 Jan 2026)",
+  "isolation": {
+    "attempted_command": "unshare -n true",
+    "exit_code": 1,
+    "stderr": "unshare: unshare failed: Operation not permitted",
+    "kernel_network_namespace": false,
+    "actual": "fresh generator exits; fresh reconstruction process; temporary cwd; minimal environment; no DNS or network calls attempted",
+    "limitation": "network access was not blocked by the kernel; absence of attempted calls is code inspection, not a packet trace"
+  }
+}
+[exit 0]
+
+$ sha256sum out/offline_proof.json (after run 1)
+c12beb96d47c44f067b9467b1da8a0a19693c172290068cd1902cb8d2712ca17  out/offline_proof.json
+[exit 0]
+
+$ node tools/offline_reconstruct_proof.mjs (default run 2)
+{
+  "identity_id": "b1:n4xq6w26e76t5acvynw7dsf6c53pm6nc2detgqihszkcjqkvweja",
+  "birth_bytes": 3683,
+  "birth_sha256": "0b1f3ba2529fd7695ef872941a9d6e421ab167ba9f2a3cfd89b84b8c9e9b8e7e",
+  "ml_public_sha256": "5b562a1de433ffa495a1a5d08b8fbabdca62484780ad5424b6c40a6ea5c7c4fa",
+  "slh_public_sha256": "53bae6c817b0cdff658fc045ad3e39d90b4ddc05bb60be4fd709eaaa94fdd7d8",
+  "entropy_sha256": "66687aadf862bd776c8fc18b8e9f8e20089714856ee233b3902a591d0d5f2925",
+  "capsule_sha256": "857e9e2bddf6bed2afbb7f598f6c0df6dacd361226505d07f846942eefad266e",
+  "capsule_bytes": 37,
+  "signature_bytes": [
+    {
+      "algorithm": "ML-DSA-87",
+      "bytes": 4627
+    },
+    {
+      "algorithm": "SLH-DSA-SHAKE-256s",
+      "bytes": 29792
+    }
+  ],
+  "verdicts": {
+    "words_entropy_capsule_equal": true,
+    "birth_byte_identical": true,
+    "identity_id_identical": true,
+    "public_key_hashes_identical": true,
+    "before_signatures_verify_both_families": true,
+    "after_signatures_verify_openssl_both_families": true,
+    "tampering_rejected_both_families": true,
+    "recovery_api_same_identity": true,
+    "recovery_event_authority_valid": true,
+    "generator_exited_before_reconstruction": true,
+    "fresh_process_and_directory": true
+  },
+  "openssl": "OpenSSL 3.5.5 27 Jan 2026 (Library: OpenSSL 3.5.5 27 Jan 2026)",
+  "isolation": {
+    "attempted_command": "unshare -n true",
+    "exit_code": 1,
+    "stderr": "unshare: unshare failed: Operation not permitted",
+    "kernel_network_namespace": false,
+    "actual": "fresh generator exits; fresh reconstruction process; temporary cwd; minimal environment; no DNS or network calls attempted",
+    "limitation": "network access was not blocked by the kernel; absence of attempted calls is code inspection, not a packet trace"
+  }
+}
+[exit 0]
+
+$ sha256sum out/offline_proof.json (after run 2)
+c12beb96d47c44f067b9467b1da8a0a19693c172290068cd1902cb8d2712ca17  out/offline_proof.json
+[exit 0]
+
+$ python3 tools/build_report.py
+Wrote docs/BRTH_QR_R1_REPORT.md from measured JSON/Markdown and offline proof
+[exit 0]
+
+$ node --test test/
+1500 bytes v40-L: cv2=False zxing-cpp=True
+2693 bytes v40-L: cv2=False zxing-cpp=True
+2900 bytes v40-L: cv2=False zxing-cpp=True
+2953 bytes v40-L: cv2=False zxing-cpp=True
+✔ 24 words, entropy and capsule reproduce identical canonical Birth and IdentityID (39390.943531ms)
+✔ capsule parser rejects truncation, extension and wrong type/version (3.874895ms)
+✔ all public descriptor encodings exclude phrase, entropy, seeds and private keys (20362.557825ms)
+✔ compact dual descriptor reconstructs canonical Birth and checks its digest (9509.358522ms)
+✔ required measured feasibility facts and exact arithmetic (4.304295ms)
+✔ live QR encoder accepts measured boundary and rejects boundary plus one at every EC (11960.291646ms)
+✔ report embeds exact generated measurement tables and public offline evidence (16.78137ms)
+✔ fresh offline proof contains only successful cryptographic verdicts (0.867452ms)
+✔ dense public descriptor succeeds with zxing-cpp despite cv2 limitation (2.51728ms)
+✔ independent live decoders check dense v40-L byte payloads (9187.510819ms)
+ℹ tests 10
+ℹ suites 0
+ℹ pass 10
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 91232.088571
+[exit 0]
+
+$ cmp .work/offline-proof-first.json out/offline_proof.json
+[exit 0]
+
+$ node --check tools/offline_reconstruct_proof.mjs
+[exit 0]
+
+$ git diff --check
+[exit 0]
+
+$ git status --short --ignored
+?? ./
+!! ../brth-layer4/node_modules/
+!! .work/
+[exit 0]
+
+$ cd ../brth-layer4 && npm test
+npm notice run brth-layer4-reference@0.0.1 test
+npm notice run node --test test/
+✔ attestations verify issuer authority and keep subject identity/state separate (38297.212173ms)
+✔ paper recovery in fresh process reproduces Birth and roots and appends fresh authority (36173.359115ms)
+✔ human actor from clean words authorizes operational key and sets human claim (9976.610651ms)
+✔ AI continuity, signed assertion, metadata changes, revocation, succession and historical evidence (33291.238202ms)
+✔ scoped authorization, expiry, claim deletion and no self-widening (19194.948584ms)
+✔ root rotation uses prior dual policy, preserves ID and rejects old roots (35687.945334ms)
+✔ adversarial chain detects tampering, replay, forks, quorum and unknown fields (13618.243629ms)
+✔ strict operation schemas reject unknown nested fields and wrong types (14.285563ms)
+✔ operational SLH is a co-signature and cannot replace required ML-DSA (22506.599178ms)
+✔ CJSON code point order, NFC, required escapes and round trip (16.073179ms)
+✔ CJSON rejects floats, duplicates, invalid Unicode, types and noncanonical bytes (4.933611ms)
+✔ BIP39 published zero/one vectors, checksum and 23/25 words (5.920705ms)
+✔ Punkti Layer-3 opaque BRTH bytes survive real carrier and mesh store/transport (1251.210499ms)
+✔ AI signed assertion is published as an opaque carrier atom (13877.143767ms)
+✔ independent OpenSSL ML-DSA and SLH-DSA interoperability both directions and exact sizes (93717.022664ms)
+✔ noble fallback signs when OpenSSL is absent (54108.758286ms)
+✔ root public keys and Birth bytes match committed published-seed vectors (8339.97743ms)
+✔ Birth rejects unknown fields, wrong types, downgrade and root order (3843.55354ms)
+ℹ tests 18
+ℹ suites 0
+ℹ pass 18
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 416325.794077
+[exit 0]
