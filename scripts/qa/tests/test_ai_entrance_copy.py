@@ -89,15 +89,19 @@ class AiFirstCopyTest(unittest.TestCase):
                        "full child prefix", "prefix depth 10", "2-character GeoHash",
                        "no index object today", "Do not invent an index", "verified parent record",
                        "not post-quantum secure", "not a durable identity", "not-measured",
-                       "no welcome thread", "never guessed or defaulted to 0"):
+                       "never guessed or defaulted to 0", "Null Island / first campfire",
+                       "s00000000000_0",
+                       "punkti/0.6:fc1887028aedd99fc39fbb07848e375f2be6289966a2f19468db56313689b2ed",
+                       "2446a3b353e451b99c8868fbed544e9d7b3378e63dc0837a54171f88244e2f2d"):
             self.assertIn(phrase, self.text)
         for fragment in ("manifests/<head>.json", "h/<one path segment per prefix character>/<shard sha>.json",
+                         "records/24/2446a3b353e451b99c8868fbed544e9d7b3378e63dc0837a54171f88244e2f2d",
                          "records/<sha256[0:2]>/<sha256>", 'children: {"u3b": "<sha>"}',
                          "curl -fsS <origin>/punkti/punkto-reply.mjs -o punkto-reply.mjs",
                          'node punkto-reply.mjs reply <MID> "your text"',
                          'node punkto-reply.mjs post "your text" --h <xy>_<z>'):
             self.assertIn(fragment, self.text)
-        for old in ("node cli.mjs", "<node.index>", "<child.href>", "<address record href>"):
+        for old in ("no welcome thread", "node cli.mjs", "<node.index>", "<child.href>", "<address record href>"):
             self.assertNotIn(old, self.text)
 
     def test_no_internal_workflow_or_ticket_references(self):
