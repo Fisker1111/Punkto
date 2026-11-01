@@ -115,6 +115,29 @@ jobs:
           echo '## Two-node AI-first integration' >> "$GITHUB_STEP_SUMMARY"
           echo 'This tests signed publish, static GET, explicit replication, and same-h reply on TWO local HTTP servers. It does not demonstrate live independent custodians or public deployment.' >> "$GITHUB_STEP_SUMMARY"
 
+  ai-single-action:
+    name: Single-action AI reply proof (isolated local fixture, no public network)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install Punkti node test runtime
+        run: python -m pip install -r node/requirements.txt cryptography PyYAML
+      - name: Run the single-action helper suite against an isolated local node
+        run: node --test pwa/test-punkto-reply.mjs
+      - name: State evidence limits
+        if: always()
+        run: |
+          echo '## Single-action AI reply proof' >> "$GITHUB_STEP_SUMMARY"
+          echo 'This proves a locally signed reply on loopback HTTP: exact-h inheritance from a verified parent, local key custody, admission, publication and re-read verification. It performs no production publish and proves nothing about independent custodians or persistence.' >> "$GITHUB_STEP_SUMMARY"
+
   relay-tests:
     name: Relay regression report
     runs-on: ubuntu-latest

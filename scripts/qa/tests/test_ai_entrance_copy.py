@@ -55,17 +55,17 @@ class AiFirstCopyTest(unittest.TestCase):
 
     def test_read_before_optional_signer(self):
         self.assertLess(self.raw.index("id=\"discover\""), self.raw.index("id=\"publish\""))
-        self.assertLess(self.raw.index("GET /nodes.json"), self.raw.index("node cli.mjs"))
+        self.assertLess(self.raw.index("GET &lt;origin&gt;/nodes.json"), self.raw.index("node punkto-reply.mjs"))
         self.assertIn("not required for reading", self.text)
         self.assertIn("root.json", self.raw)
-        self.assertIn("node.index", self.raw)
+        self.assertNotIn("node.index", self.raw)
         self.assertIn("origin of this /ai page", self.raw)
         self.assertNotIn("ORIGIN=\'https://punkto.xyz\'", self.raw)
 
     def test_spatial_only_and_exact_reply(self):
         self.assertIn("Missing or empty spatial addresses are invalid", self.text)
         self.assertIn("parent's exact h", self.text)
-        self.assertIn("--h &quot;", self.raw.replace('"&lt;parent-h&gt;"', '&quot;&lt;parent-h&gt;&quot;'))
+        self.assertIn("--h &lt;xy&gt;_&lt;z&gt;", self.raw)
         self.assertNotIn("write an unanchored atom", self.raw.lower())
         self.assertNotIn("Unanchored:</p>", self.raw)
 
@@ -81,6 +81,31 @@ class AiFirstCopyTest(unittest.TestCase):
             self.assertIn(term, self.text)
         self.assertIn("https://github.com/punkti-org/punkti", self.parser.links)
         self.assertIn("https://github.com/Fisker1111/Punkto", self.parser.links)
+
+    def test_single_action_quickstart_and_reference_paths(self):
+        self.assertLess(len(self.raw.encode("utf-8")), 12000)
+        self.assertLess(self.raw.index('id="choose"'), self.raw.index('id="roles"'))
+        for phrase in ("Choose one: READ · REPLY · NEW POST", "No Node.js and no npm",
+                       "full child prefix", "prefix depth 10", "2-character GeoHash",
+                       "no index object today", "Do not invent an index", "verified parent record",
+                       "not post-quantum secure", "not a durable identity", "not-measured",
+                       "no welcome thread", "never guessed or defaulted to 0"):
+            self.assertIn(phrase, self.text)
+        for fragment in ("manifests/<head>.json", "h/<one path segment per prefix character>/<shard sha>.json",
+                         "records/<sha256[0:2]>/<sha256>", 'children: {"u3b": "<sha>"}',
+                         "curl -fsS <origin>/punkti/punkto-reply.mjs -o punkto-reply.mjs",
+                         'node punkto-reply.mjs reply <MID> "your text"',
+                         'node punkto-reply.mjs post "your text" --h <xy>_<z>'):
+            self.assertIn(fragment, self.text)
+        for old in ("node cli.mjs", "<node.index>", "<child.href>", "<address record href>"):
+            self.assertNotIn(old, self.text)
+
+    def test_no_internal_workflow_or_ticket_references(self):
+        # The page is public and machine-facing: no internal tracker IDs, no
+        # project-management phrasing, and no claim of an unpublished release.
+        for internal in ("CEO-OS", "PR #140", "A1 proof", "#28", "#34", "#35"):
+            self.assertNotIn(internal, self.text)
+        self.assertNotRegex(self.text, re.compile(r"(?i)\b(founder (must|should|will)|will be (merged|deployed|live) soon)\b"))
 
     def test_no_unsupported_claims_or_ai_coercion(self):
         self.assertNotRegex(self.text.lower(), re.compile(r"guaranteed permanent|will survive forever|you must publish"))
