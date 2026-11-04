@@ -1,12 +1,13 @@
 import assert from 'node:assert/strict';
 import { readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
-import { spawnSync } from 'node:child_process';
+import { spawn, spawnSync } from 'node:child_process';
+import { once } from 'node:events';
 import { localNode, cli, ROOT } from './test-ai-coldstart.mjs';
 import { run } from './punkti/cli.mjs';
 import { createReader, hexShardedResolver } from './punkti/reader.js';
 import { createSubmitClient } from './punkti/submit.js';
-import { encodeRecord } from './punkti/carrier.js';
+import { encodeRecord, decodeRecord, canonical, computeMid, sha256Hex, signingInput, unb64 } from './punkti/carrier.js';
 
 const node = await localNode();
 try {
@@ -102,53 +103,148 @@ try {
   assert.equal(pageResponse.headers.get('cache-control'), 'no-cache, no-store, must-revalidate');
   const html = await pageResponse.text();
   const text = html.replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&amp;/g, '&');
-  // AI-first entrance is read-first and offers voluntary roles. It MUST NOT
-  // require a particular SDK, pressure autonomous agents to write, or promise
-  // irrevocable persistence. These assertions intentionally replace the old
-  // copy snapshot, which promoted obsolete unanchored publication.
-  assert.deepEqual([...html.matchAll(/<h2\b[^>]*>(.*?)<\/h2>/g)].map(match => match[1]), [
-    'Choose one: READ · REPLY · NEW POST',
-    'Choose how you participate',
-    'A place is an address, not a claim of presence',
-    'Persistence is something participants do',
-    'Public data, safety and current status',
-  ]);
-  for (const literal of [
-    'An entrance written for AI agents',
-    'Leave your mark here.', 'Addressability. Distribution. Persistence.',
-    'You do not have to publish anything.',
-    'Explore / harvest', 'Publish / discuss', 'Store / serve', 'Replicate / preserve',
-    'open Punkti protocol', 'commercial service',
-    'GET <origin>/nodes.json',
-    'no index object today', 'Do not invent an index.',
-    'GET <publication>/root.json', 'root.json', 'manifests/', 'records/',
-    'a central registry or a complete map', 'origin of this /ai page', 'READ — plain HTTP GET',
-    'no physical location', 'Do not invent a measurement',
-    'Missing or empty spatial addresses are invalid',
-    'WGS84 ellipsoidal height',
-    'Discover a conversation and its MID via READ.',
-    'node punkto-reply.mjs post "your text" --h <xy>_<z>',
-    'node punkto-reply.mjs reply <MID> "your text" --origin <origin>',
-    'ephemeral Ed25519 key', 'An ephemeral key is not a durable identity.',
-    'Submission acceptance is', 'not yet publication or preservation',
-    'Nothing is guaranteed to survive forever.',
-    'public, unencrypted', 'Do not publish secrets',
-  ]) assert.ok(text.includes(literal), `required AI-first page text: ${literal}`);
-  const readPosition = text.indexOf('READ — plain HTTP GET');
-  const replyPosition = text.indexOf('node punkto-reply.mjs reply <MID>');
-  const postPosition = text.indexOf('node punkto-reply.mjs post');
-  assert.ok(readPosition >= 0 && readPosition < replyPosition && replyPosition < postPosition,
-    'READ must precede REPLY and NEW POST');
-  for (const forbidden of [
-    'write an unanchored atom', 'Omit --h for an unanchored reply',
-    'It is the normal way to participate', 'you must publish',
-    'guaranteed eternal preservation',
-  ]) assert.ok(!text.includes(forbidden), `obsolete or coercive /ai page text: ${forbidden}`);
-  for (const forbidden of [
-    'PUNKTI-L3-SIGN', 'PUNKTI-L3-MID', 'manifests/<sha>.json', 'records/<sha2>/<sha>',
-    'body || signature', 'both length-prefixed', 'package.json that overrides module detection',
-  ]) assert.ok(!text.includes(forbidden), `primary /ai page leaked protocol-doc detail: ${forbidden}`);
-  assert.doesNotMatch(html, /<script\b|<link\b|<iframe\b|<img\b/i);
+  // Content requirements are shared with the Python parser rather than freezing headings.
+  const copy = spawnSync('python3', ['-m', 'unittest', 'discover', '-s', 'scripts/qa/tests',
+    '-p', 'test_ai_entrance_copy.py'], { cwd: ROOT, encoding: 'utf8' });
+  assert.equal(copy.status, 0, copy.stdout + copy.stderr);
+  assert.ok(Buffer.byteLength(html) <= 7000);
+  const blocks = [...html.matchAll(/<pre>([\s\S]*?)<\/pre>/g)].map(m => m[1]
+    .replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&amp;/g, '&'));
+  const lines = blocks.flatMap(block => block.split('\n'));
+
+  // (a) The client is Python stdlib HTTP + hashlib, with no Node/npm/SDK dependency.
+  // Its URL comes from the page, not a hardcoded test request. Only GET is used.
+  const httpOnly = spawnSync('python3', ['-c', `
+import hashlib, json, re, urllib.request, urllib.error, socket, http.client
+from pathlib import Path
+page = Path('pwa/ai.html').read_text()
+links = re.findall(r'href="(https://punkto.xyz/publication/records/([0-9a-f]{2})/([0-9a-f]{64}))"', page)
+assert len(links) == 2
+results, skipped = [], []
+for url, prefix, sha in links:
+    assert prefix == sha[:2]
+    assert '/publication/records/' in url
+    try:
+        with urllib.request.urlopen(url, timeout=15) as response:
+            raw = response.read()
+            status = response.status
+            content_type = response.headers.get_content_type()
+    except urllib.error.HTTPError as error:
+        if error.code != 429 and not 500 <= error.code <= 599:
+            raise
+        skipped.append(f"{url}: HTTP {error.code}")
+        results.append(None)
+        continue
+    except (urllib.error.URLError, TimeoutError, ConnectionError,
+            socket.gaierror, http.client.IncompleteRead, http.client.RemoteDisconnected) as error:
+        skipped.append(f"{url}: {type(error).__name__}: {error}")
+        results.append(None)
+        continue
+    # Content/status assertions are deliberately outside the transport catch.
+    assert status == 200
+    assert content_type == 'application/octet-stream'
+    assert hashlib.sha256(raw).hexdigest() == sha
+    results.append(dict(url=url, status=status, sha256=sha, bytes=len(raw), hex=raw.hex()))
+print(json.dumps(dict(records=results, skipped=skipped)))
+
+`], { cwd: ROOT, encoding: 'utf8', timeout: 70000 });
+  assert.equal(httpOnly.status, 0, httpOnly.stderr);
+  const { records: published, skipped } = JSON.parse(httpOnly.stdout);
+  const rootGet = lines.find(line => line.startsWith('curl ') && line.includes('/publication/records/'));
+  assert.ok(rootGet.includes('https://punkto.xyz/publication/records/24/2446a3b353e451b99c8868fbed544e9d7b3378e63dc0837a54171f88244e2f2d'), 'copyable GET must use the direct ROOT link');
+  if (!skipped.length) console.log(`Comprehension (a): PASS — Python HTTP-only client, ROOT 1 GET / ${published[0].bytes} bytes, reply 1 GET / ${published[1].bytes} bytes; both SHA-256 match`);
+
+  // (c) Independently check bytes, canonical body/MID, signature and reply relationship.
+  const mids = [...html.matchAll(/MID: <code>(punkti\/0\.6:[a-f0-9]{64})<\/code>/g)].map(m => m[1]);
+  assert.equal(mids.length, 2);
+  const decoded = [];
+  for (const [i, record] of published.entries()) {
+    if (record === null) continue;
+    const raw = new Uint8Array(Buffer.from(record.hex, 'hex'));
+    assert.throws(() => JSON.parse(Buffer.from(raw).toString('utf8')), 'binary is not a JSON response');
+    assert.equal(await sha256Hex(raw), record.sha256);
+    const d = decodeRecord(raw); decoded[i] = d;
+    assert.deepEqual(canonical(d.atom), d.body);
+    assert.equal('punkti/0.6:' + await computeMid(d.body), mids[i]);
+    assert.equal(d.atom.h, 's00000000000_0');
+    assert.ok(globalThis.nacl.sign.detached.verify(signingInput(d.body), d.sig, unb64(d.atom.pk)));
+    const damagedSig = Uint8Array.from(d.sig); damagedSig[0] ^= 1;
+    assert.equal(globalThis.nacl.sign.detached.verify(signingInput(d.body), damagedSig, unb64(d.atom.pk)), false);
+    const damaged = Uint8Array.from(raw); damaged[damaged.length - 1] ^= 1;
+    assert.notEqual(await sha256Hex(damaged), record.sha256);
+  }
+  if (decoded[0]) assert.deepEqual(decoded[0].atom.refs, []);
+  if (decoded[1]) assert.deepEqual(decoded[1].atom.refs, [{ target: mids[0], rel: 'reply' }]);
+  if (decoded[1]) assert.equal(JSON.parse(decoded[1].atom.x).text, 'Hello from a new AI');
+  assert.match(text, /no global index and no \/shards endpoint/);
+  assert.doesNotMatch(lines.filter(l => l.startsWith('GET ')).join('\n'), /\/shards/);
+  if (!skipped.length) console.log('Comprehension (c): PASS — both live records: SHA-256, canonical MID, Ed25519 and exact reply reference verified client-side; corrupted hashes/signatures rejected');
+
+  console.log(skipped.length
+    ? `WARNING: Public-record verification SKIPPED for ${skipped.length}/2 records: ${skipped.join('; ')}; any fetched records passed all content checks`
+    : 'Public-record verification RAN: both records passed all content checks');
+
+  // (b) Execute the actual page commands, substituting only the isolated origin
+  // and local verified parent MID. A local fixture is not the public conversation.
+  const guard = path.join(node.directory, 'loopback.mjs');
+  const audit = path.join(node.directory, 'requests.jsonl');
+  writeFileSync(guard, `import { appendFileSync } from 'node:fs';
+const original = globalThis.fetch;
+globalThis.fetch = (address, init = {}) => {
+  const url = new URL(address);
+  if (url.hostname !== '127.0.0.1' || url.protocol !== 'http:') throw new Error('non-loopback forbidden');
+  appendFileSync(${JSON.stringify(audit)}, JSON.stringify({url: url.href, method: init.method ?? 'GET'}) + '\\n');
+  return original(address, {...init, redirect: 'error'});
+};`);
+  const command = async (exe, args) => {
+    const env = Object.fromEntries(Object.entries(process.env).filter(([key]) =>
+      !key.startsWith('PUNKTO_') && key !== 'NODE_OPTIONS' && !/proxy/i.test(key)));
+    const child = spawn(exe, args, { cwd: node.directory, env, stdio: ['ignore', 'pipe', 'pipe'] });
+    let stdout = '', stderr = '';
+    child.stdout.on('data', b => { stdout += b; }); child.stderr.on('data', b => { stderr += b; });
+    const timer = setTimeout(() => child.kill('SIGKILL'), 30000);
+    try { const [code] = await once(child, 'exit'); return { code, stdout, stderr }; }
+    finally { clearTimeout(timer); }
+  };
+  // shlex parses page shell tokens without evaluating arbitrary shell text.
+  const tokens = line => {
+    const result = spawnSync('python3', ['-c', 'import json,shlex,sys;print(json.dumps(shlex.split(sys.argv[1])))', line], { encoding: 'utf8' });
+    assert.equal(result.status, 0, result.stderr); return JSON.parse(result.stdout);
+  };
+  const download = tokens(lines.find(l => l.startsWith('curl ') && l.includes('/punkti/punkto-reply.mjs'))
+    .replaceAll('https://punkto.xyz', node.base));
+  assert.equal(download[0], 'curl');
+  assert.ok(download.includes(node.base + '/punkti/punkto-reply.mjs'));
+  const downloaded = await command(download[0], download.slice(1));
+  assert.equal(downloaded.code, 0, downloaded.stderr);
+  assert.equal(readFileSync(path.join(node.directory, 'punkto-reply.mjs'), 'utf8'), readFileSync(path.join(ROOT, 'pwa/punkti/punkto-reply.mjs'), 'utf8'));
+  const pageArgs = action => tokens(lines.find(l => l.startsWith(`node punkto-reply.mjs ${action} `))
+    .replaceAll('https://punkto.xyz', node.base).replaceAll(mids[0], first.mid)).slice(2);
+  const helper = async (args, success = true) => {
+    const result = await command(process.execPath, ['--import', guard, 'punkto-reply.mjs', ...args]);
+    assert.equal(result.code, success ? 0 : 1, result.stdout + result.stderr);
+    const receipt = JSON.parse(result.stdout); assert.equal(receipt.ok, success); return receipt;
+  };
+  const replyArgs = pageArgs('reply'), postArgs = pageArgs('post');
+  const replied = await helper(replyArgs);
+  assert.equal(replied.h, atom.h);
+  assert.deepEqual(replied.parent, { mid: first.mid, h: atom.h, verified: true });
+  assert.equal(replied.verified, true);
+  const posted = await helper(postArgs);
+  assert.equal(posted.h, postArgs[postArgs.indexOf('--h') + 1]);
+  assert.equal(posted.verified, true);
+  const beforeInvalid = readFileSync(audit, 'utf8').trim().split('\n').map(JSON.parse).filter(r => r.method === 'POST').length;
+  const hIndex = postArgs.indexOf('--h');
+  const noAddress = postArgs.filter((_, i) => i !== hIndex && i !== hIndex + 1);
+  assert.match((await helper(noAddress, false)).error, /explicit --h.*--height required/);
+  assert.match((await helper([...noAddress, '--lat', '0', '--lon', '0'], false)).error, /--height required/);
+  assert.match((await helper([...postArgs, '--invented', '1'], false)).error, /unknown flag/);
+  const requests = readFileSync(audit, 'utf8').trim().split('\n').map(JSON.parse);
+  assert.ok(requests.every(r => new URL(r.url).hostname === '127.0.0.1'));
+  assert.equal(requests.filter(r => r.method === 'POST').length, beforeInvalid);
+  const afterCommands = await createReader().readPublication(entry.publication);
+  assert.deepEqual(afterCommands.records.find(r => r.mid === replied.mid).atom.refs, [{target: first.mid, rel: 'reply'}]);
+  console.log('Comprehension (b): PASS — page helper download/reply/post executed on localhost; exact parent h inherited; missing address/height and unknown flags rejected without POST; all helper traffic loopback');
   const bootstrap = await (await fetch(nodesUrl)).json();
   assert.equal(bootstrap.notice, "Recommended bootstrap list. Not a trust authority and not a completeness claim: one node's publication is one published view, not all of Punkto.");
   const index = readFileSync(path.join(ROOT, 'pwa/index.html'), 'utf8');
@@ -158,5 +254,5 @@ try {
     for (const value of [`data-testid="${id}"`, 'href="/ai"', 'target="_blank"', 'rel="noopener noreferrer"']) assert.ok(links[0][0].includes(value));
   }
   assert.match(index, /id="ai-entry-link-topbar"[^>]*pointer-events: auto/);
-  console.log('E2: PASS — all nine hostile/minimality cases and required page content');
+  console.log('E2: PASS — existing hostile cases, semantic copy contract and local comprehension scenario; public verification status reported above');
 } finally { await node.close(); }

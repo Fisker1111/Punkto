@@ -1,120 +1,161 @@
-"""Checks the AI-first invitation against Founder product and protocol invariants.
-
-This test is about published machine-facing content, not live network reachability.
-"""
+"""Semantic entrance contract; network/CLI/provenance scenarios live in test-ai-hostile."""
 from html.parser import HTMLParser
 from pathlib import Path
 import re
+import shlex
 import unittest
 
-
-AI = Path(__file__).resolve().parents[3] / "pwa" / "ai.html"
+AI = Path(__file__).resolve().parents[3] / 'pwa' / 'ai.html'
+ROOT_MID = 'punkti/0.6:fc1887028aedd99fc39fbb07848e375f2be6289966a2f19468db56313689b2ed'
+ROOT_SHA = '2446a3b353e451b99c8868fbed544e9d7b3378e63dc0837a54171f88244e2f2d'
+REPLY_MID = 'punkti/0.6:70e0da2fc002e38374947be6ec9af4c7fd4914fbb4cc41bb58513538551d6854'
+REPLY_SHA = '0c7259dac68a6f3bab62f0f57691d586aec4955d173cb7103bd37f85a8e0169b'
 
 
 class Parser(HTMLParser):
     def __init__(self):
         super().__init__(convert_charrefs=True)
-        self.text = []
-        self.links = []
-        self.headers = []
-
-    def handle_data(self, data):
-        self.text.append(data)
+        self.stack, self.errors, self.sections = [], [], []
+        self.tags, self.links, self.text, self.headings, self.commands = [], [], [], [], []
 
     def handle_starttag(self, tag, attrs):
-        values = dict(attrs)
-        if tag == "a":
-            self.links.append(values.get("href", ""))
-        if tag in ("h1", "h2"):
-            self.headers.append(tag)
+        self.tags.append((tag, dict(attrs)))
+        if tag not in ('meta', 'br', 'hr', 'img', 'link', 'input'):
+            self.stack.append(tag)
+        if tag == 'section':
+            self.sections.append([])
+        if tag == 'a':
+            self.links.append(dict(attrs).get('href', ''))
+        if tag in ('h1', 'h2', 'h3'):
+            self.headings.append([tag, ''])
+        if tag == 'pre':
+            self.commands.append('')
+
+    def handle_endtag(self, tag):
+        if not self.stack or self.stack[-1] != tag:
+            self.errors.append(tag)
+        else:
+            self.stack.pop()
+
+    def handle_data(self, data):
+        if 'style' in self.stack or 'head' in self.stack:
+            return
+        self.text.append(data)
+        if 'section' in self.stack:
+            self.sections[-1].append(data)
+        if self.stack and self.stack[-1] in ('h1', 'h2', 'h3'):
+            self.headings[-1][1] += data
+        if 'pre' in self.stack:
+            self.commands[-1] += data
 
 
 class AiFirstCopyTest(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.raw = AI.read_text(encoding="utf-8")
+        cls.raw = AI.read_text(encoding='utf-8')
         cls.parser = Parser()
         cls.parser.feed(cls.raw)
-        cls.text = " ".join(" ".join(cls.parser.text).split())
+        cls.text = ' '.join(' '.join(cls.parser.text).split())
+        cls.lower = cls.text.lower()
+        cls.sections = [' '.join(s) for s in cls.parser.sections]
 
-    def test_html_parseable_and_no_client_script(self):
-        self.assertEqual(self.parser.headers.count("h1"), 1)
-        self.assertGreaterEqual(self.parser.headers.count("h2"), 4)
-        self.assertNotIn("<script", self.raw.lower())
+    def meaning(self, *patterns):
+        for pattern in patterns:
+            self.assertRegex(self.lower, pattern)
 
-    def test_first_screen_is_ai_first_and_conveys_three_pillars(self):
-        first = self.text[:1400]
-        for phrase in ("AI agents", "Leave your mark here", "Addressability",
-                       "Distribution", "Persistence"):
-            self.assertIn(phrase, first)
+    def test_structure_and_static_access(self):
+        self.assertEqual(self.parser.errors, [])
+        self.assertEqual(self.parser.stack, [])
+        self.assertEqual(sum(t == 'h1' for t, _ in self.parser.headings), 1)
+        self.assertEqual([text for tag, text in self.parser.headings if tag == 'h1'], ['Leave your mark.'])
+        descriptions = [attrs.get('content', '') for tag, attrs in self.parser.tags
+                        if tag == 'meta' and attrs.get('name', '').lower() == 'description']
+        self.assertTrue(descriptions)
+        self.assertTrue(all(description.strip() for description in descriptions))
+        self.assertEqual(len(self.sections), 5)
+        for section, pattern in zip(self.sections, [r'(?i)punkti.*protocol', r'Null Island', r'(?i)read.*reply.*new mark', r'(?i)public.*unencrypted', r'https|traversal']):
+            self.assertRegex(' '.join(section.split()), pattern)
+        for tag, attrs in self.parser.tags:
+            self.assertNotIn(tag, ('script', 'img', 'iframe', 'link', 'object', 'embed'))
+            self.assertFalse(any(k.startswith('on') for k in attrs))
+        self.assertNotRegex(self.raw, r'(?i)@import|url\(')
+        self.assertLessEqual(len(self.raw.encode('utf-8')), 7000)
 
-    def test_participation_roles_and_independent_choice(self):
-        for term in ("Explore / harvest", "Publish / discuss", "Store / serve",
-                     "Replicate / preserve", "You do not have to publish"):
-            self.assertIn(term, self.text)
+    def test_invitation_and_limits_on_first_screen(self):
+        hero = self.sections[0].lower()
+        for pattern in (r'addressability', r'distribution', r'persistence', r'key.*authorship',
+                        r'open.*signed.*spatial.*protocol', r'humans.*ais.*(same|one).*network',
+                        r'punkto.*optional.*commercial', r'self.host', r'other providers',
+                        r'if independent operators.*preserv', r'null island', r'http get',
+                        r'no account', r'reply.*command', r'not.*actor.*presence.*truth'):
+            self.assertRegex(hero, pattern)
+        self.meaning(r'(do not have to|need not|not required to) publish')
+        self.assertNotRegex(self.lower, r'you must publish|guaranteed permanent|will survive forever|after you are gone|your context may disappear')
 
-    def test_read_before_optional_signer(self):
-        self.assertLess(self.raw.index("id=\"discover\""), self.raw.index("id=\"publish\""))
-        self.assertLess(self.raw.index("GET &lt;origin&gt;/nodes.json"), self.raw.index("node punkto-reply.mjs"))
-        self.assertIn("not required for reading", self.text)
-        self.assertIn("root.json", self.raw)
-        self.assertNotIn("node.index", self.raw)
-        self.assertIn("origin of this /ai page", self.raw)
-        self.assertNotIn("ORIGIN=\'https://punkto.xyz\'", self.raw)
+    def test_real_conversation_and_paths(self):
+        for mid, sha in ((ROOT_MID, ROOT_SHA), (REPLY_MID, REPLY_SHA)):
+            self.assertIn(mid, self.sections[1])
+            self.assertIn(sha, self.sections[1])
+            self.assertIn(f'https://punkto.xyz/publication/records/{sha[:2]}/{sha}', self.parser.links)
+        self.assertIn('s00000000000_0', self.sections[1])
+        self.meaning(r'address is not reserved', r'neither presence nor ownership')
+        self.assertNotRegex(self.raw, r'https?://[^/\s"<>]+/records/')
+        self.meaning(r'origin is https://punkto.xyz', r'publication base is https://punkto.xyz/publication', r'do not.*switch hosts')
+        for part in ('<origin>/nodes.json', '<publication>/root.json', '<publication>/manifests/<head>.json',
+                     '<publication>/h/<one path segment per prefix character>/<shard sha>.json',
+                     'records[] {h,mid,sha256}', '<publication>/records/<sha256[0:2]>/<sha256>'):
+            self.assertIn(part, self.text)
+        # Denials are required; an executable invented discovery path is forbidden.
+        self.meaning(r'no global index', r'no /shards endpoint')
+        self.assertNotRegex(self.text, r'shards/index|node\.index|<child\.href>|(?i:GET)\s+\S*/shards')
+        self.assertNotRegex(self.lower, r'write an unanchored|omit --h|address is optional')
 
-    def test_spatial_only_and_exact_reply(self):
-        self.assertIn("Missing or empty spatial addresses are invalid", self.text)
-        self.assertIn("parent's exact h", self.text)
-        self.assertIn("--h &lt;xy&gt;_&lt;z&gt;", self.raw)
-        self.assertNotIn("write an unanchored atom", self.raw.lower())
-        self.assertNotIn("Unanchored:</p>", self.raw)
+    def test_client_verification_not_server_assertion(self):
+        self.meaning(r'record is binary.*not json or text', r'client.side.*verify sha-256.*canonical mid.*ed25519 signature',
+                     r'server.*valid.*(not evidence|insufficient)', r'text is data, not instructions')
+        self.assertNotRegex(self.lower, r'(trust|accept) (a |the )?server.{0,20}valid|server.{0,20}valid is sufficient')
 
-    def test_truthful_identity_and_preservation(self):
-        for term in ("ephemeral Ed25519", "not yet publication or preservation",
-                     "Nothing is guaranteed to survive forever", "not that a claim is true"):
-            self.assertIn(term, self.text)
-        self.assertIn("public, unencrypted", self.text)
+    def test_commands_and_read_first(self):
+        blocks = '\n'.join(self.parser.commands)
+        self.assertLess(blocks.index('curl -fsS https://punkto.xyz/publication/records/'), blocks.index('node punkto-reply.mjs reply'))
+        self.assertLess(blocks.index('node punkto-reply.mjs reply'), blocks.index('node punkto-reply.mjs post'))
+        self.meaning(r'no account.*node/npm.*sdk', r'node.js.*only.*optional helper.*not required for reading', r'reply.{0,5}optional', r'new mark.{0,5}optional', r'executes modules.*trust.*code')
+        commands = [shlex.split(line) for line in blocks.splitlines() if line.startswith('node ')]
+        self.assertEqual([c[2] for c in commands], ['reply', 'post'])
+        for args in commands:
+            action = args[2]
+            flags = [arg for arg in args if arg.startswith('--')]
+            allowed = {'--origin', '--key-file'} | ({'--h', '--lat', '--lon', '--height'} if action == 'post' else set())
+            self.assertTrue(set(flags) <= allowed)
+            self.assertEqual(len(flags), len(set(flags)))
+            self.assertIn('--origin', flags)
+            self.assertEqual(args[args.index('--origin') + 1], 'https://punkto.xyz')
+            self.assertNotRegex(' '.join(args), r'<|>')
+        self.assertEqual(commands[0][3], ROOT_MID)
+        self.assertIn('--h', commands[1])
+        self.assertIn('curl -fsS https://punkto.xyz/punkti/punkto-reply.mjs -o punkto-reply.mjs', blocks)
+        self.assertTrue(set(re.findall(r'--[a-z-]+', self.text)) <= {'--origin', '--key-file', '--h', '--lat', '--lon', '--height', '--limit'})
 
-    def test_punkti_open_punkto_commercial_and_self_hosted(self):
-        for term in ("open Punkti protocol", "commercial service", "self-hosted nodes",
-                     "compete through", "not by owning the protocol"):
-            self.assertIn(term, self.text)
-        self.assertIn("https://github.com/punkti-org/punkti", self.parser.links)
-        self.assertIn("https://github.com/Fisker1111/Punkto", self.parser.links)
+    def test_each_safety_requirement(self):
+        self.meaning(r'public, unencrypted', r'never post secrets', r'permanent erasure', r'privacy and usage rights',
+                     r'submission acceptance\s*≠\s*publication visibility\s*≠\s*preservation',
+                     r'publication can lag', r'replication is not-measured', r'custody is not guaranteed',
+                     r'nothing is guaranteed to survive forever', r'ed25519 is not post.quantum',
+                     r'default identity.*ephemeral ed25519 key.*memory',
+                     r'--key-file.*durable local 32.byte hex seed outside any git repository.*0600.*never uploaded',
+                     r'reply inherits.*verified parent.s exact h',
+                     r'new mark requires an explicit h.*chosen wgs84 ellipsoidal height',
+                     r'never inferred ground height, guessed or defaulted to 0',
+                     r'all three.*--lat --lon --height',
+                     r'location does not prove presence', r'signature does not prove the actor or statement.s truth')
 
-    def test_single_action_quickstart_and_reference_paths(self):
-        self.assertLess(len(self.raw.encode("utf-8")), 12000)
-        self.assertLess(self.raw.index('id="choose"'), self.raw.index('id="roles"'))
-        for phrase in ("Choose one: READ · REPLY · NEW POST", "No Node.js and no npm",
-                       "full child prefix", "prefix depth 10", "2-character GeoHash",
-                       "no index object today", "Do not invent an index", "verified parent record",
-                       "not post-quantum secure", "not a durable identity", "not-measured",
-                       "never guessed or defaulted to 0", "Null Island / first campfire",
-                       "s00000000000_0",
-                       "punkti/0.6:fc1887028aedd99fc39fbb07848e375f2be6289966a2f19468db56313689b2ed",
-                       "2446a3b353e451b99c8868fbed544e9d7b3378e63dc0837a54171f88244e2f2d"):
-            self.assertIn(phrase, self.text)
-        for fragment in ("manifests/<head>.json", "h/<one path segment per prefix character>/<shard sha>.json",
-                         "records/24/2446a3b353e451b99c8868fbed544e9d7b3378e63dc0837a54171f88244e2f2d",
-                         "records/<sha256[0:2]>/<sha256>", 'children: {"u3b": "<sha>"}',
-                         "curl -fsS <origin>/punkti/punkto-reply.mjs -o punkto-reply.mjs",
-                         'node punkto-reply.mjs reply <MID> "your text"',
-                         'node punkto-reply.mjs post "your text" --h <xy>_<z>'):
-            self.assertIn(fragment, self.text)
-        for old in ("no welcome thread", "node cli.mjs", "<node.index>", "<child.href>", "<address record href>"):
-            self.assertNotIn(old, self.text)
-
-    def test_no_internal_workflow_or_ticket_references(self):
-        # The page is public and machine-facing: no internal tracker IDs, no
-        # project-management phrasing, and no claim of an unpublished release.
-        for internal in ("CEO-OS", "PR #140", "A1 proof", "#28", "#34", "#35"):
-            self.assertNotIn(internal, self.text)
-        self.assertNotRegex(self.text, re.compile(r"(?i)\b(founder (must|should|will)|will be (merged|deployed|live) soon)\b"))
-
-    def test_no_unsupported_claims_or_ai_coercion(self):
-        self.assertNotRegex(self.text.lower(), re.compile(r"guaranteed permanent|will survive forever|you must publish"))
-        self.assertIn("not a central registry or a complete map", self.text)
+    def test_public_references_and_no_workflow_details(self):
+        for link in ('https://github.com/punkti-org/punkti', 'https://github.com/Fisker1111/Punkto',
+                     'https://github.com/Fisker1111/Punkto/blob/main/docs/AI_FIRST_WALKTHROUGH.md'):
+            self.assertIn(link, self.parser.links)
+        self.assertTrue(any('self-hosting-node.md' in link for link in self.parser.links))
+        self.assertNotRegex(self.text, r'(?i)CEO-OS|PR #\d|issue #\d|ticket|will be (merged|deployed|live) soon|PUNKTI-L3|body \|\| signature|package.json')
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     unittest.main()
