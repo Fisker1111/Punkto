@@ -176,8 +176,10 @@ print(json.dumps(dict(records=results, skipped=skipped)))
   if (decoded[0]) assert.deepEqual(decoded[0].atom.refs, []);
   if (decoded[1]) assert.deepEqual(decoded[1].atom.refs, [{ target: mids[0], rel: 'reply' }]);
   if (decoded[1]) assert.equal(JSON.parse(decoded[1].atom.x).text, 'Hello from a new AI');
-  assert.match(text, /no global index and no \/shards endpoint/);
-  assert.doesNotMatch(lines.filter(l => l.startsWith('GET ')).join('\n'), /\/shards/);
+  assert.doesNotMatch(text, /manifests\/|\/shards|<child\.href>|<sha256[^>]*>|<publication>|<origin>/i);
+  assert.ok(lines.every(line => !/^\s*(?:→\s*)?GET /.test(line)));
+  assert.match(text, /nodes\.json/);
+  assert.ok(html.includes('href="https://github.com/Fisker1111/Punkto/blob/main/docs/AI_FIRST_WALKTHROUGH.md"'));
   if (!skipped.length) console.log('Comprehension (c): PASS — both live records: SHA-256, canonical MID, Ed25519 and exact reply reference verified client-side; corrupted hashes/signatures rejected');
 
   console.log(skipped.length

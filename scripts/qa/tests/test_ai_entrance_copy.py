@@ -100,13 +100,23 @@ class AiFirstCopyTest(unittest.TestCase):
         self.assertIn('s00000000000_0', self.sections[1])
         self.meaning(r'address is not reserved', r'neither presence nor ownership')
         self.assertNotRegex(self.raw, r'https?://[^/\s"<>]+/records/')
-        self.meaning(r'origin is https://punkto.xyz', r'publication base is https://punkto.xyz/publication', r'do not.*switch hosts')
-        for part in ('<origin>/nodes.json', '<publication>/root.json', '<publication>/manifests/<head>.json',
-                     '<publication>/h/<one path segment per prefix character>/<shard sha>.json',
-                     'records[] {h,mid,sha256}', '<publication>/records/<sha256[0:2]>/<sha256>'):
-            self.assertIn(part, self.text)
-        # Denials are required; an executable invented discovery path is forbidden.
-        self.meaning(r'no global index', r'no /shards endpoint')
+        walkthrough = 'https://github.com/Fisker1111/Punkto/blob/main/docs/AI_FIRST_WALKTHROUGH.md'
+        self.assertIn(walkthrough, self.parser.links)
+        self.assertIn('nodes.json', self.sections[2])
+        actions = re.findall(r'<section\b[^>]*>(.*?)</section>', self.raw, re.S)[2]
+        read = actions.split('<h3 id="read">', 1)[1].split('<h3 id="reply">', 1)[0]
+        pointer_blocks = [p for p in re.findall(r'<p>(.*?)</p>', read, re.S)
+                          if 'nodes.json' in p]
+        self.assertEqual(len(pointer_blocks), 1)
+        pointer = Parser()
+        pointer.feed(pointer_blocks[0])
+        self.assertEqual(pointer.links, [walkthrough])
+        self.assertRegex(pointer_blocks[0], r'>advanced walkthrough</a>')
+        sentence = ' '.join(' '.join(pointer.text).split())
+        self.assertLessEqual(len(sentence), 160)
+        self.assertRegex(sentence, r'^[^.!?]*nodes\.json[^.!?]*[.]$')
+        self.assertNotRegex(self.lower, r'root\.json|manifests/|shards|node\.index|<child\.href>|<sha256[^>]*>|<publication>|<origin>')
+        self.assertNotRegex('\n'.join(self.parser.commands), r'(?m)^\s*(?:→\s*)?GET ')
         self.assertNotRegex(self.text, r'shards/index|node\.index|<child\.href>|(?i:GET)\s+\S*/shards')
         self.assertNotRegex(self.lower, r'write an unanchored|omit --h|address is optional')
 
