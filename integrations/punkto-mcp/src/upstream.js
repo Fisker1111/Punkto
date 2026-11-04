@@ -88,6 +88,8 @@ export function createUpstream({ origin, fetchImpl = globalThis.fetch, budget = 
             const response = await fetchImpl(address, { method: 'GET', redirect: 'manual', signal: AbortSignal.timeout(4000) });
             if (response.status >= 300 && response.status < 400) fail('upstream_redirect_refused', 'Publication redirects are refused.');
             if (response.status === 404) fail('upstream_missing_object', 'Required publication object is missing.');
+            // Rate limits do not trigger fallback: only transport failures and 5xx do.
+            if (response.status === 429) fail('upstream_unavailable', 'Publication rate limited; retry later.');
             if (response.status >= 500) throw new ToolError('upstream_unavailable', 'Publication origin unavailable; retry later.', true);
             if (!response.ok) fail('upstream_unavailable', 'Publication origin rejected the request.');
             bytes = await boundedBytes(response);

@@ -1,0 +1,26 @@
+{
+  "captured_at": "2026-11-04T13:44:12.089868+00:00",
+  "origin": "https://punkto.xyz",
+  "live_root": {
+    "head": "c77ba862be21e00d37bdc62f35bac7359d09698d19cd4ef8b2ce5be33ff0a9e5",
+    "seq": 14,
+    "v": "punkti/pub/0.6"
+  },
+  "trimmed": false,
+  "captured_objects_sha256": {
+    "/publication/root.json": "82805115e90e63baf5cc4ba3915ce3dda6709f699451650e579f58175f638412",
+    "/publication/manifests/c77ba862be21e00d37bdc62f35bac7359d09698d19cd4ef8b2ce5be33ff0a9e5.json": "c77ba862be21e00d37bdc62f35bac7359d09698d19cd4ef8b2ce5be33ff0a9e5",
+    "/publication/h/s/0/f23154c7d7ddc99f7034c78f16f7121a9d17369ab1f96934697e2ba6af35ca11.json": "f23154c7d7ddc99f7034c78f16f7121a9d17369ab1f96934697e2ba6af35ca11",
+    "/publication/h/s/0/0/d448a4a0ae0058454a593a66935c24e28bbe9e68b0e6c4504d6bd06a88f82b51.json": "d448a4a0ae0058454a593a66935c24e28bbe9e68b0e6c4504d6bd06a88f82b51",
+    "/publication/h/s/0/0/0/daf242cfc1f3f44866b08698a0e7949ffcdc649888d77813d1a986503af183de.json": "daf242cfc1f3f44866b08698a0e7949ffcdc649888d77813d1a986503af183de",
+    "/publication/h/s/0/0/0/0/df683f8c4688a39c1faf78d0894780b3da8fe71a5258370f70702a3a0e3be24a.json": "df683f8c4688a39c1faf78d0894780b3da8fe71a5258370f70702a3a0e3be24a",
+    "/publication/h/s/0/0/0/0/0/81e1bdf8e8ac95b26ed5b30f9d381f5655c41ff33999f0b695a52c95dd05c499.json": "81e1bdf8e8ac95b26ed5b30f9d381f5655c41ff33999f0b695a52c95dd05c499",
+    "/publication/h/s/0/0/0/0/0/0/e14d19f56784cd23e274661352818e331d5c98bc4480cebb9593f0f424fd0add.json": "e14d19f56784cd23e274661352818e331d5c98bc4480cebb9593f0f424fd0add",
+    "/publication/h/s/0/0/0/0/0/0/0/ebbadc6830e94f204db8de5fed5fb0db1582775cc9d43b043258b0633f3687b6.json": "ebbadc6830e94f204db8de5fed5fb0db1582775cc9d43b043258b0633f3687b6",
+    "/publication/h/s/0/0/0/0/0/0/0/0/f8ed7456d182a5f5d5fb4cf67ebe8e25a85af237dfa02b7ec977207b6ff5dfef.json": "f8ed7456d182a5f5d5fb4cf67ebe8e25a85af237dfa02b7ec977207b6ff5dfef",
+    "/publication/h/s/0/0/0/0/0/0/0/0/0/acd20c49dcb897d3cbfc7decdbe73a3b3174fdd0226a198540a1653fef6fb190.json": "acd20c49dcb897d3cbfc7decdbe73a3b3174fdd0226a198540a1653fef6fb190",
+    "/publication/records/0c/0c7259dac68a6f3bab62f0f57691d586aec4955d173cb7103bd37f85a8e0169b": "0c7259dac68a6f3bab62f0f57691d586aec4955d173cb7103bd37f85a8e0169b",
+    "/publication/records/24/2446a3b353e451b99c8868fbed544e9d7b3378e63dc0837a54171f88244e2f2d": "2446a3b353e451b99c8868fbed544e9d7b3378e63dc0837a54171f88244e2f2d"
+  },
+  "note": "GET only; digest integrity checked; no signature validation performed."
+}

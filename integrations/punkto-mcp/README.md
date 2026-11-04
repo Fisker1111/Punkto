@@ -6,6 +6,8 @@ This read-only, stateless Worker serves only `POST /mcp` using Agents' default M
 host/CORS handling. It fetches only publication objects from `https://punkto.xyz`,
 falling back to `https://test2.punkto.xyz` only after transport failures (including
 timeouts) or 5xx. Missing objects, redirects and digest failures do not trigger fallback.
+HTTP 429 deliberately returns `upstream_unavailable` with “Publication rate limited;
+retry later.” without retry or fallback, and never includes the upstream body.
 
 Connection URL shape: `https://<worker>.<subdomain>.workers.dev/mcp`.
 
@@ -42,28 +44,62 @@ objects use the optional Workers Cache API; `root.json` is never cached.
 
 From this directory, use `npm ci`, `npm test`, or `npm run dev`. Tests use Node's
 built-in runner and the real `createMcpHandler` with Requests and a stub execution
-context; **all upstream responses are offline mocks**. Fixtures are local static
-publication objects with inert zero-filled signature/public-key framing, not
-signature-valid records or credentials. No local workerd test fallback is needed.
-The final test prints `process.cpuUsage()` measurements around each tool invocation,
-fetch counts, pretty-JSON character counts and rough tokens (`chars/4`). These include
-local mock/Node runtime overhead, exclude network waiting, and are **not Cloudflare
-Free's 10 ms measurement**. Live Workers metrics require account access.
+context; **all upstream responses are offline mocks**. `npm ci && npm test`
+passed initially with 31 tests; after adding 429 coverage, `npm test` passed on
+Node v26.9.0: 32 tests, 32 passed, 0 failed/cancelled/skipped/todo,
+0 suites (2085.766403 ms). No local workerd test fallback is needed.
 
-One warm local Node 22.23.4 sample (`npm ci && npm test`, 30 passed / 0 failed):
+Local bundle check: `npx wrangler deploy --dry-run --outdir=/tmp/punkto-mcp-dryrun`
+(Wrangler 4.157.0) exited 0: `Total Upload: 1254.73 KiB / gzip: 219.15 KiB`,
+`No bindings found.`, `--dry-run: exiting now.` This is local-only: no upload,
+authentication, or account. It proves the Worker bundles, including cross-directory
+`../../../pwa/punkti/carrier.js` and `spatial.js` imports; it is NOT a Cloudflare
+runtime acceptance test.
 
-| Tool | CPU ms | Fetches | JSON chars | Approx. tokens |
-| --- | ---: | ---: | ---: | ---: |
-| `read_place` (2 records) | 4.571 | 13 | 2024 | 506 |
-| `get_record` | 0.946 | 1 | 945 | 237 |
+The orchestrator's addendum records local workerd (Miniflare) runtime acceptance
+using `npx wrangler dev --local` against live `https://punkto.xyz`: initialize,
+exactly two read-only tools, both real Null Island records (13 fetches, 12 verified
+objects), `get_record` (447 bytes, correct MID), raw base64, limit clamping, typed
+errors and unknown-method handling passed. This was runtime acceptance against
+live publication, not a deployed Cloudflare Workers test. Cold/warm `read_place`
+wall times of 0.41/0.15 s include network wait and are not CPU; local workerd does
+not expose Cloudflare CPU accounting, so the Free 10 ms budget remains UNVERIFIED.
 
-If a client retains the full returned text, all those tokens remain in model
-context until it drops/summarizes them. If it exposes both MCP representations,
-the serialized envelope is 4008 / 1937 characters (~1002 / 485 tokens), before
-outer JSON-RPC overhead. Client behavior determines actual context use. These
-single samples are not performance guarantees; local CPU varies between runs.
-The tests also measured 19 fetches for eight entries, 38 for a late traversal
-fallback, and 40 for a two-attempt client stress case.
+Fixtures were captured using GET only from `https://punkto.xyz/publication/` at
+2026-11-04T13:44:12.089868+00:00 by `python3 scripts/capture-fixtures.py`.
+The live root (seq 14, head `c77ba862be21e00d37bdc62f35bac7359d09698d19cd4ef8b2ce5be33ff0a9e5`),
+its manifest, nine shards (`s0` through `s000000000`), and both Null Island raw
+records are byte-identical captures. The leaf already contained exactly those two
+records; no trimming or rehashing was necessary. Full paths and SHA-256 hashes are
+in [provenance.json](test/fixtures/provenance.json). Record digests:
+- ROOT: `2446a3b353e451b99c8868fbed544e9d7b3378e63dc0837a54171f88244e2f2d`
+- REPLY: `0c7259dac68a6f3bab62f0f57691d586aec4955d173cb7103bd37f85a8e0169b`
+
+These contain published public keys/signatures; no `validate()` call or signature
+verification is performed. Injection coverage generates a separate inline record.
+The capture utility is an explicit online maintenance command, never a test step.
+
+The final test measures 30 uncached invocations per tool with `process.cpuUsage()`;
+no samples are discarded. Median is the middle-pair average; p95 is nearest-rank.
+Measurements include process-wide Node/mock overhead and exclude network waiting.
+All samples and response sizes are in [measurements.json](test/measurements.json).
+
+| Tool | Runs | Min CPU ms | Median | p95 | Max | >10 ms | Fetches per run |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| `read_place` (2 records) | 30 | 3.154 | 5.161 | 14.036 | 18.006 | 3 | 13 |
+| `get_record` | 30 | 0.594 | 0.817 | 1.44 | 2.479 | 0 | 1 |
+
+A local Node measurement is **NOT the Cloudflare Free 10 ms limit measurement**.
+Live Workers CPU metrics require a Cloudflare account that is not authorized here;
+the **10 ms budget is UNVERIFIED**. In this run 3/30 `read_place` samples exceeded
+10 ms. These measurements are not performance guarantees.
+
+Pretty JSON sizes were 2227 / 1180 characters (~557 / 295 tokens, chars/4 rounded
+up) for `read_place` / `get_record`. If retained, all those tokens stay in model
+context until discarded/summarized. Exposing both MCP representations yields
+4418 / 2411 serialized characters (~1105 / 603 tokens), before JSON-RPC overhead.
+Tests also measured 19 fetches for eight entries, 38 for a late traversal fallback,
+and 40 for a two-attempt client stress case.
 
 For deployment, the operator runs `npx wrangler login` with their own Cloudflare
 account (credentials stay outside git), then `npx wrangler deploy` here to obtain a
