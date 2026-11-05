@@ -13,6 +13,9 @@ Connection URL shape: `https://<worker>.<subdomain>.workers.dev/mcp`.
 
 **deployment: not-done — Cloudflare account access required**
 
+The manual GitHub Actions pipeline is **PREPARED**. Nothing is deployed by this
+change and no deployment has been attempted.
+
 ## Tools
 
 - `read_place({ h?, limit? })`: canonical `xy_z`, default `s00000000000_0`;
@@ -101,10 +104,62 @@ context until discarded/summarized. Exposing both MCP representations yields
 Tests also measured 19 fetches for eight entries, 38 for a late traversal fallback,
 and 40 for a two-attempt client stress case.
 
-For deployment, the operator runs `npx wrangler login` with their own Cloudflare
-account (credentials stay outside git), then `npx wrangler deploy` here to obtain a
-`workers.dev` URL. Rollback: `npx wrangler versions list`, then `npx wrangler rollback`,
-or redeploy the previous revision. No deployment has been attempted.
+## Deploy (manual GitHub Actions)
+
+1. In Cloudflare, the Founder must manually create the placeholder Worker
+   **`punkto-mcp`** first. A per-Worker Editor token cannot create a Worker.
+2. Create an account API token with the granular role selection:
+   **Account API Tokens → Specified Workers → `punkto-mcp` → Editor**.
+   This must NOT be a Product-wide Admin / account-wide token. It grants no DNS
+   route or custom-domain access. See Cloudflare's
+   [Worker authorization](https://developers.cloudflare.com/workers/authorization/workers/)
+   and [GitHub Actions deployment](https://developers.cloudflare.com/workers/ci-cd/external-cicd/github-actions/)
+   documentation.
+3. In GitHub **Settings → Environments**, create **`cloudflare-mcp-free`**.
+   For approval and branch protection, configure required reviewers and deployment
+   branch rules allowing only the default branch; these optional environment
+   protections must be configured by the Founder in repository settings.
+   Under **Settings → Secrets and variables → Actions**, add the repository
+   secret **`CLOUDFLARE_API_TOKEN`**. Add **`CLOUDFLARE_ACCOUNT_ID`** as a repository
+   Actions variable, or as a secret of the same name. The variable takes precedence
+   if both are set. Keep the token only in GitHub Actions secrets, never in git,
+   logs, comments, or chat.
+
+Once this workflow is available on the repository's default branch, select
+**Actions → Punkto MCP deploy (manual) → Run workflow → choose the default
+branch → Run**. The deploy job only runs from the default branch; runs from any
+other ref are skipped. There are no automatic deployments. Concurrent manual
+deploys cannot overlap.
+
+The workflow runs **`npm ci` → `npm test` → dry-run bundling → deploy**, using
+Node 22 and local Wrangler 4.157.0 pinned by the committed lockfile through
+`npx --no-install`. The dry-run needs no Cloudflare authentication. Only the final
+deploy step receives credentials. The token never leaves GitHub Actions except
+for authentication to Cloudflare; it is not printed or placed in step summaries.
+The existing `workers_dev` configuration stays unchanged, with no custom domain,
+DNS route, or paid bindings.
+
+After a successful deploy, Wrangler prints the `workers.dev` URL. Use the actual
+subdomain from that output; the MCP endpoint is
+`https://punkto-mcp.<subdomain>.workers.dev/mcp`. Verify it with this POST request,
+replacing `<subdomain>` with that actual subdomain:
+
+```bash
+curl --fail-with-body 'https://punkto-mcp.<subdomain>.workers.dev/mcp' \
+  -H 'Content-Type: application/json' \
+  -H 'Accept: application/json, text/event-stream' \
+  --data '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-03-26","capabilities":{},"clientInfo":{"name":"deployment-check","version":"1.0.0"}}}'
+```
+
+Check for a successful MCP initialize response. A deployed Workers Free CPU
+measurement is still **UNVERIFIED**: local Node CPU numbers are not Cloudflare's
+10 ms metric. Deployment and initialization alone do not prove that budget is met.
+
+Rollback is not automated through this workflow. An operator with their own
+Cloudflare access can run `npx --no-install wrangler versions list`, then
+`npx --no-install wrangler rollback` from this directory, or redeploy a reviewed
+previous revision. The GitHub Actions token must not be copied out for local use.
+This change only prepares the pipeline; no deployment has been attempted.
 
 ## What this does not prove
 

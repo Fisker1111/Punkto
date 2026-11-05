@@ -1,0 +1,32 @@
+name: Punkto MCP deploy (manual)
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: punkto-mcp-deploy
+  cancel-in-progress: false
+jobs:
+  deploy:
+    if: ${{ github.ref == format('refs/heads/{0}', github.event.repository.default_branch) }}
+    runs-on: ubuntu-latest
+    environment: cloudflare-mcp-free
+    defaults:
+      run:
+        working-directory: integrations/punkto-mcp
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: integrations/punkto-mcp/package-lock.json
+      - run: npm ci
+      - run: npm test
+      # Use Wrangler pinned by package-lock.json; never fetch a floating version.
+      - run: npx --no-install wrangler deploy --dry-run --outdir=wrangler-dryrun
+      - run: npx --no-install wrangler deploy
+        # Only the real deploy step receives Cloudflare credentials.
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID || secrets.CLOUDFLARE_ACCOUNT_ID }}
