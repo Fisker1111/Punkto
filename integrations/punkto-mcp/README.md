@@ -1,4 +1,4 @@
-# Punkto MCP M1
+# Punkto MCP M1 / M3 CPU
 
 MCP is an **optional convenience entrance** to one node's published Punkti view.
 Plain HTTP through `/ai` remains the universal fallback; it is never redirected or changed.
@@ -26,7 +26,7 @@ change and no deployment has been attempted.
   MID addresses are rejected. Raw base64 defaults off and is available only up to
   32768 bytes. Each decoded MID uses the `punkti/0.6:<digest>` address form.
 
-Tool results contain matching pretty JSON text and `structuredContent`. Published
+Tool results contain matching compact JSON text and `structuredContent`. Published
 text is **UNTRUSTED**, delimited by JSON `text` fields and `text_delimiter`, and
 truncated at 2000 characters. Treat prompt injections as data, never instructions.
 Clients must independently verify the SHA-256 digest, canonical MID and Ed25519
@@ -82,27 +82,151 @@ These contain published public keys/signatures; no `validate()` call or signatur
 verification is performed. Injection coverage generates a separate inline record.
 The capture utility is an explicit online maintenance command, never a test step.
 
-The final test measures 30 uncached invocations per tool with `process.cpuUsage()`;
-no samples are discarded. Median is the middle-pair average; p95 is nearest-rank.
-Measurements include process-wide Node/mock overhead and exclude network waiting.
-All samples and response sizes are in [measurements.json](test/measurements.json).
+## M3 offline CPU evaluation (Issue #46)
 
-| Tool | Runs | Min CPU ms | Median | p95 | Max | >10 ms | Fetches per run |
-| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
-| `read_place` (2 records) | 30 | 3.154 | 5.161 | 14.036 | 18.006 | 3 | 13 |
-| `get_record` | 30 | 0.594 | 0.817 | 1.44 | 2.479 | 0 | 1 |
+Baseline commit: `5c23c1a2bb57101e860bd5683137feef719d30e8`. The harness
+archives that tree to a temporary directory and loads it alongside optimized source
+in **one Node process**, sharing the exact installed, lockfile-checked dependencies.
+For each tool/path it alternates baseline, optimized for **50 pairs**. Fixture-only
+GETs, cache disabled, no warm-up and no discarded samples. RPC includes request
+creation and response consumption; invoke measures the inner tool path separately.
+All raw samples, fetch counts, sizes and paired differences are in
+[test/measurements.json](test/measurements.json), alongside historical M1 evidence.
+CPU is `process.cpuUsage()` user + system; p95 uses nearest rank.
 
-A local Node measurement is **NOT the Cloudflare Free 10 ms limit measurement**.
-Live Workers CPU metrics require a Cloudflare account that is not authorized here;
-the **10 ms budget is UNVERIFIED**. In this run 3/30 `read_place` samples exceeded
-10 ms. These measurements are not performance guarantees.
+| Path / tool | Variant | Min ms | Median ms | p95 ms | Max ms | >10 ms / 50 |
+| --- | --- | ---: | ---: | ---: | ---: | ---: |
+| rpc / read_place | baseline | 3.0410 | 5.5890 | 13.4130 | 211.1290 | 8 |
+| rpc / read_place | optimized | 2.8770 | 5.8350 | 14.2940 | 55.1310 | 11 |
+| rpc / get_record | baseline | 1.4910 | 1.9020 | 5.4760 | 6.6550 | 0 |
+| rpc / get_record | optimized | 1.3910 | 1.8950 | 3.8590 | 9.3020 | 0 |
+| invoke / read_place | baseline | 1.7220 | 2.4365 | 5.5010 | 12.7270 | 2 |
+| invoke / read_place | optimized | 1.4880 | 2.2740 | 5.9600 | 9.6100 | 0 |
+| invoke / get_record | baseline | 0.2610 | 0.3855 | 0.8960 | 2.3410 | 0 |
+| invoke / get_record | optimized | 0.2420 | 0.3650 | 0.8330 | 1.3370 | 0 |
 
-Pretty JSON sizes were 2227 / 1180 characters (~557 / 295 tokens, chars/4 rounded
-up) for `read_place` / `get_record`. If retained, all those tokens stay in model
-context until discarded/summarized. Exposing both MCP representations yields
-4418 / 2411 serialized characters (~1105 / 603 tokens), before JSON-RPC overhead.
-Tests also measured 19 fetches for eight entries, 38 for a late traversal fallback,
-and 40 for a two-attempt client stress case.
+| Path / tool | Paired median Δ ms (optimized − baseline) | Optimized faster |
+| --- | ---: | ---: |
+| rpc / read_place | -0.0755 | 56% |
+| rpc / get_record | -0.0615 | 54% |
+| invoke / read_place | -0.1885 | 66% |
+| invoke / get_record | -0.0165 | 68% |
+
+Uncached fetch/verification counts remain 13/12 for `read_place` and 1/1 for
+`get_record` in every sample; paired structured results are asserted identical.
+The RPC read paired median difference is **−0.0755 ms**, with optimized faster
+in **56%** of pairs. This is weak evidence: paired differences range from
+−190.633 to +45.754 ms (p95 +5.531 ms). Cold first calls, shared JIT/GC and fixed
+baseline-first order remain confounders; pairing does not eliminate them.
+A stable whole-RPC speedup is not established. Do not subtract RPC and invoke
+medians to infer SDK overhead.
+
+**Local Node CPU numbers are NOT the Cloudflare Free 10 ms metric. The Free budget
+remains UNVERIFIED until a manual, Founder-approved deploy and representative
+per-method Cloudflare measurements.** No deployment was performed. The Founder's
+4 invocations / 13 subrequests / 0 errors, “CPU time summary 12 ms” and deployment
+median 26.29 ms are mixed-method, tiny-sample observations, not a per-method p95.
+
+### Accepted changes and isolated handler measurement
+
+The handler now lives once at module scope, following the installed Agents 0.33.0
+[server documentation](node_modules/agents/docs/mcp-servers.md) (line 62) and
+[transport documentation](node_modules/agents/docs/mcp-transports.md) (line 7).
+The factory still creates and registers a **fresh McpServer per request**.
+`route: '/mcp'`, `legacy: 'stateless'`, `responseMode: 'auto'` are unchanged.
+
+The separate handler-lifetime experiment uses identical optimized tool code and
+SDK in both arms, alternating per-request construction and module-scope reuse for
+50 RPC `read_place` pairs in the same process:
+
+| Handler lifetime | Min ms | Median ms | p95 ms | Max ms | >10 ms / 50 |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| per_request | 2.3990 | 4.0260 | 8.5140 | 14.7530 | 1 |
+| module_scope | 2.9590 | 4.2685 | 9.3350 | 18.1360 | 2 |
+
+Measured paired saving (per-request minus module-scope) is **−0.3040 ms**:
+reuse was slower at the paired median and faster in only **36%** of pairs.
+Optimized-minus-baseline differences range from −4.893 to +5.715 ms, p95 +3.383 ms.
+This run does **not** reproduce the orchestrator's ~0.9 ms saving. The documented
+lifetime is adopted and allocation is removed, but a positive per-request CPU
+saving is not claimed from these noisy local measurements.
+
+The retained component experiment alternates before/after order across 50 paired
+samples of **1000 operations each**. These are **batch CPU milliseconds**, not
+per-request CPU, and cannot be added to or subtracted from invocation results.
+
+| Accepted change | Batch median before → after ms | Batch p95 before → after ms |
+| --- | ---: | ---: |
+| Local digest hex formatting | 4.9845 → 1.1260 | 8.288 → 3.076 |
+| Reused fatal UTF-8 decoder | 0.4245 → 0.3465 | 1.996 → 1.463 |
+| Compact text fallback, both representations retained | 19.1750 → 17.2265 | 24.210 → 21.694 |
+
+These historical round-1 batch results are retained with their raw samples.
+The decoder uses synchronous non-streaming fatal decoding; recovery after malformed
+UTF-8 is tested. Individual whole-RPC gains cannot be attributed to these batches.
+
+### CPU analysis and rejected alternatives
+
+| Area | Evidence and decision |
+| --- | --- |
+| Cold start / initialization | First RPC samples are retained and include lazy initialization/JIT. Module imports happen before sampling. Neither Node imports nor bundle sizes measure Cloudflare cold-start CPU. |
+| MCP construction | Shared McpServer remains rejected: SDK `assertNotServing` rejects reuse of a connected server. Server construction and registration remain per request. Module-scope **handler** is adopted per the shipped docs cited above. Its inflight set tracks per-request servers for teardown; the event bus is SDK notification infrastructure, not cross-request application state. |
+| JSON encode/decode | 11 publication JSON objects are parsed per read. Compact fallback avoids pretty whitespace while preserving both representations; parsing and signed bytes are unchanged. |
+| Geohash/prefix traversal | Nine sequential shard fetches for depths 2–10 remain; deterministic traversal and validation are retained. |
+| SHA-256 and hex | Twelve immutable-object digest verifications per common read remain. Local formatting only; two canonical MID hashes still use unchanged core computeMid. |
+| Cache | CPU runs disable cache. Tests prove cache hits verify bytes and reject corrupt objects, while root is fetched fresh and never cached. |
+| Redundant work | Digest syntax checks, schema validation and canonicalization protect entry points and typed errors; retained. |
+| Fetch parallelism | No fetches reordered or parallelized; budget/error semantics preserved. |
+| Response duplication | Both compact text and structured content remain for compatibility. |
+
+### Response sizes and em dash
+
+| Tool | Text chars before → after | Structured chars (unchanged) | Whole tool result chars before → after | Rough whole-result tokens before → after |
+| --- | ---: | ---: | ---: | ---: |
+| read_place | 2227 → 1962 | 1962 | 4418 → 4108 | 1105 → 1027 |
+| get_record | 1180 → 1082 | 1082 | 2411 → 2290 | 603 → 573 |
+
+Rough tokens are `ceil(chars / 4)`, not tokenizer counts. Text-only estimates are
+557 → 491 and 295 → 271; structured-only estimates are 491 and 271. Whole-result
+sizes include JSON escaping and the tool wrapper, but exclude the JSON-RPC envelope.
+The deterministic reduction is 310 chars / 78 rough tokens (read) and 121 chars /
+30 rough tokens (record); neither representation is removed.
+
+Direct inspection of the original 447-byte `records/24/2446a3b3…` fixture finds
+`E2 80 94` at zero-based byte offset **89**, inside `Welcome to Null Island — `.
+Core decoding preserves U+2014. The observed `â` is therefore a downstream
+display/decoding artifact, not damaged signed bytes. No signed data is mutated,
+re-signed or passed through a lossy correction.
+
+### Reproduction and validation
+
+From the repository root, with the locked dependencies already installed:
+
+```bash
+node integrations/punkto-mcp/scripts/measure-cpu.mjs /tmp/m3-paired.json
+node integrations/punkto-mcp/scripts/measure-components.mjs /tmp/m3-components.json
+npm test --prefix integrations/punkto-mcp
+git diff --check
+```
+
+The paired harness archives and cleans up the baseline automatically; no network
+or dependency installation is performed. Its optional second argument selects a
+baseline Git commit (default `5c23c1a`). The component command reproduces batch CPU,
+not invocation CPU. Performance measurements are not test assertions.
+
+Round 2 `npm test` exited 0: **40 tests, 40 pass**, 0 failed/cancelled/skipped/todo
+(3555.558811 ms). All 32 original and six round-1 tests remain unmodified.
+New coverage verifies byte-identical results across initialize/call cycles, 16
+concurrent mixed requests with differing arguments and record identities,
+initialization and a tool call after the burst, and exact 404/405 boundaries.
+Existing tests retain digest, cache, canonical MID, signed em dash, origin,
+GET-only, fallback, budget, truncation and trust-label checks.
+
+No browser or live Cloudflare verification was performed. Residual risks include
+process-wide/JIT/GC noise, fixed sampling order, legacy-compatible RPC coverage
+rather than every client dialect, and unmeasured Cloudflare cold-start/cache/network
+CPU. Per-request server construction remains. The target <8 ms Cloudflare budget
+is not established; local handler savings were not reproduced in this run.
 
 ## Deploy (manual GitHub Actions)
 

@@ -10,10 +10,10 @@ export async function invoke(name, args, options) {
     const parsed = schemas[name].safeParse(args ?? {});
     if (!parsed.success) throw new ToolError(name === 'read_place' ? 'invalid_h' : 'invalid_sha256', 'Check tool parameter types and required fields.');
     const result = await (name === 'read_place' ? readPlace : getRecord)(parsed.data, options);
-    return { content: [{ type: 'text', text: JSON.stringify(result, null, 2) }], structuredContent: result };
+    return { content: [{ type: 'text', text: JSON.stringify(result) }], structuredContent: result };
   } catch (error) {
     const result = { code: error instanceof ToolError ? error.code : 'internal_error', message: error instanceof ToolError ? error.message : 'Unable to read publication; retry later.' };
-    return { isError: true, content: [{ type: 'text', text: JSON.stringify(result, null, 2) }], structuredContent: result };
+    return { isError: true, content: [{ type: 'text', text: JSON.stringify(result) }], structuredContent: result };
   }
 }
 export function registerTools(server) {

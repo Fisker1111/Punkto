@@ -1,12 +1,13 @@
 import { parse_h, xy_key } from '../../../pwa/punkti/spatial.js';
 import { fail, digest, withOrigin } from './upstream.js';
 import { metadata, b64, trust } from './records.js';
+const decoder = new TextDecoder('utf-8', { fatal: true });
 const DEFAULT_H = 's00000000000_0';
 function reference(value) {
   try { return digest(value); } catch { fail('corrupt_object', 'Invalid publication digest reference.'); }
 }
 function json(bytes) {
-  try { const value = JSON.parse(new TextDecoder('utf-8', { fatal: true }).decode(bytes)); if (value && typeof value === 'object' && !Array.isArray(value)) return value; } catch { /* Typed below. */ }
+  try { const value = JSON.parse(decoder.decode(bytes)); if (value && typeof value === 'object' && !Array.isArray(value)) return value; } catch { /* Typed below. */ }
   fail('corrupt_object', 'Invalid publication JSON object.');
 }
 export async function readPlace({ h = DEFAULT_H, limit = 4 } = {}, options) {

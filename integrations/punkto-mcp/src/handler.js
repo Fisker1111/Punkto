@@ -8,3 +8,7 @@ export function createHandler() {
     return server;
   }, { route: '/mcp', legacy: 'stateless', responseMode: 'auto' });
 }
+
+// Agents documents one handler per module, with a fresh server from the factory
+// for every request (docs/mcp-servers.md and docs/mcp-transports.md).
+export const handler = createHandler();
