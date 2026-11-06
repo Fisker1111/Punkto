@@ -1,0 +1,72 @@
+name: Read-only Cloudflare zone probe
+
+on:
+  push:
+    branches: [chore/m5-cf-zone-probe]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: GET Cloudflare zones and accounts
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        shell: bash
+        run: |
+          set +x
+          mkdir -p "$RUNNER_TEMP/cf-zone-probe"
+          failed=0
+          for domain in punkto.xyz punkti.xyz; do
+            curl -sS --get 'https://api.cloudflare.com/client/v4/zones' \
+              --data-urlencode "name=$domain" \
+              -H "Authorization: Bearer ${CLOUDFLARE_API_TOKEN}" \
+              -H 'Content-Type: application/json' \
+              --connect-timeout 15 --max-time 60 \
+              --output "$RUNNER_TEMP/cf-zone-probe/$domain.json" 2>/dev/null || failed=1
+          done
+          curl -sS --get 'https://api.cloudflare.com/client/v4/accounts' \
+            -H "Authorization: Bearer ${CLOUDFLARE_API_TOKEN}" \
+            -H 'Content-Type: application/json' \
+            --connect-timeout 15 --max-time 60 \
+            --output "$RUNNER_TEMP/cf-zone-probe/accounts.json" 2>/dev/null || failed=1
+          exit "$failed"
+      - name: Print allowlisted results and enforce API success
+        if: always()
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        shell: bash
+        run: |
+          set +x
+          failed=0
+          for target in punkto.xyz punkti.xyz accounts; do
+            printf '%s\n' "$target"
+            file="$RUNNER_TEMP/cf-zone-probe/$target.json"
+            if ! jq -e 'type == "object" and (.success | type == "boolean")' "$file" >/dev/null 2>&1; then
+              printf '%s\n' '{"success":false,"errors":[{"message":"Missing or invalid API response"}]}'
+              failed=1
+              continue
+            fi
+            jq --arg target "$target" '
+              {success, errors: [.errors[]? | {code, message}]} +
+              (if $target == "accounts" then
+                {accounts: [.result[]? | {name, id}]}
+              else
+                {zones: [.result[]? | {name, id, status, paused, type, name_servers}]}
+              end)
+              | walk(if type == "string" and (env.CLOUDFLARE_API_TOKEN | length) > 0
+                then split(env.CLOUDFLARE_API_TOKEN) | join("[REDACTED]") else . end)
+            ' "$file" || failed=1
+            if jq -e '.success == true and (.result | type == "array")' "$file" >/dev/null; then
+              if [ "$target" != accounts ]; then
+                printf 'ZONE_COUNT: %s\n' "$(jq '.result | length' "$file")"
+              fi
+            else
+              failed=1
+            fi
+          done
+          exit "$failed"
