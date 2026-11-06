@@ -1,4 +1,4 @@
-import { sha256Hex } from '../../../pwa/punkti/carrier.js';
+import { sha256Hex } from './hash.js';
 
 export const FETCH_BUDGET = 20;
 export const ORIGINS = Object.freeze(['https://punkto.xyz', 'https://test2.punkto.xyz']);
