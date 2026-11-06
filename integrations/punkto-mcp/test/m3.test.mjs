@@ -123,3 +123,42 @@ test('M3 sequential initialize/call cycles and concurrent requests are isolated'
   const results = await Promise.all(Array.from({ length: 8 }, (_, i) => rpc(`burst-${i}`, 'tools/call', i % 2 ? { name: 'get_record', arguments: { sha256 } } : params)));
   results.forEach((result, i) => assert.deepEqual(result, i % 2 ? expectedRecord : first));
 });
+
+test('M3 module handler preserves result bytes across cycles, mixed burst and reinitialize', async () => {
+  const initialize = id => rpc(id, 'initialize', { protocolVersion: '2025-03-26', capabilities: {}, clientInfo: { name: id, version: '1' } });
+  const cases = [
+    { name: 'read_place', arguments: {} },
+    { name: 'get_record', arguments: { sha256 } },
+    { name: 'read_place', arguments: { limit: 1 } },
+    { name: 'get_record', arguments: { sha256: records.find(([path]) => !path.endsWith(sha256))[0].split('/').at(-1), include_raw: true } },
+  ];
+  const expected = [];
+  for (let cycle = 0; cycle < 2; cycle++) {
+    await initialize(`byte-init-${cycle}`);
+    for (const [i, params] of cases.entries()) {
+      const bytes = JSON.stringify(await rpc(`byte-call-${cycle}-${i}`, 'tools/call', params));
+      if (cycle === 0) expected.push(bytes); else assert.equal(bytes, expected[i]);
+    }
+  }
+  const results = await Promise.all(Array.from({ length: 16 }, (_, i) => rpc(`mixed-${i}`, 'tools/call', cases[i % cases.length])));
+  results.forEach((result, i) => assert.equal(JSON.stringify(result), expected[i % cases.length]));
+  const initialized = await initialize('after-burst');
+  assert.equal(initialized.protocolVersion, '2025-03-26');
+  assert.equal(JSON.stringify(await rpc('after-burst-call', 'tools/call', cases[0])), expected[0]);
+});
+
+test('M3 module handler retains POST-only exact route boundary', async () => {
+  for (const method of ['GET', 'PUT', 'DELETE', 'OPTIONS', 'HEAD']) {
+    const response = await worker.fetch(new Request('https://unit.workers.dev/mcp', { method }), {}, {});
+    assert.equal(response.status, 405);
+    assert.deepEqual(await response.json(), { error: 'method_not_allowed' });
+  }
+  for (const path of ['/', '/mcp/', '/other']) {
+    for (const method of ['POST', 'GET']) {
+      const response = await worker.fetch(new Request(`https://unit.workers.dev${path}`, { method }), {}, {});
+      assert.equal(response.status, 404);
+      assert.deepEqual(await response.json(), { error: 'not_found' });
+    }
+  }
+  assert.deepEqual(calls, []);
+});
