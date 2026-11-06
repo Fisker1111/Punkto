@@ -1,0 +1,7 @@
+{
+  "name": "punkto-mcp",
+  "main": "src/index.js",
+  "compatibility_date": "2026-11-04",
+  "compatibility_flags": ["nodejs_compat"],
+  "workers_dev": true
+}
