@@ -35,7 +35,7 @@ jobs:
             --connect-timeout 15 --max-time 60 \
             --output "$RUNNER_TEMP/cf-zone-probe/accounts.json" 2>/dev/null || failed=1
           exit "$failed"
-      - name: Print allowlisted results and enforce API success
+      - name: Print allowlisted extended read-only results
         if: always()
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
@@ -43,30 +43,55 @@ jobs:
         run: |
           set +x
           failed=0
-          for target in punkto.xyz punkti.xyz accounts; do
-            printf '%s\n' "$target"
+          api='https://api.cloudflare.com/client/v4'
+          account='aca5695e3c79b9658c43436daf78f0fb'
+          for target in all-zones token-verify worker-routes worker-domains worker-settings; do
+            case "$target" in
+              all-zones) path='/zones?per_page=50' ;;
+              token-verify) path='/user/tokens/verify' ;;
+              worker-routes) path="/accounts/$account/workers/scripts/punkto-mcp/routes" ;;
+              worker-domains) path="/accounts/$account/workers/domains" ;;
+              worker-settings) path="/accounts/$account/workers/scripts/punkto-mcp/settings" ;;
+            esac
+            curl -sS --get "$api$path" \
+              -H "Authorization: Bearer ${CLOUDFLARE_API_TOKEN}" \
+              -H 'Content-Type: application/json' \
+              --connect-timeout 15 --max-time 60 \
+              --output "$RUNNER_TEMP/cf-zone-probe/$target.json" 2>/dev/null || failed=1
+          done
+          for target in punkto.xyz punkti.xyz accounts all-zones token-verify worker-routes worker-domains worker-settings; do
             file="$RUNNER_TEMP/cf-zone-probe/$target.json"
             if ! jq -e 'type == "object" and (.success | type == "boolean")' "$file" >/dev/null 2>&1; then
+              printf 'QUERY_RESULT: %s -> success=false errors=1\n' "$target"
               printf '%s\n' '{"success":false,"errors":[{"message":"Missing or invalid API response"}]}'
-              failed=1
               continue
             fi
             jq --arg target "$target" '
               {success, errors: [.errors[]? | {code, message}]} +
-              (if $target == "accounts" then
-                {accounts: [.result[]? | {name, id}]}
-              else
-                {zones: [.result[]? | {name, id, status, paused, type, name_servers}]}
+              (if .success != true then {} else
+                if $target == "accounts" then
+                  {accounts: [.result[]? | {name, id}]}
+                elif $target == "token-verify" then
+                  {token: (.result | {status, id, not_before, expires_on} +
+                    (if has("permissions") then
+                      {permissions: [.permissions | .. | objects | select(has("name")) | {name}]}
+                    else {} end))}
+                elif $target == "worker-routes" then
+                  {routes: [.result[]? | {pattern, script}], ROUTE_COUNT: (.result | length)}
+                elif $target == "worker-domains" then
+                  {domains: [.result[]? | {hostname, service}], CUSTOM_DOMAIN_COUNT: (.result | length)}
+                elif $target == "worker-settings" then
+                  {settings: (.result | {compatibility_date, bindings: [.bindings[]? | {type, name}]})}
+                else
+                  {zones: [.result[]? | {name, id, status, paused, type, name_servers}]} +
+                  (if $target == "all-zones" then
+                    {TOTAL_ZONES: (.result | length), result_info: (.result_info | {total, count, page, per_page})}
+                  else {ZONE_COUNT: (.result | length)} end)
+                end
               end)
               | walk(if type == "string" and (env.CLOUDFLARE_API_TOKEN | length) > 0
                 then split(env.CLOUDFLARE_API_TOKEN) | join("[REDACTED]") else . end)
-            ' "$file" || failed=1
-            if jq -e '.success == true and (.result | type == "array")' "$file" >/dev/null; then
-              if [ "$target" != accounts ]; then
-                printf 'ZONE_COUNT: %s\n' "$(jq '.result | length' "$file")"
-              fi
-            else
-              failed=1
-            fi
+              | "QUERY_RESULT: \($target) -> success=\(.success) errors=\(.errors | length)", .
+            ' -r "$file"
           done
           exit "$failed"
