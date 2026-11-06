@@ -45,13 +45,16 @@ jobs:
           failed=0
           api='https://api.cloudflare.com/client/v4'
           account='aca5695e3c79b9658c43436daf78f0fb'
-          for target in all-zones token-verify worker-routes worker-domains worker-settings; do
+          for target in all-zones token-verify worker-routes worker-domains worker-settings worker-deployments worker-script worker-subdomain; do
             case "$target" in
               all-zones) path='/zones?per_page=50' ;;
               token-verify) path='/user/tokens/verify' ;;
               worker-routes) path="/accounts/$account/workers/scripts/punkto-mcp/routes" ;;
               worker-domains) path="/accounts/$account/workers/domains" ;;
               worker-settings) path="/accounts/$account/workers/scripts/punkto-mcp/settings" ;;
+              worker-deployments) path="/accounts/$account/workers/scripts/punkto-mcp/deployments" ;;
+              worker-script) path="/accounts/$account/workers/scripts/punkto-mcp" ;;
+              worker-subdomain) path="/accounts/$account/workers/scripts/punkto-mcp/subdomain" ;;
             esac
             curl -sS --get "$api$path" \
               -H "Authorization: Bearer ${CLOUDFLARE_API_TOKEN}" \
@@ -59,7 +62,7 @@ jobs:
               --connect-timeout 15 --max-time 60 \
               --output "$RUNNER_TEMP/cf-zone-probe/$target.json" 2>/dev/null || failed=1
           done
-          for target in punkto.xyz punkti.xyz accounts all-zones token-verify worker-routes worker-domains worker-settings; do
+          for target in punkto.xyz punkti.xyz accounts all-zones token-verify worker-routes worker-domains worker-settings worker-deployments worker-script worker-subdomain; do
             file="$RUNNER_TEMP/cf-zone-probe/$target.json"
             if ! jq -e 'type == "object" and (.success | type == "boolean")' "$file" >/dev/null 2>&1; then
               printf 'QUERY_RESULT: %s -> success=false errors=1\n' "$target"
@@ -80,6 +83,15 @@ jobs:
                   {routes: [.result[]? | {pattern, script}], ROUTE_COUNT: (.result | length)}
                 elif $target == "worker-domains" then
                   {domains: [.result[]? | {hostname, service}], CUSTOM_DOMAIN_COUNT: (.result | length)}
+                elif $target == "worker-deployments" then
+                  {DEPLOYMENT_COUNT: (.result.deployments | length),
+                    deployments: [.result.deployments[]? | {id, created_on, source, strategy}]}
+                elif $target == "worker-script" then
+                  {script: (.result | {id, created_on, modified_on, etag, usage_model, logpush}
+                    | with_entries(select(.value != null and
+                      ((.value | type) == "string" or (.value | type) == "number" or (.value | type) == "boolean"))))}
+                elif $target == "worker-subdomain" then
+                  {subdomain: (.result | {subdomain, enabled})}
                 elif $target == "worker-settings" then
                   {settings: (.result | {compatibility_date, bindings: [.bindings[]? | {type, name}]})}
                 else
