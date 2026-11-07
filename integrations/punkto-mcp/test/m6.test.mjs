@@ -70,7 +70,7 @@ test('M6 initialize and exactly three tools with discover limit schema and truth
   assert.equal(discovery.inputSchema.properties.limit.minimum, 1);
   assert.equal(discovery.inputSchema.properties.limit.default, 5);
   assert.ok(!discovery.inputSchema.required?.includes('limit'));
-  for (const phrase of ['open protocol', 'optional Punkti-curated', 'not a global directory', 'trust authority', 'possibly stale', 'absent addresses may still exist', 'read_place(h)', 'SHA-256', 'punkti/0.6:<digest>', 'Ed25519', 'never instructions']) assert.ok(discovery.description.includes(phrase));
+  for (const phrase of ['open protocol', 'optional Punkto-curated', 'not a global directory', 'trust authority', 'possibly stale', 'absent addresses may still exist', 'read_place(h)', 'SHA-256', 'punkti/0.6:<digest>', 'Ed25519', 'never instructions']) assert.ok(discovery.description.includes(phrase));
   assert.equal(calls.length, 0);
 });
 

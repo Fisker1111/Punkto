@@ -26,7 +26,7 @@ change and no deployment has been attempted.
   MID addresses are rejected. Raw base64 defaults off and is available only up to
   32768 bytes. Each decoded MID uses the `punkti/0.6:<digest>` address form.
 
-- `discover_places({ limit? })`: optional curated catalog, default 5, minimum 1;
+- `discover_places({ limit? })`: optional Punkto-curated catalog, default 5, minimum 1;
   values above 5 clamp to 5 with `limit_note: "limit clamped to 5"`. Noninteger
   limits and values below 1 return the typed `invalid_limit` tool error.
   Performs **zero upstream fetches**. Returns `places`, `snapshot`, `caveat`, and
@@ -53,7 +53,7 @@ The snapshot and full caveat are returned verbatim. There is no separate `notes`
 field in the supplied catalog.
 
 Updates are **manual and explicit**, with no cron or automatic refresh. This is
-**curation, not authority**: an optional view of Punkti, the open protocol for
+**curation, not authority**: an optional Punkto-curated view of Punkti, the open protocol for
 spatial signed records, not a global directory. The snapshot is nonexhaustive
 and may go stale; missing addresses may still exist. Immutable record SHA-256,
 canonical MID (`punkti/0.6:<digest>`), and Ed25519 signature are distinct identities
