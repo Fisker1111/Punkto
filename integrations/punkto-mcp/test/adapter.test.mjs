@@ -52,8 +52,8 @@ test('01 initialize: real MCP handler returns server identity',async()=>{
  const result=await rpc('initialize',{protocolVersion:'2025-03-26',capabilities:{},clientInfo:{name:'offline',version:'1'}});
  assert.deepEqual(result.result.serverInfo,{name:'punkto-mcp',version:'0.1.0'});
 });
-test('02 tools/list: exactly two tools with schemas',async()=>{
- const {result}=await rpc('tools/list',{});assert.deepEqual(result.tools.map(t=>t.name),['read_place','get_record']);
+test('02 tools/list: exactly three tools with schemas',async()=>{
+ const {result}=await rpc('tools/list',{});assert.deepEqual(result.tools.map(t=>t.name),['read_place','get_record','discover_places']);
  for(const tool of result.tools) assert.equal(tool.inputSchema.type,'object');
 });
 test('03 default read_place: two verified records and provenance',async()=>{

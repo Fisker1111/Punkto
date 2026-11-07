@@ -1,0 +1,61 @@
+{
+  "v": "punkto/catalog/1",
+  "snapshot": {
+    "publication_head": "c77ba862be21e00d37bdc62f35bac7359d09698d19cd4ef8b2ce5be33ff0a9e5",
+    "publication_seq": 14,
+    "checked_at": "2026-11-07T13:05:00Z"
+  },
+  "caveat": "One Punkto-curated view: nonexhaustive, possibly stale, not a signed authority, and not proof an address is still published. An address missing here may still exist - call read_place(h) for current truth. All listed records are Punkto operator QA material, not outside participants.",
+  "places": [
+    {
+      "h": "u3butz7k9q_23",
+      "title": "Node A publish plus node B reply",
+      "hint": "Three operator records at one address; read_place shows a reply linked to a parent MID.",
+      "kind": "operator_qa_thread",
+      "record_sha256": "21cbb254c6902c1ae3c5ccb573f34e476cafdc6ac8f9205ea366ba728cd9379a",
+      "mid": "punkti/0.6:e1865d1e944b23bc2fa3b4c719d8e7dbd0876fd9c185b2539f47edacc20885ca",
+      "published_at": "2026-10-30",
+      "approx_position": "55.6754, 12.5619"
+    },
+    {
+      "h": "u3butzxby9_23",
+      "title": "Post-gate controlled ingestion proof",
+      "hint": "One operator proof record with a plain-text body, showing a non-JSON payload.",
+      "kind": "operator_qa",
+      "record_sha256": "db1a95385171073552237efac4ca3f0835fcfc8b63ac8e76f04c875484327306",
+      "mid": "punkti/0.6:53f0912f7223195ea49f98485322f1c8ec35168ccfab05893e49265db3303734",
+      "published_at": "2026-10-30",
+      "approx_position": "55.6761, 12.5683"
+    },
+    {
+      "h": "u4xsudvxb2_1",
+      "title": "Controlled public write acceptance atom",
+      "hint": "Operator acceptance atom carrying an extension marker in its record.",
+      "kind": "operator_acceptance",
+      "record_sha256": "7f342f1c62369126f70b90b12738c312d661721ee9cc87063d5877cdbf70b53f",
+      "mid": "punkti/0.6:b9bf8c6f936da8606f4f833738ab5ddfce27bb1d4498637f39ac5950ee6f88b5",
+      "published_at": "2026-10-30",
+      "approx_position": "59.9139, 10.7522"
+    },
+    {
+      "h": "dqgpuws6qw_1",
+      "title": "Canary record with a canary reply",
+      "hint": "Two operator canary records, one a reply: root and reply in one address.",
+      "kind": "operator_canary",
+      "record_sha256": "389d3b9331d9e62938e243259aa5b780f94be10fab05cd1776e1cf423bf0a0b5",
+      "mid": "punkti/0.6:8b57f07a73c00bd78d9b6b944ea88c0962a1000a5972142aaae97dea76ff1bc9",
+      "published_at": "2026-10-30",
+      "approx_position": "39.3672, -74.3274"
+    },
+    {
+      "h": "yspj9wt9u6_17",
+      "title": "Lone canary far from Null Island",
+      "hint": "One operator canary record on the far side of the world from Null Island.",
+      "kind": "operator_canary",
+      "record_sha256": "88f68c67951e001e2a5f6afaf69db000d4ba57b7e6291b4ac1cffb297f4ebb05",
+      "mid": "punkti/0.6:17e140d211bdcdb942b2f2c38284279dff36a738080a3e764479d4e7f57faff2",
+      "published_at": "2026-10-30",
+      "approx_position": "68.5028, 122.4174"
+    }
+  ]
+}
