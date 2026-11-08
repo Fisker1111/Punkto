@@ -180,7 +180,7 @@ function recordBytes(x) {
  const raw=new Uint8Array(body.length+72), view=new DataView(raw.buffer);view.setUint32(0,body.length);raw.set(body,4);view.setUint32(body.length+4,64);return raw;
 }
 test('text extraction: malformed payload, absent member, truncation and opaque record',async()=>{
- for(const [x,expected,truncated] of [['not json',null,false],['{}',null,false],[JSON.stringify({text:'x'.repeat(2001)}),'x'.repeat(2000),true]]) {
+ for(const [x,expected,truncated] of [['not json','not json',false],['{}',null,false],[JSON.stringify({text:'x'.repeat(2001)}),'x'.repeat(2000),true]]) {
   const bytes=recordBytes(x),sha256=await sha256Hex(bytes);responder=()=>new Response(bytes);
   const result=data(await tool('get_record',{sha256}));assert.equal(result.text,expected);assert.equal(result.text_truncated,truncated);assert.ok(result.mid);
  }

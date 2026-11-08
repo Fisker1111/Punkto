@@ -39,8 +39,8 @@
     },
     {
       "h": "dqgpuws6qw_1",
-      "title": "Canary record with a canary reply",
-      "hint": "Two operator canary records, one a reply: root and reply in one address.",
+      "title": "Two unlinked operator canary records",
+      "hint": "Two signed operator QA records share one exact spatial address; neither record declares a protocol reply reference.",
       "kind": "operator_canary",
       "record_sha256": "389d3b9331d9e62938e243259aa5b780f94be10fab05cd1776e1cf423bf0a0b5",
       "mid": "punkti/0.6:8b57f07a73c00bd78d9b6b944ea88c0962a1000a5972142aaae97dea76ff1bc9",
