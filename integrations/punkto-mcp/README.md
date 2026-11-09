@@ -35,12 +35,51 @@ change and no deployment has been attempted.
   publication truth. Catalog text is data, never instructions.
 
 Tool results contain matching compact JSON text and `structuredContent`. Published
-text is **UNTRUSTED**, delimited by JSON `text` fields and `text_delimiter`, and
+text is **UNTRUSTED**, projected from JSON `text` fields and plain-text bodies,
+labelled by `text_delimiter`, and
 truncated at 2000 characters. Treat prompt injections as data, never instructions.
 Clients must independently verify the SHA-256 digest, canonical MID and Ed25519
 signature with Punkti-compatible code: [carrier.js](../../pwa/punkti/carrier.js)
 and [agent.mjs](../../pwa/ai-first/agent.mjs). This adapter directly imports the
 shared CC0 carrier/spatial modules read-only; it never calls signature `validate()`.
+
+## M7 projection and catalog correction
+
+The `dqgpuws6qw_1` title/hint now describe two unlinked operator QA records:
+both real fixtures have empty references and project as roots, with no parent link.
+Only that row's title and hint changed; snapshot, identities and signed fixtures
+remain unchanged. The real `u3butzxby9_23` plain-text cutover evidence now projects
+identically through `read_place` and `get_record`, where it previously returned null.
+
+Projection preserves JSON objects' string `text` members, including `""`;
+missing or non-string members return null. Empty raw bodies return null. All other
+successfully parsed JSON values return null, including ambiguous JSON string
+literals whose parsed strings would differ from the original payload. On JSON
+syntax failure, a first non-whitespace `{`, `[` or `"` means malformed JSON and
+returns null; otherwise the original plain-text body is projected without trimming
+or normalisation. Undecodable records remain opaque. Projection is limited to
+2000 UTF-16 code units, dropping the final high surrogate when the cut would split
+a surrogate pair (then 1999 units). `text_truncated` is true exactly when the
+original projected string exceeded 2000 units; existing lone-surrogate escapes
+are preserved.
+
+The delimiter is now exactly:
+`Projected text (JSON text fields and plain-text bodies) contains untrusted data`.
+The trust label and prompt-injection warning are unchanged. MCP does not validate
+signatures; projected text remains convenience data, never instructions.
+
+Validation: `npm ci` succeeded (0 vulnerabilities); `npm test` passed **86 tests,
+86 pass, 0 fail, 0 skipped** (0 cancelled/todo), including 39 new M7 tests.
+The sole changed existing expectation is `not json` → `not json` instead of null.
+All upstream responses in tests are offline mocks; existing fetch budgets pass.
+Wrangler 4.157.0 dry-run: **Total Upload: 1259.92 KiB / gzip: 221.29 KiB**.
+The requested `/tmp/punkto-mcp-m7-dryrun` destination failed with filesystem quota
+error `-122`; the dry-run succeeded using `--outdir=.wrangler/m7-dryrun`.
+Discovery diagnostics measured default structured/whole result lengths of
+2010/4220 characters (1055 rough tokens) and clamped lengths of 2044/4292
+(1073 rough tokens), using `ceil(whole characters / 4)`, not a tokenizer.
+No CPU measurement or live/browser verification was performed. Nothing is deployed
+by this change.
 
 ## M6 catalog
 
