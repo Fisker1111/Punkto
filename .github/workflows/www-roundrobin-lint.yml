@@ -1,0 +1,12 @@
+name: WWW round-robin candidate lint
+on:
+  pull_request:
+jobs:
+  www-candidate-lint:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - name: Lint review-only www artifacts
+        run: python3 scripts/lint_www_candidate.py
