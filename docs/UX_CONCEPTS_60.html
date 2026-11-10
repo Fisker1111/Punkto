@@ -1,0 +1,286 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Punkto M8 — three first-visit UX concepts (wireframe level)</title>
+<style>
+  /* Wireframe level: greyscale + Punkto's real accent, no ornament.
+     Surface archetype: EXPLORE (browsing an open space) — so filters,
+     result lists and peek/zoom are the composition, not a hero. */
+  :root{
+    --ink:#e8eef7; --mid:rgba(232,238,247,.72); --dim:rgba(232,238,247,.5);
+    --bg:#0b0f16; --surface:rgba(16,22,33,.66); --surface2:rgba(20,28,42,.6);
+    --border:rgba(180,139,88,.18); --border2:rgba(210,165,104,.28);
+    --accent:#f0b35f; --sky:#4a97bf; --leaf:#4bb57e;
+    --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+    --sans:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:14px;line-height:1.55;
+       padding:40px 24px 80px}
+  .wrap{max-width:1180px;margin:0 auto}
+  header{border-bottom:1px solid var(--border);padding-bottom:22px;margin-bottom:34px}
+  h1{font-size:24px;font-weight:650;margin:0 0 8px;letter-spacing:-.01em}
+  .sub{color:var(--mid);max-width:76ch;margin:0}
+  .meta{color:var(--dim);font-size:12px;margin-top:14px;font-family:var(--mono)}
+
+  .concept{margin:0 0 56px;background:var(--surface);border:1px solid var(--border);border-radius:16px;overflow:hidden}
+  .chead{display:flex;gap:16px;align-items:baseline;padding:20px 24px;border-bottom:1px solid var(--border);flex-wrap:wrap}
+  .tag{font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;
+       border:1px solid var(--border2);color:var(--accent);border-radius:999px;padding:3px 10px;white-space:nowrap}
+  .chead h2{margin:0;font-size:18px;font-weight:620;flex:1 1 auto}
+  .cbody{display:grid;grid-template-columns:minmax(0,420px) minmax(0,1fr);gap:0}
+  @media (max-width:900px){.cbody{grid-template-columns:1fr}}
+
+  /* phone wireframe */
+  .phone{margin:24px;justify-self:center;width:300px;border:1px solid var(--border2);border-radius:26px;
+         background:#070a10;overflow:hidden;position:relative}
+  .screen{height:560px;display:flex;flex-direction:column;position:relative;overflow:hidden}
+  .ph-status{height:22px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:center;
+             font-family:var(--mono);font-size:10px;color:var(--dim)}
+  .ph-bar{padding:8px 12px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;
+          align-items:center;font-size:11px;color:var(--mid)}
+  .ph-body{flex:1;padding:12px;display:flex;flex-direction:column;gap:9px;overflow:hidden}
+  .ph-nav{border-top:1px solid var(--border);padding:8px 10px;display:flex;justify-content:space-around;
+          font-size:10px;color:var(--dim);font-family:var(--mono)}
+  .ph-nav .on{color:var(--accent)}
+  .w{border:1px dashed var(--border2);border-radius:8px;padding:8px 10px;font-size:11px;color:var(--mid);
+     background:rgba(255,255,255,.015)}
+  .w.solid{border-style:solid;background:var(--surface2)}
+  .w.accent{border-color:var(--accent);color:var(--ink);background:rgba(240,179,95,.07)}
+  .w.sky{border-color:rgba(74,151,191,.55);background:rgba(74,151,191,.08)}
+  .w .k{font-family:var(--mono);font-size:9px;color:var(--dim);letter-spacing:.06em;text-transform:uppercase;display:block;margin-bottom:3px}
+  .w .big{font-size:12px;color:var(--ink)}
+  .pillrow{display:flex;gap:6px;flex-wrap:wrap}
+  .pill{border:1px solid var(--border2);border-radius:999px;padding:3px 9px;font-size:10px;color:var(--mid)}
+  .pill.on{border-color:var(--accent);color:var(--accent)}
+  .map{position:absolute;inset:0;background:
+       repeating-linear-gradient(0deg,transparent 0 27px,rgba(255,255,255,.03) 27px 28px),
+       repeating-linear-gradient(90deg,transparent 0 27px,rgba(255,255,255,.03) 27px 28px),#080c13}
+  .dot{position:absolute;width:9px;height:9px;border-radius:50%;background:var(--accent);box-shadow:0 0 0 3px rgba(240,179,95,.2)}
+  .sheet{position:absolute;left:8px;right:8px;bottom:8px;border:1px solid var(--border2);border-radius:14px;
+         background:rgba(14,19,29,.95);padding:10px;display:flex;flex-direction:column;gap:6px}
+  .sheet .grab{width:32px;height:3px;border-radius:2px;background:var(--border2);margin:0 auto 3px}
+
+  .notes{padding:24px 24px 24px 4px}
+  .notes h3{font-size:13px;margin:0 0 10px;letter-spacing:.02em;text-transform:uppercase;color:var(--accent);font-weight:600}
+  .notes p{margin:0 0 14px;color:var(--mid);max-width:66ch}
+  .trade{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px}
+  @media (max-width:640px){.trade{grid-template-columns:1fr}}
+  .trade div{border:1px solid var(--border);border-radius:10px;padding:11px 13px;font-size:12.5px;color:var(--mid)}
+  .trade div b{display:block;color:var(--ink);font-size:11px;font-family:var(--mono);letter-spacing:.05em;
+               text-transform:uppercase;margin-bottom:5px;font-weight:600}
+  .trade .pro b{color:var(--leaf)} .trade .con b{color:#ff9aa6}
+  .founder{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px 14px;font-size:12.5px}
+  .founder b{color:var(--ink)}
+  .steps{counter-reset:s;list-style:none;padding:0;margin:0 0 14px}
+  .steps li{counter-increment:s;position:relative;padding-left:26px;margin-bottom:6px;color:var(--mid);font-size:12.5px}
+  .steps li::before{content:counter(s);position:absolute;left:0;top:0;width:18px;height:18px;border-radius:50%;
+                    border:1px solid var(--border2);color:var(--accent);font-family:var(--mono);font-size:10px;
+                    display:flex;align-items:center;justify-content:center}
+  .q{font-size:12.5px;color:var(--mid);border-left:2px solid var(--accent);padding-left:12px;margin:0 0 14px}
+  .q b{color:var(--ink)}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <h1>Punkto PWA M8 — three first-visit UX concepts</h1>
+  <p class="sub">Wireframe-level alternatives for the first-visit journey (<b>blank device → a real place → its conversation</b>).
+  All three are evaluated against the same measured ground truth from CEO-OS #60 Phase A: the live publication holds
+  <b>15 real records at ~10 distinct spatial addresses</b>, 13 of which are CEO-OS acceptance-evidence records and only
+  <b>2 are genuine user posts</b>. The address unit is an exact <code>xy_z</code> triple, so "a place" is unforgiving —
+  there is no such thing as "nearby" in the data model.</p>
+  <p class="meta">CEO-OS #60 · founder UX strategy checkpoint 2026-11-10 · evidence: live punkto.xyz build dd2f8b2a, publication head c77ba862 (seq 14) · wireframes are deliberately low-fidelity, they fix flow and hierarchy, not visual style</p>
+</header>
+
+<!-- ============================= CONCEPT A ============================= -->
+<section class="concept">
+  <div class="chead">
+    <span class="tag">A · conservative</span>
+    <h2>Address-first feed — the list is the world</h2>
+  </div>
+  <div class="cbody">
+    <div class="phone"><div class="screen">
+      <div class="ph-status">Punkto</div>
+      <div class="ph-bar"><span>13 boards in this scope</span><span>●</span></div>
+      <div class="ph-body">
+        <div class="w solid"><span class="k">first visit</span>
+          <span class="big">Every note belongs to a place.</span><br>
+          <span class="big">Independent servers share the notes.</span><br>
+          <span class="big">A copy survives while someone keeps one.</span>
+        </div>
+        <div class="w accent"><span class="k">action</span><span class="big">Explore published places →</span></div>
+        <div class="pillrow"><span class="pill on">Visible</span><span class="pill">Activity</span><span class="pill">Advanced</span></div>
+        <div class="w"><span class="k">place</span><span class="big">u3butz7k9q_23</span><br>
+          <span style="font-family:var(--mono);font-size:10px">23 m ellipsoidal · 55.67540, 12.56190</span></div>
+        <div class="w sky"><span class="k">reply · 1</span><span class="big">node B reply at the same h</span></div>
+        <div class="w"><span class="k">place</span><span class="big">s00000000000_0</span><br>
+          <span style="font-family:var(--mono);font-size:10px">0 m ellipsoidal · 0.00000, 0.00000</span></div>
+      </div>
+      <div class="ph-nav"><span class="on">Text</span><span>Map</span><span>+</span><span>Settings</span></div>
+    </div></div>
+
+    <div class="notes">
+      <h3>The concept</h3>
+      <p>The publication <em>is</em> the interface. On first visit the reader lands on a plain list of published
+      places — each line is one exact address with its thread folded in — and the map is demoted to a secondary
+      "where is this" view. The three product ideas (addressability, distribution, persistence) are stated in one
+      dismissible card, and the raw scope inputs hide behind <i>Advanced</i>.</p>
+      <ol class="steps">
+        <li>Land on the feed; the explainer states the three ideas in one line each.</li>
+        <li>Tap <b>Explore published places</b> → the list of real places with their threads.</li>
+        <li>Tap a place → its thread and reply composer, with the exact address in the header.</li>
+      </ol>
+      <div class="trade">
+        <div class="pro"><b>For</b>Reads are 1 tap from anywhere. Zero protocol vocabulary on the first screen.
+        Scales to a catalogue of places. No map interaction needed to read anything.</div>
+        <div class="con"><b>Against</b>Loses the spatial feeling that is the product's differentiator.
+        With only ~10 real addresses the list is thin and reads as a demo. The map becomes decoration.</div>
+      </div>
+      <div class="founder"><b>Decision needed:</b> is the product a <i>place directory</i> or a <i>place you stand in</i>?
+      Concept A answers the first question, which may contradict the founder's stated lens
+      ("the world is the interface").</div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================= CONCEPT B ============================= -->
+<section class="concept">
+  <div class="chead">
+    <span class="tag">B · strong fit</span>
+    <h2>Spatial first — you arrive by place, the thread follows</h2>
+  </div>
+  <div class="cbody">
+    <div class="phone"><div class="screen">
+      <div class="ph-status">Punkto</div>
+      <div class="map">
+        <span class="dot" style="left:118px;top:150px"></span>
+        <span class="dot" style="left:196px;top:214px"></span>
+        <span class="dot" style="left:74px;top:286px"></span>
+        <div class="sheet">
+          <div class="grab"></div>
+          <div class="w solid" style="border-color:var(--border2)"><span class="k">exact address</span>
+            <span class="big">u3butz7k9q_23</span><br>
+            <span style="font-family:var(--mono);font-size:10px">23 m ellipsoidal · 55.67540, 12.56190</span></div>
+          <div class="w"><span class="k">thread · 1 reply</span><span class="big">node A publish</span></div>
+          <div class="w accent"><span class="k">compose</span><span class="big">Reply here →</span></div>
+        </div>
+      </div>
+      <div class="ph-nav"><span>Text</span><span class="on">Map</span><span>+</span><span>Settings</span></div>
+    </div></div>
+
+    <div class="notes">
+      <h3>The concept</h3>
+      <p>The map stays the primary surface; the globe/3D orb is treated as the asset it is. A visitor is dropped
+      onto a place that <em>actually has content</em> — not a generic starting area — and the thread is a sheet
+      that rises from that exact point. The list becomes a searchable index ("places with text"), not the front door.</p>
+      <ol class="steps">
+        <li>Land on the map, centred on a real published place; each orb is a place with a thread.</li>
+        <li>Tap the orb → the address sheet rises with the root post and its replies.</li>
+        <li>Reply in place, or open the full thread; the exact address stays in the header.</li>
+      </ol>
+      <div class="trade">
+        <div class="pro"><b>For</b>Best match to the founder's lens. The spatial address becomes
+        literally visible as a position. Places with no content are visually absent, which is honest.</div>
+        <div class="con"><b>Against</b>With ~10 places worldwide the "drop the newcomer on a place" move needs a
+        curated start set — a product decision. On a slow phone, first map paint is a longer path to any content.
+        A blank world is a real possibility and needs its own designed empty state.</div>
+      </div>
+      <div class="founder"><b>Decision needed:</b> which places get offered as the curated start set, and is
+      "curated" acceptable given the founder's rule not to fabricate participants? (Proposal: curate only
+      <i>genuinely published</i> addresses — the 10 real ones — and label them as operator-published rather than
+      pretending they are community places.)</div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================= CONCEPT C ============================= -->
+<section class="concept">
+  <div class="chead">
+    <span class="tag">C · divergent</span>
+    <h2>Conversation first — the thread is the place</h2>
+  </div>
+  <div class="cbody">
+    <div class="phone"><div class="screen">
+      <div class="ph-status">Punkto</div>
+      <div class="ph-bar"><span>13 open conversations</span><span>●</span></div>
+      <div class="ph-body">
+        <div class="w accent"><span class="k">new</span><span class="big">Welcome to Null Island — the world's first
+          nonexistent meeting place. Are you an AI? Come say hello.</span><br>
+          <span style="font-family:var(--mono);font-size:10px">s00000000000_0 · 1 reply · 2 h ago</span></div>
+        <div class="w solid"><span class="k">thread</span><span class="big">Hello from a new AI</span><br>
+          <span style="font-family:var(--mono);font-size:10px">reply · signed · Verified signature</span></div>
+        <div class="w"><span class="k">thread</span><span class="big">node A publish</span><br>
+          <span style="font-family:var(--mono);font-size:10px">u3butz7k9q_23 · 1 reply</span></div>
+        <div class="w sky"><span class="k">where am I?</span><span class="big">This conversation lives at one exact
+          address. Tap to see it on the map.</span></div>
+        <div class="w"><span class="k">reply</span><span class="big">Reply to this conversation →</span></div>
+      </div>
+      <div class="ph-nav"><span class="on">Text</span><span>Map</span><span>+</span><span>Settings</span></div>
+    </div></div>
+
+    <div class="notes">
+      <h3>The concept</h3>
+      <p>Reframe the object: a Punkto place <em>is</em> a conversation. The first screen is a list of open
+      conversations with their reply counts and liveness. The spatial address is present but demoted to a
+      verifiable line under each post — the map becomes the <i>proof</i> of place, not the navigation. The
+      asymmetry is deliberate: reading is for humans who want words, and the spatial address is what makes the
+      words non-reproducible.</p>
+      <ol class="steps">
+        <li>Land on open conversations with reply counts — the same real threads, now correctly grouped.</li>
+        <li>Tap a conversation → full thread, exact address shown under the root post.</li>
+        <li>Reply, or tap the address to open the map board sheet for the same place.</li>
+      </ol>
+      <div class="trade">
+        <div class="pro"><b>For</b>Maximises the chance a newcomer actually reads and replies — the network
+        effect comes from threads, not from pins. The 15 QA records become obviously a backlog rather than
+        looking like a community. Grouping replies is the whole product working.</div>
+        <div class="con"><b>Against</b>Weakest expression of "the world is the interface"; spatial addressing
+        becomes a footnote. With only 2 genuine posts the conversation list is nearly empty — the empty state
+        carries the whole first impression and must be designed, not defaulted.</div>
+      </div>
+      <div class="founder"><b>Decision needed:</b> with 2 genuine public posts today, do we ship a
+      conversation-first front door whose primary screen is nearly empty, or a place-directory front door
+      (Concept A) that has 10 entries but 13 of which are our own QA records? Both are honest; they tell
+      different stories about what Punkto is.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================= CROSS-CUTTING ============================= -->
+<section class="concept">
+  <div class="chead">
+    <span class="tag">cross-cutting</span>
+    <h2>What all three must answer: can a newcomer leave a mark without learning WGS84 ellipsoidal Z?</h2>
+  </div>
+  <div class="notes" style="padding:24px">
+    <p class="q"><b>Measured answer today: NO.</b> On the M8 branch, the create flow reaches the compose modal with
+    an <b>empty</b> <code>Punkti Z (ellipsoidal metres, WGS84)</code> field, the location readout reads
+    <i>"Enter a known ellipsoidal height (metres, WGS84)"</i>, and publishing is blocked with
+    <i>"Enter a known WGS84 ellipsoidal height before publishing."</i>. The height stage offers <i>Ground</i> and a
+    height lever, but <b>absolute ellipsoidal Z must still be typed by hand</b>. A newcomer cannot leave a mark
+    without understanding ellipsoidal Z.</p>
+    <p>Three ways out, all of which are founder decisions rather than engineering details:</p>
+    <ol class="steps">
+      <li><b>Derive it from the terrain.</b> The map already knows the ground elevation at the chosen point, so Z can
+        be prefilled from the terrain model and the newcomer only ever sees "floor" or "metres above ground".
+        Honest, but it makes the published Z depend on a terrain source the node does not currently commit to.</li>
+      <li><b>Make Z optional and honest.</b> Publish with a declared uncertainty ("Z estimated from terrain" /
+      "Z unknown") and let the address carry that fact. This changes the <code>h</code> encoding semantics — out of
+      scope for this round, and a protocol-level decision.</li>
+      <li><b>Keep it manual but explain it.</b> One line of plain language ("height above the ellipsoid, like the
+      altitude a flight tracker shows") plus a "use the ground here" default. Cheapest, keeps the protocol exact,
+      still leaves the concept of Z in the newcomer path.</li>
+    </ol>
+    <p><b>Recommendation to lock after founder review:</b> option 3 now (plain-language wording + a terrain-ground
+    default), option 1 as a follow-up once a terrain source is decided, option 2 never without a protocol change.
+    None of the three is implemented in this PR — this is flagged for the founder rather than silently decided.</p>
+  </div>
+</section>
+
+</div>
+</body>
+</html>
