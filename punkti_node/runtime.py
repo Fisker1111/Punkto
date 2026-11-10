@@ -42,6 +42,11 @@ def run(config):
                     node.after_sync()
                 except OSError:
                     LOG.error('cursor persistence failed')
+            for peer in config['replication']['static_peers']:
+                try:
+                    node.replicate_publication(peer)
+                except Exception:
+                    LOG.warning('static replication failed peer=%s', peer, exc_info=False)
             delay = net['sync_interval_seconds']
 
     previous = {sig: signal.signal(sig, stop_requested) for sig in (signal.SIGTERM, signal.SIGINT)}

@@ -13,6 +13,7 @@ from .spatial import Subscription
 DEFAULTS = {
     'web': {'enabled': True, 'root': '/srv/pwa', 'spa_fallback': False, 'pages': {'/ai': 'ai.html'}},
     'bootstrap': {'nodes': []},
+    'replication': {'static_peers': []},
     'publication': {'enabled': True, 'path': None, 'packs': False, 'serve_prefix': '/publication'},
     'node': {'name': 'punkti-node', 'public_url': '', 'description': '', 'operator_contact': ''},
     'network': {'listen_host': '0.0.0.0', 'listen_port': 8000, 'advertise_url': '',
@@ -36,6 +37,7 @@ DEFAULTS = {
     },
 }
 ENV = {
+    'PUNKTO_STATIC_PEERS': ('replication', 'static_peers', lambda s: [p.strip() for p in s.split(',') if p.strip()]),
     'PUNKTO_BOOTSTRAP_NODES': ('bootstrap', 'nodes', json.loads),
     'PUNKTO_WEB_ENABLED': ('web', 'enabled', lambda s: s.lower() not in ('0', 'false', 'no', 'off')),
     'PUNKTO_WEB_ROOT': ('web', 'root', str),
@@ -105,6 +107,21 @@ def load_config(path=None, environ=None):
                 parsed.port
             except ValueError as exc:
                 raise ValueError('invalid bootstrap URL port') from exc
+    static_peers = config['replication']['static_peers']
+    if not isinstance(static_peers, list):
+        raise ValueError('replication.static_peers must be a list')
+    for value in static_peers:
+        if (not isinstance(value, str) or not value or value.endswith('/') or
+                any(c.isspace() for c in value) or '?' in value or '#' in value):
+            raise ValueError('invalid static peer URL')
+        parsed = urlsplit(value)
+        if (parsed.scheme not in ('http', 'https') or not parsed.hostname or
+                parsed.username is not None or parsed.password is not None):
+            raise ValueError('invalid static peer URL')
+        try:
+            parsed.port
+        except ValueError as exc:
+            raise ValueError('invalid static peer URL port') from exc
     web = config['web']
     pages = web['pages']
     if not isinstance(pages, dict):
