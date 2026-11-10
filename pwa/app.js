@@ -1,3 +1,4 @@
+import { trustLabel, heightLabel, isQaRecord } from './core/read-state.js';
 /**
  * app.js — Punkto PWA main application
  * Depends on: MapLibre GL JS, deck.gl 8.9.x UMD (window.deck), Dexie.js
@@ -11,7 +12,7 @@ import {
   isSettingsOpen as shellIsSettingsOpen,
   setCounts as shellSetCounts,
 } from './ui-shell.js';
-import { initTextView, renderTextFeed, openBoardById, getAtomStableId, resolveBoardAtom, replyAddress } from './ui-text.js';
+import { initTextView, renderTextFeed, openBoardById, getAtomStableId, isRootAtom, resolveBoardAtom, replyAddress } from './ui-text.js';
 import {
   initMapView,
   ensureMapInitialized,
@@ -126,7 +127,8 @@ function renderMainFeed() {
   renderTextFeed({
     atoms: _mainFeedAtoms,
     locationDenied: _locationDenied,
-    loadingVisibleAtoms: !_mapScopedFeedReady,
+    loadingVisibleAtoms: publicationReadState === 'loading',
+    readError: publicationReadState === 'error',
   });
 }
 
@@ -185,7 +187,11 @@ const elCrosshairReadout = document.getElementById('crosshair-readout');
 // Utility
 // ---------------------------------------------------------------------------
 
+let publicationReadState = 'loading';
+
 function setSyncStatus(state) {
+  publicationReadState = state === 'syncing' ? 'loading' : state;
+  if (currentPage === 'text') renderMainFeed();
   elSyncDot.className = '';
   if (elMainSyncDot) elMainSyncDot.className = '';
   if (state) elSyncDot.classList.add(state);
@@ -431,7 +437,7 @@ async function refreshUI(newAtomIds = null) {
   const allAtoms = await getAllAtomsNewestFirst();
   const visibleAtoms = allAtoms.filter((atom) => !isHiddenAtom(atom) && atomMatchesCurrentScope(atom));
   await ensureAtomIds(visibleAtoms);
-  const total = visibleAtoms.length;
+  const total = visibleAtoms.filter(isRootAtom).length;
   elCountNum.textContent = total;
   // Keep settings info (if menu is open) in sync
   if (elSettingsCount) elSettingsCount.textContent = String(total);
@@ -441,7 +447,7 @@ async function refreshUI(newAtomIds = null) {
   const center = map ? map.getCenter() : null;
   const enriched = visibleAtoms.map(a => ({
     ...a,
-    distance: center ? haversineMeters(center.lat, center.lng, a.lat, a.lon) : NaN,
+    distance: NaN, // No device location is available; map center is not the reader.
   }));
   const mapReadyForScope = Boolean(map && typeof map.getBounds === 'function' && map.isStyleLoaded && map.isStyleLoaded());
   let recent;
@@ -467,13 +473,9 @@ async function refreshUI(newAtomIds = null) {
     _mapScopedFeedReady = initialSyncDone;
   }
   // Expose to main-view feed
-  _mainFeedAtoms = recent;
+  _mainFeedAtoms = enriched;
   if (hasOpenBoard() && currentPage === 'map') await refreshMapBoardAtoms(visibleAtoms);
-  if (elMainStatusCount) {
-    elMainStatusCount.textContent = mapReadyForScope
-      ? `${recent.length} visible`
-      : (initialSyncDone ? `${recent.length} cached` : 'Loading visible atoms…');
-  }
+  if (elMainStatusCount) elMainStatusCount.textContent = `${total} visible boards`;
   if (currentPage === 'text') renderMainFeed();
 
   if (recent.length === 0) {
@@ -503,9 +505,9 @@ async function refreshUI(newAtomIds = null) {
       const raw = String(a.x || '').trim();
       const title = escHtml(deriveTitle(a));
       const preview = raw ? escHtml(raw.length > 120 ? `${raw.slice(0, 120)}…` : raw) : '<span class="empty">Untitled note</span>';
-      const altitude = fmtAltitudeLabel(Number(a.alt));
+      const altitude = heightLabel(a);
       const category = getCategoryMeta(a);
-      const verified = isVerifiedAtom(a) ? '<span class="atom-verified">Verified</span>' : '';
+      const verified = `<span class="atom-verified">${escHtml(trustLabel(a))}${isQaRecord(a) ? ' · QA record' : ''}</span>`;
       const meta = [fmtDistance(a.distance), altitude, fmtTime(a.t)].filter(Boolean).join(' · ');
       el.innerHTML = `
         <div class="atom-dot"></div>
@@ -515,7 +517,7 @@ async function refreshUI(newAtomIds = null) {
           <div class="atom-text">${preview}</div>
           ${category.code === 'EMGC' ? '<div class="atom-meta">Public urgent post — not a replacement for calling emergency services.</div>' : ''}
           <div class="atom-meta">${meta}</div>
-          <div class="atom-actions"><button class="btn btn-secondary show-in-3d-btn" type="button">Open board on map</button></div>
+          <div class="atom-actions"><button class="btn btn-secondary show-in-3d-btn" type="button">Open board</button></div>
         </div>
       `;
       const showBtn = el.querySelector('.show-in-3d-btn');
@@ -523,7 +525,7 @@ async function refreshUI(newAtomIds = null) {
         showBtn.addEventListener('click', (ev) => {
           ev.stopPropagation();
           const id = String(a.atom_id || a.mid || a.punkto || '').replace(/^p:/, '');
-          if (id) focusPunkto(id);
+          if (id) openMapBoardForAtom(a, visibleAtoms);
         });
       }
       elAtomList.appendChild(el);
@@ -565,6 +567,7 @@ function setPanelOpen(open) {
   panelOpen = open;
   elPanel.classList.toggle('open', open);
   elMapEl.classList.toggle('panel-open', open);
+  if (open) dismissOnboarding();
   elFabAdd.classList.toggle('panel-open', open);
   elFabPanel.classList.toggle('panel-open', open);
   const map = getMapInstance();
@@ -1136,10 +1139,8 @@ function wireEvents() {
 // ---------------------------------------------------------------------------
 
 async function boot() {
-  console.log('PUNKTO APP.JS LOADED pilot1-slice5-finish-punkto-2026-09-06-1');
   window.PUNKTO_APP_VERSION = 'pilot1-slice5-finish-punkto-2026-09-06-1';
 
-  console.log('[punkto] booting...');
 
   const missingMapLibs = missingMapLibraries();
   if (missingMapLibs.length) {
@@ -1155,7 +1156,6 @@ async function boot() {
   // Capture /p/<id> deep-link BEFORE wiring so map load can act on it.
   deepLinkPunkto = parseDeepLinkPunktoId();
   if (deepLinkPunkto) {
-    console.log('[punkto] deep-link detected:', `p:${deepLinkPunkto}`);
   }
 
   // Cache-first: pre-render cached atom count and hide empty state flash.
@@ -1179,6 +1179,21 @@ async function boot() {
   }
 
   wireEvents();
+  const explore = document.getElementById('first-visit-explore');
+  try { explore.hidden = localStorage.getItem('punkto.explored') === '1'; } catch {}
+  document.addEventListener('click', (event) => {
+    const action = event.target.closest('[data-action]')?.dataset.action;
+    if (action === 'reply-settings') openSettingsMenu();
+    if (action === 'retry-read') ensureSyncEngine().syncFeed();
+    if (action === 'explore' || action === 'dismiss-explore') {
+      explore.hidden = true;
+      try { localStorage.setItem('punkto.explored', '1'); } catch {}
+      if (action === 'explore') {
+        showPage('text');
+        document.getElementById('main-feed-list').scrollIntoView({ block: 'start' });
+      }
+    }
+  });
   renderSettingsView({ version: window.PUNKTO_APP_VERSION });
   punktiClient.setScope(currentWorldScope);
 
@@ -1202,7 +1217,9 @@ async function boot() {
       toggleSettingsMenu();
     },
   });
+  await loadPersistedIdentity();
   initTextView({
+    hasIdentity,
     onShowOnMap: (id) => focusPunkto(id),
     onOpenBoard: (id) => { showPage('text'); },
     onLeaveNote: openCreateOnMap,
@@ -1234,6 +1251,7 @@ async function boot() {
     getCurrentPage: () => currentPage,
   });
   initBoardView({
+    hasIdentity,
     sheet: elMapBoardSheet,
     getAtoms: () => _mainFeedAtoms,
     getAtomSelectionId,
@@ -1253,8 +1271,7 @@ async function boot() {
     console.warn('[sync] boot promise failed:', err);
     setSyncStatus('error');
   });
-  showPage('map');
-  ensureMapInitialized();
+  showPage(deepLinkPunkto ? 'map' : 'text');
   if (deepLinkPunkto) {
     setPanelOpen(false); // panel managed by 3D view when deep-linking
   }
@@ -1268,6 +1285,10 @@ boot().catch((err) => {
 
 // --- Key Management ---
 let currentIdentity = null;
+
+function hasIdentity() {
+  return Boolean(currentIdentity?.secretKey);
+}
 const AUTHOR_STORAGE_KEYS = ['punkto-name', 'punkto-author'];
 
 function getStoredAuthorName() {
@@ -1331,6 +1352,8 @@ async function activateIdentity(identity, { replacing = false } = {}) {
   await saveIdentityToDb(identity);
   localStorage.setItem('punkto-identity', JSON.stringify(identity));
   displayKeyInfo(identity);
+  renderMainFeed();
+  if (hasOpenBoard()) await refreshMapBoardAtoms(_mainFeedAtoms);
   return true;
 }
 

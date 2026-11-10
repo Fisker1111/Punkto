@@ -57,7 +57,7 @@ function hToCoordinates(h) {
   };
 }
 
-function mapRecordToAtom(record, publication) {
+export function mapRecordToAtom(record, publication = {}) {
   const payload = toUiPayload(record.atom?.x);
   const coords = hToCoordinates(record.h);
   const category = String(payload.meta?.category || payload.meta?.kind || payload.meta?.tag || '').trim().toUpperCase();
@@ -96,6 +96,20 @@ function mapRecordToAtom(record, publication) {
   if (payload.meta?.floor !== undefined) atom.floor = payload.meta.floor;
   if (payload.meta?.height_above_ground_m !== undefined) atom.height_above_ground_m = payload.meta.height_above_ground_m;
   if (payload.meta?.place !== undefined) atom.place = payload.meta.place;
+  const replyRef = record.atom?.refs?.find((ref) => String(ref.rel).trim().toLowerCase() === 'reply');
+  if (replyRef) {
+    atom.relation = 'reply';
+    atom.parent_id = replyRef.target;
+    atom.root_id = replyRef.target;
+  } else if (payload.meta?.relation === 'reply') {
+    atom.relation = 'reply';
+    for (const key of ['parent_id', 'root_id']) {
+      const value = payload.meta[key];
+      if (typeof value === 'string' && value.trim()) {
+        atom[key] = /^[a-f0-9]{64}$/i.test(value) ? `punkti/0.6:${value}` : value;
+      }
+    }
+  }
   return atom;
 }
 

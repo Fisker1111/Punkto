@@ -1674,6 +1674,20 @@
     @media (prefers-reduced-motion: reduce) {
       *, *::before, *::after { animation: none !important; transition: none !important; }
     }
+  
+    /* Reserve the actual two-row mobile navigation footprint. */
+    .board-place { overflow-wrap: anywhere; line-height: 1.6; color: var(--text-mid); }
+    .board-compose :disabled { opacity: .5; cursor: not-allowed; }
+    #first-visit-explore[hidden] { display: none; }
+    #main-read-state:empty { display: none; }
+    #main-feed summary { min-height: 44px; cursor: pointer; }
+    #main-feed input { min-width: 0; }
+    @media (max-width: 899px) {
+      :root { --nav-h: 134px; }
+      #panel { bottom: calc(var(--nav-h) + var(--safe-b) + 10px); max-height: calc(100dvh - var(--nav-h) - 90px); visibility: hidden; }
+      #panel.open { visibility: visible; }
+      #onboarding-hint { bottom: auto; top: 76px; left: 16px; right: 16px; }
+    }
   </style>
 </head>
 
@@ -1828,13 +1842,21 @@
       </div>
       <p id="main-feed-heading">VISIBLE BOARDS</p>
       <span id="main-atom-count"></span>
-      <p id="main-feed-subtitle">Public boards in this map view.</p>
+      <section id="first-visit-explore" class="main-card ui-card">
+        <p><strong>Addressability</strong> — Every note belongs to an exact place.</p>
+        <p><strong>Distribution</strong> — Independent servers can share public notes.</p>
+        <p><strong>Persistence</strong> — Notes stay available while someone keeps a copy; storage is not guaranteed forever.</p>
+        <button class="ui-btn" data-action="explore">Explore published text</button>
+        <button class="ui-btn" data-action="dismiss-explore">Dismiss</button>
+      </section>
+      <div id="main-read-state" aria-live="polite"></div>
+      <p id="main-feed-subtitle">Public boards in this published scope.</p>
       <div class="main-category-chips" aria-label="Text mode tabs" role="tablist">
         <button class="main-chip ui-tab active" type="button" data-action="text-tab" data-tab="visible" role="tab" aria-selected="true">Visible</button>
         <button class="main-chip ui-tab" type="button" data-action="text-tab" data-tab="activity" role="tab" aria-selected="false">Activity</button>
       </div>
-      <div class="main-card ui-card" style="margin-top:10px;display:grid;gap:8px;">
-        <div style="font-size:12px;opacity:.85;">World view filters (static publication)</div>
+      <details class="main-card ui-card">
+        <summary>Advanced filters</summary>
         <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;">
           <input id="world-xy-prefix" type="text" placeholder="XY prefix (e.g. u3b)" />
           <input id="world-z-min" type="text" placeholder="Z min" />
@@ -1844,7 +1866,7 @@
           <button class="btn btn-primary" id="world-apply" type="button">Apply world scope</button>
           <button class="btn btn-secondary" id="world-clear" type="button">Clear scope</button>
         </div>
-      </div>
+      </details>
       <div id="main-feed-list"></div>
 
       <div id="main-empty-notes" class="main-empty" style="display:none;">
