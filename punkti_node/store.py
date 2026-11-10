@@ -10,7 +10,7 @@ import uuid
 from . import VERSION
 from .carrier import RECORD_LIMIT, State, unb64, validate
 from .mesh import Node, digest, wire
-from .publication import Publisher, Reader
+from .publication import Publisher, Reader, PublicationReadError, root
 from .spatial import Subscription
 from .write_safety import WriteSafety
 
@@ -137,6 +137,7 @@ class PersistentNode(Node):
                          config['network']['peers'], self.durable.meta['epoch'])
         self.publication = None
         self.publication_reader = None
+        self._publication_heads = {}
         self.publication_state = None
         self._publication_dirty = False
         self.replaying = True
@@ -249,12 +250,19 @@ class PersistentNode(Node):
         if not self.publication_reader:
             raise ValueError('publication disabled')
         with self.lock:
-            self.publication_reader.store.valid.clear()
-            self.publication_reader.store.candidates.clear()
-            self.publication_reader.read_publication(peer_base)
-            for raw in list(self.publication_reader.store.valid.values()) + list(self.publication_reader.store.candidates.values()):
+            # Stage each peer independently. Failed/racing reads cannot advance
+            # its checkpoint or leak records into the durable local store.
+            reader = Reader(packs=self.config['publication']['packs'])
+            reader.heads = self._publication_heads.copy()
+            result = reader.read_publication(peer_base)
+            if root(reader.get(peer_base, 'root.json')) != {
+                    'v': 'punkti/pub/0.6', 'head': result['head'], 'seq': result['seq']}:
+                raise PublicationReadError('publication race')
+            for raw in list(reader.store.valid.values()) + list(reader.store.candidates.values()):
                 self.admit(wire(raw))
-            return self.republish_publication()
+            self.flush_publication()
+            self._publication_heads = reader.heads
+            return self.publication_state
 
     def submit_records(self, records):
         if not isinstance(records, list) or not records:
