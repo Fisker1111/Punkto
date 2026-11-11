@@ -8,6 +8,22 @@ This project follows a loose semantic-versioning convention: `vMAJOR.MINOR` for 
 
 ## [Unreleased]
 
+### PWA load performance (static delivery)
+
+Measured locally in Chrome, 390×844, simulated 9 Mbps / 40 ms network, served by the single-image node (`punkti_node`):
+
+| | before | after |
+|---|---|---|
+| First visit: first contentful paint | ~2.7 s | ~0.2 s |
+| First visit: transferred | ~2.9 MB | ~0.76 MB |
+| Repeat visit: load event | ~2.9 s | ~0.4 s |
+| Repeat visit: transferred | ~2.9 MB | ~0.12 MB |
+
+#### Changed
+- **`punkti_node/web.py`** — vendored `/lib/*` is served with `public, max-age=86400, immutable` (same as the Caddy node policy and `docs/cache-cloudflare.md`); app shell `*.html`/`*.js`/`*.json` and `/publication` keep `no-cache, no-store`. Text assets ≥1 KiB are gzip-compressed when the client sends `Accept-Encoding: gzip` (`Vary: Accept-Encoding`, in-memory cache keyed on mtime+size).
+- **`pwa/index.html`** — vendored scripts use `defer` (same execution order, before `/app.js` and `DOMContentLoaded`) so the shell paints without waiting for ~2.5 MB of libraries; the required-library check now runs on `DOMContentLoaded`; `preconnect` to `tiles.openfreemap.org` for the map-first view.
+
+
 ### Deployment Infrastructure Hardening (Delivery 1.1)
 
 Operational maturation: automated smoke-test verification, comprehensive runbooks, and CI integration for safer deployments.

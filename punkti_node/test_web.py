@@ -1,4 +1,5 @@
 """Real HTTP coverage of optional UI hosting and deployment route aliases."""
+import gzip
 import http.client
 import json
 from pathlib import Path
@@ -32,9 +33,9 @@ class WebTests(unittest.TestCase):
         self.addCleanup(self.node.durable.close)
         self.addCleanup(self.node.stop)
 
-    def get(self, path, method='GET', body=None):
+    def get(self, path, method='GET', body=None, headers=None):
         conn = http.client.HTTPConnection('127.0.0.1', self.node.server.server_port)
-        conn.request(method, path, body=json.dumps(body) if body else None)
+        conn.request(method, path, body=json.dumps(body) if body else None, headers=headers or {})
         response = conn.getresponse()
         result = response.status, dict(response.getheaders()), response.read()
         conn.close()
@@ -60,6 +61,40 @@ class WebTests(unittest.TestCase):
             self.assertEqual(self.get(path)[0], 404, path)
         self.node.web.spa_fallback = False
         self.assertEqual(self.get('/missing')[0], 404)
+
+    def test_lib_cache_and_gzip(self):
+        (self.web / 'lib').mkdir()
+        big = ('const vendored = 1;\n' * 400).encode()
+        (self.web / 'lib' / 'vendor.js').write_bytes(big)
+        (self.web / 'lib' / 'vendor.css').write_bytes(b'a{}' * 600)
+        (self.web / 'big.js').write_bytes(big)
+        # Vendored /lib/* is cacheable; root app JS stays no-store.
+        status, headers, raw = self.get('/lib/vendor.js')
+        self.assertEqual(status, 200)
+        self.assertEqual(headers['Cache-Control'], 'public, max-age=86400, immutable')
+        self.assertEqual(raw, big)
+        self.assertNotIn('Content-Encoding', headers)
+        self.assertEqual(self.get('/lib/vendor.css')[1]['Cache-Control'], 'public, max-age=86400, immutable')
+        self.assertIn('no-store', self.get('/big.js')[1]['Cache-Control'])
+        # Publication mount keeps its existing policy even under a lib-like name.
+        self.assertIn('no-store', self.get('/publication/root.json')[1]['Cache-Control'])
+        # gzip only when accepted, above the size floor, and byte-exact on decode.
+        status, headers, raw = self.get('/lib/vendor.js', headers={'Accept-Encoding': 'br, gzip;q=0.8'})
+        self.assertEqual(headers['Content-Encoding'], 'gzip')
+        self.assertEqual(headers['Vary'], 'Accept-Encoding')
+        self.assertEqual(int(headers['Content-Length']), len(raw))
+        self.assertLess(len(raw), len(big))
+        self.assertEqual(gzip.decompress(raw), big)
+        status, headers, raw = self.get('/big.js', 'HEAD', headers={'Accept-Encoding': 'gzip'})
+        self.assertEqual(raw, b'')
+        self.assertEqual(headers['Content-Encoding'], 'gzip')
+        self.assertNotIn('Content-Encoding', self.get('/big.js', headers={'Accept-Encoding': 'gzip;q=0'})[1])
+        self.assertNotIn('Content-Encoding', self.get('/app.js', headers={'Accept-Encoding': 'gzip'})[1])
+        self.assertNotIn('Content-Encoding', self.get('/icon.png', headers={'Accept-Encoding': 'gzip'})[1])
+        # Cache refreshes when the file changes.
+        (self.web / 'lib' / 'vendor.js').write_bytes(big + b'//v2\n' * 300)
+        raw = self.get('/lib/vendor.js', headers={'Accept-Encoding': 'gzip'})[2]
+        self.assertTrue(gzip.decompress(raw).endswith(b'//v2\n'))
 
     def test_confinement(self):
         for path in ['/../secret', '/%2e%2e/secret', '/%252e%252e/secret', '/escape', '/%2fetc/passwd', '/dir/../../secret', '/missing.js', '/%00']:
