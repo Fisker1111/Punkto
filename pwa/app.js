@@ -1,3 +1,4 @@
+import { initialPageForBoot, selectExplorePlaces, primaryExplorePlace, exploreNudgeBodyHtml } from './core/explore.js';
 import { trustLabel, heightLabel, isQaRecord } from './core/read-state.js';
 /**
  * app.js — Punkto PWA main application
@@ -21,6 +22,7 @@ import {
   missingMapLibraries,
   renderAtoms,
   focusPunktoOnMap,
+  frameInitialExplorePlace,
   detectBuildingAtCenter,
   toggle3D,
   setMapBoardViewport,
@@ -89,6 +91,7 @@ let _locationDenied = false;    // true when geolocation denied/unavailable
 let _mapScopedFeedReady = false;
 let _refreshUiTimer = null;
 let selectedAtomId = null;
+let exploreDismissed = false;
 
 // ── App shell: two views (Text / Map) ─────────────────────────────────────────
 // showPage — thin wrapper. Body/nav state + page lifecycle live in ui-shell.js.
@@ -98,6 +101,18 @@ function showPage(page) {
   currentPage = page;
   if (page !== 'map') closeMapBoard({ clearSelection: true });
   shellShowPage(page);
+}
+
+function refreshExploreNudge() {
+  const nudge = document.getElementById('map-explore-nudge');
+  if (!nudge) return;
+  nudge.hidden = exploreDismissed || currentPage !== 'map' || hasOpenBoard();
+  const places = selectExplorePlaces(_mainFeedAtoms);
+  const content = document.getElementById('map-explore-places');
+  const html = exploreNudgeBodyHtml(places, publicationReadState);
+  // Keep keyboard focus on an unchanged button during background refreshes.
+  if (content.innerHTML !== html) content.innerHTML = html;
+  if (currentPage === 'map') frameInitialExplorePlace(primaryExplorePlace(places));
 }
 
 async function getAtomSelectionId(atom) {
@@ -192,6 +207,7 @@ let publicationReadState = 'loading';
 function setSyncStatus(state) {
   publicationReadState = state === 'syncing' ? 'loading' : state;
   if (currentPage === 'text') renderMainFeed();
+  refreshExploreNudge();
   elSyncDot.className = '';
   if (elMainSyncDot) elMainSyncDot.className = '';
   if (state) elSyncDot.classList.add(state);
@@ -477,6 +493,7 @@ async function refreshUI(newAtomIds = null) {
   if (hasOpenBoard() && currentPage === 'map') await refreshMapBoardAtoms(visibleAtoms);
   if (elMainStatusCount) elMainStatusCount.textContent = `${total} visible boards`;
   if (currentPage === 'text') renderMainFeed();
+  refreshExploreNudge();
 
   if (recent.length === 0) {
     // Only show the empty placeholder AFTER the first sync has completed.
@@ -1179,19 +1196,20 @@ async function boot() {
   }
 
   wireEvents();
-  const explore = document.getElementById('first-visit-explore');
-  try { explore.hidden = localStorage.getItem('punkto.explored') === '1'; } catch {}
+  try { exploreDismissed = localStorage.getItem('punkto.explored') === '1'; } catch {}
   document.addEventListener('click', (event) => {
-    const action = event.target.closest('[data-action]')?.dataset.action;
+    const button = event.target.closest('[data-action]');
+    const action = button?.dataset.action;
     if (action === 'reply-settings') openSettingsMenu();
     if (action === 'retry-read') ensureSyncEngine().syncFeed();
-    if (action === 'explore' || action === 'dismiss-explore') {
-      explore.hidden = true;
+    if (action === 'dismiss-explore') {
+      exploreDismissed = true;
       try { localStorage.setItem('punkto.explored', '1'); } catch {}
-      if (action === 'explore') {
-        showPage('text');
-        document.getElementById('main-feed-list').scrollIntoView({ block: 'start' });
-      }
+      refreshExploreNudge();
+    }
+    if (action === 'explore-place') {
+      const place = selectExplorePlaces(_mainFeedAtoms).find(place => place.atomId === button.dataset.atomId);
+      if (place) focusPunkto(place.atomId).catch(err => console.warn('[map] explore focus failed:', err));
     }
   });
   renderSettingsView({ version: window.PUNKTO_APP_VERSION });
@@ -1204,10 +1222,12 @@ async function boot() {
       currentPage = 'text';
       closeMapBoard({ clearSelection: true });
       renderMainFeed();
+      refreshExploreNudge();
     },
     onShowMap: () => {
       currentPage = 'map';
       ensureMapInitialized();
+      refreshExploreNudge();
     },
     onAdd: openCreateOnMap,
     onOpenSettings: () => {
@@ -1263,7 +1283,11 @@ async function boot() {
     onRenderMap: renderAtoms,
     onSubmitReply: submitBoardReply,
     onFocusMap: focusPunkto,
-    onBoardViewportChanged: setMapBoardViewport,
+    onBoardViewportChanged: (open, rect) => {
+      setMapBoardViewport(open, rect);
+      // Closing clears the board selection after this viewport callback.
+      queueMicrotask(refreshExploreNudge);
+    },
     onPrintAtom: printPunktiForAtom,
   });
 
@@ -1271,7 +1295,7 @@ async function boot() {
     console.warn('[sync] boot promise failed:', err);
     setSyncStatus('error');
   });
-  showPage(deepLinkPunkto ? 'map' : 'text');
+  showPage(initialPageForBoot());
   if (deepLinkPunkto) {
     setPanelOpen(false); // panel managed by 3D view when deep-linking
   }
