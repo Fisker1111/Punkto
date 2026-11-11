@@ -1,0 +1,32 @@
+# Candidate for founder approval; never applied by this PR.
+# node2: node-local v0.6 at 172.22.0.3:8000 on punkti_edge.
+# Replaces only the www redirect block in node2 ~/punkto/Caddyfile.
+www.punkto.xyz {
+    tls /etc/caddy/www-tls/fullchain.pem /etc/caddy/www-tls/key.pem
+    header {
+        X-Content-Type-Options nosniff
+        X-Frame-Options DENY
+        Referrer-Policy strict-origin-when-cross-origin
+        -Server
+    }
+    encode gzip
+    @submit_write {
+        method POST
+        path /submit /api/submit
+    }
+    @push_write {
+        method POST
+        path /push /sync /api/push /api/sync
+        not remote_ip 46.101.118.157
+    }
+    @mcp path /mcp
+    route {
+        respond @submit_write 403
+        respond @push_write 403
+        reverse_proxy @mcp https://punkto-mcp.sunebech.workers.dev {
+            header_up Host punkto-mcp.sunebech.workers.dev
+            flush_interval -1
+        }
+        reverse_proxy 172.22.0.3:8000
+    }
+}
