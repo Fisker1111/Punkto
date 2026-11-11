@@ -231,7 +231,17 @@ async function realPwaStaticReadTest(playwright) {
       await page.waitForSelector(textNavSelector, { timeout: 15000 });
       await page.click(textNavSelector);
 
-      await page.waitForSelector('#world-apply', { timeout: 15000 });
+      const filtersDisclosure = page.locator('#main-feed details')
+        .filter({ hasText: 'Advanced filters' });
+      const ensureFiltersVisible = async () => {
+        if (await filtersDisclosure.getAttribute('open') === null) {
+          await filtersDisclosure.locator('summary').click();
+        }
+        await page.waitForSelector('#world-apply', { state: 'visible', timeout: 15000 });
+        await page.waitForSelector('#world-xy-prefix', { state: 'visible', timeout: 15000 });
+      };
+
+      await ensureFiltersVisible();
       await page.click('#world-apply');
 
       await page.waitForFunction(() => {
@@ -272,7 +282,9 @@ async function realPwaStaticReadTest(playwright) {
         };
       }, origin);
 
+      await ensureFiltersVisible();
       await page.fill('#world-xy-prefix', 'zzzz');
+      await ensureFiltersVisible();
       await page.click('#world-apply');
       await page.waitForFunction(() => {
         const cards = document.querySelectorAll('#main-feed-list .main-card').length;
@@ -285,7 +297,9 @@ async function realPwaStaticReadTest(playwright) {
         cardCount: document.querySelectorAll('#main-feed-list .main-card').length,
       }));
 
+      await ensureFiltersVisible();
       await page.fill('#world-xy-prefix', '');
+      await ensureFiltersVisible();
       await page.click('#world-apply');
       await page.waitForFunction(() => {
         const cards = document.querySelectorAll('#main-feed-list .main-card').length;
