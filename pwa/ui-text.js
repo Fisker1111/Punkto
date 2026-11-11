@@ -158,8 +158,9 @@ export function initTextView({ onShowOnMap, onLeaveNote, onOpenBoard, onPostRepl
 
   _syncTabUi();
   const list = document.getElementById('main-feed-list');
-  if (list) {
-    list.addEventListener('click', (e) => {
+  const feed = document.getElementById('main-feed');
+  if (feed) {
+    feed.addEventListener('click', (e) => {
       const backBtn = e.target.closest('[data-action="board-back"]');
       if (backBtn) { _selectedBoardId = null; _selectedBoardAtom = null; _activeTab = _boardReturnTab || 'visible'; _syncTabUi(); renderTextFeed({ atoms: _mainFeedAtoms }); return; }
 
@@ -167,6 +168,8 @@ export function initTextView({ onShowOnMap, onLeaveNote, onOpenBoard, onPostRepl
       const tabBtn = e.target.closest('[data-action="text-tab"]');
       if (tabBtn) {
         const tab = tabBtn.dataset.tab === 'activity' ? 'activity' : 'visible';
+        _selectedBoardId = null;
+        _selectedBoardAtom = null;
         _activeTab = tab;
         _syncTabUi();
         renderTextFeed({ atoms: _mainFeedAtoms });
@@ -267,12 +270,16 @@ function _activityTimestamp(atom) {
   return Number(atom?.updated_at || atom?.updatedAt || atom?.created_at || atom?.createdAt || atom?.t || 0) || 0;
 }
 
-function _atomsForActiveTab(atoms) {
+export function atomsForTextTab(atoms, tab = 'visible') {
   const list = Array.isArray(atoms) ? atoms.slice() : [];
-  if (_activeTab === 'activity') {
+  if (tab === 'activity') {
     return list.sort((a, b) => _activityTimestamp(b) - _activityTimestamp(a));
   }
-  return list;
+  return list.filter(isRootAtom);
+}
+
+export function visibleRootCount(atoms) {
+  return atomsForTextTab(atoms).length;
 }
 
 function _syncTabUi() {
@@ -443,7 +450,7 @@ export function renderBoardSheetHtml({ atom, atoms = [], replyStatus = null, rep
 
 export function renderTextFeed({ atoms = [], locationDenied = false, loadingVisibleAtoms = false, readError = false } = {}) {
   _mainFeedAtoms = Array.isArray(atoms) ? atoms : [];
-  const activeAtoms = _atomsForActiveTab(_mainFeedAtoms).filter((atom) => _activeTab === 'activity' || !_isReplyAtom(atom));
+  const activeAtoms = atomsForTextTab(_mainFeedAtoms, _activeTab);
   _syncTabUi();
   const list = document.getElementById('main-feed-list');
   const emptyEl = document.getElementById('main-empty-notes');
@@ -466,7 +473,7 @@ export function renderTextFeed({ atoms = [], locationDenied = false, loadingVisi
       _selectedBoardAtom = atom;
       if (locEl) locEl.style.display = 'none';
       if (emptyEl) emptyEl.style.display = 'none';
-      const rootCount = _mainFeedAtoms.filter(_isRootAtom).length;
+      const rootCount = visibleRootCount(_mainFeedAtoms);
       if (countEl) countEl.textContent = loadingVisibleAtoms ? 'Loading visible atoms…' : (rootCount + ' public boards');
       if (statusCountEl) statusCountEl.textContent = loadingVisibleAtoms ? 'Loading visible atoms…' : (rootCount + ' visible boards');
       list.innerHTML = _isReplyAtom(atom) ? renderOrphanReplyDetail(atom) : renderBoardDetail(atom);
@@ -508,7 +515,7 @@ export function renderTextFeed({ atoms = [], locationDenied = false, loadingVisi
   if (locEl) locEl.style.display = 'none';
   if (emptyEl) emptyEl.style.display = 'none';
   if (countEl) countEl.textContent = loadingVisibleAtoms ? 'Loading visible atoms…' : (activeAtoms.length + (_activeTab === 'activity' ? ' public activity items' : ' public boards'));
-  if (statusCountEl) statusCountEl.textContent = loadingVisibleAtoms ? 'Loading visible atoms…' : (_mainFeedAtoms.filter(_isRootAtom).length + ' visible boards');
+  if (statusCountEl) statusCountEl.textContent = loadingVisibleAtoms ? 'Loading visible atoms…' : (visibleRootCount(_mainFeedAtoms) + ' visible boards');
 
   const headingEl = document.getElementById('main-feed-heading');
   const subtitleEl = document.getElementById('main-feed-subtitle');

@@ -11,6 +11,8 @@ import { createRequire } from 'node:module';
 import { webcrypto } from 'node:crypto';
 import { VERSION, State, encodeRecord, decodeRecord, canonical, computeMid, sha256Hex, signingInput, validate, unb64 } from './punkti/carrier.js';
 import { createReader } from './punkti/reader.js';
+import { createPunktiClient } from './sync/punkti-client.js';
+import { boardReplies } from './ui-text.js';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const HELPER = path.join(ROOT, 'pwa/punkti/punkto-reply.mjs');
@@ -226,6 +228,26 @@ globalThis.fetch = (address, init = {}) => {
       assert.equal(reply.submitted, true); assert.equal(reply.submit_state, State.VALID);
       assert.equal(reply.visible, true); assert.equal(reply.verified, true);
       assert.equal(reply.node.id, 'z-local');
+      // The browser client captures fetch at construction; route every read through
+      // the same audited loopback-only guard used by the fixture.
+      let atoms;
+      globalThis.fetch = get;
+      try {
+        const client = createPunktiClient({ baseUrl: f.base, identity: () => null });
+        atoms = await client.pullAll();
+      } finally {
+        globalThis.fetch = nativeFetch;
+      }
+      const root = atoms.find(atom => atom.atom_id === welcome.address);
+      const publishedReply = atoms.find(atom => atom.atom_id === reply.mid);
+      assert.ok(root);
+      assert.ok(publishedReply);
+      assert.equal(publishedReply.verification_state, 'VALID');
+      assert.equal(publishedReply.relation, 'reply');
+      assert.equal(publishedReply.parent_id, root.atom_id);
+      assert.equal(publishedReply.root_id, root.atom_id);
+      assert.equal(publishedReply.h, root.h);
+      assert.deepEqual(boardReplies(root, atoms), [publishedReply]);
       const post = await run(f, ['post', 'coordinates', '--lat', '55.6761', '--lon', '12.5683', '--height', '23.123456789']);
       assert.ok(post.h.endsWith('_23.123456789')); assert.equal(post.parent, null);
     });

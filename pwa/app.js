@@ -12,7 +12,7 @@ import {
   isSettingsOpen as shellIsSettingsOpen,
   setCounts as shellSetCounts,
 } from './ui-shell.js';
-import { initTextView, renderTextFeed, openBoardById, getAtomStableId, isRootAtom, resolveBoardAtom, replyAddress } from './ui-text.js';
+import { initTextView, renderTextFeed, openBoardById, getAtomStableId, visibleRootCount, resolveBoardAtom, replyAddress } from './ui-text.js';
 import {
   initMapView,
   ensureMapInitialized,
@@ -437,10 +437,6 @@ async function refreshUI(newAtomIds = null) {
   const allAtoms = await getAllAtomsNewestFirst();
   const visibleAtoms = allAtoms.filter((atom) => !isHiddenAtom(atom) && atomMatchesCurrentScope(atom));
   await ensureAtomIds(visibleAtoms);
-  const total = visibleAtoms.filter(isRootAtom).length;
-  elCountNum.textContent = total;
-  // Keep settings info (if menu is open) in sync
-  if (elSettingsCount) elSettingsCount.textContent = String(total);
 
   // Render recent 50 visible atoms in panel, prioritizing nearby notes
   const map = getMapInstance();
@@ -474,6 +470,10 @@ async function refreshUI(newAtomIds = null) {
   }
   // Expose to main-view feed
   _mainFeedAtoms = enriched;
+  const total = visibleRootCount(_mainFeedAtoms);
+  elCountNum.textContent = total;
+  // Keep settings info (if menu is open) in sync.
+  if (elSettingsCount) elSettingsCount.textContent = String(total);
   if (hasOpenBoard() && currentPage === 'map') await refreshMapBoardAtoms(visibleAtoms);
   if (elMainStatusCount) elMainStatusCount.textContent = `${total} visible boards`;
   if (currentPage === 'text') renderMainFeed();
