@@ -24,7 +24,21 @@ jobs:
       - name: Install pinned Playwright package
         run: npm install --no-save playwright@1.64.1
       - name: Install Chromium for pinned Playwright
-        run: npx playwright install --with-deps chromium
+        run: |
+          set -euo pipefail
+          for attempt in 1 2 3; do
+            if npx playwright install --with-deps chromium; then
+              echo "chromium installed on attempt ${attempt}"
+              exit 0
+            fi
+            echo "chromium install attempt ${attempt} failed; retrying"
+            sudo sed -i 's|http://azure.archive.ubuntu.com/ubuntu|http://archive.ubuntu.com/ubuntu|g' \
+              /etc/apt/sources.list.d/ubuntu.sources 2>/dev/null || true
+            sudo apt-get update -y || true
+            sleep 15
+          done
+          echo "chromium install failed after 3 attempts" >&2
+          exit 1
       - name: Run browser static-first E2E
         env:
           PLAYWRIGHT_MODULE: file://${{ github.workspace }}/node_modules/playwright/index.mjs
