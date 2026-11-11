@@ -15,6 +15,7 @@ import {
 } from './ui-shell.js';
 import { initTextView, renderTextFeed, openBoardById, getAtomStableId, visibleRootCount, resolveBoardAtom, replyAddress } from './ui-text.js';
 import {
+  prefersReducedMotion,
   initMapView,
   ensureMapInitialized,
   getMapInstance,
@@ -809,7 +810,7 @@ async function submitAtomFromModal({ text, author, category, draft }) {
     await refreshUI();
     requestAnimationFrame(() => { if (map) map.resize(); });
     setSyncStatus('ok');
-    if (map) map.flyTo({ center: [center.lng, center.lat], zoom: Math.max(map.getZoom(), 14) });
+    if (map) map.flyTo({ center: [center.lng, center.lat], zoom: Math.max(map.getZoom(), 14), ...(prefersReducedMotion() ? { duration: 0 } : {}) });
   } catch (err) {
     console.error('[addAtom]', err);
     setSyncStatus('error');

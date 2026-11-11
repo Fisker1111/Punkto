@@ -13,6 +13,10 @@ import { stripPunktoPrefix, ensurePunktoPrefix } from './protocol/punkto-id.js';
 import { getAtomStableId } from './ui-text.js';
 import { isPunktiMid, isStableAtomId } from './protocol/atom-id.js';
 
+export function prefersReducedMotion() {
+  return !!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+}
+
 const CATEGORY_META = {
   TEXT: { code: 'TEXT', label: 'Talk', cls: 'cat-talk', color: [224, 166, 96] },
   INFO: { code: 'INFO', label: 'Info', cls: 'cat-info', color: [74, 151, 191] },
@@ -207,13 +211,12 @@ export function setMapBoardViewport(open, boardRect = null) {
     }
   }
 
-  const reduceMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
   const apply = () => {
     mapBoardPendingApply = null;
     try {
       map.easeTo({
         padding,
-        duration: reduceMotion ? 0 : 180,
+        duration: prefersReducedMotion() ? 0 : 180,
         pitch: map.getPitch(),
         bearing: map.getBearing(),
         zoom: map.getZoom(),
@@ -275,7 +278,7 @@ export function ensureMapInitialized() {
 }
 
 function flyToPlace(loc) {
-  map.flyTo({ center: [loc.lon, loc.lat], zoom: 16, duration: 1200 });
+  map.flyTo({ center: [loc.lon, loc.lat], zoom: 16, duration: prefersReducedMotion() ? 0 : 1200 });
 }
 
 export function frameInitialExplorePlace(place) {
@@ -686,13 +689,13 @@ export function toggle3D() {
   const elToggle3D = document.getElementById('toggle-3d');
   is3D = !is3D;
   if (is3D) {
-    map.easeTo({ pitch: 45, bearing: -10, duration: 800 });
+    map.easeTo({ pitch: 45, bearing: -10, duration: prefersReducedMotion() ? 0 : 800 });
     if (elToggle3D) {
       elToggle3D.textContent = '2D';
       elToggle3D.title = 'Switch to 2D view';
     }
   } else {
-    map.easeTo({ pitch: 0, bearing: 0, duration: 800 });
+    map.easeTo({ pitch: 0, bearing: 0, duration: prefersReducedMotion() ? 0 : 800 });
     if (elToggle3D) {
       elToggle3D.textContent = '3D';
       elToggle3D.title = 'Switch to 3D view';
@@ -923,12 +926,11 @@ function applyMapCreateViewport() {
   const padding = mapCreateOpen
     ? createViewportPadding(base, mapCreateComposerRect)
     : { ...base };
-  const reduceMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
 
   try {
     map.easeTo({
       padding,
-      duration: reduceMotion ? 0 : 120,
+      duration: prefersReducedMotion() ? 0 : 120,
       center: map.getCenter(),
       pitch: map.getPitch(),
       bearing: map.getBearing(),

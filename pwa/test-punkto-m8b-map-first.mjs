@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import vm from 'node:vm';
 import { readFile } from 'node:fs/promises';
 import { initialPageForBoot, EXPLORE_PLACE_LIMIT, selectExplorePlaces, primaryExplorePlace, explorePlacesHtml, exploreNudgeBodyHtml } from './core/explore.js';
 import { mapRecordToAtom } from './sync/punkti-client.js';
@@ -133,6 +134,95 @@ check('mobile board sheet clears the nav footprint while the desktop offset stay
   assert.match(sheet[1], /(?:^|;)\s*bottom\s*:\s*calc\(\s*134px\s*\+\s*var\(\s*--safe-b\s*\)\s*\)\s*;/);
   assert.match(index, /@media\s*\(\s*max-width\s*:\s*899px\s*\)\s*\{\s*:root\s*\{\s*--nav-h\s*:\s*134px\s*;\s*\}/);
   assert.match(index, /@media\s*\(\s*min-width\s*:\s*900px\s*\)\s*\{\s*#map-board-sheet\s*\{[^}]*\bbottom\s*:\s*20px\s*;/);
+});
+
+// Execute the map module with a fake camera, retaining its real animation paths.
+const mapSource = await readFile(new URL('./ui-map.js', import.meta.url), 'utf8');
+const appSource = await readFile(new URL('./app.js', import.meta.url), 'utf8');
+const publishCamera = appSource.match(/if \(map\) map\.flyTo\([^\n]+/)[0];
+function cameraHarness() {
+  const calls = [];
+  let reduced = false;
+  let moving = false;
+  let deferred;
+  const fakeMap = {
+    flyTo: options => calls.push(options),
+    easeTo: options => calls.push(options),
+    getContainer: () => null,
+    getPadding: () => ({ top: 0, right: 0, bottom: 0, left: 0 }),
+    getPitch: () => 0,
+    getBearing: () => 0,
+    getZoom: () => 15,
+    getCenter: () => ({ lng: 12, lat: 55 }),
+    isMoving: () => moving,
+    once: (event, callback) => { deferred = callback; },
+    off: () => {},
+  };
+  const context = vm.createContext({
+    window: {
+      innerWidth: 1000,
+      innerHeight: 800,
+      matchMedia: query => {
+        assert.equal(query, '(prefers-reduced-motion: reduce)');
+        return { matches: reduced };
+      },
+    },
+    document: { getElementById: () => null },
+    console,
+    fakeMap,
+  });
+  vm.runInContext(mapSource.replace(/^import .*;$/gm, '').replace(/^export /gm, '') + '\nmap = fakeMap;', context);
+  return {
+    calls,
+    context,
+    run: code => vm.runInContext(code, context),
+    reduce: value => { reduced = value; },
+    move: value => { moving = value; },
+    finishMove: () => deferred(),
+  };
+}
+check('all camera paths honour reduced motion and preserve normal durations', () => {
+  assert.match(appSource, /import\s*\{[^}]*prefersReducedMotion[^}]*\} from '\.\/ui-map\.js'/);
+  const harness = cameraHarness();
+  for (const reduced of [false, true, false]) {
+    harness.reduce(reduced);
+    harness.calls.length = 0;
+    harness.run(`
+      flyToPlace({ lon: 12, lat: 55 });
+      is3D = false;
+      toggle3D();
+      toggle3D();
+      setMapBoardViewport(true, { width: 424 });
+      setMapBoardViewport(false);
+      mapCreateOpen = true;
+      applyMapCreateViewport();
+      mapCreateOpen = false;
+      applyMapCreateViewport();
+    `);
+    harness.run(`{ const center = { lng: 12, lat: 55 }; ${publishCamera} }`);
+    assert.deepEqual(harness.calls.map(call => call.duration),
+      reduced ? Array(8).fill(0) : [1200, 800, 800, 180, 180, 120, 120, undefined]);
+    assert.equal(Object.hasOwn(harness.calls.at(-1), 'duration'), reduced);
+    assert.deepEqual(Array.from(harness.calls[0].center), [12, 55]);
+    assert.equal(harness.calls[0].zoom, 16);
+    assert.equal(harness.calls[1].pitch, 45);
+    assert.equal(harness.calls[2].pitch, 0);
+  }
+});
+check('motion preference is read at call time, including deferred board padding', () => {
+  const harness = cameraHarness();
+  assert.equal(harness.run('prefersReducedMotion()'), false);
+  harness.move(true);
+  harness.run('setMapBoardViewport(true, { width: 424 })');
+  assert.equal(harness.calls.length, 0);
+  harness.reduce(true);
+  assert.equal(harness.run('prefersReducedMotion()'), true);
+  harness.finishMove();
+  assert.equal(harness.calls[0].duration, 0);
+  harness.reduce(false);
+  assert.equal(harness.run('prefersReducedMotion()'), false);
+  delete harness.context.window.matchMedia;
+  assert.equal(harness.run('prefersReducedMotion()'), false);
 });
 
 console.log(`${passed}/${passed} M8B map-first checks passed (initial Map, real explore place, exact-address board).`);
