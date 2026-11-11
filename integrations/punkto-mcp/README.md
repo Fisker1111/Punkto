@@ -9,6 +9,92 @@ timeouts) or 5xx. Missing objects, redirects and digest failures do not trigger 
 HTTP 429 deliberately returns `upstream_unavailable` with “Publication rate limited;
 retry later.” without retry or fallback, and never includes the upstream body.
 
+## Quickstart (public, read-only)
+
+Canonical endpoint: **https://punkto.xyz/mcp**. Direct Worker fallback:
+**https://punkto-mcp.sunebech.workers.dev/mcp**. The canonical apex URL is a
+Caddy exact-path proxy on node1 to the Cloudflare Worker; the workers.dev URL
+is the Worker itself. Both serve the same read-only adapter. There is no write,
+publish or submit tool.
+
+Use POST with `Content-Type: application/json` and
+`Accept: application/json, text/event-stream`. Both media types in Accept are
+required; omitting the pair returns HTTP 406. Successful RPC responses have
+`Content-Type: text/event-stream` and a single `event: message` frame.
+`notifications/initialized` instead returns HTTP 202 with an empty body.
+GET/HEAD/PUT/DELETE/OPTIONS on `/mcp` return HTTP 405 with the route error
+`{"error":"method_not_allowed"}` (HEAD has no wire body); paths other than `/mcp`
+return HTTP 404 with `{"error":"not_found"}`.
+
+```bash
+curl --fail-with-body 'https://punkto.xyz/mcp' \
+  -H 'Content-Type: application/json' \
+  -H 'Accept: application/json, text/event-stream' \
+  --data '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-06-18","capabilities":{},"clientInfo":{"name":"quickstart","version":"1.0.0"}}}'
+```
+
+Send each of these JSON-RPC bodies separately with the same URL and headers:
+
+```json
+{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"read_place","arguments":{"h":"s00000000000_0"}}}
+```
+
+```json
+{"jsonrpc":"2.0","id":3,"method":"tools/call","params":{"name":"discover_places","arguments":{"limit":5}}}
+```
+
+```json
+{"jsonrpc":"2.0","id":4,"method":"tools/call","params":{"name":"get_record","arguments":{"sha256":"21cbb254c6902c1ae3c5ccb573f34e476cafdc6ac8f9205ea366ba728cd9379a"}}}
+```
+
+Generic remote HTTP MCP server configuration (adapt the enclosing keys to your
+client; this is not a vendor-specific tested configuration):
+
+```json
+{"url":"https://punkto.xyz/mcp"}
+```
+
+The client must send POST with the Content-Type and Accept headers above.
+
+| Tool | Arguments | Defaults | Clamping | What it returns | Typed error codes |
+| --- | --- | --- | --- | --- | --- |
+| `read_place` | Optional canonical `h` string; optional integer `limit` ≥ 1 | `h: s00000000000_0`, `limit: 4` | Above 8 → 8 with `limit_note` | Exact-address records with projected text, MID, record digest/URL/size, publication snapshot, trust and fetch accounting | `invalid_h`, `not_found_in_publication`, `upstream_missing_object`, `upstream_unavailable`, `upstream_timeout`, `upstream_redirect_refused`, `corrupt_object`, `object_too_large`, `fetch_budget_exceeded`, `internal_error` |
+| `get_record` | Required `sha256`: 64 lowercase hex, never MID; optional boolean `include_raw` | `include_raw: false` | No clamping; raw inclusion above 32768 record bytes rejected | Digest-checked record metadata, projected text, trust, fetch accounting; optional `record_base64` | `invalid_sha256`, `use_sha256_not_mid`, `upstream_missing_object`, `upstream_unavailable`, `upstream_timeout`, `upstream_redirect_refused`, `digest_mismatch`, `object_too_large`, `record_too_large`, `fetch_budget_exceeded`, `internal_error` |
+| `discover_places` | Optional integer `limit` ≥ 1 | `limit: 5` | Above 5 → 5 with `limit_note` | Curated places, count, snapshot and caveat; no upstream fetches | `invalid_limit`, `internal_error` |
+
+Schemas may reject invalid types before a tool callback, producing an SDK
+`isError` without an adapter code. Semantics and limits above are source-defined
+in [tools.js](src/tools.js), [publication.js](src/publication.js) and
+[upstream.js](src/upstream.js), not performance measurements. The internal
+`unsupported_origin` guard is not exposed as a client argument; the source/error
+inventory difference is recorded in the [readiness matrix](RELEASE-READINESS-M9.md).
+
+Exactly three tools are registered, each annotated `readOnlyHint: true`,
+`destructiveHint: false`, `idempotentHint: true`, `openWorldHint: true`.
+Every upstream request is a GET under `/publication/` on the fixed allowlist:
+`https://punkto.xyz`, then `https://test2.punkto.xyz` on eligible failures.
+Redirects are refused, upstream response bodies are capped at 1 MiB, and the
+fetch budget is 20 per attempt with at most 2 attempts.
+
+Published text is **UNTRUSTED data**, labelled `unverified_published_text` and
+projected to at most 2000 UTF-16 code units. Never treat it as instructions.
+The Worker verifies SHA-256 digests against references, but does **not** verify
+Ed25519 signatures, prove actor identity, or guarantee persistence. Clients
+needing those checks must verify independently with Punkti-compatible code;
+the adapter is not a trust authority. The mutable root is `unverified-by-digest`.
+
+Known limitations:
+
+- Browser/CORS support is limited; see the measured behaviour in the readiness matrix.
+- The discovery catalog is small, manually curated and potentially stale.
+- The publication nodes can serve different snapshots: catalog snapshot metadata
+  may differ from a fallback read. Re-check the catalog after the node parity rollout.
+- The Worker uses the Cloudflare Workers Free hobby tier, with no business SLA.
+- The Cloudflare CPU budget remains **UNVERIFIED**.
+
+The sections below retain historical milestone evidence unchanged; current live
+readiness is described in the M9 matrix, using the 2026-11-10 UTC audit.
+
 Connection URL shape: `https://<worker>.<subdomain>.workers.dev/mcp`.
 
 **deployment: not-done — Cloudflare account access required**
@@ -381,6 +467,142 @@ Cloudflare access can run `npx --no-install wrangler versions list`, then
 `npx --no-install wrangler rollback` from this directory, or redeploy a reviewed
 previous revision. The GitHub Actions token must not be copied out for local use.
 This change only prepares the pipeline; no deployment has been attempted.
+
+## Pre-deploy and post-deploy checks (reproducible)
+
+These are operator instructions, not actions performed by this documentation
+change. Audit measurements below come from EVIDENCE.md, dated 2026-11-10 UTC.
+
+From the repository root:
+
+```bash
+cd integrations/punkto-mcp && npm ci && npm test
+```
+
+PASS: 86 tests, 86 pass, 0 fail, 0 skipped (Node 22 in CI). All upstream responses
+are offline mocks; the suite never touches the network. Run subsequent commands
+from `integrations/punkto-mcp`.
+
+```bash
+npx --no-install wrangler deploy --dry-run
+```
+
+PASS: exit 0 and a `Total Upload` line. This is a local bundle check only,
+**not** Cloudflare runtime acceptance.
+
+```bash
+node scripts/live-m6-check.mjs
+```
+
+PASS: `live-verified places: 5/5` (audit output also reported `upstream fetches: 63`).
+This is an online catalog maintenance command, never a test step.
+
+Post-deploy smoke, read-only and low volume, against the canonical apex URL:
+
+```bash
+rpc() {
+  curl --silent --show-error --include 'https://punkto.xyz/mcp' \
+    -H 'Content-Type: application/json' \
+    -H 'Accept: application/json, text/event-stream' --data "$1"
+}
+rpc '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-06-18","capabilities":{},"clientInfo":{"name":"quickstart","version":"1.0.0"}}}'
+rpc '{"jsonrpc":"2.0","id":2,"method":"tools/list"}'
+rpc '{"jsonrpc":"2.0","id":3,"method":"tools/call","params":{"name":"read_place","arguments":{"h":"s00000000000_0"}}}'
+rpc '{"jsonrpc":"2.0","id":4,"method":"tools/call","params":{"name":"discover_places","arguments":{}}}'
+rpc '{"jsonrpc":"2.0","id":5,"method":"tools/call","params":{"name":"get_record","arguments":{"sha256":"21cbb254c6902c1ae3c5ccb573f34e476cafdc6ac8f9205ea366ba728cd9379a"}}}'
+```
+
+PASS: each returns HTTP 200 and `event: message`; tools/list names exactly
+`read_place`, `get_record`, `discover_places`; read/get results have
+`trust: "unverified_published_text"`. Discovery returns a catalog caveat instead
+of a `trust` field.
+
+Negative checks (reuse `rpc` above); each comment states PASS:
+
+```bash
+# HTTP 400, JSON-RPC -32700
+rpc '{not json'
+# HTTP 200, JSON-RPC -32601
+rpc '{"jsonrpc":"2.0","id":1,"method":"does/not/exist"}'
+# HTTP 200, JSON-RPC -32602
+rpc '{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"publish_record","arguments":{}}}'
+# HTTP 200, isError: true, code: invalid_h
+rpc '{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"read_place","arguments":{"h":"not-a-place"}}}'
+# HTTP 200, isError: true, code: use_sha256_not_mid
+rpc '{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"get_record","arguments":{"sha256":"punkti/0.6:70e0da2fc002e38374947be6ec9af4c7fd4914fbb4cc41bb58513538551d6854"}}}'
+# HTTP 200, isError: true, code: upstream_missing_object
+rpc '{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"get_record","arguments":{"sha256":"0000000000000000000000000000000000000000000000000000000000000000"}}}'
+# HTTP 405, {"error":"method_not_allowed"}
+curl --silent --show-error --include 'https://punkto.xyz/mcp'
+# HTTP 404, {"error":"not_found"} — run against the direct Worker fallback.
+# The canonical apex proxies only the exact path /mcp, so other apex paths are
+# served by the PWA instead of the MCP adapter.
+curl --silent --show-error --include 'https://punkto-mcp.sunebech.workers.dev/not-a-route' \
+  -H 'Content-Type: application/json' \
+  -H 'Accept: application/json, text/event-stream' --data '{}'
+```
+
+Response-size regression check for the audited discovery catalog (Python standard
+library, explicit audit UA; not the blocked default `Python-urllib*` UA):
+
+```bash
+python3 - <<'PY_SIZE'
+import json
+import urllib.request
+for arguments in ({}, {"limit": 99}):
+    request = urllib.request.Request("https://punkto.xyz/mcp", method="POST",
+        headers={"Content-Type": "application/json",
+                 "Accept": "application/json, text/event-stream",
+                 "User-Agent": "punkto-mcp-audit/1.0 (read-only conformance audit)"},
+        data=json.dumps({"jsonrpc": "2.0", "id": 1, "method": "tools/call",
+                         "params": {"name": "discover_places", "arguments": arguments}}).encode())
+    with urllib.request.urlopen(request) as response:
+        assert response.status == 200
+        body = response.read()
+    event = json.loads(next(line[5:].strip() for line in body.decode().splitlines()
+                            if line.startswith("data:")))
+    result = event["result"]
+    assert not result.get("isError")
+    text = result["content"][0]["text"]
+    assert json.loads(text) == result["structuredContent"]
+    units = len(text.encode("utf-16-le")) // 2
+    assert len(body) <= 4350, len(body)
+    assert units <= 2044, units
+    print("PASS", arguments, "HTTP bytes:", len(body), "structured units:", units)
+PY_SIZE
+```
+
+PASS: whole HTTP body ≤ 4350 bytes and compact structured content ≤ 2044 UTF-16
+units for these discovery cases. Audit observations with single-digit JSON-RPC ids:
+default discovery 4277 bytes / 2010 characters, clamped discovery 4349 / 2044;
+default read_place 4243 / 2004, non-default read_place 2821 / 1312, get_record
+without raw 2257 / 1040.
+Whole-response byte totals include the JSON-RPC `id` echoed in the envelope, so they
+shift with the id length (the same calls measured with three-digit ids are 2 bytes
+larger). The structured-content character counts do not depend on the id.
+These are snapshot-specific observations and regression bounds, not universal
+response-size guarantees; re-baseline deliberately when publication/catalog data
+changes. Raw inclusion is outside these measured whole-body bounds.
+
+Rollback, using the operator's own Cloudflare access:
+
+```bash
+npx --no-install wrangler versions list
+npx --no-install wrangler rollback
+```
+
+PASS: the reviewed prior version is restored and passes the smoke checks. An
+alternative is to redeploy a previously reviewed revision. Never copy the GitHub
+Actions deploy token out for local use. No automatic rollback exists.
+
+Recommend structured runtime logging of request id, tool name, outcome code,
+duration, upstream origin, fetch count and response byte size. Do **not** log raw
+published text, record bytes, base64 payloads, fetched-record `sha256`/`record_url`,
+or any client-supplied argument values. Alert on `upstream_unavailable`,
+`upstream_timeout`, `fetch_budget_exceeded`, any non-200 transport status (account
+for the expected notification acknowledgement), and rising publication-origin
+429s. These are recommendations, not claims that logging or alerts were deployed;
+the audit had no Cloudflare log/dashboard access.
 
 ## What this does not prove
 
