@@ -231,6 +231,10 @@ async function realPwaStaticReadTest(playwright) {
       await page.waitForSelector(textNavSelector, { timeout: 15000 });
       await page.click(textNavSelector);
 
+      await page.evaluate(() => {
+        const details = document.getElementById('world-apply')?.closest('details');
+        if (details) details.open = true;
+      });
       await page.waitForSelector('#world-apply', { timeout: 15000 });
       await page.click('#world-apply');
 
