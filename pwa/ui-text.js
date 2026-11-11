@@ -2,6 +2,8 @@
  * ui-text.js — Punkto PWA Text feed + board-detail view
  */
 
+import { trustLabel, heightLabel, placeHtml, isQaRecord, readStateHtml } from './core/read-state.js';
+
 import { parse_h } from './punkti/spatial.js';
 
 // Punkto L4: reply placement is the parent's exact signed spatial address.
@@ -20,6 +22,7 @@ let _onOpenBoard = null;
 let _onPostReply = null;
 let _onPrintAtom = null;
 let _helpers = null;
+let _hasIdentity = () => false;
 let _replyStatus = null;
 let _replyDraft = '';
 let _mainFeedAtoms = [];
@@ -110,19 +113,19 @@ export function resolveBoardAtom(atom, atoms = []) {
   if (!_isReplyAtom(atom)) return atom;
   return _findRootForReply(atom, atoms) || atom;
 }
-function _boardReplies(root, atoms) {
+export function boardReplies(root, atoms) {
   return (Array.isArray(atoms) ? atoms : [])
     .filter((a) => a !== root && _replyBelongsToRoot(a, root))
     .sort((a, b) => _activityTimestamp(a) - _activityTimestamp(b));
 }
-function _replyCount(root, atoms) { return _boardReplies(root, atoms).length; }
+function _replyCount(root, atoms) { return boardReplies(root, atoms).length; }
 function _shortId(id) {
   const value = String(id || '').trim();
   if (!value) return 'unknown';
   return value.length > 18 ? value.slice(0, 10) + '…' + value.slice(-6) : value;
 }
 function _authorLabel(atom){ const a=String(atom?.author||atom?.f||'').trim(); return a?`by ${a}`:'by anonymous'; }
-function _trustLabel(atom){ return atom?.sig ? (_isVerified(atom) ? 'Verified' : 'Signed') : 'Unsigned'; }
+function _trustLabel(atom){ return trustLabel(atom); }
 function _categoryBadge(catRaw){
   const raw=String(catRaw||'').trim().toUpperCase();
   const map={TEXT:{code:'TEXT',label:'Talk',cls:'cat-talk'},TALK:{code:'TEXT',label:'Talk',cls:'cat-talk'},INFO:{code:'INFO',label:'Info',cls:'cat-info'},WARN:{code:'WARN',label:'Warning',cls:'cat-warn'},EMGC:{code:'EMGC',label:'Emergency',cls:'cat-emgc'},EVNT:{code:'EVNT',label:'Event',cls:'cat-evnt'},LOST:{code:'LOST',label:'Lost/Found',cls:'cat-lost'}};
@@ -132,6 +135,7 @@ function _isImportedSourceAtom(atom) {
   return atom?.imported === true || Boolean(String(atom?.import_source || '').trim());
 }
 function _importedSourceBadge(atom) {
+  if (isQaRecord(atom)) return '<span class="ui-badge">QA record</span>';
   return _isImportedSourceAtom(atom) ? '<span class="main-card-source-badge ui-badge">Imported source</span>' : '';
 }
 function _importedSourceLine(atom) {
@@ -143,18 +147,20 @@ function _importedSourceLine(atom) {
   return `Imported source data · ${details.join(' · ')}`;
 }
 
-export function initTextView({ onShowOnMap, onLeaveNote, onOpenBoard, onPostReply, onPrintAtom, helpers } = {}) {
+export function initTextView({ onShowOnMap, onLeaveNote, onOpenBoard, onPostReply, onPrintAtom, hasIdentity, helpers } = {}) {
   _onShowOnMap = typeof onShowOnMap === 'function' ? onShowOnMap : null;
   _onLeaveNote = typeof onLeaveNote === 'function' ? onLeaveNote : null;
   _onOpenBoard = typeof onOpenBoard === 'function' ? onOpenBoard : null;
   _onPostReply = typeof onPostReply === 'function' ? onPostReply : null;
   _onPrintAtom = typeof onPrintAtom === 'function' ? onPrintAtom : null;
   _helpers = helpers || null;
+  _hasIdentity = hasIdentity || (() => false);
 
   _syncTabUi();
   const list = document.getElementById('main-feed-list');
-  if (list) {
-    list.addEventListener('click', (e) => {
+  const feed = document.getElementById('main-feed');
+  if (feed) {
+    feed.addEventListener('click', (e) => {
       const backBtn = e.target.closest('[data-action="board-back"]');
       if (backBtn) { _selectedBoardId = null; _selectedBoardAtom = null; _activeTab = _boardReturnTab || 'visible'; _syncTabUi(); renderTextFeed({ atoms: _mainFeedAtoms }); return; }
 
@@ -162,6 +168,8 @@ export function initTextView({ onShowOnMap, onLeaveNote, onOpenBoard, onPostRepl
       const tabBtn = e.target.closest('[data-action="text-tab"]');
       if (tabBtn) {
         const tab = tabBtn.dataset.tab === 'activity' ? 'activity' : 'visible';
+        _selectedBoardId = null;
+        _selectedBoardAtom = null;
         _activeTab = tab;
         _syncTabUi();
         renderTextFeed({ atoms: _mainFeedAtoms });
@@ -262,12 +270,16 @@ function _activityTimestamp(atom) {
   return Number(atom?.updated_at || atom?.updatedAt || atom?.created_at || atom?.createdAt || atom?.t || 0) || 0;
 }
 
-function _atomsForActiveTab(atoms) {
+export function atomsForTextTab(atoms, tab = 'visible') {
   const list = Array.isArray(atoms) ? atoms.slice() : [];
-  if (_activeTab === 'activity') {
+  if (tab === 'activity') {
     return list.sort((a, b) => _activityTimestamp(b) - _activityTimestamp(a));
   }
-  return list;
+  return list.filter(isRootAtom);
+}
+
+export function visibleRootCount(atoms) {
+  return atomsForTextTab(atoms).length;
 }
 
 function _syncTabUi() {
@@ -365,7 +377,7 @@ function renderBoardDetail(atom, opts = {}) {
   const title = _escHtml(_deriveTitle(atom));
   const author = String(atom?.author || atom?.f || '').trim();
   const trust = _trustLabel(atom);
-  const altLabel = Number.isFinite(Number(atom.alt)) ? _fmtAltLabel(Number(atom.alt)) : '';
+  const altLabel = heightLabel(atom);
   const dist = Number.isFinite(atom.distance) ? _fmtDistance(atom.distance) : '';
   const time = atom.t ? _fmtTime(atom.t) : '';
   const floorMeta = altLabel || 'Floor not available';
@@ -374,15 +386,16 @@ function renderBoardDetail(atom, opts = {}) {
   const meta = [timeMeta, floorMeta, distanceMeta].filter(Boolean).join(' · ');
   const atomId = stripPunktoPrefix(atom.punkto || _selectedBoardId || '');
   const stableId = _atomStableId(atom);
-  const replies = _boardReplies(atom, atoms);
-  const canReply = Boolean(stableId);
+  const replies = boardReplies(atom, atoms);
+  const identityReady = opts.identityReady ?? _hasIdentity();
+  const canReply = Boolean(stableId) && identityReady;
   const replyStatusState = opts.replyStatus === undefined ? _replyStatus : opts.replyStatus;
   const replyDraft = opts.replyDraft === undefined ? _replyDraft : opts.replyDraft;
   const replyValue = replyStatusState?.type === 'error' ? replyDraft : '';
   const replyStatus = replyStatusState ? `<p id="board-reply-status" class="board-reply-status ${replyStatusState.type === 'error' ? 'error' : 'success'}">${_escHtml(replyStatusState.message)}</p>` : '<p id="board-reply-status" class="board-reply-status"></p>';
   const disabledAttr = canReply ? '' : ' disabled';
-  const orphanText = canReply ? '' : '<p class="board-reply-status error">Cannot reply: board id is missing.</p>';
-  const trustLine = author ? `${trust} by ${author}` : `${trust} public post`;
+  const orphanText = !identityReady ? '<p>Set up your identity in Settings to reply.</p><button type="button" class="ui-btn" data-action="reply-settings">Open Settings</button>' : canReply ? '' : '<p class="board-reply-status error">Cannot reply: board id is missing.</p>';
+  const trustLine = `${trust} · ${author ? `Author label: ${author}` : 'Anonymous author'}`;
   const importedLine = _importedSourceLine(atom);
   const publicLine = importedLine || (trust === 'Unsigned' ? 'Unsigned public post' : 'Public board');
   const sourceBadge = _importedSourceBadge(atom);
@@ -403,14 +416,14 @@ function renderBoardDetail(atom, opts = {}) {
 ` +
     `    <div class="main-card-badges"><span class="main-card-cat ui-badge ${_escHtml(cat.cls)}">${_escHtml(cat.code)} · ${_escHtml(cat.label)}</span><span class="main-card-type ui-badge">Public board</span>${sourceBadge}</div>
 ` +
-    `    <p class="main-card-disclaimer">${_escHtml(importedLine ? 'Imported source data; not user-created content.' : 'Visible in this map view')}</p>
+    `    <p class="main-card-disclaimer">${_escHtml(importedLine ? 'Imported source data; not user-created content.' : 'Published in this scope')}</p>
 ` +
     `    <h3 class="main-card-title">${title}</h3>
 ` +
     (raw ? `    <p class="main-card-preview board-body">${_escHtml(raw)}</p>
 ` : '') +
     (_buildLinkCards(raw) || '') +
-    `    <div class="board-trust-row">${_escHtml(trustLine)}</div>
+    `    <div class="board-trust-row">${_escHtml(trustLine)}</div>${placeHtml(atom)}
 ` +
     `    <div class="main-card-meta"><span>${_escHtml(publicLine)}</span></div>
 ` +
@@ -428,16 +441,16 @@ function renderBoardDetail(atom, opts = {}) {
     `</section>`;
 }
 
-export function renderBoardSheetHtml({ atom, atoms = [], replyStatus = null, replyDraft = '', backLabel = 'Close board', backAction = 'map-board-close' } = {}) {
+export function renderBoardSheetHtml({ atom, atoms = [], replyStatus = null, replyDraft = '', backLabel = 'Close board', backAction = 'map-board-close', identityReady } = {}) {
   const boardAtom = resolveBoardAtom(atom, atoms);
   if (!boardAtom) return '';
   if (_isReplyAtom(boardAtom)) return renderOrphanReplyDetail(boardAtom, { backLabel, backAction });
-  return renderBoardDetail(boardAtom, { atoms, replyStatus, replyDraft, backLabel, backAction });
+  return renderBoardDetail(boardAtom, { atoms, replyStatus, replyDraft, backLabel, backAction, identityReady });
 }
 
-export function renderTextFeed({ atoms = [], locationDenied = false, loadingVisibleAtoms = false } = {}) {
+export function renderTextFeed({ atoms = [], locationDenied = false, loadingVisibleAtoms = false, readError = false } = {}) {
   _mainFeedAtoms = Array.isArray(atoms) ? atoms : [];
-  const activeAtoms = _atomsForActiveTab(_mainFeedAtoms).filter((atom) => _activeTab === 'activity' || !_isReplyAtom(atom));
+  const activeAtoms = atomsForTextTab(_mainFeedAtoms, _activeTab);
   _syncTabUi();
   const list = document.getElementById('main-feed-list');
   const emptyEl = document.getElementById('main-empty-notes');
@@ -445,6 +458,8 @@ export function renderTextFeed({ atoms = [], locationDenied = false, loadingVisi
   const statusCountEl = document.getElementById('main-status-count');
   const locEl = document.getElementById('main-empty-location');
   if (!list) return;
+  const stateEl = document.getElementById('main-read-state');
+  if (stateEl) stateEl.innerHTML = readStateHtml({ loading: loadingVisibleAtoms, error: readError });
 
   if (_selectedBoardId) {
     const atomFromList = _mainFeedAtoms.find((a) => _normalizedAtomIds(a).includes(_selectedBoardId) || _normalizedAtomIds(a).includes('p:' + _selectedBoardId));
@@ -458,9 +473,9 @@ export function renderTextFeed({ atoms = [], locationDenied = false, loadingVisi
       _selectedBoardAtom = atom;
       if (locEl) locEl.style.display = 'none';
       if (emptyEl) emptyEl.style.display = 'none';
-      const rootCount = _mainFeedAtoms.filter(_isRootAtom).length;
+      const rootCount = visibleRootCount(_mainFeedAtoms);
       if (countEl) countEl.textContent = loadingVisibleAtoms ? 'Loading visible atoms…' : (rootCount + ' public boards');
-      if (statusCountEl) statusCountEl.textContent = loadingVisibleAtoms ? 'Loading visible atoms…' : (rootCount + ' visible');
+      if (statusCountEl) statusCountEl.textContent = loadingVisibleAtoms ? 'Loading visible atoms…' : (rootCount + ' visible boards');
       list.innerHTML = _isReplyAtom(atom) ? renderOrphanReplyDetail(atom) : renderBoardDetail(atom);
       return;
     }
@@ -474,22 +489,22 @@ export function renderTextFeed({ atoms = [], locationDenied = false, loadingVisi
     const headingEl = document.getElementById('main-feed-heading');
     const subtitleEl = document.getElementById('main-feed-subtitle');
     if (headingEl) headingEl.textContent = _activeTab === 'activity' ? 'Activity' : 'Visible here';
-    if (subtitleEl) subtitleEl.textContent = _activeTab === 'activity' ? 'Newest public roots and replies in this map view.' : 'Public boards in this map view.';
+    if (subtitleEl) subtitleEl.textContent = _activeTab === 'activity' ? 'Newest public roots and replies in this published scope.' : 'Public boards in this published scope.';
     if (statusCountEl) statusCountEl.textContent = loadingVisibleAtoms ? 'Loading visible atoms…' : '0 visible';
-    if (locationDenied || !navigator.geolocation) {
+    if (!loadingVisibleAtoms && !readError && (locationDenied || !navigator.geolocation)) {
       if (emptyEl) emptyEl.style.display = 'none';
       if (locEl) locEl.style.display = '';
     } else {
       if (emptyEl) {
-        emptyEl.style.display = '';
+        emptyEl.style.display = loadingVisibleAtoms || readError ? 'none' : '';
         const h = emptyEl.querySelector('h3');
         const p = emptyEl.querySelector('p');
         if (_activeTab === 'activity') {
           if (h) h.textContent = 'No activity visible here yet.';
-          if (p) p.textContent = 'Newest public activity in this map view will appear here.';
+          if (p) p.textContent = 'Newest public activity in this published scope will appear here.';
         } else {
           if (h) h.textContent = 'No public boards visible here.';
-          if (p) p.textContent = 'Move the map or tap + to start one.';
+          if (p) p.textContent = 'Try another scope or tap + to start one.';
         }
       }
       if (locEl) locEl.style.display = 'none';
@@ -500,12 +515,12 @@ export function renderTextFeed({ atoms = [], locationDenied = false, loadingVisi
   if (locEl) locEl.style.display = 'none';
   if (emptyEl) emptyEl.style.display = 'none';
   if (countEl) countEl.textContent = loadingVisibleAtoms ? 'Loading visible atoms…' : (activeAtoms.length + (_activeTab === 'activity' ? ' public activity items' : ' public boards'));
-  if (statusCountEl) statusCountEl.textContent = loadingVisibleAtoms ? 'Loading visible atoms…' : (activeAtoms.length + (_activeTab === 'activity' ? ' activity' : ' visible'));
+  if (statusCountEl) statusCountEl.textContent = loadingVisibleAtoms ? 'Loading visible atoms…' : (visibleRootCount(_mainFeedAtoms) + ' visible boards');
 
   const headingEl = document.getElementById('main-feed-heading');
   const subtitleEl = document.getElementById('main-feed-subtitle');
   if (headingEl) headingEl.textContent = _activeTab === 'activity' ? 'Activity' : 'Visible here';
-  if (subtitleEl) subtitleEl.textContent = _activeTab === 'activity' ? 'Newest public roots and replies in this map view.' : 'Public boards in this map view.';
+  if (subtitleEl) subtitleEl.textContent = _activeTab === 'activity' ? 'Newest public roots and replies in this published scope.' : 'Public boards in this published scope.';
 
   list.innerHTML = activeAtoms.map((atom) => {
     const isReply = _isReplyAtom(atom);
@@ -516,7 +531,7 @@ export function renderTextFeed({ atoms = [], locationDenied = false, loadingVisi
     const cat = _categoryBadge(atom.category || atom.kind || _deriveCategory(atom));
     const raw = String(atom.x || '').trim();
     const preview = raw.length > 120 ? raw.slice(0, 120) + '…' : raw;
-    const altLabel = Number.isFinite(Number(atom.alt)) ? _fmtAltLabel(Number(atom.alt)) : '';
+    const altLabel = heightLabel(atom);
     const dist = Number.isFinite(atom.distance) ? _fmtDistance(atom.distance) : '';
     const time = atom.t ? _fmtTime(atom.t) : '';
     const floorMeta = altLabel || 'Floor not available';

@@ -5,6 +5,7 @@
 import { resolveBoardAtom, renderBoardSheetHtml, replyAddress } from './ui-text.js';
 
 let _sheet = null;
+let _hasIdentity = () => false;
 let _getAtoms = () => [];
 let _getAtomSelectionId = null;
 let _onSelectionChanged = null;
@@ -25,6 +26,7 @@ let _replyDraft = '';
 
 export function initBoardView({
   sheet,
+  hasIdentity,
   getAtoms,
   getAtomSelectionId,
   onSelectionChanged,
@@ -36,6 +38,7 @@ export function initBoardView({
   onBoardViewportChanged,
   onPrintAtom,
 } = {}) {
+  _hasIdentity = hasIdentity || (() => false);
   _sheet = sheet || document.getElementById('map-board-sheet');
   _getAtoms = typeof getAtoms === 'function' ? getAtoms : _getAtoms;
   _getAtomSelectionId = typeof getAtomSelectionId === 'function' ? getAtomSelectionId : null;
@@ -99,7 +102,8 @@ export function renderMapBoardSheet() {
     atoms: _selectedBoardAtoms.length ? _selectedBoardAtoms : _getAtoms(),
     replyStatus: _replyStatus,
     replyDraft: _replyDraft,
-    backLabel: 'Close board',
+    backLabel: '← Back to map',
+    identityReady: _hasIdentity(),
     backAction: 'map-board-close',
   });
   _sheet.classList.add('open');
@@ -163,7 +167,7 @@ function handleBoardClick(e) {
   const closeBtn = e.target.closest('[data-action="map-board-close"]');
   if (closeBtn) {
     e.preventDefault();
-    closeMapBoard({ clearSelection: true });
+    closeMapBoard({ clearSelection: false });
     return;
   }
 

@@ -35,6 +35,8 @@ jobs:
 
       - name: PWA JavaScript syntax checks
         run: |
+          node --check pwa/core/explore.js
+          node --input-type=module --check < pwa/core/explore.js
           node --check pwa/app.js
           node --check pwa/ui-shell.js
           node --check pwa/ui-text.js
@@ -65,6 +67,12 @@ jobs:
           node pwa/test-ai-coldstart.mjs
           node pwa/test-ai-hostile.mjs
           node pwa/test-ai-cli.mjs
+
+      - name: M8 UX regression suite (reply grouping, trust labels, feed consistency)
+        run: node pwa/test-punkto-m8-ux.mjs
+
+      - name: M8B map-first regression suite (initial Map, explore places, map to board)
+        run: node pwa/test-punkto-m8b-map-first.mjs
 
       - name: Required Pilot files exist
         run: |

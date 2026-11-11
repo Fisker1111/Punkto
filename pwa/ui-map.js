@@ -13,6 +13,10 @@ import { stripPunktoPrefix, ensurePunktoPrefix } from './protocol/punkto-id.js';
 import { getAtomStableId } from './ui-text.js';
 import { isPunktiMid, isStableAtomId } from './protocol/atom-id.js';
 
+export function prefersReducedMotion() {
+  return !!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+}
+
 const CATEGORY_META = {
   TEXT: { code: 'TEXT', label: 'Talk', cls: 'cat-talk', color: [224, 166, 96] },
   INFO: { code: 'INFO', label: 'Info', cls: 'cat-info', color: [74, 151, 191] },
@@ -83,8 +87,11 @@ let atomMarkers = new Map();
 let _lastRenderedAtoms = [];
 let focusedPunktoId = null;
 let hasBootFit = false;
+let exploreFramed = false;
+let userLocationKnown = false;
 let svgLeaderOverlay = null;
 let mapBoardBasePadding = null;
+let mapBoardPendingApply = null;
 let mapCreateBasePadding = null;
 let mapCreateOpen = false;
 let mapCreateComposerRect = null;
@@ -167,7 +174,19 @@ export function exitHeightPlacementMode() {
   renderAtoms().catch((err) => console.warn('[map-create] render placement exit failed:', err));
 }
 
+export function shouldDeferViewportPadding(mapLike) {
+  try {
+    return typeof mapLike?.isMoving === 'function' && mapLike.isMoving() === true;
+  } catch {
+    return false;
+  }
+}
+
 export function setMapBoardViewport(open, boardRect = null) {
+  if (mapBoardPendingApply) {
+    mapBoardPendingApply.map.off('moveend', mapBoardPendingApply.apply);
+    mapBoardPendingApply = null;
+  }
   if (!map || typeof map.easeTo !== 'function') return;
   const viewportWidth = window.innerWidth || document.documentElement.clientWidth || 0;
   const viewportHeight = window.innerHeight || document.documentElement.clientHeight || 0;
@@ -192,19 +211,27 @@ export function setMapBoardViewport(open, boardRect = null) {
     }
   }
 
-  const reduceMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
-  try {
-    map.easeTo({
-      padding,
-      duration: reduceMotion ? 0 : 180,
-      pitch: map.getPitch(),
-      bearing: map.getBearing(),
-      zoom: map.getZoom(),
-    });
-    if (!open) mapBoardBasePadding = null;
-  } catch (err) {
-    console.warn('[map-board] viewport padding failed:', err);
-    if (!open) mapBoardBasePadding = null;
+  const apply = () => {
+    mapBoardPendingApply = null;
+    try {
+      map.easeTo({
+        padding,
+        duration: prefersReducedMotion() ? 0 : 180,
+        pitch: map.getPitch(),
+        bearing: map.getBearing(),
+        zoom: map.getZoom(),
+      });
+      if (!open) mapBoardBasePadding = null;
+    } catch (err) {
+      console.warn('[map-board] viewport padding failed:', err);
+      if (!open) mapBoardBasePadding = null;
+    }
+  };
+  if (shouldDeferViewportPadding(map) && typeof map.once === 'function' && typeof map.off === 'function') {
+    mapBoardPendingApply = { map, apply };
+    map.once('moveend', apply);
+  } else {
+    apply();
   }
 }
 
@@ -250,6 +277,16 @@ export function ensureMapInitialized() {
   return initMap();
 }
 
+function flyToPlace(loc) {
+  map.flyTo({ center: [loc.lon, loc.lat], zoom: 16, duration: prefersReducedMotion() ? 0 : 1200 });
+}
+
+export function frameInitialExplorePlace(place) {
+  if (!place || !mapLoadComplete || exploreFramed || userLocationKnown || _hasDeepLink() || focusedPunktoId) return;
+  exploreFramed = true;
+  flyToPlace(place);
+}
+
 export async function focusPunktoOnMap(id) {
   if (!id) return;
   ensureMapInitialized();
@@ -268,7 +305,7 @@ export async function focusPunktoOnMap(id) {
   const markerKey = String(focusedAtom?.punkto || '').trim();
   const titleIdentity = h || markerKey || rawId;
 
-  map.flyTo({ center: [loc.lon, loc.lat], zoom: 16, duration: 1200 });
+  flyToPlace(loc);
   document.title = `Punkto · ${titleIdentity}`;
 
   if (focusedPunktoId && focusedPunktoId !== rawId) {
@@ -652,13 +689,13 @@ export function toggle3D() {
   const elToggle3D = document.getElementById('toggle-3d');
   is3D = !is3D;
   if (is3D) {
-    map.easeTo({ pitch: 45, bearing: -10, duration: 800 });
+    map.easeTo({ pitch: 45, bearing: -10, duration: prefersReducedMotion() ? 0 : 800 });
     if (elToggle3D) {
       elToggle3D.textContent = '2D';
       elToggle3D.title = 'Switch to 2D view';
     }
   } else {
-    map.easeTo({ pitch: 0, bearing: 0, duration: 800 });
+    map.easeTo({ pitch: 0, bearing: 0, duration: prefersReducedMotion() ? 0 : 800 });
     if (elToggle3D) {
       elToggle3D.textContent = '3D';
       elToggle3D.title = 'Switch to 3D view';
@@ -748,6 +785,7 @@ function initMap() {
     if (!_hasDeepLink() && navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         (pos) => {
+          userLocationKnown = true;
           try {
             map.jumpTo({
               center: [pos.coords.longitude, pos.coords.latitude],
@@ -888,12 +926,11 @@ function applyMapCreateViewport() {
   const padding = mapCreateOpen
     ? createViewportPadding(base, mapCreateComposerRect)
     : { ...base };
-  const reduceMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
 
   try {
     map.easeTo({
       padding,
-      duration: reduceMotion ? 0 : 120,
+      duration: prefersReducedMotion() ? 0 : 120,
       center: map.getCenter(),
       pitch: map.getPitch(),
       bearing: map.getBearing(),
